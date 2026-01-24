@@ -1,0 +1,286 @@
+.todayCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 12px 0;
+  margin-bottom: 24px;
+}
+
+.todayLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.todayTitle {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.02em;
+}
+
+.plusButton {
+  width: 98px;
+  height: 98px;
+  border-radius: 50%;
+  border: 1px dashed var(--border);
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.plusIcon {
+  font-size: 2.4rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.plusText {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.todayHint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.notesHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.notesTitle {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.notesSubtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.userChip {
+  align-self: flex-start;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.noteList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.noteCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.noteHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.noteTitle {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.noteTime {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.noteTrigger {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.noteBehavior {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.noteMeta {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.emptyState {
+  border: 1px dashed var(--border);
+  background: var(--surface-muted);
+  border-radius: 16px;
+  padding: 24px;
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0 0 6px;
+  font-weight: 600;
+}
+
+.emptyHint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(26, 24, 20, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 20;
+}
+
+.modalCard {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modalLabel {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.modalTitle {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+}
+
+.modalClose {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+  font-size: 0.8rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fieldInline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.fieldLabel {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.fieldHint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.input,
+.textarea,
+.inputSmall {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.textarea {
+  resize: vertical;
+}
+
+.inputSmall {
+  width: 88px;
+}
+
+.submitButton {
+  border-radius: 12px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  padding: 12px 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.formError,
+.formSuccess {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.formError {
+  color: var(--danger);
+}
+
+.formSuccess {
+  color: var(--accent);
+}
+
+@media (max-width: 720px) {
+  .todayCard {
+    padding: 24px;
+  }
+
+  .noteList {
+    grid-template-columns: 1fr;
+  }
+}

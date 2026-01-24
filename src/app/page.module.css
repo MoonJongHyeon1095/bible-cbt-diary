@@ -1,0 +1,45 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  padding: 16px 24px 48px;
+}
+
+.shell {
+  width: min(1080px, 100%);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.emptyAuth {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 30px;
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.emptyAuthTitle {
+  margin: 0 0 8px;
+  font-size: 1.2rem;
+}
+
+.emptyAuthHint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding-bottom: 96px;
+  }
+}

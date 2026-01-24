@@ -60,20 +60,20 @@ export default function EmotionNoteDetailPage({
   const shouldShowSave = noteId ? hasTitleChange : hasDraft;
   const selectedFabStyle =
     selectedSection === "thought"
-      ? { backgroundColor: "#ffd74a", color: "#5a3b00", borderColor: "#f3bd00" }
+      ? { backgroundColor: "#ffd300", color: "#2b2400", borderColor: "#d7b800" }
       : selectedSection === "error"
-        ? { backgroundColor: "#ff8a5c", color: "#5a1d10", borderColor: "#ff6b3a" }
+        ? { backgroundColor: "#ff4fd8", color: "#2b0020", borderColor: "#d63cb8" }
         : selectedSection === "alternative"
           ? {
-              backgroundColor: "#41d37c",
-              color: "#0b3d22",
-              borderColor: "#1fb365",
+              backgroundColor: "#36d94a",
+              color: "#002b08",
+              borderColor: "#24b43a",
             }
           : selectedSection === "behavior"
             ? {
-                backgroundColor: "#4da3ff",
-                color: "#0b2a57",
-                borderColor: "#2b86f6",
+                backgroundColor: "#26e0ff",
+                color: "#00242b",
+                borderColor: "#14bcd9",
               }
             : undefined;
 
@@ -81,25 +81,25 @@ export default function EmotionNoteDetailPage({
     {
       key: "thought" as const,
       label: "자동 사고",
-      color: "#ffd74a",
+      color: "#ffd300",
       count: thoughtSection.details.length,
     },
     {
       key: "error" as const,
       label: "인지 오류",
-      color: "#ff8a5c",
+      color: "#ff4fd8",
       count: errorSection.details.length,
     },
     {
       key: "alternative" as const,
       label: "대안 사고",
-      color: "#41d37c",
+      color: "#36d94a",
       count: alternativeSection.details.length,
     },
     {
       key: "behavior" as const,
       label: "행동 반응",
-      color: "#4da3ff",
+      color: "#26e0ff",
       count: behaviorSection.details.length,
     },
   ];
@@ -108,7 +108,7 @@ export default function EmotionNoteDetailPage({
     {
       key: "thought",
       label: "자동 사고",
-      color: "#ffd74a",
+      color: "#ffd300",
       count: thoughtSection.details.length,
       isActive: selectedSection === "thought",
       onToggle: () =>
@@ -124,7 +124,7 @@ export default function EmotionNoteDetailPage({
     {
       key: "error",
       label: "인지 오류",
-      color: "#ff8a5c",
+      color: "#ff4fd8",
       count: errorSection.details.length,
       isActive: selectedSection === "error",
       onToggle: () =>
@@ -140,7 +140,7 @@ export default function EmotionNoteDetailPage({
     {
       key: "alternative",
       label: "대안 사고",
-      color: "#41d37c",
+      color: "#36d94a",
       count: alternativeSection.details.length,
       isActive: selectedSection === "alternative",
       onToggle: () =>
@@ -158,7 +158,7 @@ export default function EmotionNoteDetailPage({
     {
       key: "behavior",
       label: "행동 반응",
-      color: "#4da3ff",
+      color: "#26e0ff",
       count: behaviorSection.details.length,
       isActive: selectedSection === "behavior",
       onToggle: () =>

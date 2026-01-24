@@ -1,5 +1,13 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import {
+  Cell,
+  Pie,
+  PieChart,
+  ResponsiveContainer,
+  type PieLabelRenderProps,
+} from "recharts";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type SectionKey = "thought" | "error" | "alternative" | "behavior";
@@ -17,45 +25,45 @@ type EmotionNoteSectionChartProps = {
   onSelect: (key: SectionKey) => void;
 };
 
-const MIN_VALUE = 1;
-
-const polarToCartesian = (cx: number, cy: number, radius: number, angle: number) => ({
-  x: cx + radius * Math.cos(angle),
-  y: cy + radius * Math.sin(angle),
-});
-
-const describeDonutSlice = (
-  cx: number,
-  cy: number,
-  outerRadius: number,
-  innerRadius: number,
-  startAngle: number,
-  endAngle: number,
-) => {
-  const startOuter = polarToCartesian(cx, cy, outerRadius, startAngle);
-  const endOuter = polarToCartesian(cx, cy, outerRadius, endAngle);
-  const startInner = polarToCartesian(cx, cy, innerRadius, endAngle);
-  const endInner = polarToCartesian(cx, cy, innerRadius, startAngle);
-  const largeArc = endAngle - startAngle > Math.PI ? 1 : 0;
-
-  return [
-    `M ${startOuter.x} ${startOuter.y}`,
-    `A ${outerRadius} ${outerRadius} 0 ${largeArc} 1 ${endOuter.x} ${endOuter.y}`,
-    `L ${startInner.x} ${startInner.y}`,
-    `A ${innerRadius} ${innerRadius} 0 ${largeArc} 0 ${endInner.x} ${endInner.y}`,
-    "Z",
-  ].join(" ");
+type ChartDatum = {
+  key: SectionKey;
+  label: string;
+  count: number;
+  value: number;
+  color: string;
 };
 
-const getMidPoint = (
-  cx: number,
-  cy: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-) => {
-  const midAngle = (startAngle + endAngle) / 2;
-  return polarToCartesian(cx, cy, radius, midAngle);
+const MIN_VALUE = 1;
+
+const renderLabel = (props: PieLabelRenderProps) => {
+  const { cx = 0, cy = 0, midAngle = 0, innerRadius = 0, outerRadius = 0 } =
+    props;
+  const payload = props.payload as ChartDatum | undefined;
+  if (!payload) {
+    return null;
+  }
+
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.55;
+  const angle = (-midAngle * Math.PI) / 180;
+  const x = cx + radius * Math.cos(angle);
+  const y = cy + radius * Math.sin(angle);
+
+  return (
+    <text
+      x={x}
+      y={y}
+      textAnchor="middle"
+      dominantBaseline="middle"
+      className={styles.chartLabel}
+    >
+      <tspan x={x} dy="-0.1em">
+        {payload.label}
+      </tspan>
+      <tspan x={x} dy="1.1em">
+        {payload.count}
+      </tspan>
+    </text>
+  );
 };
 
 export default function EmotionNoteSectionChart({
@@ -63,78 +71,66 @@ export default function EmotionNoteSectionChart({
   selectedKey,
   onSelect,
 }: EmotionNoteSectionChartProps) {
-  const values = sections.map((section) =>
-    section.count > 0 ? section.count : MIN_VALUE,
-  );
-  const total = values.reduce((sum, value) => sum + value, 0);
-  let currentAngle = -Math.PI / 2;
-  const outerRadius = 52;
-  const innerRadius = 18;
-  const labelRadius = (outerRadius + innerRadius) / 2;
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const [radius, setRadius] = useState(120);
+  const data: ChartDatum[] = sections.map((section) => ({
+    key: section.key,
+    label: section.label,
+    count: section.count,
+    value: section.count > 0 ? section.count : MIN_VALUE,
+    color: section.color,
+  }));
+  const outerRadius = radius * 0.88;
+  const activeOuterRadius = radius * 0.96;
+  const innerRadius = radius * 0.26;
+
+  useEffect(() => {
+    const element = wrapperRef.current;
+    if (!element || typeof ResizeObserver === "undefined") {
+      return;
+    }
+
+    const updateSize = () => {
+      const size = Math.min(element.clientWidth, element.clientHeight);
+      if (size > 0) {
+        setRadius(size / 2);
+      }
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <div className={styles.chartShell}>
-      <div className={styles.chartWrapper}>
-        <svg
-          viewBox="0 0 120 120"
-          className={styles.chartSvg}
-          aria-hidden
-        >
-          {(() => {
-            const slices = sections.map((section, index) => {
-            const sliceAngle = (values[index] / total) * Math.PI * 2;
-            const startAngle = currentAngle;
-            const endAngle = currentAngle + sliceAngle;
-            currentAngle = endAngle;
-            const path = describeDonutSlice(
-              60,
-              60,
-              outerRadius,
-              innerRadius,
-              startAngle,
-              endAngle,
-            );
-            const isActive = selectedKey === section.key;
-            const midPoint = getMidPoint(60, 60, labelRadius, startAngle, endAngle);
-
-            return {
-              key: section.key,
-              isActive,
-              node: (
-                <g
-                  key={section.key}
-                  className={`${styles.chartSlice} ${
-                    isActive ? styles.chartSliceActive : ""
-                  }`}
-                  onClick={() => onSelect(section.key)}
-                  role="button"
-                  aria-label={`${section.label} ${section.count}개`}
-                >
-                  <path d={path} fill={section.color} />
-                  <text
-                    x={midPoint.x}
-                    y={midPoint.y}
-                    textAnchor="middle"
-                    dominantBaseline="middle"
-                    className={styles.chartLabel}
-                  >
-                    <tspan x={midPoint.x} dy="-0.1em">
-                      {section.label}
-                    </tspan>
-                    <tspan x={midPoint.x} dy="1.1em">
-                      {section.count}
-                    </tspan>
-                  </text>
-                </g>
-              ),
-            };
-          });
-
-            const active = slices.filter((slice) => slice.isActive);
-            const inactive = slices.filter((slice) => !slice.isActive);
-            return [...inactive, ...active].map((slice) => slice.node);
-          })()}
-        </svg>
+      <div className={styles.chartWrapper} ref={wrapperRef}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={data}
+              dataKey="value"
+              innerRadius={innerRadius}
+              outerRadius={(entry) =>
+                entry.key === selectedKey ? activeOuterRadius : outerRadius
+              }
+              paddingAngle={1}
+              cornerRadius={8}
+              stroke="none"
+              labelLine={false}
+              label={renderLabel}
+              onClick={(entry) => onSelect(entry.key)}
+              isAnimationActive={false}
+              startAngle={90}
+              endAngle={-270}
+            >
+              {data.map((entry) => (
+                <Cell key={entry.key} fill={entry.color} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );

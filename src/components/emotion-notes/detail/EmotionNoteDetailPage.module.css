@@ -164,8 +164,8 @@
 .chartWrapper {
   display: grid;
   place-items: center;
-  width: clamp(220px, 42vw, 320px);
-  height: clamp(220px, 42vw, 320px);
+  width: clamp(260px, 55vw, 380px);
+  height: clamp(260px, 55vw, 380px);
 }
 
 .chartSvg {
@@ -174,20 +174,30 @@
   overflow: visible;
 }
 
-.chartSlice {
-  cursor: pointer;
-  transition: transform 0.2s ease;
-  transform-box: fill-box;
-  transform-origin: center;
+.chartWrapper :global(.recharts-sector),
+.chartWrapper :global(.recharts-pie-sector) {
+  stroke: none !important;
+  outline: none;
 }
 
-.chartSliceActive {
-  transform: scale(1.06);
+.chartWrapper :global(.recharts-sector:focus),
+.chartWrapper :global(.recharts-pie-sector:focus) {
+  outline: none;
+}
+
+.chartWrapper :global(svg),
+.chartWrapper :global(.recharts-wrapper) {
+  outline: none;
+}
+
+.chartWrapper :global(svg:focus),
+.chartWrapper :global(.recharts-wrapper:focus) {
+  outline: none;
 }
 
 .chartLabel {
   fill: #1c1c1c;
-  font-size: 0.42rem;
+  font-size: 0.83rem;
   font-weight: 700;
   pointer-events: none;
 }
@@ -246,7 +256,6 @@
   background: rgba(0, 0, 0, 0.08);
 }
 
-
 .sectionCard {
   border-radius: 18px;
   padding: 18px;
@@ -259,23 +268,23 @@
 }
 
 .sectionThought {
-  background: #ffd74a;
-  border-color: #f3bd00;
+  background: #ffd300;
+  border-color: #d7b800;
 }
 
 .sectionError {
-  background: #ff8a5c;
-  border-color: #ff6b3a;
+  background: #ff4fd8;
+  border-color: #d63cb8;
 }
 
 .sectionAlt {
-  background: #41d37c;
-  border-color: #1fb365;
+  background: #36d94a;
+  border-color: #24b43a;
 }
 
 .sectionBehavior {
-  background: #4da3ff;
-  border-color: #2b86f6;
+  background: #26e0ff;
+  border-color: #14bcd9;
 }
 
 .sectionHeader {
@@ -327,23 +336,23 @@
 }
 
 .sectionPastelThought {
-  background: rgba(255, 215, 74, 0.22);
-  border-color: rgba(243, 189, 0, 0.55);
+  background: rgba(255, 211, 0, 0.22);
+  border-color: rgba(215, 184, 0, 0.55);
 }
 
 .sectionPastelError {
-  background: rgba(255, 138, 92, 0.22);
-  border-color: rgba(255, 107, 58, 0.55);
+  background: rgba(255, 79, 216, 0.22);
+  border-color: rgba(214, 60, 184, 0.55);
 }
 
 .sectionPastelAlt {
-  background: rgba(65, 211, 124, 0.22);
-  border-color: rgba(31, 179, 101, 0.55);
+  background: rgba(54, 217, 74, 0.22);
+  border-color: rgba(36, 180, 58, 0.55);
 }
 
 .sectionPastelBehavior {
-  background: rgba(77, 163, 255, 0.22);
-  border-color: rgba(43, 134, 246, 0.55);
+  background: rgba(38, 224, 255, 0.22);
+  border-color: rgba(20, 188, 217, 0.55);
 }
 
 .sectionHint {

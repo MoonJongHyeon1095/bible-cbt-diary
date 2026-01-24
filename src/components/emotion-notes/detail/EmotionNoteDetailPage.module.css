@@ -388,6 +388,18 @@
   gap: 8px;
 }
 
+.detailCardSelected {
+  border-color: #fff;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.autoGrowTextarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 72px;
+}
+
 .detailHeader {
   display: flex;
   align-items: center;
@@ -424,6 +436,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .detailEdit {

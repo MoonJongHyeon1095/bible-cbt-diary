@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./EmotionCalendarSection.module.css";
@@ -40,6 +41,7 @@ export default function EmotionCalendarSection() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const router = useRouter();
 
   const monthLabel = useMemo(
     () =>
@@ -190,10 +192,15 @@ export default function EmotionCalendarSection() {
             <p className={styles.detailEmpty}>표시할 기록이 없습니다.</p>
           ) : (
             selectedNotes.map((note) => (
-              <div key={note.id} className={styles.detailItem}>
+              <button
+                key={note.id}
+                type="button"
+                className={styles.detailItem}
+                onClick={() => router.push(`/detail/${note.id}`)}
+              >
                 <p className={styles.detailTitle}>{note.title}</p>
                 <p className={styles.detailText}>{note.trigger_text}</p>
-              </div>
+              </button>
             ))
           )}
         </div>

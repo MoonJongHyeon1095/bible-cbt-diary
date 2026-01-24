@@ -137,6 +137,11 @@
 }
 
 .detailItem {
+  border: none;
+  background: transparent;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
   border-bottom: 1px solid var(--border);
   padding-bottom: 10px;
 }

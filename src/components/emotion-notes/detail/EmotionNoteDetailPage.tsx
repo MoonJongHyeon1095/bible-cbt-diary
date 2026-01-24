@@ -3,7 +3,7 @@
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import AppHeader from "@/components/header/AppHeader";
-import { List, Plus, Upload, Trash2 } from "lucide-react";
+import { List, Pencil, Plus, Upload, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
@@ -19,6 +19,7 @@ type EmotionNoteDetailPageProps = {
 };
 
 type SectionKey = "thought" | "error" | "alternative" | "behavior";
+type SelectedItem = { section: SectionKey; id: number } | null;
 
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString("ko-KR", {
@@ -53,6 +54,7 @@ export default function EmotionNoteDetailPage({
   } = useEmotionNoteDetail(noteId);
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(null);
+  const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
   const hasTitleChange =
     (note?.title ?? "") !== title.trim() ||
     (note?.trigger_text ?? "") !== triggerText.trim();
@@ -76,6 +78,16 @@ export default function EmotionNoteDetailPage({
                 borderColor: "#14bcd9",
               }
             : undefined;
+
+  const isEditingSelected =
+    (selectedItem?.section === "thought" &&
+      thoughtSection.editingThoughtId === selectedItem.id) ||
+    (selectedItem?.section === "error" &&
+      errorSection.editingErrorId === selectedItem.id) ||
+    (selectedItem?.section === "alternative" &&
+      alternativeSection.editingAlternativeId === selectedItem.id) ||
+    (selectedItem?.section === "behavior" &&
+      behaviorSection.editingBehaviorId === selectedItem.id);
 
   const sections = [
     {
@@ -111,13 +123,21 @@ export default function EmotionNoteDetailPage({
       color: "#ffd300",
       count: thoughtSection.details.length,
       isActive: selectedSection === "thought",
-      onToggle: () =>
-        setSelectedSection((prev) => (prev === "thought" ? null : "thought")),
+      onToggle: () => {
+        setSelectedSection((prev) => (prev === "thought" ? null : "thought"));
+        setSelectedItem(null);
+      },
       content: (
         <ThoughtDetailSection
           {...thoughtSection}
           formatDateTime={formatDateTime}
           showAddButton={false}
+          onSelectDetail={(detailId) =>
+            setSelectedItem({ section: "thought", id: detailId })
+          }
+          selectedDetailId={
+            selectedItem?.section === "thought" ? selectedItem.id : null
+          }
         />
       ),
     },
@@ -127,13 +147,21 @@ export default function EmotionNoteDetailPage({
       color: "#ff4fd8",
       count: errorSection.details.length,
       isActive: selectedSection === "error",
-      onToggle: () =>
-        setSelectedSection((prev) => (prev === "error" ? null : "error")),
+      onToggle: () => {
+        setSelectedSection((prev) => (prev === "error" ? null : "error"));
+        setSelectedItem(null);
+      },
       content: (
         <ErrorDetailSection
           {...errorSection}
           formatDateTime={formatDateTime}
           showAddButton={false}
+          onSelectDetail={(detailId) =>
+            setSelectedItem({ section: "error", id: detailId })
+          }
+          selectedDetailId={
+            selectedItem?.section === "error" ? selectedItem.id : null
+          }
         />
       ),
     },
@@ -143,15 +171,23 @@ export default function EmotionNoteDetailPage({
       color: "#36d94a",
       count: alternativeSection.details.length,
       isActive: selectedSection === "alternative",
-      onToggle: () =>
+      onToggle: () => {
         setSelectedSection((prev) =>
           prev === "alternative" ? null : "alternative",
-        ),
+        );
+        setSelectedItem(null);
+      },
       content: (
         <AlternativeDetailSection
           {...alternativeSection}
           formatDateTime={formatDateTime}
           showAddButton={false}
+          onSelectDetail={(detailId) =>
+            setSelectedItem({ section: "alternative", id: detailId })
+          }
+          selectedDetailId={
+            selectedItem?.section === "alternative" ? selectedItem.id : null
+          }
         />
       ),
     },
@@ -161,13 +197,21 @@ export default function EmotionNoteDetailPage({
       color: "#26e0ff",
       count: behaviorSection.details.length,
       isActive: selectedSection === "behavior",
-      onToggle: () =>
-        setSelectedSection((prev) => (prev === "behavior" ? null : "behavior")),
+      onToggle: () => {
+        setSelectedSection((prev) => (prev === "behavior" ? null : "behavior"));
+        setSelectedItem(null);
+      },
       content: (
         <BehaviorDetailSection
           {...behaviorSection}
           formatDateTime={formatDateTime}
           showAddButton={false}
+          onSelectDetail={(detailId) =>
+            setSelectedItem({ section: "behavior", id: detailId })
+          }
+          selectedDetailId={
+            selectedItem?.section === "behavior" ? selectedItem.id : null
+          }
         />
       ),
     },
@@ -281,7 +325,11 @@ export default function EmotionNoteDetailPage({
               sections={sections}
               selectedKey={selectedSection}
               onSelect={(key) =>
-                setSelectedSection((prev) => (prev === key ? null : key))
+                setSelectedSection((prev) => {
+                  const next = prev === key ? null : key;
+                  setSelectedItem(null);
+                  return next;
+                })
               }
             />
             <EmotionNoteSectionToggleList items={toggleItems} />
@@ -303,7 +351,7 @@ export default function EmotionNoteDetailPage({
           disabled={isSaving}
         />
       ) : null}
-      {selectedSection ? (
+      {selectedSection && !selectedItem ? (
         <FloatingActionButton
           label="추가"
           icon={<Plus size={26} />}
@@ -314,6 +362,123 @@ export default function EmotionNoteDetailPage({
             ...selectedFabStyle,
           }}
         />
+      ) : null}
+      {selectedItem && !isEditingSelected ? (
+        <>
+          <FloatingActionButton
+            label="편집"
+            icon={<Pencil size={22} />}
+            helperText="선택 항목 편집"
+            onClick={() => {
+              const section = selectedItem.section;
+              if (section === "thought") {
+                const detail = thoughtSection.details.find(
+                  (item) => item.id === selectedItem.id,
+                );
+                if (detail) {
+                  thoughtSection.onStartEditing(detail);
+                }
+              } else if (section === "error") {
+                const detail = errorSection.details.find(
+                  (item) => item.id === selectedItem.id,
+                );
+                if (detail) {
+                  errorSection.onStartEditing(detail);
+                }
+              } else if (section === "alternative") {
+                const detail = alternativeSection.details.find(
+                  (item) => item.id === selectedItem.id,
+                );
+                if (detail) {
+                  alternativeSection.onStartEditing(detail);
+                }
+              } else {
+                const detail = behaviorSection.details.find(
+                  (item) => item.id === selectedItem.id,
+                );
+                if (detail) {
+                  behaviorSection.onStartEditing(detail);
+                }
+              }
+            }}
+            style={{
+              bottom: shouldShowSave ? "26vh" : "33vh",
+              ...selectedFabStyle,
+            }}
+          />
+          <FloatingActionButton
+            label="삭제"
+            icon={<Trash2 size={22} />}
+            helperText="선택 항목 삭제"
+            onClick={() => {
+              const section = selectedItem.section;
+              if (section === "thought") {
+                thoughtSection.onDelete(selectedItem.id);
+              } else if (section === "error") {
+                errorSection.onDelete(selectedItem.id);
+              } else if (section === "alternative") {
+                alternativeSection.onDelete(selectedItem.id);
+              } else {
+                behaviorSection.onDelete(selectedItem.id);
+              }
+              setSelectedItem(null);
+            }}
+            style={{
+              bottom: shouldShowSave ? "10vh" : "17vh",
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
+            }}
+          />
+        </>
+      ) : null}
+      {selectedItem && isEditingSelected ? (
+        <>
+          <FloatingActionButton
+            label="저장"
+            icon={<Upload size={22} />}
+            helperText="선택 항목 저장"
+            onClick={() => {
+              const section = selectedItem.section;
+              if (section === "thought") {
+                thoughtSection.onUpdate(selectedItem.id);
+              } else if (section === "error") {
+                errorSection.onUpdate(selectedItem.id);
+              } else if (section === "alternative") {
+                alternativeSection.onUpdate(selectedItem.id);
+              } else {
+                behaviorSection.onUpdate(selectedItem.id);
+              }
+            }}
+            style={{
+              bottom: shouldShowSave ? "26vh" : "33vh",
+              ...selectedFabStyle,
+            }}
+          />
+          <FloatingActionButton
+            label="취소"
+            icon={<List size={22} />}
+            helperText="편집 취소"
+            onClick={() => {
+              const section = selectedItem.section;
+              if (section === "thought") {
+                thoughtSection.onCancelEditing();
+              } else if (section === "error") {
+                errorSection.onCancelEditing();
+              } else if (section === "alternative") {
+                alternativeSection.onCancelEditing();
+              } else {
+                behaviorSection.onCancelEditing();
+              }
+            }}
+            style={{
+              bottom: shouldShowSave ? "10vh" : "17vh",
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
+            }}
+          />
+        </>
       ) : null}
     </div>
   );

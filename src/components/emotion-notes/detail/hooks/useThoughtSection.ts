@@ -30,6 +30,8 @@ export default function useThoughtSection({
   const [editingThoughtId, setEditingThoughtId] = useState<number | null>(null);
   const [editingThoughtText, setEditingThoughtText] = useState("");
   const [editingEmotionText, setEditingEmotionText] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const loadDetails = useCallback(async () => {
     if (!noteId) {
@@ -107,8 +109,10 @@ export default function useThoughtSection({
 
   const handleUpdate = useCallback(
     async (detailId: number) => {
+      setIsUpdating(true);
       const accessToken = await requireAccessToken();
       if (!accessToken) {
+        setIsUpdating(false);
         return;
       }
 
@@ -120,6 +124,7 @@ export default function useThoughtSection({
 
       if (!payload.automatic_thought || !payload.emotion) {
         setError("자동 사고와 감정을 입력해주세요.");
+        setIsUpdating(false);
         return;
       }
 
@@ -127,11 +132,13 @@ export default function useThoughtSection({
 
       if (!response.ok) {
         setError("자동 사고 수정에 실패했습니다.");
+        setIsUpdating(false);
         return;
       }
 
       cancelEditing();
       await loadDetails();
+      setIsUpdating(false);
     },
     [
       cancelEditing,
@@ -145,8 +152,10 @@ export default function useThoughtSection({
 
   const handleDelete = useCallback(
     async (detailId: number) => {
+      setDeletingId(detailId);
       const accessToken = await requireAccessToken();
       if (!accessToken) {
+        setDeletingId(null);
         return;
       }
 
@@ -154,10 +163,12 @@ export default function useThoughtSection({
 
       if (!response.ok) {
         setError("자동 사고 삭제에 실패했습니다.");
+        setDeletingId(null);
         return;
       }
 
       await loadDetails();
+      setDeletingId(null);
     },
     [loadDetails, requireAccessToken, setError],
   );
@@ -174,6 +185,8 @@ export default function useThoughtSection({
     setEditingThoughtText,
     setEditingEmotionText,
     setDetails,
+    isUpdating,
+    deletingId,
     loadDetails,
     handleAdd,
     startEditing,

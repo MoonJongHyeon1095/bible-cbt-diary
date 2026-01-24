@@ -1,8 +1,9 @@
+import type { ReactNode } from "react";
 import styles from "./SessionHistorySection.module.css";
 
 type SessionHistorySectionCardProps = {
   title: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export default function SessionHistorySectionCard({
@@ -20,7 +21,7 @@ export default function SessionHistorySectionCard({
 export function SessionHistorySectionText({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return <p className={styles.sectionText}>{children}</p>;
 }
@@ -28,7 +29,7 @@ export function SessionHistorySectionText({
 export function SessionHistorySectionItalic({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <p className={`${styles.sectionText} ${styles.sectionItalic}`}>{children}</p>
@@ -38,11 +39,11 @@ export function SessionHistorySectionItalic({
 export function SessionHistoryChipRow({
   children,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return <div className={styles.chipRow}>{children}</div>;
 }
 
-export function SessionHistoryChip({ children }: { children: React.ReactNode }) {
+export function SessionHistoryChip({ children }: { children: ReactNode }) {
   return <span className={styles.chip}>{children}</span>;
 }

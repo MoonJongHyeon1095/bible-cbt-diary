@@ -10,6 +10,7 @@ import { MinimalAutoThoughtHintSection } from "./components/MinimalAutoThoughtHi
 import { MinimalAutoThoughtInputForm } from "./components/MinimalAutoThoughtInputForm";
 import { MinimalAutoThoughtTextSection } from "./components/MinimalAutoThoughtTextSection";
 import styles from "../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalAutoThoughtSectionProps {
   userInput: string;
@@ -89,15 +90,16 @@ export function MinimalAutoThoughtSection({
             {error && (
               <div className={styles.helperText}>
                 {error}{" "}
-                <button
-                  type="button"
-                  onClick={() => void reloadThoughts()}
-                  className={styles.exampleButton}
-                >
-                  다시 불러오기
-                </button>
-              </div>
-            )}
+              <Button
+                type="button"
+                variant="unstyled"
+                onClick={() => void reloadThoughts()}
+                className={styles.exampleButton}
+              >
+                다시 불러오기
+              </Button>
+            </div>
+          )}
           </MinimalStepHeaderSection>
         </div>
 

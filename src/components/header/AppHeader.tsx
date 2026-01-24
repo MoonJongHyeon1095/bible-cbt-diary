@@ -5,6 +5,7 @@ import { LogIn, LogOut } from "lucide-react";
 import AppTabs from "@/components/tab/AppTabs";
 import LogoSection from "./LogoSection";
 import AuthModal from "./AuthModal";
+import Button from "@/components/ui/Button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./AppHeader.module.css";
 
@@ -58,25 +59,27 @@ export default function AppHeader() {
         {user ? (
           <div className={styles.userBox}>
             <span className={styles.userEmail}>{user.email}</span>
-            <button
+            <Button
               type="button"
+              variant="unstyled"
               className={styles.iconButton}
               onClick={handleSignOut}
               aria-label="로그아웃"
               title="로그아웃"
             >
               <LogOut size={18} />
-            </button>
+            </Button>
           </div>
         ) : (
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             className={styles.loginButton}
             onClick={() => setIsModalOpen(true)}
           >
             <LogIn size={18} />
             로그인
-          </button>
+          </Button>
         )}
       </div>
       <AuthModal

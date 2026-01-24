@@ -22,6 +22,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   const [triggerText, setTriggerText] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
 
@@ -174,27 +175,27 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   const handleDeleteNote = async () => {
     if (!noteId) {
-      return;
+      return false;
     }
 
-    const shouldDelete = window.confirm("이 기록을 삭제할까요?");
-    if (!shouldDelete) {
-      return;
-    }
-
+    setIsDeleting(true);
     const accessToken = await requireAccessToken();
     if (!accessToken) {
-      return;
+      setIsDeleting(false);
+      return false;
     }
 
     const response = await deleteEmotionNote(noteId, accessToken);
 
     if (!response.ok) {
       setError("삭제에 실패했습니다.");
-      return;
+      setIsDeleting(false);
+      return false;
     }
 
+    setIsDeleting(false);
     router.push("/today");
+    return true;
   };
 
   const thoughtSection = {
@@ -202,6 +203,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     editingThoughtId: thoughtSectionState.editingThoughtId,
     editingThoughtText: thoughtSectionState.editingThoughtText,
     editingEmotionText: thoughtSectionState.editingEmotionText,
+    isUpdating: thoughtSectionState.isUpdating,
+    deletingId: thoughtSectionState.deletingId,
     onStartEditing: thoughtSectionState.startEditing,
     onCancelEditing: thoughtSectionState.cancelEditing,
     onUpdate: thoughtSectionState.handleUpdate,
@@ -214,6 +217,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     editingErrorId: errorSectionState.editingErrorId,
     editingErrorLabel: errorSectionState.editingErrorLabel,
     editingErrorDescription: errorSectionState.editingErrorDescription,
+    isUpdating: errorSectionState.isUpdating,
+    deletingId: errorSectionState.deletingId,
     onStartEditing: errorSectionState.startEditing,
     onCancelEditing: errorSectionState.cancelEditing,
     onUpdate: errorSectionState.handleUpdate,
@@ -225,6 +230,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     details: alternativeSectionState.details,
     editingAlternativeId: alternativeSectionState.editingAlternativeId,
     editingAlternativeText: alternativeSectionState.editingAlternativeText,
+    isUpdating: alternativeSectionState.isUpdating,
+    deletingId: alternativeSectionState.deletingId,
     onStartEditing: alternativeSectionState.startEditing,
     onCancelEditing: alternativeSectionState.cancelEditing,
     onUpdate: alternativeSectionState.handleUpdate,
@@ -237,6 +244,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     editingBehaviorId: behaviorSectionState.editingBehaviorId,
     editingBehaviorLabel: behaviorSectionState.editingBehaviorLabel,
     editingBehaviorDescription: behaviorSectionState.editingBehaviorDescription,
+    isUpdating: behaviorSectionState.isUpdating,
+    deletingId: behaviorSectionState.deletingId,
     onStartEditing: behaviorSectionState.startEditing,
     onCancelEditing: behaviorSectionState.cancelEditing,
     onUpdate: behaviorSectionState.handleUpdate,
@@ -251,6 +260,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     isNew,
     isLoading,
     isSaving,
+    isDeleting,
     message,
     error,
     title,

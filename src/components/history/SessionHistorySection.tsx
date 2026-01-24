@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatKoreanDateTime } from "@/lib/time";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import Button from "@/components/ui/Button";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
   SessionHistoryChipRow,
@@ -48,6 +49,8 @@ export default function SessionHistorySection() {
   const [notice, setNotice] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingAll, setDeletingAll] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const loadHistories = async () => {
@@ -91,12 +94,15 @@ export default function SessionHistorySection() {
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) return;
 
+    setDeletingId(id);
     const { response } = await deleteSessionHistory(accessToken, id);
     if (!response.ok) {
       setNotice("세션 기록을 삭제하지 못했습니다.");
+      setDeletingId(null);
       return;
     }
     setHistories((prev) => prev.filter((item) => item.id !== id));
+    setDeletingId(null);
   };
 
   const handleDeleteAll = async () => {
@@ -104,14 +110,17 @@ export default function SessionHistorySection() {
     const accessToken = sessionData.session?.access_token;
     if (!accessToken) return;
 
+    setDeletingAll(true);
     const { response } = await deleteAllSessionHistories(accessToken);
     if (!response.ok) {
       setNotice("세션 기록을 삭제하지 못했습니다.");
+      setDeletingAll(false);
       return;
     }
     setHistories([]);
     setExpanded({});
     setConfirmDeleteAll(false);
+    setDeletingAll(false);
   };
 
   const toggleExpanded = (id: string) => {
@@ -126,14 +135,14 @@ export default function SessionHistorySection() {
           <h2 className={styles.title}>이전 세션 기록</h2>
         </div>
         <div className={styles.actions}>
-          <button
-            type="button"
-            className={`${styles.textButton} ${styles.dangerButton}`}
+          <Button
+            variant="danger"
+            size="sm"
             onClick={() => setConfirmDeleteAll(true)}
             disabled={loading || histories.length === 0}
           >
             전체 삭제
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -141,22 +150,24 @@ export default function SessionHistorySection() {
         <div className={styles.confirmBar}>
           <span>이전 세션 기록이 모두 삭제됩니다.</span>
           <div className={styles.actions}>
-            <button
-              type="button"
-              className={`${styles.textButton} ${styles.dangerButton}`}
+            <Button
+              variant="danger"
+              size="sm"
               onClick={handleDeleteAll}
-              disabled={loading}
+              loading={deletingAll}
+              loadingText="삭제 중..."
+              disabled={loading || deletingAll}
             >
               삭제
-            </button>
-            <button
-              type="button"
-              className={styles.textButton}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setConfirmDeleteAll(false)}
-              disabled={loading}
+              disabled={loading || deletingAll}
             >
               취소
-            </button>
+            </Button>
           </div>
         </div>
       )}
@@ -175,8 +186,8 @@ export default function SessionHistorySection() {
           histories.map((history) => (
             <div key={history.id} className={styles.item}>
               <div className={styles.itemTop}>
-                <button
-                  type="button"
+                <Button
+                  variant="unstyled"
                   className={styles.itemHeaderButton}
                   onClick={() => toggleExpanded(history.id)}
                   aria-expanded={expanded[history.id] ?? false}
@@ -196,15 +207,19 @@ export default function SessionHistorySection() {
                   >
                     <ChevronDown size={16} />
                   </span>
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
                   className={styles.deleteButton}
                   onClick={() => handleDelete(history.id)}
                   aria-label="기록 삭제"
+                  loading={deletingId === history.id}
+                  loadingText=""
+                  loadingBehavior="replace"
                 >
                   <Trash2 size={16} />
-                </button>
+                </Button>
               </div>
 
               {expanded[history.id] && (

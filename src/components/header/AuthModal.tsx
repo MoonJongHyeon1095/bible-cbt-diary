@@ -2,6 +2,7 @@
 
 import { getOAuthRedirectTo } from "@/lib/auth/oauth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import Button from "@/components/ui/Button";
 import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
@@ -138,9 +139,14 @@ export default function AuthModal({
               )}
             </div>
           </div>
-          <button type="button" className={styles.close} onClick={onClose}>
+          <Button
+            type="button"
+            variant="unstyled"
+            className={styles.close}
+            onClick={onClose}
+          >
             닫기
-          </button>
+          </Button>
         </header>
 
         <form className={styles.form} onSubmit={handleAuthSubmit}>
@@ -201,17 +207,16 @@ export default function AuthModal({
             </div>
           ) : null}
           {message ? <p className={styles.message}>{message}</p> : null}
-          <button
+          <Button
             type="submit"
+            variant="unstyled"
             className={styles.primaryButton}
+            loading={isSubmitting}
+            loadingText="처리 중..."
             disabled={isSubmitting}
           >
-            {isSubmitting
-              ? "처리 중..."
-              : mode === "signin"
-                ? "로그인"
-                : "회원가입"}
-          </button>
+            {mode === "signin" ? "로그인" : "회원가입"}
+          </Button>
 
           <div className={styles.dividerRow}>
             <span className={styles.dividerLine} />
@@ -219,10 +224,13 @@ export default function AuthModal({
             <span className={styles.dividerLine} />
           </div>
 
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             className={styles.socialButton}
             onClick={() => handleOAuth("google")}
+            loading={isSubmitting}
+            loadingText="연결 중..."
             disabled={isSubmitting}
           >
             <svg className={styles.googleIcon} viewBox="0 0 24 24">
@@ -244,30 +252,32 @@ export default function AuthModal({
               />
             </svg>
             Google로 계속하기
-          </button>
+          </Button>
 
           <div className={styles.switchRow}>
             {mode === "signin" ? (
               <span>
                 계정이 없으신가요?{" "}
-                <button
+                <Button
                   type="button"
+                  variant="unstyled"
                   onClick={() => setMode("signup")}
                   className={styles.switchButton}
                 >
                   회원가입
-                </button>
+                </Button>
               </span>
             ) : (
               <span>
                 이미 계정이 있으신가요?{" "}
-                <button
+                <Button
                   type="button"
+                  variant="unstyled"
                   onClick={() => setMode("signin")}
                   className={styles.switchButton}
                 >
                   로그인
-                </button>
+                </Button>
               </span>
             )}
           </div>

@@ -117,6 +117,9 @@
 .noteTitle {
   margin: 0;
   font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .noteTime {
@@ -128,6 +131,10 @@
   margin: 0;
   font-size: 0.9rem;
   color: var(--text);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
 }
 
 .noteTags {

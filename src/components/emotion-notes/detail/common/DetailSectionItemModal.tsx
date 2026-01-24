@@ -2,6 +2,7 @@
 
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import Button from "@/components/ui/Button";
 import DetailSectionBadge from "./DetailSectionBadge";
 import styles from "./DetailSectionItemModal.module.css";
 
@@ -48,14 +49,15 @@ export default function DetailSectionItemModal({
           </div>
         ) : null}
         <p className={styles.body}>{body}</p>
-        <button
+        <Button
           type="button"
+          variant="unstyled"
           className={styles.close}
           onClick={onClose}
           aria-label="닫기"
         >
           <X size={18} />
-        </button>
+        </Button>
       </div>
     </div>
   );

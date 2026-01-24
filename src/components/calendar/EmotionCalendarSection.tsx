@@ -8,6 +8,7 @@ import styles from "./EmotionCalendarSection.module.css";
 import type { EmotionNote } from "@/lib/types";
 import { fetchEmotionNotesByRange } from "./utils/emotionCalendarApi";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
+import Button from "@/components/ui/Button";
 
 type DayCell = {
   date: Date;
@@ -119,8 +120,10 @@ export default function EmotionCalendarSection() {
           <h2 className={styles.title}>{monthLabel}</h2>
         </div>
         <div className={styles.controls}>
-          <button
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className={styles.iconButton}
             onClick={() =>
               setCurrentMonth(
@@ -130,9 +133,11 @@ export default function EmotionCalendarSection() {
             aria-label="이전 달"
           >
             <ChevronLeft size={18} />
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
+            size="icon"
             className={styles.iconButton}
             onClick={() =>
               setCurrentMonth(
@@ -142,7 +147,7 @@ export default function EmotionCalendarSection() {
             aria-label="다음 달"
           >
             <ChevronRight size={18} />
-          </button>
+          </Button>
         </div>
       </header>
 
@@ -162,9 +167,10 @@ export default function EmotionCalendarSection() {
           const isSelected =
             selectedDate && key === formatDateKey(selectedDate);
           return (
-            <button
+            <Button
               key={key}
               type="button"
+              variant="unstyled"
               className={[
                 styles.cell,
                 day.inMonth ? styles.cellInMonth : styles.cellOut,
@@ -181,7 +187,7 @@ export default function EmotionCalendarSection() {
               ) : (
                 <span className={styles.emptyDot} />
               )}
-            </button>
+            </Button>
           );
         })}
       </div>

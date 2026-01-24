@@ -8,6 +8,7 @@ import { useAlternativeThoughts } from "@/components/cbt/hooks/useAlternativeTho
 import { MinimalAlternativeThoughtBodySection } from "./components/MinimalAlternativeThoughtBodySection";
 import { MinimalAlternativeThoughtErrorState } from "./components/MinimalAlternativeThoughtErrorState";
 import styles from "../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalAlternativeThoughtSectionProps {
   userInput: string;
@@ -103,14 +104,15 @@ export function MinimalAlternativeThoughtSection({
             ariaLabel="이 생각으로 진행"
             disabled={!currentThought?.thought}
           />
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             onClick={() => void handleNext()}
             aria-label="다른 생각 보기"
             className={styles.smallIconButton}
           >
             <RefreshCw size={18} strokeWidth={2.5} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

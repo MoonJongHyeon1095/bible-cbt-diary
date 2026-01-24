@@ -28,6 +28,7 @@ import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
 import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
+import Button from "@/components/ui/Button";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
@@ -60,6 +61,7 @@ export default function EmotionNoteDetailPage({
     isNew,
     isLoading,
     isSaving,
+    isDeleting,
     message,
     error,
     title,
@@ -79,6 +81,7 @@ export default function EmotionNoteDetailPage({
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const createModalHandler =
     (color: string, icon: ReactNode) =>
@@ -124,6 +127,23 @@ export default function EmotionNoteDetailPage({
       alternativeSection.editingAlternativeId === selectedItem.id) ||
     (selectedItem?.section === "behavior" &&
       behaviorSection.editingBehaviorId === selectedItem.id);
+
+  const isUpdatingSelected =
+    (selectedItem?.section === "thought" && thoughtSection.isUpdating) ||
+    (selectedItem?.section === "error" && errorSection.isUpdating) ||
+    (selectedItem?.section === "alternative" &&
+      alternativeSection.isUpdating) ||
+    (selectedItem?.section === "behavior" && behaviorSection.isUpdating);
+
+  const isDeletingSelected =
+    (selectedItem?.section === "thought" &&
+      thoughtSection.deletingId === selectedItem.id) ||
+    (selectedItem?.section === "error" &&
+      errorSection.deletingId === selectedItem.id) ||
+    (selectedItem?.section === "alternative" &&
+      alternativeSection.deletingId === selectedItem.id) ||
+    (selectedItem?.section === "behavior" &&
+      behaviorSection.deletingId === selectedItem.id);
 
   const sections = [
     {
@@ -339,29 +359,61 @@ export default function EmotionNoteDetailPage({
             </div>
             <div className={styles.headerActions}>
               {noteId ? (
-                <button
+                <Button
                   type="button"
+                  variant="unstyled"
                   className={styles.iconButton}
                   onClick={handleGoToList}
                   aria-label="목록으로"
                 >
                   <List size={18} />
                   <span className={styles.srOnly}>목록으로</span>
-                </button>
+                </Button>
               ) : null}
               {noteId ? (
-                <button
+                <Button
                   type="button"
+                  variant="unstyled"
                   className={`${styles.iconButton} ${styles.iconDanger}`}
-                  onClick={handleDeleteNote}
+                  onClick={() => setConfirmDelete(true)}
                   aria-label="삭제"
                 >
                   <Trash2 size={18} />
                   <span className={styles.srOnly}>삭제</span>
-                </button>
+                </Button>
               ) : null}
             </div>
           </section>
+          {confirmDelete ? (
+            <div className={styles.confirmBar}>
+              <span>이 기록을 삭제할까요?</span>
+              <div className={styles.confirmActions}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={async () => {
+                    const deleted = await handleDeleteNote();
+                    if (deleted) {
+                      setConfirmDelete(false);
+                    }
+                  }}
+                  loading={isDeleting}
+                  loadingText="삭제 중..."
+                  disabled={isDeleting}
+                >
+                  삭제
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setConfirmDelete(false)}
+                  disabled={isDeleting}
+                >
+                  취소
+                </Button>
+              </div>
+            </div>
+          ) : null}
 
           <section className={styles.noteForm}>
             <label className={styles.field}>
@@ -424,6 +476,8 @@ export default function EmotionNoteDetailPage({
           helperText="수정사항 저장"
           onClick={handleSaveNote}
           disabled={isSaving}
+          loading={isSaving}
+          loadingBehavior="replace"
         />
       ) : null}
       {selectedSection && !selectedItem ? (
@@ -487,19 +541,22 @@ export default function EmotionNoteDetailPage({
             label="삭제"
             icon={<Trash2 size={22} />}
             helperText="선택 항목 삭제"
-            onClick={() => {
+            onClick={async () => {
               const section = selectedItem.section;
               if (section === "thought") {
-                thoughtSection.onDelete(selectedItem.id);
+                await thoughtSection.onDelete(selectedItem.id);
               } else if (section === "error") {
-                errorSection.onDelete(selectedItem.id);
+                await errorSection.onDelete(selectedItem.id);
               } else if (section === "alternative") {
-                alternativeSection.onDelete(selectedItem.id);
+                await alternativeSection.onDelete(selectedItem.id);
               } else {
-                behaviorSection.onDelete(selectedItem.id);
+                await behaviorSection.onDelete(selectedItem.id);
               }
               setSelectedItem(null);
             }}
+            disabled={isDeletingSelected}
+            loading={isDeletingSelected}
+            loadingBehavior="replace"
             style={{
               bottom: shouldShowSave ? "10vh" : "17vh",
               backgroundColor: "#e14a4a",
@@ -515,18 +572,21 @@ export default function EmotionNoteDetailPage({
             label="저장"
             icon={<Upload size={22} />}
             helperText="수정내용 저장"
-            onClick={() => {
+            onClick={async () => {
               const section = selectedItem.section;
               if (section === "thought") {
-                thoughtSection.onUpdate(selectedItem.id);
+                await thoughtSection.onUpdate(selectedItem.id);
               } else if (section === "error") {
-                errorSection.onUpdate(selectedItem.id);
+                await errorSection.onUpdate(selectedItem.id);
               } else if (section === "alternative") {
-                alternativeSection.onUpdate(selectedItem.id);
+                await alternativeSection.onUpdate(selectedItem.id);
               } else {
-                behaviorSection.onUpdate(selectedItem.id);
+                await behaviorSection.onUpdate(selectedItem.id);
               }
             }}
+            disabled={isUpdatingSelected}
+            loading={isUpdatingSelected}
+            loadingBehavior="replace"
             style={{
               bottom: shouldShowSave ? "26vh" : "33vh",
               ...selectedFabStyle,

@@ -1,6 +1,7 @@
 "use client";
 
 import { Copy, Maximize2 } from "lucide-react";
+import Button from "@/components/ui/Button";
 import styles from "@/components/emotion-notes/detail/EmotionNoteDetailPage.module.css";
 
 export type DetailItemActionConfig = {
@@ -31,8 +32,9 @@ export default function DetailItemActions({ actions }: DetailItemActionsProps) {
   return (
     <div className={styles.detailFooter}>
       <div className={styles.detailFooterLeft}>
-        <button
+        <Button
           type="button"
+          variant="unstyled"
           className={styles.miniIconButton}
           onClick={(event) => {
             event.stopPropagation();
@@ -42,9 +44,10 @@ export default function DetailItemActions({ actions }: DetailItemActionsProps) {
         >
           <Copy size={16} />
           <span className={styles.srOnly}>복사</span>
-        </button>
-        <button
+        </Button>
+        <Button
           type="button"
+          variant="unstyled"
           className={styles.miniIconButton}
           onClick={(event) => {
             event.stopPropagation();
@@ -54,7 +57,7 @@ export default function DetailItemActions({ actions }: DetailItemActionsProps) {
         >
           <Maximize2 size={16} />
           <span className={styles.srOnly}>확대</span>
-        </button>
+        </Button>
       </div>
       {timeText ? <span className={styles.detailTime}>{timeText}</span> : null}
     </div>

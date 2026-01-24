@@ -31,6 +31,8 @@ export default function useBehaviorSection({
   const [editingBehaviorLabel, setEditingBehaviorLabel] = useState("");
   const [editingBehaviorDescription, setEditingBehaviorDescription] =
     useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const loadDetails = useCallback(async () => {
     if (!noteId) {
@@ -108,8 +110,10 @@ export default function useBehaviorSection({
 
   const handleUpdate = useCallback(
     async (detailId: number) => {
+      setIsUpdating(true);
       const accessToken = await requireAccessToken();
       if (!accessToken) {
+        setIsUpdating(false);
         return;
       }
 
@@ -121,6 +125,7 @@ export default function useBehaviorSection({
 
       if (!payload.behavior_label || !payload.behavior_description) {
         setError("행동 반응과 설명을 입력해주세요.");
+        setIsUpdating(false);
         return;
       }
 
@@ -128,11 +133,13 @@ export default function useBehaviorSection({
 
       if (!response.ok) {
         setError("행동 반응 수정에 실패했습니다.");
+        setIsUpdating(false);
         return;
       }
 
       cancelEditing();
       await loadDetails();
+      setIsUpdating(false);
     },
     [
       cancelEditing,
@@ -146,8 +153,10 @@ export default function useBehaviorSection({
 
   const handleDelete = useCallback(
     async (detailId: number) => {
+      setDeletingId(detailId);
       const accessToken = await requireAccessToken();
       if (!accessToken) {
+        setDeletingId(null);
         return;
       }
 
@@ -155,10 +164,12 @@ export default function useBehaviorSection({
 
       if (!response.ok) {
         setError("행동 반응 삭제에 실패했습니다.");
+        setDeletingId(null);
         return;
       }
 
       await loadDetails();
+      setDeletingId(null);
     },
     [loadDetails, requireAccessToken, setError],
   );
@@ -175,6 +186,8 @@ export default function useBehaviorSection({
     setEditingBehaviorLabel,
     setEditingBehaviorDescription,
     setDetails,
+    isUpdating,
+    deletingId,
     loadDetails,
     handleAdd,
     startEditing,

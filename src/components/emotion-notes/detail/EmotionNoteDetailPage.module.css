@@ -27,6 +27,25 @@
   margin-left: auto;
 }
 
+.confirmBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(224, 85, 74, 0.4);
+  background: rgba(224, 85, 74, 0.12);
+  margin-bottom: 20px;
+  font-size: 0.85rem;
+}
+
+.confirmActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .noteForm {
   display: flex;
   flex-direction: column;

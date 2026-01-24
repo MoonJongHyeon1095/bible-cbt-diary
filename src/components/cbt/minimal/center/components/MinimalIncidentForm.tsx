@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useAutoResizeTextarea } from "@/components/cbt/hooks/useAutoResizeTextarea";
 import styles from "../../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalIncidentFormProps {
   userInput: string;
@@ -32,13 +33,14 @@ export function MinimalIncidentForm({
           className={styles.textarea}
         />
       </div>
-      <button
+      <Button
         type="button"
+        variant="unstyled"
         onClick={onShowExample}
         className={styles.exampleButton}
       >
         예시를 보여주세요
-      </button>
+      </Button>
     </div>
   );
 }

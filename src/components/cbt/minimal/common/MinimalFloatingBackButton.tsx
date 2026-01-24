@@ -1,5 +1,6 @@
 import { Undo2 } from "lucide-react";
 import styles from "../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalFloatingBackButtonProps {
   onClick: () => void;
@@ -13,14 +14,15 @@ export function MinimalFloatingBackButton({
   disabled = false,
 }: MinimalFloatingBackButtonProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="unstyled"
       onClick={onClick}
       aria-label={ariaLabel}
       disabled={disabled}
       className={styles.floatingMiniButton}
     >
       <Undo2 className={styles.floatingMiniIcon} />
-    </button>
+    </Button>
   );
 }

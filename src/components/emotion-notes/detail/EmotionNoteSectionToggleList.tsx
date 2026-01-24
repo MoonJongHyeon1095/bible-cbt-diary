@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Button from "@/components/ui/Button";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type SectionToggleItem = {
@@ -24,8 +25,9 @@ export default function EmotionNoteSectionToggleList({
     <div className={styles.toggleList}>
       {items.map((item) => (
         <div key={item.key} className={styles.toggleCard}>
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             className={`${styles.chartLegendButton} ${
               item.isActive ? styles.chartLegendActive : ""
             }`}
@@ -39,7 +41,7 @@ export default function EmotionNoteSectionToggleList({
               {item.label}
             </span>
             <span>{item.count}</span>
-          </button>
+          </Button>
           {item.isActive ? (
             <div className={styles.toggleContent}>{item.content}</div>
           ) : null}

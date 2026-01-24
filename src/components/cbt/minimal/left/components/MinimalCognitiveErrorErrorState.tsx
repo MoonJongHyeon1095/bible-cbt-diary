@@ -1,4 +1,5 @@
 import styles from "../../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalCognitiveErrorErrorStateProps {
   error: string;
@@ -14,9 +15,14 @@ export function MinimalCognitiveErrorErrorState({
       <div className={styles.sectionInner}>
         <div className={styles.errorState}>
           <p>{error}</p>
-          <button type="button" onClick={onRetry} className={styles.secondaryButton}>
-            다시 불러오기
-          </button>
+        <Button
+          type="button"
+          variant="unstyled"
+          onClick={onRetry}
+          className={styles.secondaryButton}
+        >
+          다시 불러오기
+        </Button>
         </div>
       </div>
     </div>

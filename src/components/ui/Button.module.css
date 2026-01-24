@@ -1,0 +1,128 @@
+.button {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.2s ease, border-color 0.2s ease,
+    background 0.2s ease, color 0.2s ease;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: none;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(7, 9, 13, 0.4);
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.primary {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: rgba(143, 167, 200, 0.5);
+}
+
+.primary:hover {
+  border-color: rgba(143, 167, 200, 0.9);
+}
+
+.outline {
+  background: transparent;
+  border-color: var(--border-strong);
+  color: var(--text);
+}
+
+.ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--muted);
+}
+
+.ghost:hover {
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: none;
+}
+
+.danger {
+  background: rgba(78, 34, 34, 0.4);
+  border-color: rgba(224, 123, 107, 0.5);
+  color: #f5c5bd;
+}
+
+.danger:hover {
+  border-color: rgba(224, 123, 107, 0.9);
+  color: #ffe1db;
+}
+
+.unstyled {
+  background: transparent;
+  border-color: transparent;
+  padding: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.unstyled:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.sm {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}
+
+.md {
+  padding: 10px 18px;
+}
+
+.lg {
+  padding: 12px 22px;
+  font-size: 0.95rem;
+}
+
+.icon {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border-radius: 999px;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  animation: spin 0.8s linear infinite;
+}
+
+.content {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.unstyledContent {
+  display: contents;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

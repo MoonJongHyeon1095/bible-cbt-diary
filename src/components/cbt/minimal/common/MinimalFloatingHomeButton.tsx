@@ -1,5 +1,6 @@
 import { Home } from "lucide-react";
 import styles from "../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalFloatingHomeButtonProps {
   onClick: () => void;
@@ -13,14 +14,15 @@ export function MinimalFloatingHomeButton({
   disabled = false,
 }: MinimalFloatingHomeButtonProps) {
   return (
-    <button
+    <Button
       type="button"
+      variant="unstyled"
       onClick={onClick}
       aria-label={ariaLabel}
       disabled={disabled}
       className={styles.floatingMiniButton}
     >
       <Home className={styles.floatingMiniIcon} />
-    </button>
+    </Button>
   );
 }

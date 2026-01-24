@@ -8,6 +8,7 @@ import { useCognitiveErrorRanking } from "@/components/cbt/hooks/useCognitiveErr
 import { MinimalCognitiveErrorCard } from "./components/MinimalCognitiveErrorCard";
 import { MinimalCognitiveErrorErrorState } from "./components/MinimalCognitiveErrorErrorState";
 import styles from "../MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
 interface MinimalCognitiveErrorSectionProps {
   userInput: string;
@@ -89,15 +90,16 @@ export function MinimalCognitiveErrorSection({
             onClick={handleSelect}
             ariaLabel="이 오류로 진행"
           />
-          <button
+          <Button
             type="button"
+            variant="unstyled"
             onClick={handleNext}
             aria-label="다른 오류 보기"
             disabled={rankLoading}
             className={styles.smallIconButton}
           >
             <RefreshCw size={18} strokeWidth={2.5} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>

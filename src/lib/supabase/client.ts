@@ -63,6 +63,8 @@ export const createSupabaseBrowserClient = () => {
     auth: {
       persistSession: true,
       storage: createStorageAdapter(),
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
     },
   });
 };

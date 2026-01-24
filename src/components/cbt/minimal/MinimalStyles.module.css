@@ -78,16 +78,16 @@
 
 .inputWrap {
   position: relative;
-  background: rgba(20, 24, 32, 0.85);
-  border: 1px solid rgba(64, 75, 92, 0.6);
+  background: transparent;
+  border: 1px solid transparent;
   border-radius: 28px;
   padding: 6px 12px;
-  box-shadow: 0 10px 24px rgba(6, 8, 12, 0.4);
+  box-shadow: none;
   transition: border-color 0.2s ease;
 }
 
 .inputWrap:focus-within {
-  border-color: rgba(144, 173, 220, 0.8);
+  border-color: transparent;
 }
 
 .inputWrap::after {
@@ -383,6 +383,15 @@
   color: var(--text);
 }
 
+.errorCard {
+  gap: 18px;
+}
+
+.sectionBlock {
+  display: grid;
+  gap: 10px;
+}
+
 .controlRow {
   display: flex;
   align-items: center;
@@ -438,6 +447,7 @@
 .tag {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   padding: 6px 12px;
   border-radius: 999px;
   border: 1px solid rgba(80, 96, 120, 0.7);
@@ -445,6 +455,31 @@
   font-size: 0.78rem;
   color: #cdd4e2;
   font-weight: 600;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sectionLabel {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(160, 176, 202, 0.75);
+}
+
+.quoteText {
+  font-style: italic;
+  color: #c7d0de;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.reasonBlock {
+  font-size: 0.95rem;
+  color: #d6dce8;
+  line-height: 1.6;
 }
 
 .savingOverlay {

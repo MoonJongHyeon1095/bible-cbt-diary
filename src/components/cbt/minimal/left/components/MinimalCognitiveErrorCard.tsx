@@ -16,7 +16,7 @@ export function MinimalCognitiveErrorCard({
   detail,
 }: MinimalCognitiveErrorCardProps) {
   return (
-    <div className={styles.inlineCard}>
+    <div className={`${styles.inlineCard} ${styles.errorCard}`}>
       <div>
         <p className={styles.detailTitle}>{title}</p>
         {infoDescription && (
@@ -24,11 +24,20 @@ export function MinimalCognitiveErrorCard({
         )}
       </div>
       {evidenceQuote && (
-        <p className={styles.detailSubtext}>“{evidenceQuote}”</p>
+        <div className={styles.sectionBlock}>
+          <span className={styles.sectionLabel}>CLUE</span>
+          <p className={styles.quoteText}>“{evidenceQuote}”</p>
+        </div>
       )}
-      <p className={styles.helperText}>{reason}</p>
+      <div className={styles.sectionBlock}>
+        <span className={styles.sectionLabel}>REASON</span>
+        <p className={styles.reasonBlock}>{reason}</p>
+      </div>
       {detail ? (
-        <p className={styles.textBlock}>{detail}</p>
+        <div className={styles.sectionBlock}>
+          <span className={styles.sectionLabel}>INSIGHT</span>
+          <p className={styles.textBlock}>{detail}</p>
+        </div>
       ) : (
         <div className={styles.loadingFooter}>
           <span className={styles.spinner} />

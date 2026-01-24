@@ -110,66 +110,6 @@
   background: var(--border);
 }
 
-.detailCard {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  background: var(--surface);
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detailLabel {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.detailSubtitle {
-  margin: 6px 0 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-.detailList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detailItem {
-  border: none;
-  background: transparent;
-  text-align: left;
-  width: 100%;
-  cursor: pointer;
-  border-bottom: 1px solid var(--border);
-  padding-bottom: 10px;
-}
-
-.detailItem:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.detailTitle {
-  margin: 0 0 4px;
-  font-weight: 600;
-}
-
-.detailText {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.detailEmpty {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
 @media (max-width: 900px) {
   .cell {
     min-height: 58px;

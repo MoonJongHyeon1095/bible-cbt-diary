@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export default function AuthCallbackPage() {
+function CallbackHandler() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -28,9 +28,19 @@ export default function AuthCallbackPage() {
     run();
   }, [searchParams]);
 
+  return null;
+}
+
+export default function AuthCallbackPage() {
   return (
-    <div style={{ padding: "32px", color: "var(--muted)" }}>
-      로그인 처리 중입니다...
-    </div>
+    <Suspense
+      fallback={
+        <div style={{ padding: "32px", color: "var(--muted)" }}>
+          로그인 처리 중입니다...
+        </div>
+      }
+    >
+      <CallbackHandler />
+    </Suspense>
   );
 }

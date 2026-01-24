@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { EmotionNote } from "@/lib/types";
-import EmotionNoteList from "./EmotionNoteList";
+import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNotesSection.module.css";
 
 type EmotionNotesSectionProps = {
@@ -30,17 +30,11 @@ export default function EmotionNotesSection({
         <p className={styles.todayHint}>오늘 무슨 일이 있었나요?</p>
       </div>
 
-      <div className={styles.notesHeader}>
-        <div>
-          <h3 className={styles.notesTitle}>
-            {isLoading
-              ? "불러오는 중..."
-              : `오늘 ${notes.length}개의 기록이 있습니다`}
-          </h3>
-        </div>
-      </div>
-
-      <EmotionNoteList notes={notes} />
+      <EmotionNoteListSection
+        title={`오늘 ${notes.length}개의 기록이 있습니다`}
+        notes={notes}
+        isLoading={isLoading}
+      />
     </>
   );
 }

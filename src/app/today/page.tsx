@@ -5,6 +5,7 @@ import AppHeader from "@/components/header/AppHeader";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { EmotionNote } from "@/lib/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { formatKoreanDateTime } from "@/lib/time";
 import styles from "../page.module.css";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
@@ -15,12 +16,11 @@ type SessionUser = {
 };
 
 const getTodayLabel = () => {
-  const now = new Date();
-  return new Intl.DateTimeFormat("ko-KR", {
+  return formatKoreanDateTime(new Date(), {
     month: "long",
     day: "numeric",
     weekday: "short",
-  }).format(now);
+  });
 };
 
 export default function EmotionNotesPage() {

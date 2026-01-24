@@ -4,6 +4,9 @@ export type EmotionNote = {
   trigger_text: string;
   behavior: string | null;
   created_at: string;
+  emotion_labels?: string[];
+  error_labels?: string[];
+  behavior_labels?: string[];
 };
 
 export type EmotionNoteWithDetails = EmotionNote & {

@@ -1,30 +1,10 @@
 import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getUserFromRequest } from "@/lib/auth/session";
+import { getKstDayRange } from "@/lib/time";
 
 const getDateRange = (dateParam?: string | null) => {
-  const baseDate = dateParam ? new Date(dateParam) : new Date();
-  const start = new Date(
-    baseDate.getFullYear(),
-    baseDate.getMonth(),
-    baseDate.getDate(),
-    0,
-    0,
-    0,
-  );
-  const end = new Date(
-    baseDate.getFullYear(),
-    baseDate.getMonth(),
-    baseDate.getDate() + 1,
-    0,
-    0,
-    0,
-  );
-
-  return {
-    startIso: start.toISOString(),
-    endIso: end.toISOString(),
-  };
+  return getKstDayRange(dateParam ?? new Date());
 };
 
 export async function GET(request: Request) {
@@ -105,12 +85,26 @@ export async function GET(request: Request) {
   const endParam = searchParams.get("end");
   const { startIso, endIso } =
     startParam && endParam
-      ? { startIso: new Date(startParam).toISOString(), endIso: new Date(endParam).toISOString() }
+      ? {
+          startIso: new Date(startParam).toISOString(),
+          endIso: new Date(endParam).toISOString(),
+        }
       : getDateRange(searchParams.get("date"));
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("emotion_notes")
-    .select("id,title,trigger_text,behavior,created_at")
+    .select(
+      `
+      id,
+      title,
+      trigger_text,
+      behavior,
+      created_at,
+      emotion_note_details(emotion),
+      emotion_error_details(error_label),
+      emotion_behavior_details(behavior_label)
+    `,
+    )
     .eq("user_id", user.id)
     .gte("created_at", startIso)
     .lt("created_at", endIso)
@@ -123,7 +117,43 @@ export async function GET(request: Request) {
     );
   }
 
-  return NextResponse.json({ notes: data ?? [] });
+  const notes =
+    data?.map((note) => {
+      const emotionLabels = Array.from(
+        new Set(
+          (note.emotion_note_details ?? [])
+            .map((detail) => detail.emotion)
+            .filter(Boolean),
+        ),
+      );
+      const errorLabels = Array.from(
+        new Set(
+          (note.emotion_error_details ?? [])
+            .map((detail) => detail.error_label)
+            .filter(Boolean),
+        ),
+      );
+      const behaviorLabels = Array.from(
+        new Set(
+          (note.emotion_behavior_details ?? [])
+            .map((detail) => detail.behavior_label)
+            .filter(Boolean),
+        ),
+      );
+
+      return {
+        id: note.id,
+        title: note.title,
+        trigger_text: note.trigger_text,
+        behavior: note.behavior,
+        created_at: note.created_at,
+        emotion_labels: emotionLabels,
+        error_labels: errorLabels,
+        behavior_labels: behaviorLabels,
+      };
+    }) ?? [];
+
+  return NextResponse.json({ notes });
 }
 
 export async function POST(request: Request) {

@@ -1,12 +1,13 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/time";
 import styles from "./EmotionCalendarSection.module.css";
 import type { EmotionNote } from "@/lib/types";
 import { fetchEmotionNotesByRange } from "./utils/emotionCalendarApi";
+import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 
 type DayCell = {
   date: Date;
@@ -33,7 +34,7 @@ const buildCalendar = (baseDate: Date): DayCell[] => {
   return cells;
 };
 
-const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
+const formatDateKey = (date: Date) => formatKoreanDateKey(date);
 
 export default function EmotionCalendarSection() {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
@@ -41,13 +42,13 @@ export default function EmotionCalendarSection() {
   const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date());
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const router = useRouter();
 
   const monthLabel = useMemo(
     () =>
-      new Intl.DateTimeFormat("ko-KR", { year: "numeric", month: "long" }).format(
-        currentMonth,
-      ),
+      formatKoreanDateTime(currentMonth, {
+        year: "numeric",
+        month: "long",
+      }),
     [currentMonth],
   );
 
@@ -56,7 +57,7 @@ export default function EmotionCalendarSection() {
   const countsByDate = useMemo(() => {
     const counts = new Map<string, number>();
     notes.forEach((note) => {
-      const key = note.created_at.slice(0, 10);
+      const key = formatKoreanDateKey(note.created_at);
       counts.set(key, (counts.get(key) ?? 0) + 1);
     });
     return counts;
@@ -67,8 +68,19 @@ export default function EmotionCalendarSection() {
       return [];
     }
     const key = formatDateKey(selectedDate);
-    return notes.filter((note) => note.created_at.startsWith(key));
+    return notes.filter((note) => formatKoreanDateKey(note.created_at) === key);
   }, [notes, selectedDate]);
+
+  const selectedLabel = useMemo(() => {
+    if (!selectedDate) {
+      return "날짜를 선택하세요";
+    }
+    const dateLabel = formatKoreanDateTime(selectedDate, {
+      month: "long",
+      day: "numeric",
+    });
+    return `${dateLabel} ${selectedNotes.length}개의 기록이 있습니다`;
+  }, [selectedDate, selectedNotes.length]);
 
   useEffect(() => {
     const load = async () => {
@@ -174,37 +186,13 @@ export default function EmotionCalendarSection() {
         })}
       </div>
 
-      <div className={styles.detailCard}>
-        <div>
-          <p className={styles.detailLabel}>
-            {selectedDate
-              ? `${selectedDate.getMonth() + 1}월 ${selectedDate.getDate()}일`
-              : "날짜를 선택하세요"}
-          </p>
-          <p className={styles.detailSubtitle}>
-            {isLoading
-              ? "불러오는 중..."
-              : `${selectedNotes.length}개의 기록`}
-          </p>
-        </div>
-        <div className={styles.detailList}>
-          {selectedNotes.length === 0 ? (
-            <p className={styles.detailEmpty}>표시할 기록이 없습니다.</p>
-          ) : (
-            selectedNotes.map((note) => (
-              <button
-                key={note.id}
-                type="button"
-                className={styles.detailItem}
-                onClick={() => router.push(`/detail/${note.id}`)}
-              >
-                <p className={styles.detailTitle}>{note.title}</p>
-                <p className={styles.detailText}>{note.trigger_text}</p>
-              </button>
-            ))
-          )}
-        </div>
-      </div>
+      <EmotionNoteListSection
+        title={selectedLabel}
+        notes={selectedNotes}
+        isLoading={isLoading}
+        emptyTitle="표시할 기록이 없습니다."
+        emptyHint="날짜를 바꿔 다른 기록을 확인해보세요."
+      />
     </section>
   );
 }

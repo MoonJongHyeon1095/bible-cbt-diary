@@ -5,11 +5,17 @@ import type { EmotionNote } from "@/lib/types";
 
 type EmotionNoteListProps = {
   notes: EmotionNote[];
+  emptyTitle?: string;
+  emptyHint?: string;
 };
 
-export default function EmotionNoteList({ notes }: EmotionNoteListProps) {
+export default function EmotionNoteList({
+  notes,
+  emptyTitle,
+  emptyHint,
+}: EmotionNoteListProps) {
   if (notes.length === 0) {
-    return <EmotionNoteEmptyState />;
+    return <EmotionNoteEmptyState title={emptyTitle} hint={emptyHint} />;
   }
 
   return (

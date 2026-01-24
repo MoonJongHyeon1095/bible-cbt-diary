@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { formatKoreanDateTime } from "@/lib/time";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -43,7 +44,7 @@ type ModalContent = {
 } | null;
 
 const formatDateTime = (value: string) =>
-  new Date(value).toLocaleString("ko-KR", {
+  formatKoreanDateTime(value, {
     month: "long",
     day: "numeric",
     hour: "2-digit",

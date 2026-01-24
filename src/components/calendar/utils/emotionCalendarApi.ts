@@ -2,14 +2,16 @@
 
 import type { EmotionNote } from "@/lib/types";
 import { buildAuthHeaders } from "@/components/utils/api";
+import { getKstMonthRange } from "@/lib/time";
 
 export const fetchEmotionNotesByRange = async (
   start: Date,
-  end: Date,
+  _end: Date,
   accessToken: string,
 ) => {
+  const { startIso, endIso } = getKstMonthRange(start);
   const response = await fetch(
-    `/api/emotion-notes?start=${start.toISOString()}&end=${end.toISOString()}`,
+    `/api/emotion-notes?start=${startIso}&end=${endIso}`,
     {
       headers: buildAuthHeaders(accessToken),
     },

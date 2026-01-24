@@ -92,3 +92,92 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export async function PATCH(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as {
+    id?: number;
+    error_label?: string;
+    error_description?: string;
+  };
+
+  const detailId = Number(payload.id ?? "");
+  if (Number.isNaN(detailId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const updatePayload: {
+    error_label?: string;
+    error_description?: string;
+  } = {};
+
+  if (payload.error_label !== undefined) {
+    updatePayload.error_label = String(payload.error_label).trim();
+  }
+  if (payload.error_description !== undefined) {
+    updatePayload.error_description = String(payload.error_description).trim();
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_error_details")
+    .update(updatePayload)
+    .eq("id", detailId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "에러 상세 수정에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as { id?: number };
+  const detailId = Number(payload.id ?? "");
+  if (Number.isNaN(detailId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_error_details")
+    .delete()
+    .eq("id", detailId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "에러 상세 삭제에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}

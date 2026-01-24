@@ -99,3 +99,99 @@ export async function POST(request: Request) {
 
   return NextResponse.json({ ok: true });
 }
+
+export async function PATCH(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as {
+    id?: number;
+    behavior_label?: string;
+    behavior_description?: string;
+    error_tags?: string[];
+  };
+
+  const detailId = Number(payload.id ?? "");
+  if (Number.isNaN(detailId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const updatePayload: {
+    behavior_label?: string;
+    behavior_description?: string;
+    error_tags?: string[];
+  } = {};
+
+  if (payload.behavior_label !== undefined) {
+    updatePayload.behavior_label = String(payload.behavior_label).trim();
+  }
+  if (payload.behavior_description !== undefined) {
+    updatePayload.behavior_description = String(payload.behavior_description).trim();
+  }
+  if (payload.error_tags !== undefined) {
+    updatePayload.error_tags = Array.isArray(payload.error_tags)
+      ? payload.error_tags.map((tag) => String(tag))
+      : [];
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_behavior_details")
+    .update(updatePayload)
+    .eq("id", detailId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "행동 상세 수정에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as { id?: number };
+  const detailId = Number(payload.id ?? "");
+  if (Number.isNaN(detailId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_behavior_details")
+    .delete()
+    .eq("id", detailId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "행동 상세 삭제에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}

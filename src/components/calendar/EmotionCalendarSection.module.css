@@ -1,0 +1,170 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.title {
+  margin: 4px 0 0;
+  font-size: 1.4rem;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.iconButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.weekRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-align: center;
+}
+
+.weekday {
+  padding: 6px 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cell {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 10px;
+  min-height: 66px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.cellInMonth {
+  color: var(--text);
+}
+
+.cellOut {
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+.cellToday {
+  border-color: var(--accent);
+}
+
+.cellSelected {
+  background: var(--accent-soft);
+}
+
+.dayNumber {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.countBadge {
+  font-size: 0.7rem;
+  background: var(--accent);
+  color: #0c1118;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+
+.emptyDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border);
+}
+
+.detailCard {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.detailSubtitle {
+  margin: 6px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.detailList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailItem {
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.detailItem:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.detailTitle {
+  margin: 0 0 4px;
+  font-weight: 600;
+}
+
+.detailText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.detailEmpty {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+@media (max-width: 900px) {
+  .cell {
+    min-height: 58px;
+  }
+}

@@ -35,7 +35,12 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
-  const { startIso, endIso } = getDateRange(searchParams.get("date"));
+  const startParam = searchParams.get("start");
+  const endParam = searchParams.get("end");
+  const { startIso, endIso } =
+    startParam && endParam
+      ? { startIso: new Date(startParam).toISOString(), endIso: new Date(endParam).toISOString() }
+      : getDateRange(searchParams.get("date"));
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("emotion_notes")
@@ -102,4 +107,107 @@ export async function POST(request: Request) {
   }
 
   return NextResponse.json({ ok: true, message: "기록이 저장되었습니다." });
+}
+
+export async function PATCH(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as {
+    id?: number;
+    title?: string;
+    trigger_text?: string;
+    behavior?: string;
+    frequency?: number;
+  };
+
+  const noteId = Number(payload.id ?? "");
+  if (Number.isNaN(noteId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const updatePayload: {
+    title?: string;
+    trigger_text?: string;
+    behavior?: string;
+    frequency?: number;
+    updated_at?: string;
+  } = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (payload.title !== undefined) {
+    updatePayload.title = String(payload.title).trim();
+  }
+  if (payload.trigger_text !== undefined) {
+    updatePayload.trigger_text = String(payload.trigger_text).trim();
+  }
+  if (payload.behavior !== undefined) {
+    updatePayload.behavior = String(payload.behavior).trim();
+  }
+  if (payload.frequency !== undefined) {
+    const frequencyValue = Number(payload.frequency);
+    updatePayload.frequency = Number.isNaN(frequencyValue) ? 1 : frequencyValue;
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_notes")
+    .update(updatePayload)
+    .eq("id", noteId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "기록 수정에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
+}
+
+export async function DELETE(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const payload = (await request.json()) as { id?: number };
+  const noteId = Number(payload.id ?? "");
+  if (Number.isNaN(noteId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const { error } = await supabase
+    .from("emotion_notes")
+    .delete()
+    .eq("id", noteId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "기록 삭제에 실패했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }

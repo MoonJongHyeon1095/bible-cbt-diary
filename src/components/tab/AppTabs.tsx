@@ -1,33 +1,48 @@
-import { CalendarDays, ChartColumn, ListChecks } from "lucide-react";
+ "use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { CalendarDays, ChartColumn, ListChecks, Sun } from "lucide-react";
 import styles from "./AppTabs.module.css";
 
 export default function AppTabs() {
+  const pathname = usePathname();
+  const tabs = [
+    { href: "/", label: "오늘", icon: Sun },
+    { href: "/month", label: "월별", icon: CalendarDays },
+    { href: "/records", label: "기록", icon: ListChecks },
+    { href: "/stats", label: "통계", icon: ChartColumn },
+  ];
+
   return (
     <>
       <nav className={styles.topNav}>
-        <button type="button" className={styles.tabButton} aria-current="page">
-          오늘
-        </button>
-        <button type="button" className={styles.tabButton}>
-          기록
-        </button>
-        <button type="button" className={styles.tabButton}>
-          통계
-        </button>
+        {tabs.map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={styles.tabButton}
+            aria-current={pathname === tab.href ? "page" : undefined}
+          >
+            {tab.label}
+          </Link>
+        ))}
       </nav>
       <nav className={styles.bottomNav}>
-        <button type="button" className={styles.tabButton} aria-current="page">
-          <CalendarDays size={18} aria-hidden />
-          <span>오늘</span>
-        </button>
-        <button type="button" className={styles.tabButton}>
-          <ListChecks size={18} aria-hidden />
-          <span>기록</span>
-        </button>
-        <button type="button" className={styles.tabButton}>
-          <ChartColumn size={18} aria-hidden />
-          <span>통계</span>
-        </button>
+        {tabs.map((tab) => {
+          const Icon = tab.icon;
+          return (
+            <Link
+              key={tab.href}
+              href={tab.href}
+              className={styles.tabButton}
+              aria-current={pathname === tab.href ? "page" : undefined}
+            >
+              <Icon size={18} aria-hidden />
+              <span>{tab.label}</span>
+            </Link>
+          );
+        })}
       </nav>
     </>
   );

@@ -27,7 +27,7 @@ import ThoughtDetailSection from "./ThoughtDetailSection";
 import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
-import DetailSectionItemModal from "@/components/common/DetailSectionItemModal";
+import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;

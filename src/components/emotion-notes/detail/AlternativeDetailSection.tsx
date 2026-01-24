@@ -4,7 +4,7 @@ import { useLayoutEffect, useRef } from "react";
 import { Lightbulb } from "lucide-react";
 import type { EmotionNoteAlternativeDetail } from "@/lib/types";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
-import DetailSectionItem from "@/components/common/DetailSectionItem";
+import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type AlternativeDetailSectionProps = {

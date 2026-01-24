@@ -2,6 +2,52 @@ import { NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getUserFromRequest } from "@/lib/auth/session";
 
+export async function GET(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json({ histories: [] }, { status: 401 });
+  }
+
+  const { searchParams } = new URL(request.url);
+  const limitParam = Number(searchParams.get("limit") ?? "50");
+  const limit = Number.isNaN(limitParam) ? 50 : Math.min(Math.max(limitParam, 1), 100);
+
+  const supabase = createSupabaseAdminClient();
+  const { data, error } = await supabase
+    .from("session_history")
+    .select(
+      "id, timestamp, user_input, emotion_thought_pairs, selected_cognitive_errors, selected_alternative_thought, selected_behavior, bible_verse",
+    )
+    .eq("user_id", user.id)
+    .is("soft_deleted_at", null)
+    .order("timestamp", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    return NextResponse.json(
+      { histories: [], message: "세션 기록을 불러오지 못했습니다." },
+      { status: 500 },
+    );
+  }
+
+  const histories =
+    data?.map((row) => ({
+      id: String(row.id),
+      timestamp: row.timestamp,
+      userInput: row.user_input ?? "",
+      emotionThoughtPairs: Array.isArray(row.emotion_thought_pairs)
+        ? row.emotion_thought_pairs
+        : [],
+      selectedCognitiveErrors: row.selected_cognitive_errors ?? [],
+      selectedAlternativeThought: row.selected_alternative_thought ?? "",
+      selectedBehavior: row.selected_behavior ?? null,
+      bibleVerse: row.bible_verse ?? null,
+    })) ?? [];
+
+  return NextResponse.json({ histories });
+}
+
 export async function POST(request: Request) {
   const user = await getUserFromRequest(request);
 
@@ -60,4 +106,54 @@ export async function POST(request: Request) {
       { status: 500 },
     );
   }
+}
+
+export async function DELETE(request: Request) {
+  const user = await getUserFromRequest(request);
+
+  if (!user) {
+    return NextResponse.json(
+      { ok: false, message: "로그인이 필요합니다." },
+      { status: 401 },
+    );
+  }
+
+  const { searchParams } = new URL(request.url);
+  const deleteAll = searchParams.get("all") === "true";
+  const idParam = searchParams.get("id");
+
+  if (!deleteAll && !idParam) {
+    return NextResponse.json(
+      { ok: false, message: "id가 필요합니다." },
+      { status: 400 },
+    );
+  }
+
+  const supabase = createSupabaseAdminClient();
+  const baseQuery = supabase
+    .from("session_history")
+    .update({ soft_deleted_at: new Date().toISOString() })
+    .eq("user_id", user.id)
+    .is("soft_deleted_at", null);
+
+  const historyId = Number(idParam ?? "");
+  if (!deleteAll && Number.isNaN(historyId)) {
+    return NextResponse.json(
+      { ok: false, message: "id가 올바르지 않습니다." },
+      { status: 400 },
+    );
+  }
+
+  const { error } = deleteAll
+    ? await baseQuery
+    : await baseQuery.eq("id", historyId);
+
+  if (error) {
+    return NextResponse.json(
+      { ok: false, message: "세션 기록을 삭제하지 못했습니다." },
+      { status: 500 },
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }

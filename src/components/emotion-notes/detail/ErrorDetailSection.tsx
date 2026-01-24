@@ -4,8 +4,8 @@ import { useLayoutEffect, useRef } from "react";
 import { AlertCircle } from "lucide-react";
 import type { EmotionNoteErrorDetail } from "@/lib/types";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
-import DetailSectionItem from "@/components/common/DetailSectionItem";
-import DetailSectionBadge from "@/components/common/DetailSectionBadge";
+import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
+import DetailSectionBadge from "@/components/emotion-notes/detail/common/DetailSectionBadge";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type ErrorDetailSectionProps = {

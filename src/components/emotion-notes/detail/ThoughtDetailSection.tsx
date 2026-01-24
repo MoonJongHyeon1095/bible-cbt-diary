@@ -1,7 +1,7 @@
 "use client";
 
-import DetailSectionBadge from "@/components/common/DetailSectionBadge";
-import DetailSectionItem from "@/components/common/DetailSectionItem";
+import DetailSectionBadge from "@/components/emotion-notes/detail/common/DetailSectionBadge";
+import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
 import type { EmotionNoteDetail } from "@/lib/types";
 import { Brain } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";

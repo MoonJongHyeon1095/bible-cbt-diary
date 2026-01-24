@@ -1,8 +1,8 @@
- "use client";
+"use client";
 
+import { CalendarDays, ChartColumn, Home, ListChecks, Sun } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChartColumn, Home, ListChecks, Sun } from "lucide-react";
 import styles from "./AppTabs.module.css";
 
 export default function AppTabs() {

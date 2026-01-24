@@ -192,13 +192,15 @@ export default function EmotionCalendarSection() {
         })}
       </div>
 
-      <EmotionNoteListSection
-        title={selectedLabel}
-        notes={selectedNotes}
-        isLoading={isLoading}
-        emptyTitle="표시할 기록이 없습니다."
-        emptyHint="날짜를 바꿔 다른 기록을 확인해보세요."
-      />
+      <div className={styles.listSection}>
+        <EmotionNoteListSection
+          title={selectedLabel}
+          notes={selectedNotes}
+          isLoading={isLoading}
+          emptyTitle="표시할 기록이 없습니다."
+          emptyHint="날짜를 바꿔 다른 기록을 확인해보세요."
+        />
+      </div>
     </section>
   );
 }

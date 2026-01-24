@@ -5,7 +5,7 @@ import { normalizeSelectedCognitiveErrors } from "@/lib/normalizeSelectedCogniti
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { formatKoreanDateTime } from "@/lib/time";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Button from "@/components/ui/Button";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
@@ -44,50 +44,121 @@ const formatScriptureReference = (
 };
 
 export default function SessionHistorySection() {
+  const pageSize = 20;
   const [histories, setHistories] = useState<SessionHistory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const nextOffsetRef = useRef(0);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const loadHistories = async () => {
+  const fetchPage = useCallback(
+    async (offset: number) => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        return { ok: false, histories: [] as SessionHistory[] };
+      }
+
+      const { response, data } = await fetchSessionHistories(accessToken, {
+        limit: pageSize,
+        offset,
+      });
+      if (!response.ok) {
+        return { ok: false, histories: [] as SessionHistory[] };
+      }
+
+      const normalized = (data.histories ?? []).map((history) => ({
+        ...history,
+        emotionThoughtPairs: Array.isArray(history.emotionThoughtPairs)
+          ? history.emotionThoughtPairs
+          : [],
+        selectedCognitiveErrors: normalizeSelectedCognitiveErrors(
+          history.selectedCognitiveErrors,
+        ),
+      }));
+      return { ok: true, histories: normalized };
+    },
+    [pageSize, supabase],
+  );
+
+  const loadHistories = useCallback(async () => {
     setLoading(true);
     setNotice(null);
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) {
-      setHistories([]);
-      setLoading(false);
-      return;
-    }
-
-    const { response, data } = await fetchSessionHistories(accessToken);
-    if (!response.ok) {
+    nextOffsetRef.current = 0;
+    const { ok, histories: fetchedHistories } = await fetchPage(0);
+    if (!ok) {
       setNotice("세션 기록을 불러오지 못했습니다.");
       setHistories([]);
       setLoading(false);
+      setHasMore(false);
       return;
     }
-
-    const normalized = (data.histories ?? []).map((history) => ({
-      ...history,
-      emotionThoughtPairs: Array.isArray(history.emotionThoughtPairs)
-        ? history.emotionThoughtPairs
-        : [],
-      selectedCognitiveErrors: normalizeSelectedCognitiveErrors(
-        history.selectedCognitiveErrors,
-      ),
-    }));
-    setHistories(normalized);
+    setHistories(fetchedHistories);
+    setHasMore(fetchedHistories.length >= pageSize);
+    nextOffsetRef.current = fetchedHistories.length;
     setLoading(false);
-  };
+  }, [fetchPage, pageSize]);
 
   useEffect(() => {
     loadHistories();
-  }, []);
+  }, [loadHistories]);
+
+  const loadMore = useCallback(async () => {
+    if (loading || isLoadingMore || !hasMore) {
+      return;
+    }
+    setIsLoadingMore(true);
+    const offset = nextOffsetRef.current;
+    const { ok, histories: fetchedHistories } = await fetchPage(offset);
+    if (!ok) {
+      setNotice("세션 기록을 불러오지 못했습니다.");
+      setIsLoadingMore(false);
+      return;
+    }
+
+    if (fetchedHistories.length === 0) {
+      setHasMore(false);
+      setIsLoadingMore(false);
+      return;
+    }
+
+    setHistories((prev) => {
+      const existingIds = new Set(prev.map((item) => item.id));
+      const nextItems = fetchedHistories.filter(
+        (item) => !existingIds.has(item.id),
+      );
+      return [...prev, ...nextItems];
+    });
+    nextOffsetRef.current += fetchedHistories.length;
+    setHasMore(fetchedHistories.length >= pageSize);
+    setIsLoadingMore(false);
+  }, [fetchPage, hasMore, isLoadingMore, loading, pageSize]);
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px 0px" },
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasMore, loadMore]);
 
   const handleDelete = async (id: string) => {
     const { data: sessionData } = await supabase.auth.getSession();
@@ -102,6 +173,7 @@ export default function SessionHistorySection() {
       return;
     }
     setHistories((prev) => prev.filter((item) => item.id !== id));
+    nextOffsetRef.current = Math.max(0, nextOffsetRef.current - 1);
     setDeletingId(null);
   };
 
@@ -119,6 +191,8 @@ export default function SessionHistorySection() {
     }
     setHistories([]);
     setExpanded({});
+    setHasMore(false);
+    nextOffsetRef.current = 0;
     setConfirmDeleteAll(false);
     setDeletingAll(false);
   };
@@ -308,6 +382,18 @@ export default function SessionHistorySection() {
           ))
         )}
       </div>
+      {hasMore && !loading ? (
+        <div ref={sentinelRef} className={styles.loadMore}>
+          {isLoadingMore ? (
+            <>
+              <span className={styles.loadMoreSpinner} aria-hidden />
+              더 불러오는 중...
+            </>
+          ) : (
+            "스크롤하여 더 보기"
+          )}
+        </div>
+      ) : null}
     </section>
   );
 }

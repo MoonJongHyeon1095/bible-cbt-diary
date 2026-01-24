@@ -58,6 +58,10 @@
   gap: 8px;
 }
 
+.listSection {
+  margin-top: 24px;
+}
+
 .cell {
   border: 1px solid var(--border);
   border-radius: 14px;

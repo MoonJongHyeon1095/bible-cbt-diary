@@ -3,8 +3,22 @@
 import { buildAuthHeaders } from "@/components/utils/api";
 import type { SessionHistory } from "@/lib/cbtTypes";
 
-export const fetchSessionHistories = async (accessToken: string) => {
-  const response = await fetch("/api/session-history?limit=50", {
+type FetchSessionHistoriesOptions = {
+  limit?: number;
+  offset?: number;
+};
+
+export const fetchSessionHistories = async (
+  accessToken: string,
+  options: FetchSessionHistoriesOptions = {},
+) => {
+  const limit = options.limit ?? 50;
+  const offset = options.offset ?? 0;
+  const params = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  });
+  const response = await fetch(`/api/session-history?${params.toString()}`, {
     headers: buildAuthHeaders(accessToken),
   });
 

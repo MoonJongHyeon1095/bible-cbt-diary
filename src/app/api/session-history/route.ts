@@ -11,7 +11,9 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const limitParam = Number(searchParams.get("limit") ?? "50");
+  const offsetParam = Number(searchParams.get("offset") ?? "0");
   const limit = Number.isNaN(limitParam) ? 50 : Math.min(Math.max(limitParam, 1), 100);
+  const offset = Number.isNaN(offsetParam) ? 0 : Math.max(offsetParam, 0);
 
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
@@ -22,7 +24,7 @@ export async function GET(request: Request) {
     .eq("user_id", user.id)
     .is("soft_deleted_at", null)
     .order("timestamp", { ascending: false })
-    .limit(limit);
+    .range(offset, offset + limit - 1);
 
   if (error) {
     return NextResponse.json(

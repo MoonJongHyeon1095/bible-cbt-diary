@@ -121,6 +121,7 @@
   font-size: 1.05rem;
   line-height: 1.6;
   padding: 6px 6px 6px 6px;
+  overflow: hidden;
 }
 
 .exampleButton {
@@ -390,6 +391,10 @@
 .sectionBlock {
   display: grid;
   gap: 10px;
+}
+
+.headerInset {
+  padding-left: 18px;
 }
 
 .controlRow {

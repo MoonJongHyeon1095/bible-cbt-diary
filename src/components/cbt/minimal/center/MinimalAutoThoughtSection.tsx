@@ -84,20 +84,22 @@ export function MinimalAutoThoughtSection({
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <MinimalStepHeaderSection title={title}>
-          {error && (
-            <div className={styles.helperText}>
-              {error}{" "}
-              <button
-                type="button"
-                onClick={() => void reloadThoughts()}
-                className={styles.exampleButton}
-              >
-                다시 불러오기
-              </button>
-            </div>
-          )}
-        </MinimalStepHeaderSection>
+        <div className={styles.headerInset}>
+          <MinimalStepHeaderSection title={title}>
+            {error && (
+              <div className={styles.helperText}>
+                {error}{" "}
+                <button
+                  type="button"
+                  onClick={() => void reloadThoughts()}
+                  className={styles.exampleButton}
+                >
+                  다시 불러오기
+                </button>
+              </div>
+            )}
+          </MinimalStepHeaderSection>
+        </div>
 
         {wantsCustom ? (
           <div className={styles.inlineCard}>

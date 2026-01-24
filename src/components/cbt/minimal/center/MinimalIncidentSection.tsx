@@ -44,7 +44,9 @@ export function MinimalIncidentSection({
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <MinimalStepHeaderSection title={title} description={description} />
+        <div className={styles.headerInset}>
+          <MinimalStepHeaderSection title={title} description={description} />
+        </div>
 
         <MinimalIncidentForm
           userInput={userInput}

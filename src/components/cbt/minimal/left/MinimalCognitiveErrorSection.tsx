@@ -70,7 +70,9 @@ export function MinimalCognitiveErrorSection({
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <MinimalStepHeaderSection title={HEADER_TEXT} />
+        <div className={styles.headerInset}>
+          <MinimalStepHeaderSection title={HEADER_TEXT} />
+        </div>
 
         {currentRankItem && (
           <MinimalCognitiveErrorCard

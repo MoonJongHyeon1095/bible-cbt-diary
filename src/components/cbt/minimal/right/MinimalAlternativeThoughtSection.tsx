@@ -83,7 +83,9 @@ export function MinimalAlternativeThoughtSection({
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <MinimalStepHeaderSection title={TITLE} description={DESCRIPTION} />
+        <div className={styles.headerInset}>
+          <MinimalStepHeaderSection title={TITLE} description={DESCRIPTION} />
+        </div>
 
         <div className={styles.inlineCard}>
           <MinimalAlternativeThoughtBodySection

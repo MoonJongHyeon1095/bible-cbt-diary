@@ -1,12 +1,13 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { EmotionThoughtPair, SelectedCognitiveError, SessionHistory } from "@/lib/cbtTypes";
 import { CbtToastProvider, useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import { saveMinimalPatternAPI, saveSessionHistoryAPI } from "@/components/cbt/utils/api";
+import { formatKoreanDateTime } from "@/lib/time";
 import { MinimalIncidentSection } from "./minimal/center/MinimalIncidentSection";
 import { MinimalEmotionSection } from "./minimal/center/MinimalEmotionSection";
 import { MinimalAutoThoughtSection } from "./minimal/center/MinimalAutoThoughtSection";
@@ -21,6 +22,7 @@ type MinimalStep = "incident" | "emotion" | "thought" | "errors" | "alternative"
 
 function SessionPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { pushToast } = useCbtToast();
   const [step, setStep] = useState<MinimalStep>("incident");
   const [userInput, setUserInput] = useState("");
@@ -40,6 +42,17 @@ function SessionPageContent() {
       pushToast(message, "error");
     },
   });
+  const dateParam = searchParams.get("date");
+  const hasDateParam = Boolean(dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam));
+  const dateLabel = hasDateParam
+    ? formatKoreanDateTime(`${dateParam}T00:00:00+09:00`, {
+        month: "long",
+        day: "numeric",
+      })
+    : "";
+  const incidentTitle = hasDateParam
+    ? `${dateLabel}에 무슨 일이 있었나요?`
+    : "오늘 무슨 일이 있었나요?";
 
   const stepOrder: MinimalStep[] = [
     "incident",
@@ -175,6 +188,7 @@ function SessionPageContent() {
             userInput={userInput}
             onInputChange={setUserInput}
             onNext={() => setStep("emotion")}
+            title={incidentTitle}
           />
         )}
 

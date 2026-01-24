@@ -10,15 +10,16 @@ interface MinimalIncidentSectionProps {
   userInput: string;
   onInputChange: (value: string) => void;
   onNext: () => void;
+  title?: string;
 }
 
 export function MinimalIncidentSection({
   userInput,
   onInputChange,
   onNext,
+  title = "오늘 무슨 일이 있었나요?",
 }: MinimalIncidentSectionProps) {
   const { pushToast } = useCbtToast();
-  const title = "오늘 무슨 일이 있었나요?";
   const description =
     "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
 

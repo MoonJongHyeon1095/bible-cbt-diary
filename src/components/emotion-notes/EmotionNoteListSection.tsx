@@ -1,13 +1,15 @@
+import type { Ref } from "react";
 import EmotionNoteList from "./EmotionNoteList";
 import styles from "./EmotionNotesSection.module.css";
 import type { EmotionNote } from "@/lib/types";
 
 type EmotionNoteListSectionProps = {
-  title: string;
+  title?: string | null;
   notes: EmotionNote[];
   isLoading?: boolean;
   emptyTitle?: string;
   emptyHint?: string;
+  headerRef?: Ref<HTMLDivElement>;
 };
 
 export default function EmotionNoteListSection({
@@ -16,14 +18,17 @@ export default function EmotionNoteListSection({
   isLoading = false,
   emptyTitle,
   emptyHint,
+  headerRef,
 }: EmotionNoteListSectionProps) {
   return (
     <div>
-      <div className={styles.notesHeader}>
-        <h3 className={styles.notesTitle}>
-          {isLoading ? "불러오는 중..." : title}
-        </h3>
-      </div>
+      {title ? (
+        <div ref={headerRef} className={styles.notesHeader}>
+          <h3 className={styles.notesTitle}>
+            {isLoading ? "불러오는 중..." : title}
+          </h3>
+        </div>
+      ) : null}
       <EmotionNoteList
         notes={notes}
         emptyTitle={emptyTitle}

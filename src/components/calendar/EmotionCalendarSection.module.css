@@ -60,6 +60,94 @@
 
 .listSection {
   margin-top: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.searchLabel {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.searchInput {
+  flex: 1;
+  width: 100%;
+  min-width: 220px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 8px 40px 8px 36px;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.searchField {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-width: 220px;
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.searchSubmit {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--text);
+  color: var(--surface);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.calendarFab {
+  position: fixed;
+  right: 24px;
+  bottom: 25vh;
+  z-index: 30;
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(143, 167, 200, 0.85);
+  color: #0c1118;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+}
+
+@media (max-width: 720px) {
+  .calendarFab {
+    right: 16px;
+    bottom: 22vh;
+    width: 60px;
+    height: 60px;
+  }
 }
 
 .cell {

@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/time";
-import styles from "./EmotionCalendarSection.module.css";
-import type { EmotionNote } from "@/lib/types";
-import { fetchEmotionNotesByRange } from "./utils/emotionCalendarApi";
+import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 import Button from "@/components/ui/Button";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/time";
+import type { EmotionNote } from "@/lib/types";
+import { ChevronLeft, ChevronRight, CornerDownLeft, Plus, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
+import styles from "./EmotionCalendarSection.module.css";
+import { fetchEmotionNotesByRange } from "./utils/emotionCalendarApi";
 
 type DayCell = {
   date: Date;
@@ -40,9 +42,13 @@ const formatDateKey = (date: Date) => formatKoreanDateKey(date);
 export default function EmotionCalendarSection() {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [notes, setNotes] = useState<EmotionNote[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [searchInput, setSearchInput] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const listHeaderRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   const monthLabel = useMemo(
     () =>
@@ -50,6 +56,13 @@ export default function EmotionCalendarSection() {
         year: "numeric",
         month: "long",
       }),
+    [currentMonth],
+  );
+  const searchPlaceholder = useMemo(
+    () =>
+      `${formatKoreanDateTime(currentMonth, {
+        month: "long",
+      })} 기록 중 검색`,
     [currentMonth],
   );
 
@@ -64,6 +77,20 @@ export default function EmotionCalendarSection() {
     return counts;
   }, [notes]);
 
+  const normalizedQuery = searchQuery.trim().toLowerCase();
+  const searchResults = useMemo(() => {
+    if (!normalizedQuery) {
+      return [];
+    }
+    return notes.filter((note) => {
+      const title = note.title?.toLowerCase() ?? "";
+      const trigger = note.trigger_text?.toLowerCase() ?? "";
+      return (
+        title.includes(normalizedQuery) || trigger.includes(normalizedQuery)
+      );
+    });
+  }, [normalizedQuery, notes]);
+
   const selectedNotes = useMemo(() => {
     if (!selectedDate) {
       return [];
@@ -73,6 +100,11 @@ export default function EmotionCalendarSection() {
   }, [notes, selectedDate]);
 
   const selectedLabel = useMemo(() => {
+    if (normalizedQuery) {
+      return searchResults.length > 0
+        ? `검색 결과 ${searchResults.length}개의 기록이 있습니다`
+        : "";
+    }
     if (!selectedDate) {
       return "날짜를 선택하세요";
     }
@@ -80,8 +112,38 @@ export default function EmotionCalendarSection() {
       month: "long",
       day: "numeric",
     });
-    return `${dateLabel} ${selectedNotes.length}개의 기록이 있습니다`;
-  }, [selectedDate, selectedNotes.length]);
+    return selectedNotes.length > 0
+      ? `${dateLabel} ${selectedNotes.length}개의 기록이 있습니다`
+      : "";
+  }, [
+    normalizedQuery,
+    searchResults.length,
+    selectedDate,
+    selectedNotes.length,
+  ]);
+
+  useEffect(() => {
+    if (!selectedDate || selectedNotes.length === 0) {
+      return;
+    }
+    if (normalizedQuery) {
+      return;
+    }
+    listHeaderRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [normalizedQuery, selectedDate, selectedNotes.length]);
+
+  useEffect(() => {
+    if (!normalizedQuery) {
+      return;
+    }
+    listHeaderRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+  }, [normalizedQuery]);
 
   useEffect(() => {
     const load = async () => {
@@ -93,8 +155,16 @@ export default function EmotionCalendarSection() {
         setIsLoading(false);
         return;
       }
-      const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
-      const end = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
+      const start = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth(),
+        1,
+      );
+      const end = new Date(
+        currentMonth.getFullYear(),
+        currentMonth.getMonth() + 1,
+        1,
+      );
       const { response, data } = await fetchEmotionNotesByRange(
         start,
         end,
@@ -112,6 +182,19 @@ export default function EmotionCalendarSection() {
     load();
   }, [currentMonth, supabase]);
 
+  const visibleNotes = normalizedQuery ? searchResults : selectedNotes;
+  const applySearch = () => {
+    const trimmed = searchInput.trim();
+    setSearchQuery(trimmed);
+    if (trimmed) {
+      setSelectedDate(null);
+    }
+  };
+  const todayKey = formatDateKey(new Date());
+  const selectedKey = selectedDate ? formatDateKey(selectedDate) : null;
+  const isPastDate =
+    selectedKey !== null && selectedKey < todayKey && !normalizedQuery;
+
   return (
     <section className={styles.section}>
       <header className={styles.header}>
@@ -127,7 +210,11 @@ export default function EmotionCalendarSection() {
             className={styles.iconButton}
             onClick={() =>
               setCurrentMonth(
-                new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1, 1),
+                new Date(
+                  currentMonth.getFullYear(),
+                  currentMonth.getMonth() - 1,
+                  1,
+                ),
               )
             }
             aria-label="이전 달"
@@ -141,7 +228,11 @@ export default function EmotionCalendarSection() {
             className={styles.iconButton}
             onClick={() =>
               setCurrentMonth(
-                new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+                new Date(
+                  currentMonth.getFullYear(),
+                  currentMonth.getMonth() + 1,
+                  1,
+                ),
               )
             }
             aria-label="다음 달"
@@ -175,11 +266,17 @@ export default function EmotionCalendarSection() {
                 styles.cell,
                 day.inMonth ? styles.cellInMonth : styles.cellOut,
                 isToday ? styles.cellToday : "",
-                isSelected ? styles.cellSelected : "",
+                isSelected && !normalizedQuery ? styles.cellSelected : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
-              onClick={() => setSelectedDate(day.date)}
+              onClick={() => {
+                if (normalizedQuery || searchInput) {
+                  setSearchQuery("");
+                  setSearchInput("");
+                }
+                setSelectedDate(day.date);
+              }}
             >
               <span className={styles.dayNumber}>{day.date.getDate()}</span>
               {count > 0 ? (
@@ -193,14 +290,68 @@ export default function EmotionCalendarSection() {
       </div>
 
       <div className={styles.listSection}>
+        <div className={styles.searchBar}>
+          <div className={styles.searchField}>
+            <Search size={16} aria-hidden className={styles.searchIcon} />
+            <input
+              id="calendar-search"
+              type="search"
+              placeholder={searchPlaceholder}
+              value={searchInput}
+              onChange={(event) => {
+                setSearchInput(event.target.value);
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  applySearch();
+                }
+              }}
+              className={styles.searchInput}
+            />
+            <Button
+              type="button"
+              variant="unstyled"
+              className={styles.searchSubmit}
+              onClick={applySearch}
+              aria-label="검색"
+            >
+              <CornerDownLeft size={16} />
+            </Button>
+          </div>
+        </div>
         <EmotionNoteListSection
           title={selectedLabel}
-          notes={selectedNotes}
+          notes={visibleNotes}
           isLoading={isLoading}
-          emptyTitle="표시할 기록이 없습니다."
-          emptyHint="날짜를 바꿔 다른 기록을 확인해보세요."
+          emptyTitle={
+            normalizedQuery
+              ? "검색 결과가 없습니다."
+              : "표시할 기록이 없습니다."
+          }
+          emptyHint={
+            normalizedQuery
+              ? "다른 키워드로 다시 검색해보세요."
+              : "날짜를 바꿔 다른 기록을 확인해보세요."
+          }
+          headerRef={listHeaderRef}
         />
       </div>
+      {isPastDate ? (
+        <FloatingActionButton
+          label="이 날의 기록 추가"
+          icon={<Plus size={24} />}
+          helperText="이 날의 기록 추가"
+          onClick={() => {
+            if (!selectedDate) {
+              router.push("/session");
+              return;
+            }
+            const dateKey = formatKoreanDateKey(selectedDate);
+            router.push(`/session?date=${dateKey}`);
+          }}
+          className={styles.calendarFab}
+        />
+      ) : null}
     </section>
   );
 }

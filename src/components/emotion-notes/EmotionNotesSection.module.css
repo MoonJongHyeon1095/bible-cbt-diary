@@ -26,6 +26,7 @@
   border-radius: 50%;
   border: 1px dashed var(--border);
   background: transparent;
+  margin-top: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -98,7 +99,9 @@
   gap: 10px;
   color: inherit;
   text-decoration: none;
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
   cursor: pointer;
 }
 

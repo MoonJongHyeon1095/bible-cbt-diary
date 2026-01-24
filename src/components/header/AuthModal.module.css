@@ -10,7 +10,7 @@
 }
 
 .modal {
-  width: min(420px, 100%);
+  width: min(460px, 100%);
   background: var(--surface);
   border-radius: 18px;
   border: 1px solid var(--border);
@@ -28,15 +28,20 @@
   gap: 10px;
 }
 
-.label {
+.headerTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #e9ecf1;
   margin: 0;
-  color: var(--muted);
-  font-size: 0.8rem;
 }
 
-.title {
-  margin: 4px 0 0;
-  font-size: 1.2rem;
+.description {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .close {
@@ -45,28 +50,6 @@
   border-radius: 999px;
   padding: 6px 12px;
   cursor: pointer;
-}
-
-.tabRow {
-  display: flex;
-  gap: 8px;
-}
-
-.tab,
-.tabActive {
-  flex: 1;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  padding: 8px 12px;
-  background: var(--surface-muted);
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.tabActive {
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-weight: 600;
 }
 
 .form {
@@ -85,6 +68,9 @@
   font-size: 0.8rem;
   color: var(--muted);
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .input {
@@ -94,11 +80,30 @@
   padding: 10px 12px;
 }
 
+.helperText {
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.errorBox {
+  border: 1px solid rgba(255, 117, 117, 0.4);
+  background: rgba(255, 82, 82, 0.12);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+
+.errorText {
+  margin: 0;
+  color: #ff9a9a;
+  font-size: 0.85rem;
+}
+
 .primaryButton {
   border-radius: 12px;
   border: none;
-  background: var(--accent);
-  color: #fff;
+  background: linear-gradient(135deg, #6d84ff, #c77dff);
+  color: #0f1114;
   padding: 10px 14px;
   font-weight: 600;
   cursor: pointer;
@@ -109,16 +114,23 @@
   cursor: not-allowed;
 }
 
-.divider {
-  text-align: center;
-  font-size: 0.75rem;
+.dividerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   color: var(--muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
 }
 
-.socialRow {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+.dividerLine {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.dividerLabel {
+  padding: 0 6px;
 }
 
 .socialButton {
@@ -133,20 +145,28 @@
   gap: 8px;
 }
 
-.socialIcon {
-  display: inline-flex;
-  width: 22px;
-  height: 22px;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--accent-soft);
-  color: var(--accent);
-  font-size: 0.75rem;
+.googleIcon {
+  width: 20px;
+  height: 20px;
+  color: #e7e7f4;
 }
 
 .message {
   margin: 0;
   color: var(--muted);
   font-size: 0.8rem;
+}
+
+.switchRow {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.switchButton {
+  border: none;
+  background: transparent;
+  color: #c6b2ff;
+  font-weight: 600;
+  cursor: pointer;
 }

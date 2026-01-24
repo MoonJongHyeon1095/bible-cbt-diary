@@ -22,6 +22,10 @@
   gap: 6px;
 }
 
+.tabIcon {
+  opacity: 0.85;
+}
+
 .tabButton[aria-current="page"] {
   background: var(--accent-soft);
   color: var(--accent);

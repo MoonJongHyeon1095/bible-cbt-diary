@@ -6,6 +6,7 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { EmotionNote } from "@/lib/types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "../page.module.css";
+import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
 
 type SessionUser = {
@@ -80,12 +81,7 @@ export default function EmotionNotesPage() {
               isLoading={isLoading}
             />
           ) : (
-            <div className={styles.emptyAuth}>
-              <h2 className={styles.emptyAuthTitle}>로그인이 필요합니다</h2>
-              <p className={styles.emptyAuthHint}>
-                상단에서 이메일 로그인을 진행해주세요.
-              </p>
-            </div>
+            <RequireLoginPrompt />
           )}
         </div>
       </main>

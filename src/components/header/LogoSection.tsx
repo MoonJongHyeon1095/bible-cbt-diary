@@ -10,9 +10,6 @@ export default function LogoSection() {
         </span>
         <h1 className={styles.brandTitle}>Emotion Notes</h1>
       </div>
-      <p className={styles.brandSubtitle}>
-        오늘의 감정을 짧게 기록하고 흐름을 확인하세요.
-      </p>
     </div>
   );
 }

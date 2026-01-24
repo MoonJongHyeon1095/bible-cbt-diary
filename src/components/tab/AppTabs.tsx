@@ -25,6 +25,7 @@ export default function AppTabs() {
             className={styles.tabButton}
             aria-current={pathname === tab.href ? "page" : undefined}
           >
+            <tab.icon size={16} aria-hidden className={styles.tabIcon} />
             {tab.label}
           </Link>
         ))}

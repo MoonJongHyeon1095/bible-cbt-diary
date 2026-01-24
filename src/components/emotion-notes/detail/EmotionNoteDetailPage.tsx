@@ -2,6 +2,7 @@
 
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
+import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import AppHeader from "@/components/header/AppHeader";
 import {
   AlertCircle,
@@ -308,12 +309,7 @@ export default function EmotionNoteDetailPage({
         <AppHeader />
         <main className={pageStyles.main}>
           <div className={pageStyles.shell}>
-            <div className={pageStyles.emptyAuth}>
-              <h2 className={pageStyles.emptyAuthTitle}>로그인이 필요합니다</h2>
-              <p className={pageStyles.emptyAuthHint}>
-                상단에서 이메일 로그인을 진행해주세요.
-              </p>
-            </div>
+            <RequireLoginPrompt />
           </div>
         </main>
       </div>

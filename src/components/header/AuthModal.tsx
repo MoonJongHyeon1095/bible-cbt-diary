@@ -1,8 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import { getOAuthRedirectTo } from "@/lib/auth/oauth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
 
 type SessionUser = {
@@ -16,13 +17,39 @@ type AuthModalProps = {
   onSignedIn: (user: SessionUser) => void;
 };
 
-export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProps) {
+export default function AuthModal({
+  isOpen,
+  onClose,
+  onSignedIn,
+}: AuthModalProps) {
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const { data } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!session) {
+        return;
+      }
+      if (event !== "SIGNED_IN" && event !== "TOKEN_REFRESHED") {
+        return;
+      }
+
+      onSignedIn({ id: session.user.id, email: session.user.email ?? null });
+      onClose();
+    });
+
+    return () => data.subscription.unsubscribe();
+  }, [isOpen, onClose, onSignedIn, supabase]);
 
   if (!isOpen) {
     return null;
@@ -32,6 +59,7 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
     event.preventDefault();
     setIsSubmitting(true);
     setMessage("");
+    setError("");
 
     if (mode === "signin") {
       const { data, error } = await supabase.auth.signInWithPassword({
@@ -41,7 +69,7 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
       setIsSubmitting(false);
 
       if (error || !data.user) {
-        setMessage("로그인에 실패했습니다.");
+        setError("로그인에 실패했습니다.");
         return;
       }
 
@@ -53,11 +81,12 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: name ? { data: { name } } : undefined,
     });
     setIsSubmitting(false);
 
     if (error) {
-      setMessage("회원가입에 실패했습니다.");
+      setError("회원가입에 실패했습니다.");
       return;
     }
 
@@ -67,12 +96,14 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
       return;
     }
 
-    setMessage("가입 확인 이메일을 보냈습니다.");
+    setMessage("회원가입이 완료되었습니다. 로그인해주세요.");
+    setMode("signin");
   };
 
   const handleOAuth = async (provider: "google") => {
     setIsSubmitting(true);
     setMessage("");
+    setError("");
     const redirectTo = getOAuthRedirectTo();
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -81,56 +112,75 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
     setIsSubmitting(false);
 
     if (error) {
-      setMessage("소셜 로그인을 시작하지 못했습니다.");
+      setError("소셜 로그인을 시작하지 못했습니다.");
     }
   };
 
   return (
     <div className={styles.backdrop} onClick={onClose}>
-      <div className={styles.modal} onClick={(event) => event.stopPropagation()}>
+      <div
+        className={styles.modal}
+        onClick={(event) => event.stopPropagation()}
+      >
         <header className={styles.header}>
           <div>
-            <p className={styles.label}>계정</p>
-            <h2 className={styles.title}>
-              {mode === "signin" ? "로그인" : "회원가입"}
-            </h2>
+            <div className={styles.headerTitle}>
+              {mode === "signin" ? (
+                <>
+                  <LogIn size={20} />
+                  로그인
+                </>
+              ) : (
+                <>
+                  <UserPlus size={20} />
+                  회원가입
+                </>
+              )}
+            </div>
           </div>
           <button type="button" className={styles.close} onClick={onClose}>
             닫기
           </button>
         </header>
 
-        <div className={styles.tabRow}>
-          <button
-            type="button"
-            className={mode === "signin" ? styles.tabActive : styles.tab}
-            onClick={() => setMode("signin")}
-          >
-            로그인
-          </button>
-          <button
-            type="button"
-            className={mode === "signup" ? styles.tabActive : styles.tab}
-            onClick={() => setMode("signup")}
-          >
-            회원가입
-          </button>
-        </div>
-
         <form className={styles.form} onSubmit={handleAuthSubmit}>
+          {mode === "signup" ? (
+            <label className={styles.field}>
+              <span className={styles.fieldLabel}>
+                <User size={16} />
+                이름
+              </span>
+              <input
+                type="text"
+                name="name"
+                required
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                placeholder="홍길동"
+                className={styles.input}
+              />
+            </label>
+          ) : null}
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>이메일</span>
+            <span className={styles.fieldLabel}>
+              <Mail size={16} />
+              이메일
+            </span>
             <input
               type="email"
               name="email"
               required
               value={email}
               onChange={(event) => setEmail(event.target.value)}
+              placeholder="example@email.com"
               className={styles.input}
             />
           </label>
           <label className={styles.field}>
-            <span className={styles.fieldLabel}>비밀번호</span>
+            <span className={styles.fieldLabel}>
+              <Lock size={16} />
+              비밀번호
+            </span>
             <input
               type="password"
               name="password"
@@ -138,35 +188,90 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
               minLength={6}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
+              placeholder="••••••••"
               className={styles.input}
             />
+            {mode === "signup" ? (
+              <span className={styles.helperText}>최소 6자 이상</span>
+            ) : null}
           </label>
+          {error ? (
+            <div className={styles.errorBox}>
+              <p className={styles.errorText}>{error}</p>
+            </div>
+          ) : null}
+          {message ? <p className={styles.message}>{message}</p> : null}
           <button
             type="submit"
             className={styles.primaryButton}
             disabled={isSubmitting}
           >
-            {mode === "signin" ? "로그인" : "회원가입"}
+            {isSubmitting
+              ? "처리 중..."
+              : mode === "signin"
+                ? "로그인"
+                : "회원가입"}
           </button>
-        </form>
 
-        <div className={styles.divider}>또는</div>
+          <div className={styles.dividerRow}>
+            <span className={styles.dividerLine} />
+            <span className={styles.dividerLabel}>또는</span>
+            <span className={styles.dividerLine} />
+          </div>
 
-        <div className={styles.socialRow}>
           <button
             type="button"
             className={styles.socialButton}
             onClick={() => handleOAuth("google")}
             disabled={isSubmitting}
           >
-            <span className={styles.socialIcon} aria-hidden>
-              G
-            </span>
+            <svg className={styles.googleIcon} viewBox="0 0 24 24">
+              <path
+                fill="currentColor"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+              />
+              <path
+                fill="currentColor"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+              />
+              <path
+                fill="currentColor"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+              />
+            </svg>
             Google로 계속하기
           </button>
-        </div>
 
-        {message ? <p className={styles.message}>{message}</p> : null}
+          <div className={styles.switchRow}>
+            {mode === "signin" ? (
+              <span>
+                계정이 없으신가요?{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode("signup")}
+                  className={styles.switchButton}
+                >
+                  회원가입
+                </button>
+              </span>
+            ) : (
+              <span>
+                이미 계정이 있으신가요?{" "}
+                <button
+                  type="button"
+                  onClick={() => setMode("signin")}
+                  className={styles.switchButton}
+                >
+                  로그인
+                </button>
+              </span>
+            )}
+          </div>
+        </form>
       </div>
     </div>
   );

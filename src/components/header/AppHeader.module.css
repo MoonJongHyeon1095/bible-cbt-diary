@@ -4,6 +4,7 @@
   grid-template-columns: minmax(180px, 1fr) auto minmax(220px, 1fr);
   gap: 16px;
   align-items: center;
+  position: relative;
 }
 
 .brandBlock {
@@ -53,6 +54,10 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 40;
 }
 
 .loginButton {
@@ -104,6 +109,6 @@
   }
 
   .actions {
-    justify-content: flex-start;
+    justify-content: flex-end;
   }
 }

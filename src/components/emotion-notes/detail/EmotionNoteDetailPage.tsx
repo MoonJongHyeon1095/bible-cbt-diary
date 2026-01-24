@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   Upload,
+  X,
   Trash2,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -38,6 +39,7 @@ type ModalContent = {
   body: string;
   color: string;
   icon: ReactNode;
+  badgeText?: string | null;
 } | null;
 
 const formatDateTime = (value: string) =>
@@ -77,6 +79,17 @@ export default function EmotionNoteDetailPage({
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const createModalHandler =
+    (color: string, icon: ReactNode) =>
+    (title: string, body: string, badgeText?: string | null) => {
+      setModalContent({
+        title,
+        body,
+        color,
+        icon,
+        badgeText: badgeText ?? null,
+      });
+    };
   const hasTitleChange =
     (note?.title ?? "") !== title.trim() ||
     (note?.trigger_text ?? "") !== triggerText.trim();
@@ -153,6 +166,22 @@ export default function EmotionNoteDetailPage({
     }
   };
 
+  const clearEditing = () => {
+    thoughtSection.onCancelEditing();
+    errorSection.onCancelEditing();
+    alternativeSection.onCancelEditing();
+    behaviorSection.onCancelEditing();
+  };
+
+  const handleSelectDetail = (section: SectionKey, detailId: number) => {
+    const isSameSelection =
+      selectedItem?.section === section && selectedItem.id === detailId;
+    if (!isSameSelection) {
+      clearEditing();
+    }
+    setSelectedItem({ section, id: detailId });
+  };
+
   const toggleItems = [
     {
       key: "thought",
@@ -168,22 +197,14 @@ export default function EmotionNoteDetailPage({
         <ThoughtDetailSection
           {...thoughtSection}
           formatDateTime={formatDateTime}
-          showAddButton={false}
           onSelectDetail={(detailId) =>
-            setSelectedItem({ section: "thought", id: detailId })
+            handleSelectDetail("thought", detailId)
           }
           selectedDetailId={
             selectedItem?.section === "thought" ? selectedItem.id : null
           }
           onCopyText={handleCopyText}
-          onOpenModal={(title, body) =>
-            setModalContent({
-              title,
-              body,
-              color: "#ffd300",
-              icon: <Brain size={18} />,
-            })
-          }
+          onOpenModal={createModalHandler("#ffd300", <Brain size={18} />)}
         />
       ),
     },
@@ -201,22 +222,12 @@ export default function EmotionNoteDetailPage({
         <ErrorDetailSection
           {...errorSection}
           formatDateTime={formatDateTime}
-          showAddButton={false}
-          onSelectDetail={(detailId) =>
-            setSelectedItem({ section: "error", id: detailId })
-          }
+          onSelectDetail={(detailId) => handleSelectDetail("error", detailId)}
           selectedDetailId={
             selectedItem?.section === "error" ? selectedItem.id : null
           }
           onCopyText={handleCopyText}
-          onOpenModal={(title, body) =>
-            setModalContent({
-              title,
-              body,
-              color: "#ff4fd8",
-              icon: <AlertCircle size={18} />,
-            })
-          }
+          onOpenModal={createModalHandler("#ff4fd8", <AlertCircle size={18} />)}
         />
       ),
     },
@@ -236,22 +247,14 @@ export default function EmotionNoteDetailPage({
         <AlternativeDetailSection
           {...alternativeSection}
           formatDateTime={formatDateTime}
-          showAddButton={false}
           onSelectDetail={(detailId) =>
-            setSelectedItem({ section: "alternative", id: detailId })
+            handleSelectDetail("alternative", detailId)
           }
           selectedDetailId={
             selectedItem?.section === "alternative" ? selectedItem.id : null
           }
           onCopyText={handleCopyText}
-          onOpenModal={(title, body) =>
-            setModalContent({
-              title,
-              body,
-              color: "#36d94a",
-              icon: <Lightbulb size={18} />,
-            })
-          }
+          onOpenModal={createModalHandler("#36d94a", <Lightbulb size={18} />)}
         />
       ),
     },
@@ -269,22 +272,12 @@ export default function EmotionNoteDetailPage({
         <BehaviorDetailSection
           {...behaviorSection}
           formatDateTime={formatDateTime}
-          showAddButton={false}
-          onSelectDetail={(detailId) =>
-            setSelectedItem({ section: "behavior", id: detailId })
-          }
+          onSelectDetail={(detailId) => handleSelectDetail("behavior", detailId)}
           selectedDetailId={
             selectedItem?.section === "behavior" ? selectedItem.id : null
           }
           onCopyText={handleCopyText}
-          onOpenModal={(title, body) =>
-            setModalContent({
-              title,
-              body,
-              color: "#26e0ff",
-              icon: <Footprints size={18} />,
-            })
-          }
+          onOpenModal={createModalHandler("#26e0ff", <Footprints size={18} />)}
         />
       ),
     },
@@ -303,6 +296,19 @@ export default function EmotionNoteDetailPage({
     resizeTriggerTextarea();
   }, [triggerText]);
 
+  const hasEditing =
+    thoughtSection.editingThoughtId !== null ||
+    errorSection.editingErrorId !== null ||
+    alternativeSection.editingAlternativeId !== null ||
+    behaviorSection.editingBehaviorId !== null;
+
+  useEffect(() => {
+    if (selectedItem || !hasEditing) {
+      return;
+    }
+    clearEditing();
+  }, [hasEditing, selectedItem]);
+
   if (!userEmail && !isLoading) {
     return (
       <div className={pageStyles.page}>
@@ -319,7 +325,7 @@ export default function EmotionNoteDetailPage({
   return (
     <div className={pageStyles.page}>
       <AppHeader />
-      <main className={pageStyles.main}>
+      <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
         <div className={pageStyles.shell}>
           <section className={styles.header}>
             <div>
@@ -507,7 +513,7 @@ export default function EmotionNoteDetailPage({
           <FloatingActionButton
             label="저장"
             icon={<Upload size={22} />}
-            helperText="선택 항목 저장"
+            helperText="수정내용 저장"
             onClick={() => {
               const section = selectedItem.section;
               if (section === "thought") {
@@ -527,7 +533,7 @@ export default function EmotionNoteDetailPage({
           />
           <FloatingActionButton
             label="취소"
-            icon={<List size={22} />}
+            icon={<X size={22} />}
             helperText="편집 취소"
             onClick={() => {
               const section = selectedItem.section;
@@ -556,6 +562,7 @@ export default function EmotionNoteDetailPage({
         body={modalContent?.body ?? ""}
         accentColor={modalContent?.color ?? "#fff"}
         icon={modalContent?.icon ?? null}
+        badgeText={modalContent?.badgeText ?? null}
         onClose={() => setModalContent(null)}
       />
       {copyMessage ? (

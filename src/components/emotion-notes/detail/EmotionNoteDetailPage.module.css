@@ -396,7 +396,9 @@
 .autoGrowTextarea {
   resize: none;
   overflow: hidden;
-  min-height: 72px;
+  min-height: 120px;
+  height: auto;
+  box-sizing: border-box;
 }
 
 .copyToast {
@@ -419,17 +421,23 @@
 }
 
 .detailTag {
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--accent);
   background: var(--accent-soft);
-  padding: 4px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .detailTime {
   font-size: 0.72rem;
   color: var(--muted);
+  margin-top: auto;
+  align-self: flex-end;
 }
 
 .detailText {
@@ -453,9 +461,15 @@
 .detailFooter {
   display: flex;
   align-items: center;
-  justify-content: flex-start;
+  justify-content: space-between;
   gap: 8px;
   margin-top: 6px;
+}
+
+.detailFooterLeft {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .miniIconButton {
@@ -476,6 +490,16 @@
   gap: 10px;
 }
 
+.detailEditBadge {
+  align-self: flex-start;
+}
+
+.detailEdit .input,
+.detailEdit .textarea {
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  line-height: 1.7;
+}
 .emptyText {
   margin: 0;
   color: var(--muted);

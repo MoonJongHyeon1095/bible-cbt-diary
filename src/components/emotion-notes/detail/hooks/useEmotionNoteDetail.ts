@@ -198,16 +198,10 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const thoughtSection = {
-    noteId,
-    detailThought: thoughtSectionState.detailThought,
-    detailEmotion: thoughtSectionState.detailEmotion,
     details: thoughtSectionState.details,
     editingThoughtId: thoughtSectionState.editingThoughtId,
     editingThoughtText: thoughtSectionState.editingThoughtText,
     editingEmotionText: thoughtSectionState.editingEmotionText,
-    onChangeDetailThought: thoughtSectionState.setDetailThought,
-    onChangeDetailEmotion: thoughtSectionState.setDetailEmotion,
-    onAdd: thoughtSectionState.handleAdd,
     onStartEditing: thoughtSectionState.startEditing,
     onCancelEditing: thoughtSectionState.cancelEditing,
     onUpdate: thoughtSectionState.handleUpdate,
@@ -217,32 +211,21 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const errorSection = {
-    noteId,
-    errorLabel: errorSectionState.errorLabel,
-    errorDescription: errorSectionState.errorDescription,
     details: errorSectionState.details,
     editingErrorId: errorSectionState.editingErrorId,
     editingErrorLabel: errorSectionState.editingErrorLabel,
     editingErrorDescription: errorSectionState.editingErrorDescription,
-    onChangeErrorLabel: errorSectionState.setErrorLabel,
-    onChangeErrorDescription: errorSectionState.setErrorDescription,
-    onAdd: errorSectionState.handleAdd,
     onStartEditing: errorSectionState.startEditing,
     onCancelEditing: errorSectionState.cancelEditing,
     onUpdate: errorSectionState.handleUpdate,
     onDelete: errorSectionState.handleDelete,
-    onChangeEditingErrorLabel: errorSectionState.setEditingErrorLabel,
     onChangeEditingErrorDescription: errorSectionState.setEditingErrorDescription,
   };
 
   const alternativeSection = {
-    noteId,
-    alternativeText: alternativeSectionState.alternativeText,
     details: alternativeSectionState.details,
     editingAlternativeId: alternativeSectionState.editingAlternativeId,
     editingAlternativeText: alternativeSectionState.editingAlternativeText,
-    onChangeAlternativeText: alternativeSectionState.setAlternativeText,
-    onAdd: alternativeSectionState.handleAdd,
     onStartEditing: alternativeSectionState.startEditing,
     onCancelEditing: alternativeSectionState.cancelEditing,
     onUpdate: alternativeSectionState.handleUpdate,
@@ -251,21 +234,14 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const behaviorSection = {
-    noteId,
-    behaviorLabel: behaviorSectionState.behaviorLabel,
-    behaviorDescription: behaviorSectionState.behaviorDescription,
     details: behaviorSectionState.details,
     editingBehaviorId: behaviorSectionState.editingBehaviorId,
     editingBehaviorLabel: behaviorSectionState.editingBehaviorLabel,
     editingBehaviorDescription: behaviorSectionState.editingBehaviorDescription,
-    onChangeBehaviorLabel: behaviorSectionState.setBehaviorLabel,
-    onChangeBehaviorDescription: behaviorSectionState.setBehaviorDescription,
-    onAdd: behaviorSectionState.handleAdd,
     onStartEditing: behaviorSectionState.startEditing,
     onCancelEditing: behaviorSectionState.cancelEditing,
     onUpdate: behaviorSectionState.handleUpdate,
     onDelete: behaviorSectionState.handleDelete,
-    onChangeEditingBehaviorLabel: behaviorSectionState.setEditingBehaviorLabel,
     onChangeEditingBehaviorDescription:
       behaviorSectionState.setEditingBehaviorDescription,
   };

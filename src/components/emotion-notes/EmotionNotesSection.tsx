@@ -21,7 +21,7 @@ export default function EmotionNotesSection({
       <div className={styles.todayCard}>
         <p className={styles.todayLabel}>{todayLabel}</p>
         <h2 className={styles.todayTitle}>오늘의 감정 기록</h2>
-        <Link href="/detail" className={styles.plusButton}>
+        <Link href="/session" className={styles.plusButton}>
           <span className={styles.plusIcon} aria-hidden>
             +
           </span>

@@ -51,7 +51,8 @@ const createStorageAdapter = (): StorageAdapter => {
   };
 };
 
-export const createSupabaseBrowserClient = () => {
+// 로그인/세션 조회/토큰 획득 용도
+const createSupabaseBrowserClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -67,4 +68,15 @@ export const createSupabaseBrowserClient = () => {
       detectSessionInUrl: true,
     },
   });
+};
+
+let supabaseBrowserClient: ReturnType<
+  typeof createSupabaseBrowserClient
+> | null = null;
+
+export const getSupabaseBrowserClient = () => {
+  if (!supabaseBrowserClient) {
+    supabaseBrowserClient = createSupabaseBrowserClient();
+  }
+  return supabaseBrowserClient;
 };

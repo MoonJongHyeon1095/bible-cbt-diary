@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { getOAuthRedirectTo } from "@/lib/auth/oauth";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./AuthModal.module.css";
 
 type SessionUser = {
@@ -22,7 +22,7 @@ export default function AuthModal({ isOpen, onClose, onSignedIn }: AuthModalProp
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   if (!isOpen) {
     return null;

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, ChartColumn, ListChecks, Sun } from "lucide-react";
+import { CalendarDays, ChartColumn, Home, ListChecks, Sun } from "lucide-react";
 import styles from "./AppTabs.module.css";
 
 export default function AppTabs() {
   const pathname = usePathname();
   const tabs = [
-    { href: "/", label: "오늘", icon: Sun },
+    { href: "/", label: "홈", icon: Home },
+    { href: "/today", label: "오늘", icon: Sun },
     { href: "/month", label: "월별", icon: CalendarDays },
     { href: "/records", label: "기록", icon: ListChecks },
     { href: "/stats", label: "통계", icon: ChartColumn },

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import styles from "./EmotionNotesSection.module.css";
 import type { EmotionNote } from "@/lib/types";
 
@@ -12,7 +13,7 @@ export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
   });
 
   return (
-    <article className={styles.noteCard}>
+    <Link href={`/detail/${note.id}`} className={styles.noteCard}>
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
         <span className={styles.noteTime}>{timeLabel}</span>
@@ -21,9 +22,6 @@ export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
       {note.behavior ? (
         <p className={styles.noteBehavior}>반응: {note.behavior}</p>
       ) : null}
-      <div className={styles.noteMeta}>
-        <span>빈도 {note.frequency}</span>
-      </div>
-    </article>
+    </Link>
   );
 }

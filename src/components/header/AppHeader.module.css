@@ -41,6 +41,10 @@
   font-size: 0.9rem;
 }
 
+.logoSlot {
+  display: block;
+}
+
 .tabsSlot {
   display: flex;
   justify-content: center;
@@ -93,6 +97,10 @@
 @media (max-width: 900px) {
   .header {
     grid-template-columns: 1fr;
+  }
+
+  .logoSlot {
+    display: none;
   }
 
   .actions {

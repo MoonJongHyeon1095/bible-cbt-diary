@@ -1,0 +1,43 @@
+.button {
+  position: fixed;
+  right: 24px;
+  bottom: 25vh;
+  z-index: 30;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  width: 68px;
+  height: 68px;
+  background: #fff;
+  color: #1f2328;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.22);
+  cursor: pointer;
+}
+
+.helperText {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  background: rgba(18, 20, 24, 0.92);
+  color: #fff;
+  font-size: 0.8rem;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 720px) {
+  .button {
+    right: 16px;
+    bottom: 22vh;
+    width: 60px;
+    height: 60px;
+  }
+}

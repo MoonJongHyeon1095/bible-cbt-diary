@@ -35,6 +35,72 @@ export async function GET(request: Request) {
   }
 
   const { searchParams } = new URL(request.url);
+  const idParam = searchParams.get("id");
+
+  if (idParam) {
+    const noteId = Number(idParam);
+    if (Number.isNaN(noteId)) {
+      return NextResponse.json(
+        { note: null, message: "id가 올바르지 않습니다." },
+        { status: 400 },
+      );
+    }
+
+    const supabase = createSupabaseAdminClient();
+    const { data, error } = await supabase
+      .from("emotion_notes")
+      .select(
+        `
+        id,
+        title,
+        trigger_text,
+        behavior,
+        created_at,
+        emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
+        emotion_error_details(id,note_id,error_label,error_description,created_at),
+        emotion_alternative_details(id,note_id,alternative,created_at),
+        emotion_behavior_details(
+          id,
+          note_id,
+          behavior_label,
+          behavior_description,
+          error_tags,
+          created_at
+        )
+      `,
+      )
+      .eq("user_id", user.id)
+      .eq("id", noteId)
+      .order("created_at", { ascending: true, foreignTable: "emotion_note_details" })
+      .order("created_at", { ascending: true, foreignTable: "emotion_error_details" })
+      .order("created_at", { ascending: true, foreignTable: "emotion_alternative_details" })
+      .order("created_at", { ascending: true, foreignTable: "emotion_behavior_details" })
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json(
+        { note: null, message: "노트를 불러오지 못했습니다." },
+        { status: 500 },
+      );
+    }
+
+    const note = data
+      ? {
+          id: data.id,
+          title: data.title,
+          trigger_text: data.trigger_text,
+          behavior: data.behavior,
+          created_at: data.created_at,
+          thought_details: data.emotion_note_details ?? [],
+          error_details: data.emotion_error_details ?? [],
+          alternative_details: data.emotion_alternative_details ?? [],
+          behavior_details: data.emotion_behavior_details ?? [],
+        }
+      : null;
+
+    return NextResponse.json({ note });
+  }
+
   const startParam = searchParams.get("start");
   const endParam = searchParams.get("end");
   const { startIso, endIso } =
@@ -44,7 +110,7 @@ export async function GET(request: Request) {
   const supabase = createSupabaseAdminClient();
   const { data, error } = await supabase
     .from("emotion_notes")
-    .select("id,title,trigger_text,behavior,frequency,created_at")
+    .select("id,title,trigger_text,behavior,created_at")
     .eq("user_id", user.id)
     .gte("created_at", startIso)
     .lt("created_at", endIso)
@@ -74,14 +140,11 @@ export async function POST(request: Request) {
     title?: string;
     trigger_text?: string;
     behavior?: string;
-    frequency?: number;
   };
 
   const title = String(payload.title ?? "").trim();
   const triggerText = String(payload.trigger_text ?? "").trim();
   const behavior = String(payload.behavior ?? "").trim();
-  const frequencyValue = Number(payload.frequency ?? 1);
-  const frequency = Number.isNaN(frequencyValue) ? 1 : frequencyValue;
 
   if (!title || !triggerText) {
     return NextResponse.json(
@@ -91,13 +154,16 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("emotion_notes").insert({
+  const { data, error } = await supabase
+    .from("emotion_notes")
+    .insert({
     user_id: user.id,
     title,
     trigger_text: triggerText,
     behavior,
-    frequency,
-  });
+    })
+    .select("id")
+    .single();
 
   if (error) {
     return NextResponse.json(
@@ -106,7 +172,11 @@ export async function POST(request: Request) {
     );
   }
 
-  return NextResponse.json({ ok: true, message: "기록이 저장되었습니다." });
+  return NextResponse.json({
+    ok: true,
+    message: "기록이 저장되었습니다.",
+    noteId: data?.id ?? null,
+  });
 }
 
 export async function PATCH(request: Request) {
@@ -124,7 +194,6 @@ export async function PATCH(request: Request) {
     title?: string;
     trigger_text?: string;
     behavior?: string;
-    frequency?: number;
   };
 
   const noteId = Number(payload.id ?? "");
@@ -139,7 +208,6 @@ export async function PATCH(request: Request) {
     title?: string;
     trigger_text?: string;
     behavior?: string;
-    frequency?: number;
     updated_at?: string;
   } = {
     updated_at: new Date().toISOString(),
@@ -153,10 +221,6 @@ export async function PATCH(request: Request) {
   }
   if (payload.behavior !== undefined) {
     updatePayload.behavior = String(payload.behavior).trim();
-  }
-  if (payload.frequency !== undefined) {
-    const frequencyValue = Number(payload.frequency);
-    updatePayload.frequency = Number.isNaN(frequencyValue) ? 1 : frequencyValue;
   }
 
   const supabase = createSupabaseAdminClient();

@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import styles from "./EmotionCalendarSection.module.css";
 import type { EmotionNote } from "@/lib/types";
+import { fetchEmotionNotesByRange } from "./utils/emotionCalendarApi";
 
 type DayCell = {
   date: Date;
@@ -38,7 +39,7 @@ export default function EmotionCalendarSection() {
   const [notes, setNotes] = useState<EmotionNote[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   const monthLabel = useMemo(
     () =>
@@ -79,18 +80,16 @@ export default function EmotionCalendarSection() {
       }
       const start = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
       const end = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1);
-      const response = await fetch(
-        `/api/emotion-notes?start=${start.toISOString()}&end=${end.toISOString()}`,
-        {
-          headers: { Authorization: `Bearer ${accessToken}` },
-        },
+      const { response, data } = await fetchEmotionNotesByRange(
+        start,
+        end,
+        accessToken,
       );
       if (!response.ok) {
         setNotes([]);
         setIsLoading(false);
         return;
       }
-      const data = (await response.json()) as { notes: EmotionNote[] };
       setNotes(data.notes ?? []);
       setIsLoading(false);
     };

@@ -1,6 +1,6 @@
 "use client";
 
-import { Brain, Pencil, Trash2 } from "lucide-react";
+import { Brain, Copy, Maximize2 } from "lucide-react";
 import type { EmotionNoteDetail } from "@/lib/types";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -26,6 +26,8 @@ type ThoughtDetailSectionProps = {
   showAddButton?: boolean;
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
+  onCopyText?: (text: string) => void;
+  onOpenModal?: (title: string, body: string) => void;
 };
 
 export default function ThoughtDetailSection({
@@ -49,6 +51,8 @@ export default function ThoughtDetailSection({
   showAddButton = true,
   onSelectDetail,
   selectedDetailId,
+  onCopyText,
+  onOpenModal,
 }: ThoughtDetailSectionProps) {
   return (
     <EmotionDetailSectionCard
@@ -57,22 +61,7 @@ export default function ThoughtDetailSection({
       title="자동 사고"
       hint="떠오른 생각과 감정"
     >
-      <div className={styles.sectionForm}>
-        <input
-          value={detailThought}
-          onChange={(event) => onChangeDetailThought(event.target.value)}
-          placeholder="떠오른 생각을 적어주세요"
-          className={styles.input}
-          disabled={!noteId}
-        />
-        <input
-          value={detailEmotion}
-          onChange={(event) => onChangeDetailEmotion(event.target.value)}
-          placeholder="감정을 적어주세요"
-          className={styles.input}
-          disabled={!noteId}
-        />
-      </div>
+      {null}
       {showAddButton ? (
         <div className={styles.sectionActions}>
           <button
@@ -136,32 +125,38 @@ export default function ThoughtDetailSection({
                     </span>
                   </div>
                   <p className={styles.detailText}>{detail.automatic_thought}</p>
-                  <div className={styles.detailActions}>
+                  <div className={styles.detailFooter}>
                     <button
                       type="button"
-                      className={styles.iconButton}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onStartEditing(detail);
+                        onCopyText?.(
+                          `자동 사고: ${detail.automatic_thought}\n감정: ${detail.emotion}`,
+                        );
                       }}
-                      aria-label="수정"
+                      aria-label="복사"
                     >
-                      <Pencil size={16} />
-                      <span className={styles.srOnly}>수정</span>
+                      <Copy size={16} />
+                      <span className={styles.srOnly}>복사</span>
                     </button>
                     <button
                       type="button"
-                      className={`${styles.iconButton} ${styles.iconDanger}`}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onDelete(detail.id);
+                        onOpenModal?.(
+                          "자동 사고",
+                          `${detail.automatic_thought}\n\n감정: ${detail.emotion}`,
+                        );
                       }}
-                      aria-label="삭제"
+                      aria-label="확대"
                     >
-                      <Trash2 size={16} />
-                      <span className={styles.srOnly}>삭제</span>
+                      <Maximize2 size={16} />
+                      <span className={styles.srOnly}>확대</span>
                     </button>
                   </div>
+                  {null}
                 </>
               )}
             </div>

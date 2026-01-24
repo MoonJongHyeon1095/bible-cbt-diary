@@ -3,8 +3,19 @@
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import AppHeader from "@/components/header/AppHeader";
-import { List, Pencil, Plus, Upload, Trash2 } from "lucide-react";
+import {
+  AlertCircle,
+  Brain,
+  Footprints,
+  Lightbulb,
+  List,
+  Pencil,
+  Plus,
+  Upload,
+  Trash2,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -13,6 +24,7 @@ import ThoughtDetailSection from "./ThoughtDetailSection";
 import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
+import DetailSectionItemModal from "@/components/common/DetailSectionItemModal";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
@@ -20,6 +32,12 @@ type EmotionNoteDetailPageProps = {
 
 type SectionKey = "thought" | "error" | "alternative" | "behavior";
 type SelectedItem = { section: SectionKey; id: number } | null;
+type ModalContent = {
+  title: string;
+  body: string;
+  color: string;
+  icon: ReactNode;
+} | null;
 
 const formatDateTime = (value: string) =>
   new Date(value).toLocaleString("ko-KR", {
@@ -55,6 +73,9 @@ export default function EmotionNoteDetailPage({
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(null);
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
+  const [modalContent, setModalContent] = useState<ModalContent>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasTitleChange =
     (note?.title ?? "") !== title.trim() ||
     (note?.trigger_text ?? "") !== triggerText.trim();
@@ -116,6 +137,21 @@ export default function EmotionNoteDetailPage({
     },
   ];
 
+  const handleCopyText = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyMessage("클립보드에 복사되었습니다.");
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current);
+      }
+      copyTimerRef.current = setTimeout(() => {
+        setCopyMessage(null);
+      }, 1600);
+    } catch {
+      // Ignore clipboard errors silently.
+    }
+  };
+
   const toggleItems = [
     {
       key: "thought",
@@ -137,6 +173,15 @@ export default function EmotionNoteDetailPage({
           }
           selectedDetailId={
             selectedItem?.section === "thought" ? selectedItem.id : null
+          }
+          onCopyText={handleCopyText}
+          onOpenModal={(title, body) =>
+            setModalContent({
+              title,
+              body,
+              color: "#ffd300",
+              icon: <Brain size={18} />,
+            })
           }
         />
       ),
@@ -161,6 +206,15 @@ export default function EmotionNoteDetailPage({
           }
           selectedDetailId={
             selectedItem?.section === "error" ? selectedItem.id : null
+          }
+          onCopyText={handleCopyText}
+          onOpenModal={(title, body) =>
+            setModalContent({
+              title,
+              body,
+              color: "#ff4fd8",
+              icon: <AlertCircle size={18} />,
+            })
           }
         />
       ),
@@ -188,6 +242,15 @@ export default function EmotionNoteDetailPage({
           selectedDetailId={
             selectedItem?.section === "alternative" ? selectedItem.id : null
           }
+          onCopyText={handleCopyText}
+          onOpenModal={(title, body) =>
+            setModalContent({
+              title,
+              body,
+              color: "#36d94a",
+              icon: <Lightbulb size={18} />,
+            })
+          }
         />
       ),
     },
@@ -211,6 +274,15 @@ export default function EmotionNoteDetailPage({
           }
           selectedDetailId={
             selectedItem?.section === "behavior" ? selectedItem.id : null
+          }
+          onCopyText={handleCopyText}
+          onOpenModal={(title, body) =>
+            setModalContent({
+              title,
+              body,
+              color: "#26e0ff",
+              icon: <Footprints size={18} />,
+            })
           }
         />
       ),
@@ -403,7 +475,9 @@ export default function EmotionNoteDetailPage({
             }}
             style={{
               bottom: shouldShowSave ? "26vh" : "33vh",
-              ...selectedFabStyle,
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
             }}
           />
           <FloatingActionButton
@@ -425,9 +499,9 @@ export default function EmotionNoteDetailPage({
             }}
             style={{
               bottom: shouldShowSave ? "10vh" : "17vh",
-              backgroundColor: "#121417",
+              backgroundColor: "#e14a4a",
               color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.35)",
+              borderColor: "#b93333",
             }}
           />
         </>
@@ -479,6 +553,17 @@ export default function EmotionNoteDetailPage({
             }}
           />
         </>
+      ) : null}
+      <DetailSectionItemModal
+        isOpen={Boolean(modalContent)}
+        title={modalContent?.title ?? ""}
+        body={modalContent?.body ?? ""}
+        accentColor={modalContent?.color ?? "#fff"}
+        icon={modalContent?.icon ?? null}
+        onClose={() => setModalContent(null)}
+      />
+      {copyMessage ? (
+        <div className={styles.copyToast}>{copyMessage}</div>
       ) : null}
     </div>
   );

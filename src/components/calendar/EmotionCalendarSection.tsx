@@ -38,7 +38,7 @@ const formatDateKey = (date: Date) => date.toISOString().slice(0, 10);
 export default function EmotionCalendarSection() {
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [notes, setNotes] = useState<EmotionNote[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date());
   const [isLoading, setIsLoading] = useState(true);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const router = useRouter();

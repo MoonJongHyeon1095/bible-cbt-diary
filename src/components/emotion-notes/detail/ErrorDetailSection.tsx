@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Pencil, Trash2 } from "lucide-react";
+import { AlertCircle, Copy, Maximize2 } from "lucide-react";
 import type { EmotionNoteErrorDetail } from "@/lib/types";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -26,6 +26,8 @@ type ErrorDetailSectionProps = {
   showAddButton?: boolean;
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
+  onCopyText?: (text: string) => void;
+  onOpenModal?: (title: string, body: string) => void;
 };
 
 export default function ErrorDetailSection({
@@ -49,6 +51,8 @@ export default function ErrorDetailSection({
   showAddButton = true,
   onSelectDetail,
   selectedDetailId,
+  onCopyText,
+  onOpenModal,
 }: ErrorDetailSectionProps) {
   return (
     <EmotionDetailSectionCard
@@ -57,23 +61,7 @@ export default function ErrorDetailSection({
       title="인지 오류"
       hint="왜곡된 생각을 정리하세요"
     >
-      <div className={styles.sectionForm}>
-        <input
-          value={errorLabel}
-          onChange={(event) => onChangeErrorLabel(event.target.value)}
-          placeholder="오류 이름"
-          className={styles.input}
-          disabled={!noteId}
-        />
-        <textarea
-          value={errorDescription}
-          onChange={(event) => onChangeErrorDescription(event.target.value)}
-          rows={2}
-          placeholder="어떤 오류인지 설명"
-          className={styles.textarea}
-          disabled={!noteId}
-        />
-      </div>
+      {null}
       {showAddButton ? (
         <div className={styles.sectionActions}>
           <button
@@ -140,32 +128,38 @@ export default function ErrorDetailSection({
                   <p className={styles.detailEmotion}>
                     {detail.error_description}
                   </p>
-                  <div className={styles.detailActions}>
+                  <div className={styles.detailFooter}>
                     <button
                       type="button"
-                      className={styles.iconButton}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onStartEditing(detail);
+                        onCopyText?.(
+                          `인지 오류: ${detail.error_label}\n${detail.error_description}`,
+                        );
                       }}
-                      aria-label="수정"
+                      aria-label="복사"
                     >
-                      <Pencil size={16} />
-                      <span className={styles.srOnly}>수정</span>
+                      <Copy size={16} />
+                      <span className={styles.srOnly}>복사</span>
                     </button>
                     <button
                       type="button"
-                      className={`${styles.iconButton} ${styles.iconDanger}`}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onDelete(detail.id);
+                        onOpenModal?.(
+                          "인지 오류",
+                          `${detail.error_label}\n\n${detail.error_description}`,
+                        );
                       }}
-                      aria-label="삭제"
+                      aria-label="확대"
                     >
-                      <Trash2 size={16} />
-                      <span className={styles.srOnly}>삭제</span>
+                      <Maximize2 size={16} />
+                      <span className={styles.srOnly}>확대</span>
                     </button>
                   </div>
+                  {null}
                 </>
               )}
             </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Lightbulb, Pencil, Trash2 } from "lucide-react";
+import { Copy, Lightbulb, Maximize2 } from "lucide-react";
 import type { EmotionNoteAlternativeDetail } from "@/lib/types";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -22,6 +22,8 @@ type AlternativeDetailSectionProps = {
   showAddButton?: boolean;
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
+  onCopyText?: (text: string) => void;
+  onOpenModal?: (title: string, body: string) => void;
 };
 
 export default function AlternativeDetailSection({
@@ -41,6 +43,8 @@ export default function AlternativeDetailSection({
   showAddButton = true,
   onSelectDetail,
   selectedDetailId,
+  onCopyText,
+  onOpenModal,
 }: AlternativeDetailSectionProps) {
   return (
     <EmotionDetailSectionCard
@@ -49,16 +53,7 @@ export default function AlternativeDetailSection({
       title="대안 사고"
       hint="새로운 시각을 적어보세요"
     >
-      <div className={styles.sectionForm}>
-        <textarea
-          value={alternativeText}
-          onChange={(event) => onChangeAlternativeText(event.target.value)}
-          rows={2}
-          placeholder="더 균형 잡힌 생각"
-          className={styles.textarea}
-          disabled={!noteId}
-        />
-      </div>
+      {null}
       {showAddButton ? (
         <div className={styles.sectionActions}>
           <button
@@ -115,32 +110,33 @@ export default function AlternativeDetailSection({
                     </span>
                   </div>
                   <p className={styles.detailText}>{detail.alternative}</p>
-                  <div className={styles.detailActions}>
+                  <div className={styles.detailFooter}>
                     <button
                       type="button"
-                      className={styles.iconButton}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onStartEditing(detail);
+                        onCopyText?.(`대안 사고: ${detail.alternative}`);
                       }}
-                      aria-label="수정"
+                      aria-label="복사"
                     >
-                      <Pencil size={16} />
-                      <span className={styles.srOnly}>수정</span>
+                      <Copy size={16} />
+                      <span className={styles.srOnly}>복사</span>
                     </button>
                     <button
                       type="button"
-                      className={`${styles.iconButton} ${styles.iconDanger}`}
+                      className={styles.miniIconButton}
                       onClick={(event) => {
                         event.stopPropagation();
-                        onDelete(detail.id);
+                        onOpenModal?.("대안 사고", detail.alternative);
                       }}
-                      aria-label="삭제"
+                      aria-label="확대"
                     >
-                      <Trash2 size={16} />
-                      <span className={styles.srOnly}>삭제</span>
+                      <Maximize2 size={16} />
+                      <span className={styles.srOnly}>확대</span>
                     </button>
                   </div>
+                  {null}
                 </>
               )}
             </div>

@@ -250,10 +250,9 @@
 }
 
 .toggleContent {
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 12px;
-  background: rgba(0, 0, 0, 0.08);
+  border: none;
+  padding: 0;
+  background: transparent;
 }
 
 .sectionCard {
@@ -400,6 +399,18 @@
   min-height: 72px;
 }
 
+.copyToast {
+  position: fixed;
+  left: 24px;
+  bottom: 12vh;
+  z-index: 40;
+  background: rgba(18, 20, 24, 0.92);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+}
+
 .detailHeader {
   display: flex;
   align-items: center;
@@ -437,6 +448,26 @@
   gap: 8px;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.detailFooter {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.miniIconButton {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
 }
 
 .detailEdit {

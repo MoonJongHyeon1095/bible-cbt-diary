@@ -207,7 +207,6 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     onUpdate: thoughtSectionState.handleUpdate,
     onDelete: thoughtSectionState.handleDelete,
     onChangeEditingThoughtText: thoughtSectionState.setEditingThoughtText,
-    onChangeEditingEmotionText: thoughtSectionState.setEditingEmotionText,
   };
 
   const errorSection = {

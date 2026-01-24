@@ -1,10 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { Brain } from "lucide-react";
-import type { EmotionNoteDetail } from "@/lib/types";
-import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
+import DetailSectionBadge from "@/components/common/DetailSectionBadge";
 import DetailSectionItem from "@/components/common/DetailSectionItem";
+import type { EmotionNoteDetail } from "@/lib/types";
+import { Brain } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
+import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type ThoughtDetailSectionProps = {
@@ -17,12 +18,15 @@ type ThoughtDetailSectionProps = {
   onUpdate: (detailId: number) => void;
   onDelete: (detailId: number) => void;
   onChangeEditingThoughtText: (value: string) => void;
-  onChangeEditingEmotionText: (value: string) => void;
   formatDateTime: (value: string) => string;
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
-  onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
+  onOpenModal?: (
+    title: string,
+    body: string,
+    badgeText?: string | null,
+  ) => void;
 };
 
 export default function ThoughtDetailSection({
@@ -35,7 +39,6 @@ export default function ThoughtDetailSection({
   onUpdate,
   onDelete,
   onChangeEditingThoughtText,
-  onChangeEditingEmotionText,
   formatDateTime,
   onSelectDetail,
   selectedDetailId,
@@ -93,37 +96,35 @@ export default function ThoughtDetailSection({
               tabIndex={onSelectDetail ? 0 : undefined}
             >
               {editingThoughtId === detail.id ? (
-                    <div className={styles.detailEdit}>
-                      <textarea
-                        ref={editTextareaRef}
-                        value={editingThoughtText}
-                        onChange={(event) =>
-                          onChangeEditingThoughtText(event.target.value)
-                        }
-                        onFocus={resizeEditTextarea}
-                        onInput={resizeEditTextarea}
-                        rows={2}
-                        className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                      />
-                      <input
-                        value={editingEmotionText}
-                        onChange={(event) =>
-                          onChangeEditingEmotionText(event.target.value)
-                        }
-                        className={styles.input}
-                      />
+                <div className={styles.detailEdit}>
+                  {editingEmotionText ? (
+                    <div className={styles.detailEditBadge}>
+                      <DetailSectionBadge text={`${editingEmotionText}`} />
                     </div>
+                  ) : null}
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editingThoughtText}
+                    onChange={(event) =>
+                      onChangeEditingThoughtText(event.target.value)
+                    }
+                    onFocus={resizeEditTextarea}
+                    onInput={resizeEditTextarea}
+                    rows={2}
+                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
+                  />
+                </div>
               ) : (
                 <>
                   {null}
                   <DetailSectionItem
+                    badgeText={detail.emotion}
                     body={detail.automatic_thought}
-                    secondary={`감정: ${detail.emotion}`}
                     actions={{
                       copyText: `자동 사고: ${detail.automatic_thought}\n감정: ${detail.emotion}`,
                       modalTitle: "자동 사고",
-                      modalBody: `${detail.automatic_thought}\n\n감정: ${detail.emotion}`,
-                      modalBadgeText: null,
+                      modalBody: detail.automatic_thought,
+                      modalBadgeText: `${detail.emotion}`,
                       timeText: formatDateTime(detail.created_at),
                       onCopyText,
                       onOpenModal,

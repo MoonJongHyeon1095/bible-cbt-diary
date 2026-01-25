@@ -73,6 +73,7 @@ export default function EmotionNoteSectionChart({
 }: EmotionNoteSectionChartProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [radius, setRadius] = useState(120);
+  const [isReady, setIsReady] = useState(false);
   const data: ChartDatum[] = sections.map((section) => ({
     key: section.key,
     label: section.label,
@@ -94,7 +95,10 @@ export default function EmotionNoteSectionChart({
       const size = Math.min(element.clientWidth, element.clientHeight);
       if (size > 0) {
         setRadius(size / 2);
+        setIsReady(true);
+        return;
       }
+      setIsReady(false);
     };
 
     updateSize();
@@ -106,31 +110,40 @@ export default function EmotionNoteSectionChart({
   return (
     <div className={styles.chartShell}>
       <div className={styles.chartWrapper} ref={wrapperRef}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              dataKey="value"
-              innerRadius={innerRadius}
-              outerRadius={(entry) =>
-                entry.key === selectedKey ? activeOuterRadius : outerRadius
-              }
-              paddingAngle={1}
-              cornerRadius={8}
-              stroke="none"
-              labelLine={false}
-              label={renderLabel}
-              onClick={(entry) => onSelect(entry.key)}
-              isAnimationActive={false}
-              startAngle={90}
-              endAngle={-270}
-            >
-              {data.map((entry) => (
-                <Cell key={entry.key} fill={entry.color} />
-              ))}
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+        {isReady ? (
+          <ResponsiveContainer
+            width="100%"
+            height="100%"
+            minWidth={260}
+            minHeight={260}
+          >
+            <PieChart>
+              <Pie
+                data={data}
+                dataKey="value"
+                innerRadius={innerRadius}
+                outerRadius={(entry) =>
+                  entry.key === selectedKey ? activeOuterRadius : outerRadius
+                }
+                paddingAngle={1}
+                cornerRadius={8}
+                stroke="none"
+                labelLine={false}
+                label={renderLabel}
+                onClick={(entry) => onSelect(entry.key)}
+                isAnimationActive={false}
+                startAngle={90}
+                endAngle={-270}
+              >
+                {data.map((entry) => (
+                  <Cell key={entry.key} fill={entry.color} />
+                ))}
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className={styles.chartPlaceholder} aria-hidden="true" />
+        )}
       </div>
     </div>
   );

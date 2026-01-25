@@ -2,11 +2,11 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import Button from "@/components/ui/Button";
-import { BookSearch, LayoutDashboard } from "lucide-react";
+import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import EmotionGraphCanvas from "./EmotionGraphCanvas";
-import EmotionGraphDeepOverlay from "./EmotionGraphDeepOverlay";
+import EmotionGraphDeepSelectModal from "./EmotionGraphDeepSelectModal";
 import EmotionGraphDetailStack from "./EmotionGraphDetailStack";
 import styles from "./EmotionGraphSection.module.css";
 import { useElkLayout } from "./hooks/useElkLayout";
@@ -43,7 +43,6 @@ export default function EmotionGraphSection({
     selectedNote,
     sortedSelectableNotes,
     clearSelection,
-    selectNode,
     toggleSelection,
   } = useGraphSelection(notes);
   const {
@@ -59,30 +58,15 @@ export default function EmotionGraphSection({
     elkEdges,
     selectedNodeId,
   );
-  const longPressTriggeredRef = useRef(false);
-  const displayNodesWithHandlers = useMemo(
-    () =>
-      displayNodes.map((node) => ({
-        ...node,
-        data: {
-          ...node.data,
-          onLongPress: (nodeId: string) => {
-            longPressTriggeredRef.current = true;
-            window.setTimeout(() => {
-              longPressTriggeredRef.current = false;
-            }, 250);
-            selectNode(nodeId);
-            if (!groupId) {
-              router.push(`/session/deep?mainId=${nodeId}`);
-              return;
-            }
-            closeDeepSelection();
-            setIsDeepSelecting(true);
-          },
-        },
-      })),
-    [closeDeepSelection, displayNodes, groupId, router, selectNode, setIsDeepSelecting],
-  );
+  const handleGoDeeper = () => {
+    if (!selectedNote) return;
+    if (!groupId) {
+      router.push(`/session/deep?mainId=${selectedNote.id}`);
+      return;
+    }
+    closeDeepSelection();
+    setIsDeepSelecting(true);
+  };
   const layoutKey = useMemo(() => {
     const nodeKey = elkNodes.map((node) => node.id).join("|");
     const edgeKey = elkEdges.map((edge) => edge.id).join("|");
@@ -94,10 +78,6 @@ export default function EmotionGraphSection({
   const noteCount = notes.length;
 
   const handleNodeClick = (nodeId: string) => {
-    if (longPressTriggeredRef.current) {
-      longPressTriggeredRef.current = false;
-      return;
-    }
     toggleSelection(nodeId);
   };
 
@@ -122,7 +102,7 @@ export default function EmotionGraphSection({
 
       <EmotionGraphCanvas
         graphKey={layoutKey}
-        displayNodes={displayNodesWithHandlers}
+        displayNodes={displayNodes}
         displayEdges={displayEdges}
         isLoading={isLoading}
         needsNote={needsNote}
@@ -132,14 +112,23 @@ export default function EmotionGraphSection({
         onSelectNode={handleNodeClick}
       >
         {selectedNote ? (
-          <FloatingActionButton
-            label="상세조회"
-            helperText="상세조회"
-            icon={<BookSearch size={20} />}
-            onClick={() => router.push(`/detail/${selectedNote.id}`)}
-          />
+          <>
+            <FloatingActionButton
+              label="상세조회"
+              helperText="상세조회"
+              icon={<BookSearch size={20} />}
+              onClick={() => router.push(`/detail/${selectedNote.id}`)}
+            />
+            <FloatingActionButton
+              label="Go Deeper"
+              helperText="Go Deeper"
+              icon={<Route size={20} />}
+              className={styles.deepFab}
+              onClick={handleGoDeeper}
+            />
+          </>
         ) : null}
-        <EmotionGraphDeepOverlay
+        <EmotionGraphDeepSelectModal
           isOpen={isDeepSelecting}
           mainNote={selectedNote}
           selectableNotes={sortedSelectableNotes}

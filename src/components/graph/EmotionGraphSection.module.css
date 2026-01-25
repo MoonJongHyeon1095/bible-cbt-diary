@@ -118,6 +118,10 @@
   width: 100%;
 }
 
+.deepFab {
+  --fab-right: calc(24px + 78px);
+}
+
 .detailStackHeader:focus-visible,
 .detailStackItem:focus-visible {
   outline: 2px solid rgba(255, 255, 255, 0.55);
@@ -155,13 +159,17 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  padding: 10px;
+  padding: 0;
   font-size: 0.75rem;
   line-height: 1.2;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
   overflow: hidden;
   position: absolute;
   box-sizing: border-box;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    opacity 0.18s ease;
 }
 
 .nodeContent {
@@ -170,12 +178,13 @@
   height: 100%;
   display: grid;
   place-items: center;
+  border-radius: inherit;
 }
 
 .nodeLongPressOverlay {
   position: absolute;
   inset: 0;
-  background: rgba(236, 241, 255, 0.18);
+  background: rgba(120, 120, 120, 0.55);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -187,7 +196,8 @@
     opacity 0.16s ease,
     transform 0.16s ease;
   pointer-events: none;
-  color: #e9efff;
+  color: #1f2328;
+  border-radius: inherit;
 }
 
 .nodeLongPressOverlayActive {
@@ -199,8 +209,9 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(18, 22, 36, var(--press-fill, 0.25));
+  background: rgba(255, 255, 255, var(--press-fill, 0.4));
   transition: background 0.08s linear;
+  border-radius: inherit;
 }
 
 .nodeLongPressIcon,
@@ -374,18 +385,18 @@
 }
 
 .deepOverlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: rgba(15, 18, 24, 0.68);
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 32px;
   z-index: 4;
 }
 
 .deepOverlayCard {
-  width: min(720px, 100%);
-  max-height: 90%;
+  width: min(960px, 92vw);
+  max-height: 86vh;
   overflow: hidden;
   background: #12151b;
   border-radius: 20px;

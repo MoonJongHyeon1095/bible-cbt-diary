@@ -1,3 +1,4 @@
+import { useModalOpen } from "@/components/common/useModalOpen";
 import styles from "../MinimalStyles.module.css";
 
 type MinimalSavingModalProps = {
@@ -5,6 +6,8 @@ type MinimalSavingModalProps = {
 };
 
 export function MinimalSavingModal({ open }: MinimalSavingModalProps) {
+  useModalOpen(open);
+
   if (!open) return null;
 
   return (

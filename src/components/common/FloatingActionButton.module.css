@@ -1,7 +1,7 @@
 .button {
   position: fixed;
-  right: 24px;
-  bottom: 25vh;
+  right: var(--fab-right, 24px);
+  bottom: var(--fab-bottom, 25vh);
   z-index: 30;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: 999px;
@@ -33,10 +33,15 @@
   cursor: not-allowed;
 }
 
+:global(body[data-modal-open="true"]) .button {
+  opacity: 0;
+  pointer-events: none;
+}
+
 @media (max-width: 720px) {
   .button {
-    right: 16px;
-    bottom: 22vh;
+    right: var(--fab-right, 16px);
+    bottom: var(--fab-bottom-mobile, 22vh);
     width: 60px;
     height: 60px;
   }

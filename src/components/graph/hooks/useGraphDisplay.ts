@@ -22,20 +22,23 @@ export const useGraphDisplay = (
       };
     }
 
-    const displayNodes = timelineNodes.map((node) => ({
-      ...node,
-      selected: node.id === selectedNodeId,
-      style: {
-        ...node.style,
-        borderColor:
-          node.id === selectedNodeId ? "var(--accent)" : "var(--border-strong)",
-        boxShadow:
-          node.id === selectedNodeId
-            ? "0 0 0 3px rgba(143, 167, 200, 0.25)"
+    const displayNodes = timelineNodes.map((node) => {
+      const isSelected = node.id === selectedNodeId;
+      return {
+        ...node,
+        selected: isSelected,
+        style: {
+          ...node.style,
+          borderColor: isSelected ? "var(--accent)" : "var(--border-strong)",
+          borderWidth: isSelected ? 2 : 1,
+          boxShadow: isSelected
+            ? "0 0 0 6px rgba(143, 167, 200, 0.25), 0 16px 32px rgba(0, 0, 0, 0.28)"
             : "none",
-        zIndex: node.id === selectedNodeId ? 3 : 2,
-      },
-    }));
+          opacity: isSelected ? 1 : 0.6,
+          zIndex: isSelected ? 3 : 2,
+        },
+      };
+    });
 
     return {
       displayNodes,

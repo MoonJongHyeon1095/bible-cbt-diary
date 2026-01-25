@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useModalOpen } from "@/components/common/useModalOpen";
 
 type DrawerProps = {
   open: boolean;
@@ -25,6 +26,8 @@ export function Drawer({
   const [mounted, setMounted] = useState(open);
   const [visible, setVisible] = useState(open);
   const closeTimer = useRef<number | null>(null);
+
+  useModalOpen(mounted);
 
   useEffect(() => {
     if (open) {

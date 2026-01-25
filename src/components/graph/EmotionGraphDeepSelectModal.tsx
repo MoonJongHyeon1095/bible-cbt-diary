@@ -2,9 +2,10 @@
 
 import type { EmotionNote } from "@/lib/types";
 import Button from "@/components/ui/Button";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import styles from "./EmotionGraphSection.module.css";
 
-type EmotionGraphDeepOverlayProps = {
+type EmotionGraphDeepSelectModalProps = {
   isOpen: boolean;
   mainNote: EmotionNote | null;
   selectableNotes: EmotionNote[];
@@ -15,7 +16,7 @@ type EmotionGraphDeepOverlayProps = {
   onConfirm: () => void;
 };
 
-export default function EmotionGraphDeepOverlay({
+export default function EmotionGraphDeepSelectModal({
   isOpen,
   mainNote,
   selectableNotes,
@@ -24,10 +25,13 @@ export default function EmotionGraphDeepOverlay({
   onToggleSub,
   onClose,
   onConfirm,
-}: EmotionGraphDeepOverlayProps) {
+}: EmotionGraphDeepSelectModalProps) {
+  useModalOpen(isOpen && Boolean(mainNote));
+
   if (!isOpen || !mainNote) {
     return null;
   }
+  const note = mainNote;
 
   return (
     <div className={styles.deepOverlay} role="dialog" aria-modal="true">
@@ -48,10 +52,10 @@ export default function EmotionGraphDeepOverlay({
             <p className={styles.deepOverlaySectionTitle}>Main</p>
             <div className={styles.deepNoteCard}>
               <span className={styles.deepNoteTitle}>
-                {mainNote.title || "감정 노트"}
+                {note.title || "감정 노트"}
               </span>
-              <p className={styles.deepNoteText}>{mainNote.trigger_text}</p>
-              <span className={styles.deepNoteMeta}>#{mainNote.id}</span>
+              <p className={styles.deepNoteText}>{note.trigger_text}</p>
+              <span className={styles.deepNoteMeta}>#{note.id}</span>
             </div>
           </div>
           <div className={styles.deepOverlaySection}>

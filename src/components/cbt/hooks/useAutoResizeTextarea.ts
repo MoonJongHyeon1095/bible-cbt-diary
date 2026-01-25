@@ -10,5 +10,5 @@ export function useAutoResizeTextarea(
     if (!el) return;
     el.style.height = "auto";
     el.style.height = `${el.scrollHeight}px`;
-  }, [ref, ...deps]);
+  }, [ref, deps]);
 }

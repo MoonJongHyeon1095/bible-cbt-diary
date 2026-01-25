@@ -3,6 +3,7 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import Button from "@/components/ui/Button";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import DetailSectionBadge from "./DetailSectionBadge";
 import styles from "./DetailSectionItemModal.module.css";
 
@@ -25,6 +26,8 @@ export default function DetailSectionItemModal({
   badgeText,
   onClose,
 }: DetailSectionItemModalProps) {
+  useModalOpen(isOpen);
+
   if (!isOpen) {
     return null;
   }

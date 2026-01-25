@@ -3,6 +3,7 @@
 import { getOAuthRedirectTo } from "@/lib/auth/oauth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
@@ -23,6 +24,8 @@ export default function AuthModal({
   onClose,
   onSignedIn,
 }: AuthModalProps) {
+  useModalOpen(isOpen);
+
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

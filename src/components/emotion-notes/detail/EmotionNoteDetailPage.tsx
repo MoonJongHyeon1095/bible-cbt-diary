@@ -20,7 +20,7 @@ import {
   X,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
@@ -193,12 +193,17 @@ export default function EmotionNoteDetailPage({
     }
   };
 
-  const clearEditing = () => {
+  const clearEditing = useCallback(() => {
     thoughtSection.onCancelEditing();
     errorSection.onCancelEditing();
     alternativeSection.onCancelEditing();
     behaviorSection.onCancelEditing();
-  };
+  }, [
+    alternativeSection,
+    behaviorSection,
+    errorSection,
+    thoughtSection,
+  ]);
 
   const handleSelectDetail = (section: SectionKey, detailId: number) => {
     const isSameSelection =

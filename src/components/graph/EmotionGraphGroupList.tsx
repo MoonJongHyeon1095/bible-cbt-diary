@@ -1,9 +1,14 @@
 "use client";
 
-import { forceCenter, forceCollide, forceManyBody, forceSimulation } from "d3-force";
+import {
+  forceCenter,
+  forceCollide,
+  forceManyBody,
+  forceSimulation,
+} from "d3-force";
+import { useRouter } from "next/navigation";
 import type { CSSProperties } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import styles from "./EmotionGraphGroupList.module.css";
 import { fetchEmotionNoteGroups } from "./utils/emotionGraphApi";
 import { getGroupThemeColor } from "./utils/graphColors";
@@ -75,9 +80,12 @@ export default function EmotionGraphGroupList({
     }
     const simNodes = nodes.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
-      .force("charge", forceManyBody().strength(-260))
+      .force("charge", forceManyBody().strength(-20))
       .force("center", forceCenter(size.width / 2, size.height / 2))
-      .force("collide", forceCollide().radius((node) => (node as GroupNode).radius + 14))
+      .force(
+        "collide",
+        forceCollide().radius((node) => (node as GroupNode).radius),
+      )
       .alpha(0.9);
 
     let rafId: number | null = null;

@@ -128,6 +128,15 @@ export default function BehaviorDetailSection(
                       onOpenModal,
                     }}
                   />
+                  {detail.error_tags && detail.error_tags.length > 0 ? (
+                    <div className={styles.detailTagList}>
+                      {detail.error_tags.map((tag) => (
+                        <span key={`${detail.id}-${tag}`} className={styles.detailErrorTag}>
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
                   {null}
                 </>
               )}

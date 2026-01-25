@@ -5,6 +5,7 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { MinimalAlternativeThoughtBodySection } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtBodySection";
 import { MinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtErrorState";
 import Button from "@/components/ui/Button";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -14,7 +15,7 @@ interface DeepAlternativeThoughtSectionProps {
   userInput: string;
   emotion: string;
   autoThought: string;
-  summary: string;
+  internalContext: DeepInternalContext | null;
   selectedCognitiveErrors: SelectedCognitiveError[];
   previousAlternatives: string[];
   seed: number;
@@ -28,7 +29,7 @@ export function DeepAlternativeThoughtSection({
   userInput,
   emotion,
   autoThought,
-  summary,
+  internalContext,
   selectedCognitiveErrors,
   previousAlternatives,
   seed,
@@ -46,7 +47,7 @@ export function DeepAlternativeThoughtSection({
     userInput,
     emotion,
     autoThought,
-    summary,
+    internalContext,
     selectedCognitiveErrors,
     previousAlternatives,
   });

@@ -18,6 +18,9 @@ import {
   fetchEmotionGraph,
   fetchEmotionNoteById,
 } from "@/components/graph/utils/emotionGraphApi";
+import { createDeepInternalContext } from "@/lib/ai";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/types";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -67,12 +70,17 @@ function DeepSessionPageContent() {
   const requestIdRef = useRef(0);
   const lastLoadKeyRef = useRef("");
   const inFlightRef = useRef(false);
+  const internalContextKeyRef = useRef("");
 
   const [step, setStep] = useState<DeepStep>("incident");
   const [userInput, setUserInput] = useState("");
   const [selectedEmotion, setSelectedEmotion] = useState("");
   const [autoThought, setAutoThought] = useState("");
-  const [summary, setSummary] = useState("");
+  const [internalContext, setInternalContext] =
+    useState<DeepInternalContext | null>(null);
+  const [internalContextError, setInternalContextError] =
+    useState<string | null>(null);
+  const [internalContextLoading, setInternalContextLoading] = useState(false);
   const [selectedCognitiveErrors, setSelectedCognitiveErrors] = useState<
     SelectedCognitiveError[]
   >([]);
@@ -198,6 +206,50 @@ function DeepSessionPageContent() {
     subIdSet,
     subIds.length,
   ]);
+
+  useEffect(() => {
+    if (!mainNote || notesLoading || internalContextLoading) return;
+    const key = `${mainNote.id}:${subNotes.map((note) => note.id).join(",")}`;
+    if (internalContextKeyRef.current === key && internalContext) return;
+    internalContextKeyRef.current = key;
+    const mainContext = buildDeepNoteContext(mainNote);
+    const subContexts = subNotes.map(buildDeepNoteContext);
+    let canceled = false;
+
+    setInternalContextLoading(true);
+    setInternalContextError(null);
+
+    createDeepInternalContext(mainContext, subContexts)
+      .then((ctx) => {
+        if (canceled) return;
+        setInternalContext(ctx);
+      })
+      .catch((error) => {
+        if (canceled) return;
+        setInternalContextError(
+          error instanceof Error ? error.message : "내부 컨텍스트 생성 실패",
+        );
+      })
+      .finally(() => {
+        if (canceled) return;
+        setInternalContextLoading(false);
+      });
+
+    return () => {
+      canceled = true;
+    };
+  }, [
+    mainNote,
+    notesLoading,
+    subNotes,
+    internalContext,
+    internalContextLoading,
+  ]);
+
+  useEffect(() => {
+    if (!internalContextError) return;
+    pushToast(internalContextError, "error");
+  }, [internalContextError, pushToast]);
 
   const handleBack = () => {
     if (currentStepIndex <= 0) return;
@@ -325,9 +377,9 @@ function DeepSessionPageContent() {
             emotion={selectedEmotion}
             mainNote={mainNote}
             subNotes={subNotes}
-            onComplete={(nextThought, nextSummary) => {
+            internalContext={internalContext}
+            onComplete={(nextThought) => {
               setAutoThought(nextThought);
-              setSummary(nextSummary);
               setStep("errors");
             }}
           />
@@ -337,7 +389,7 @@ function DeepSessionPageContent() {
           <DeepCognitiveErrorSection
             userInput={userInput}
             thought={autoThought}
-            summary={summary}
+            internalContext={internalContext}
             onSelect={handleSelectErrors}
           />
         )}
@@ -347,7 +399,7 @@ function DeepSessionPageContent() {
             userInput={userInput}
             emotion={selectedEmotion}
             autoThought={autoThought}
-            summary={summary}
+            internalContext={internalContext}
             selectedCognitiveErrors={selectedCognitiveErrors}
             previousAlternatives={previousAlternatives}
             seed={alternativeSeed}

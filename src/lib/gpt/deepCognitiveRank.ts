@@ -20,11 +20,11 @@ type RankLlmResponseShape = {
 const RANK_SYSTEM_PROMPT = `
 You are an expert who ranks the likelihood of "cognitive distortions" from a Cognitive Behavioral Therapy (CBT) perspective.
 
-The input is provided as [Situation], [Automatic Thought], and [Summary].
+The input is provided as [Situation] and [Automatic Thought].
 Your goals:
 - Sort all 10 cognitive distortions below in order from most likely to least likely. (Include all indices 1–10, no duplicates.)
 - "evidenceQuote": MUST be copied verbatim from [Automatic Thought]. (No paraphrasing or summarizing.)
-- "reason": Explain (1–2 sentences) why that distortion is plausible, based on the evidenceQuote and summary, but WITHOUT copying or quoting the evidenceQuote text.
+- "reason": Explain (1–2 sentences) why that distortion is plausible, based on the evidenceQuote and situation, but WITHOUT copying or quoting the evidenceQuote text.
 
 Important rules:
 1) Output must be JSON only. (No explanations, comments, code blocks, numbering, or bullets.)
@@ -59,7 +59,6 @@ Cognitive distortion index meanings:
 export async function rankDeepCognitiveErrors(
   situation: string,
   thought: string,
-  summary: string,
 ): Promise<CognitiveErrorRankResult> {
   const prompt = `
 [Situation]
@@ -67,9 +66,6 @@ ${situation}
 
 [Automatic Thought]
 ${thought}
-
-[Summary]
-${summary}
 `.trim();
 
   try {

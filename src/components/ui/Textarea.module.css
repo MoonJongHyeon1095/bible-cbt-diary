@@ -1,0 +1,17 @@
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: #fff;
+  color: #1f2328;
+  padding: 10px 12px;
+  font-size: 1rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.textarea:focus {
+  outline: 2px solid rgba(99, 102, 241, 0.25);
+  border-color: rgba(99, 102, 241, 0.6);
+}

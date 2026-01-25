@@ -1,0 +1,68 @@
+.root {
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  pointer-events: none;
+}
+
+.actions {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.backButton {
+  border-radius: 999px;
+  border: 1px solid var(--back-border, #e2e8f0);
+  background: #fff;
+  color: var(--back-text, #2563eb);
+}
+
+.nextButton {
+  border-radius: 999px;
+  background: var(--next-bg, #3b82f6);
+  color: #fff;
+  box-shadow: 0 14px 30px rgba(15, 23, 42, 0.18);
+}
+
+.toneBlue {
+  --back-border: #bfdbfe;
+  --back-text: #2563eb;
+  --back-hover: #eff6ff;
+  --next-bg: #3b82f6;
+  --next-hover: #2563eb;
+}
+
+.toneGreen {
+  --back-border: #bbf7d0;
+  --back-text: #16a34a;
+  --back-hover: #f0fdf4;
+  --next-bg: #22c55e;
+  --next-hover: #16a34a;
+}
+
+.toneAmber {
+  --back-border: #fde68a;
+  --back-text: #d97706;
+  --back-hover: #fffbeb;
+  --next-bg: #f59e0b;
+  --next-hover: #d97706;
+}
+
+.toneRose {
+  --back-border: #fecdd3;
+  --back-text: #e11d48;
+  --back-hover: #fff1f2;
+  --next-bg: #f43f5e;
+  --next-hover: #e11d48;
+}
+
+.backButton:hover {
+  background: var(--back-hover, #f8fafc);
+}
+
+.nextButton:hover {
+  background: var(--next-hover, #2563eb);
+}

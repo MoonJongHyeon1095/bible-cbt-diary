@@ -23,59 +23,118 @@ type LlmResponseShape = {
   }>;
 };
 
+// const SYSTEM_PROMPT = `
+// 너는 한국어로 답하는 인지치료 상담가다.
+// 인지행동치료(CBT) 관점에서 행동기법을 제안하는 전문가 역할을 한다.
+// 이전 진행상황으로 [상황], [감정/자동사고], [대안사고], [인지오류], [행동기법 목록]이 제공된다.
+// [행동기법 목록]에는 해당 행동기법의 [이름], [설명], [사용방법]이 포함되어 있다.
+
+// 너의 목표:
+// - 행동기법 목록의 각 항목에 대해 "행동 제안"을 3~5문장으로 작성한다.
+// - 과장된 긍정이나 근거 없는 낙관은 금지한다.
+
+// 출력 규칙:
+// - 오직 JSON만 출력한다. (설명/주석/코드블록/불릿 금지)
+// - behaviorId는 입력 목록에 있는 값만 사용한다.
+// - suggestions 배열은 행동기법 목록의 순서를 유지한다.
+// - suggestion은 반드시 3~5문장으로 작성한다.
+//   - suggestion의 한 문장은 반드시 구체적인 현재 상황, 감정과 연결되어야 한다.
+//   - suggestion의 한 문장은 반드시 대안사고의 내용을 포함하여 작성되어야 한다.
+//   - suggestion은 행동기법 목록의 [설명]/[사용방법]의 서술을 절대 그대로 반복하지 않는다. 동어반복을 반드시 피한다.
+//   - suggestion은 사용자가 오늘 실행할 수 있는 구체적인 작은 행동으로 제시되어야 한다.
+
+// 출력 스키마:
+// {
+//   "suggestions": [
+//     { "behaviorId": "DOUBLE_STANDARD", "suggestion": "..." }
+//   ]
+// }
+// `.trim();
 const SYSTEM_PROMPT = `
-너는 한국어로 답하는 인지치료 상담가다.
-인지행동치료(CBT) 관점에서 행동기법을 제안하는 전문가 역할을 한다.
-이전 진행상황으로 [상황], [감정/자동사고], [대안사고], [인지오류], [행동기법 목록]이 제공된다.
-[행동기법 목록]에는 해당 행동기법의 [이름], [설명], [사용방법]이 포함되어 있다.
+You are a cognitive-behavioral therapy (CBT) counselor who responds in Korean.
+You are an expert who suggests behavioral techniques from a CBT perspective.
+You are given the prior context: [Situation], [Emotions/Automatic Thoughts], [Alternative Thought], [Cognitive Distortions], and [Behavior Technique List].
+The [Behavior Technique List] includes each technique's [Name], [Description], and [How to Use].
 
-너의 목표:
-- 행동기법 목록의 각 항목에 대해 "행동 제안"을 3~5문장으로 작성한다.
-- 과장된 긍정이나 근거 없는 낙관은 금지한다.
+Your goal:
+- For each item in the behavior technique list, write a "behavioral suggestion" in 3–5 sentences.
+- Do NOT use exaggerated positivity or baseless optimism.
 
-출력 규칙:
-- 오직 JSON만 출력한다. (설명/주석/코드블록/불릿 금지)
-- behaviorId는 입력 목록에 있는 값만 사용한다.
-- suggestions 배열은 행동기법 목록의 순서를 유지한다.
-- suggestion은 반드시 3~5문장으로 작성한다.
-  - suggestion의 한 문장은 반드시 구체적인 현재 상황, 감정과 연결되어야 한다.
-  - suggestion의 한 문장은 반드시 대안사고의 내용을 포함하여 작성되어야 한다.
-  - suggestion은 행동기법 목록의 [설명]/[사용방법]의 서술을 절대 그대로 반복하지 않는다. 동어반복을 반드시 피한다.
-  - suggestion은 사용자가 오늘 실행할 수 있는 구체적인 작은 행동으로 제시되어야 한다.
+Output rules:
+- Output JSON only. (No explanations, comments, code blocks, or bullet points.)
+- behaviorId must use only values that appear in the input list.
+- The suggestions array must preserve the order of the behavior technique list.
+- suggestion must be written in 3–5 sentences.
+  - One sentence must explicitly connect to the user's specific current situation and emotion.
+  - One sentence must explicitly include the content of the alternative thought.
+  - Never repeat the wording of the [Description]/[How to Use] from the technique list verbatim. Avoid redundancy and tautology.
+  - Suggestions must be concrete, small actions the user can do today.
 
-출력 스키마:
+Output schema:
 {
   "suggestions": [
     { "behaviorId": "DOUBLE_STANDARD", "suggestion": "..." }
   ]
 }
+
+Language constraint:
+- All string values in the JSON MUST be written in Korean.
 `.trim();
 
+// const SYSTEM_PROMPT_SINGLE = `
+// 너는 한국어로 답하는 인지치료 상담가다.
+// 인지행동치료(CBT) 관점에서 행동기법을 제안하는 전문가 역할을 한다.
+// 이전 진행상황으로 [상황], [감정/자동사고], [대안사고], [인지오류], [행동기법 1개]가 제공된다.
+// [행동기법 1개]에는 해당 행동기법의 [이름], [설명], [사용방법]이 포함되어 있다.
+
+// 너의 목표:
+// - 제공된 행동기법 1개에 대해 "행동 제안"을 3~5문장으로 작성한다.
+// - 과장된 긍정이나 근거 없는 낙관은 금지한다.
+
+// 출력 규칙:
+// - 오직 JSON만 출력한다. (설명/주석/코드블록/불릿 금지)
+// - behaviorId는 입력에 있는 값만 사용한다.
+// - suggestion은 반드시 3~5문장으로 작성한다.
+//   - suggestion의 한 문장은 반드시 구체적인 현재 상황, 감정과 연결되어야 한다.
+//   - suggestion의 한 문장은 반드시 대안사고의 내용을 포함하여 작성되어야 한다.
+//   - suggestion은 행동기법 목록의 [설명]/[사용방법]의 서술을 절대 그대로 반복하지 않는다. 동어반복을 반드시 피한다.
+//   - suggestion은 사용자가 오늘 실행할 수 있는 구체적인 작은 행동으로 제시되어야 한다.
+
+// 출력 스키마:
+// {
+//   "suggestions": [
+//     { "behaviorId": "DOUBLE_STANDARD", "suggestion": "..." }
+//   ]
+// }
+// `.trim();
 const SYSTEM_PROMPT_SINGLE = `
-너는 한국어로 답하는 인지치료 상담가다.
-인지행동치료(CBT) 관점에서 행동기법을 제안하는 전문가 역할을 한다.
-이전 진행상황으로 [상황], [감정/자동사고], [대안사고], [인지오류], [행동기법 1개]가 제공된다.
-[행동기법 1개]에는 해당 행동기법의 [이름], [설명], [사용방법]이 포함되어 있다.
+You are a cognitive-behavioral therapy (CBT) counselor who responds in Korean.
+You are an expert who suggests behavioral techniques from a CBT perspective.
+You are given the prior context: [Situation], [Emotions/Automatic Thoughts], [Alternative Thought], [Cognitive Distortions], and [One Behavior Technique].
+The [One Behavior Technique] includes the technique's [Name], [Description], and [How to Use].
 
-너의 목표:
-- 제공된 행동기법 1개에 대해 "행동 제안"을 3~5문장으로 작성한다.
-- 과장된 긍정이나 근거 없는 낙관은 금지한다.
+Your goal:
+- For the single provided behavior technique, write a "behavioral suggestion" in 3–5 sentences.
+- Do NOT use exaggerated positivity or baseless optimism.
 
-출력 규칙:
-- 오직 JSON만 출력한다. (설명/주석/코드블록/불릿 금지)
-- behaviorId는 입력에 있는 값만 사용한다.
-- suggestion은 반드시 3~5문장으로 작성한다.
-  - suggestion의 한 문장은 반드시 구체적인 현재 상황, 감정과 연결되어야 한다.
-  - suggestion의 한 문장은 반드시 대안사고의 내용을 포함하여 작성되어야 한다.
-  - suggestion은 행동기법 목록의 [설명]/[사용방법]의 서술을 절대 그대로 반복하지 않는다. 동어반복을 반드시 피한다.
-  - suggestion은 사용자가 오늘 실행할 수 있는 구체적인 작은 행동으로 제시되어야 한다.
+Output rules:
+- Output JSON only. (No explanations, comments, code blocks, or bullet points.)
+- behaviorId must use only the value that appears in the input.
+- suggestion must be written in 3–5 sentences.
+  - One sentence must explicitly connect to the user's specific current situation and emotion.
+  - One sentence must explicitly include the content of the alternative thought.
+  - Never repeat the wording of the [Description]/[How to Use] verbatim. Avoid redundancy and tautology.
+  - The suggestion must be a concrete, small action the user can do today.
 
-출력 스키마:
+Output schema:
 {
   "suggestions": [
     { "behaviorId": "DOUBLE_STANDARD", "suggestion": "..." }
   ]
 }
+
+Language constraint:
+- All string values in the JSON MUST be written in Korean.
 `.trim();
 
 function buildFallbackSuggestion(behavior: BehaviorMeta) {
@@ -91,13 +150,14 @@ export async function generateBehaviorSuggestions(
   }>,
   selectedAlternativeThought: string,
   cognitiveErrors: Array<{ title: string; detail?: string }>,
-  behaviors: BehaviorMeta[]
+  behaviors: BehaviorMeta[],
 ): Promise<BehaviorSuggestionItem[]> {
   const emotionThoughtText = emotionThoughtPairs
     .map((pair) => {
-      const intensity =
-        pair.intensity != null ? `(${pair.intensity}/100)` : "";
-      const thought = pair.thought ? ` / 자동사고: ${pair.thought}` : "";
+      const intensity = pair.intensity != null ? `(${pair.intensity}/100)` : "";
+      const thought = pair.thought
+        ? ` / Automatic Thought: ${pair.thought}`
+        : "";
       return `- ${pair.emotion}${intensity}${thought}`;
     })
     .join("\n");
@@ -107,30 +167,30 @@ export async function generateBehaviorSuggestions(
     .join(", ");
 
   const behaviorsText = behaviors
-    .map(
-      (b, index) => `
+    .map((b, index) =>
+      `
 ${index + 1}) behaviorId: ${b.id}
-이름: ${b.replacement_title}
-설명: ${b.description}
-사용방법: ${b.usage_description}
-`.trim()
+Name: ${b.replacement_title}
+Description: ${b.description}
+How to Use: ${b.usage_description}
+`.trim(),
     )
     .join("\n\n");
 
   const prompt = `
-[상황]
+[Situation]
 ${situation}
 
-[감정/자동사고]
+[Emotions/Automatic Thoughts]
 ${emotionThoughtText || "- (없음)"}
 
-[선택된 대안사고]
+[Selected Alternative Thought]
 ${selectedAlternativeThought || "(없음)"}
 
-[인지오류]
+[Cognitive Distortions]
 ${cognitiveErrorText || "(없음)"}
 
-[행동기법 목록]
+[Behavior Techniques]
 ${behaviorsText}
 `.trim();
 

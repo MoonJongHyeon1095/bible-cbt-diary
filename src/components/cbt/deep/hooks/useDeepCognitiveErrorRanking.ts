@@ -5,6 +5,7 @@ import {
   COGNITIVE_ERRORS_BY_INDEX,
   type ErrorIndex,
 } from "@/lib/ai";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 
 type DetailItem = {
   index: ErrorIndex;
@@ -23,7 +24,7 @@ type CognitiveErrorCacheEntry = {
 type UseDeepCognitiveErrorRankingParams = {
   userInput: string;
   thought: string;
-  summary: string;
+  internalContext: DeepInternalContext | null;
 };
 
 const BATCH_SIZE = 3;
@@ -32,7 +33,7 @@ const cognitiveErrorCache = new Map<string, CognitiveErrorCacheEntry>();
 export function useDeepCognitiveErrorRanking({
   userInput,
   thought,
-  summary,
+  internalContext,
 }: UseDeepCognitiveErrorRankingParams) {
   const [ranked, setRanked] = useState<RankedItem[]>([]);
   const [detailByIndex, setDetailByIndex] = useState<
@@ -44,10 +45,12 @@ export function useDeepCognitiveErrorRanking({
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingDetailRef = useRef<Set<ErrorIndex>>(new Set());
-  const cacheKey = useMemo(
-    () => `${userInput.trim()}::${thought.trim()}::${summary.trim()}`,
-    [summary, thought, userInput],
-  );
+  const cacheKey = useMemo(() => {
+    const ctxKey = internalContext
+      ? JSON.stringify(internalContext)
+      : "no-context";
+    return `${userInput.trim()}::${thought.trim()}::${ctxKey}`;
+  }, [internalContext, thought, userInput]);
 
   const resetState = () => {
     setRanked([]);
@@ -59,6 +62,7 @@ export function useDeepCognitiveErrorRanking({
   };
 
   const fetchDetails = async (indices: ErrorIndex[]) => {
+    if (!internalContext) return;
     const unique = indices.filter(
       (idx) => !detailByIndex[idx] && !pendingDetailRef.current.has(idx),
     );
@@ -69,7 +73,7 @@ export function useDeepCognitiveErrorRanking({
       const detail = await analyzeDeepCognitiveErrorDetails(
         userInput,
         thought,
-        summary,
+        internalContext,
         unique,
       );
       setDetailByIndex((prev) => {
@@ -91,7 +95,7 @@ export function useDeepCognitiveErrorRanking({
     setRankLoading(true);
     resetState();
     try {
-      const result = await rankDeepCognitiveErrors(userInput, thought, summary);
+      const result = await rankDeepCognitiveErrors(userInput, thought);
       setRanked(result.ranked);
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
@@ -101,7 +105,7 @@ export function useDeepCognitiveErrorRanking({
   };
 
   useEffect(() => {
-    if (!userInput.trim() || !thought.trim() || !summary.trim()) return;
+    if (!userInput.trim() || !thought.trim() || !internalContext) return;
     const cached = cognitiveErrorCache.get(cacheKey);
     if (cached) {
       setRanked(cached.ranked);
@@ -115,7 +119,7 @@ export function useDeepCognitiveErrorRanking({
     }
     void loadRanked();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey, summary, thought, userInput]);
+  }, [cacheKey, internalContext, thought, userInput]);
 
   const currentIndices = useMemo(() => {
     const start = pageIndex * BATCH_SIZE;

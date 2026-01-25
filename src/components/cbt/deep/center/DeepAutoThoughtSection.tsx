@@ -6,6 +6,7 @@ import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/Minima
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
 import type { EmotionNote } from "@/lib/types/types";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import { useDeepAutoThought } from "../hooks/useDeepAutoThought";
 
 interface DeepAutoThoughtSectionProps {
@@ -13,7 +14,8 @@ interface DeepAutoThoughtSectionProps {
   emotion: string;
   mainNote: EmotionNote;
   subNotes: EmotionNote[];
-  onComplete: (autoThought: string, summary: string) => void;
+  internalContext: DeepInternalContext | null;
+  onComplete: (autoThought: string) => void;
 }
 
 const TITLE = "어쩌면 지긋지긋한 생각들일지도 모릅니다.";
@@ -23,22 +25,24 @@ export function DeepAutoThoughtSection({
   emotion,
   mainNote,
   subNotes,
+  internalContext,
   onComplete,
 }: DeepAutoThoughtSectionProps) {
   const { pushToast } = useCbtToast();
-  const { autoThought, summary, loading, error, reload } = useDeepAutoThought({
+  const { autoThought, loading, error, reload } = useDeepAutoThought({
     userInput,
     emotion,
     mainNote,
     subNotes,
+    internalContext,
   });
 
   const handleNext = () => {
-    if (!autoThought.trim() || !summary.trim()) {
+    if (!autoThought.trim()) {
       pushToast("생각을 불러오는 중입니다.", "error");
       return;
     }
-    onComplete(autoThought, summary);
+    onComplete(autoThought);
   };
 
   if (loading) {

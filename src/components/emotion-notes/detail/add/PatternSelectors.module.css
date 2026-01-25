@@ -1,0 +1,91 @@
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.button {
+  border-radius: 999px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease, transform 150ms ease;
+}
+
+.button:active {
+  transform: scale(0.95);
+}
+
+.activeAmber {
+  background: #f59e0b;
+  border-color: #f59e0b;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.inactiveAmber {
+  color: #334155;
+}
+
+.inactiveAmber:hover {
+  border-color: #fcd34d;
+  background: #fffbeb;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.activeRose {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.inactiveRose {
+  color: #be123c;
+  border-color: #fecdd3;
+}
+
+.inactiveRose:hover {
+  border-color: #fda4af;
+  background: #fff1f2;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.activeBlue {
+  background: #2563eb;
+  border-color: #2563eb;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
+}
+
+.inactiveBlue {
+  color: #334155;
+  border-color: #e2e8f0;
+}
+
+.inactiveBlue:hover {
+  border-color: #93c5fd;
+  background: #eff6ff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+.buttonInner {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.infoButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 2px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.infoButton:hover {
+  color: #fff;
+}

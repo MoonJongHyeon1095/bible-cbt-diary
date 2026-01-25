@@ -6,6 +6,7 @@ import { MinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/compone
 import { MinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/MinimalCognitiveErrorErrorState";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { RefreshCw } from "lucide-react";
 import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRanking";
@@ -13,7 +14,7 @@ import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRank
 interface DeepCognitiveErrorSectionProps {
   userInput: string;
   thought: string;
-  summary: string;
+  internalContext: DeepInternalContext | null;
   onSelect: (errors: SelectedCognitiveError[]) => void;
 }
 
@@ -22,7 +23,7 @@ const HEADER_TEXT = "이제는 익숙한 오류일지도 모르겠군요.";
 export function DeepCognitiveErrorSection({
   userInput,
   thought,
-  summary,
+  internalContext,
   onSelect,
 }: DeepCognitiveErrorSectionProps) {
   const { pushToast } = useCbtToast();
@@ -35,7 +36,11 @@ export function DeepCognitiveErrorSection({
     rankLoading,
     handleNext,
     reload,
-  } = useDeepCognitiveErrorRanking({ userInput, thought, summary });
+  } = useDeepCognitiveErrorRanking({
+    userInput,
+    thought,
+    internalContext,
+  });
 
   const handleSelect = () => {
     if (!currentRankItem) {

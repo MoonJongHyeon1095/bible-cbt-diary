@@ -244,6 +244,7 @@ export const createBehaviorDetail = async (
     note_id: number;
     behavior_label: string;
     behavior_description: string;
+    error_tags?: string[] | null;
   },
   accessToken: string,
 ) =>
@@ -257,7 +258,12 @@ export const createBehaviorDetail = async (
   });
 
 export const updateBehaviorDetail = async (
-  payload: { id: number; behavior_label: string; behavior_description: string },
+  payload: {
+    id: number;
+    behavior_label: string;
+    behavior_description: string;
+    error_tags?: string[] | null;
+  },
   accessToken: string,
 ) =>
   fetch("/api/emotion-behavior-details", {

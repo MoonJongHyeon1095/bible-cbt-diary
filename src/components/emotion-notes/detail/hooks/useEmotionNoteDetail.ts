@@ -203,26 +203,36 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const thoughtSection = {
+    detailThought: thoughtSectionState.detailThought,
+    detailEmotion: thoughtSectionState.detailEmotion,
     details: thoughtSectionState.details,
     editingThoughtId: thoughtSectionState.editingThoughtId,
     editingThoughtText: thoughtSectionState.editingThoughtText,
     editingEmotionText: thoughtSectionState.editingEmotionText,
     isUpdating: thoughtSectionState.isUpdating,
     deletingId: thoughtSectionState.deletingId,
+    handleAdd: thoughtSectionState.handleAdd,
     onStartEditing: thoughtSectionState.startEditing,
     onCancelEditing: thoughtSectionState.cancelEditing,
     onUpdate: thoughtSectionState.handleUpdate,
     onDelete: thoughtSectionState.handleDelete,
+    setDetailThought: thoughtSectionState.setDetailThought,
+    setDetailEmotion: thoughtSectionState.setDetailEmotion,
     onChangeEditingThoughtText: thoughtSectionState.setEditingThoughtText,
   };
 
   const errorSection = {
     details: errorSectionState.details,
+    errorLabel: errorSectionState.errorLabel,
+    errorDescription: errorSectionState.errorDescription,
     editingErrorId: errorSectionState.editingErrorId,
     editingErrorLabel: errorSectionState.editingErrorLabel,
     editingErrorDescription: errorSectionState.editingErrorDescription,
     isUpdating: errorSectionState.isUpdating,
     deletingId: errorSectionState.deletingId,
+    handleAdd: errorSectionState.handleAdd,
+    setErrorLabel: errorSectionState.setErrorLabel,
+    setErrorDescription: errorSectionState.setErrorDescription,
     onStartEditing: errorSectionState.startEditing,
     onCancelEditing: errorSectionState.cancelEditing,
     onUpdate: errorSectionState.handleUpdate,
@@ -232,30 +242,40 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const alternativeSection = {
+    alternativeText: alternativeSectionState.alternativeText,
     details: alternativeSectionState.details,
     editingAlternativeId: alternativeSectionState.editingAlternativeId,
     editingAlternativeText: alternativeSectionState.editingAlternativeText,
     isUpdating: alternativeSectionState.isUpdating,
     deletingId: alternativeSectionState.deletingId,
+    handleAdd: alternativeSectionState.handleAdd,
     onStartEditing: alternativeSectionState.startEditing,
     onCancelEditing: alternativeSectionState.cancelEditing,
     onUpdate: alternativeSectionState.handleUpdate,
     onDelete: alternativeSectionState.handleDelete,
+    setAlternativeText: alternativeSectionState.setAlternativeText,
     onChangeEditingAlternativeText:
       alternativeSectionState.setEditingAlternativeText,
   };
 
   const behaviorSection = {
+    behaviorLabel: behaviorSectionState.behaviorLabel,
+    behaviorDescription: behaviorSectionState.behaviorDescription,
+    behaviorErrorTags: behaviorSectionState.behaviorErrorTags,
     details: behaviorSectionState.details,
     editingBehaviorId: behaviorSectionState.editingBehaviorId,
     editingBehaviorLabel: behaviorSectionState.editingBehaviorLabel,
     editingBehaviorDescription: behaviorSectionState.editingBehaviorDescription,
     isUpdating: behaviorSectionState.isUpdating,
     deletingId: behaviorSectionState.deletingId,
+    handleAdd: behaviorSectionState.handleAdd,
     onStartEditing: behaviorSectionState.startEditing,
     onCancelEditing: behaviorSectionState.cancelEditing,
     onUpdate: behaviorSectionState.handleUpdate,
     onDelete: behaviorSectionState.handleDelete,
+    setBehaviorLabel: behaviorSectionState.setBehaviorLabel,
+    setBehaviorDescription: behaviorSectionState.setBehaviorDescription,
+    setBehaviorErrorTags: behaviorSectionState.setBehaviorErrorTags,
     onChangeEditingBehaviorDescription:
       behaviorSectionState.setEditingBehaviorDescription,
   };

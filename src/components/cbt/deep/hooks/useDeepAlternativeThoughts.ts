@@ -1,5 +1,6 @@
 import { generateDeepAlternativeThoughts } from "@/lib/ai";
 import { AlternativeThought } from "@/lib/gpt/alternative";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -10,7 +11,7 @@ type UseDeepAlternativeThoughtsParams = {
   userInput: string;
   emotion: string;
   autoThought: string;
-  summary: string;
+  internalContext: DeepInternalContext | null;
   selectedCognitiveErrors: SelectedCognitiveError[];
   previousAlternatives: string[];
 };
@@ -20,7 +21,7 @@ export function useDeepAlternativeThoughts({
   userInput,
   emotion,
   autoThought,
-  summary,
+  internalContext,
   selectedCognitiveErrors,
   previousAlternatives,
 }: UseDeepAlternativeThoughtsParams) {
@@ -35,7 +36,7 @@ export function useDeepAlternativeThoughts({
     userInput,
     emotion,
     autoThought,
-    summary,
+    internalContext,
     selectedCognitiveErrors,
     previousAlternatives,
   });
@@ -43,6 +44,7 @@ export function useDeepAlternativeThoughts({
   const generateAlternatives = useCallback(
     async (options?: { force?: boolean }) => {
       if (inFlightRef.current) return;
+      if (!internalContext) return;
       const cached = alternativeThoughtsCache.get(requestKey);
       if (!options?.force && cached) {
         setAlternativeThoughts(cached);
@@ -60,7 +62,7 @@ export function useDeepAlternativeThoughts({
           userInput,
           emotion,
           autoThought,
-          summary,
+          internalContext,
           selectedCognitiveErrors,
           previousAlternatives,
         );
@@ -80,10 +82,10 @@ export function useDeepAlternativeThoughts({
     [
       autoThought,
       emotion,
+      internalContext,
       previousAlternatives,
       requestKey,
       selectedCognitiveErrors,
-      summary,
       userInput,
     ],
   );
@@ -93,7 +95,8 @@ export function useDeepAlternativeThoughts({
       step === 4 &&
       alternativeThoughts.length === 0 &&
       !thoughtsLoading &&
-      autoThought.trim()
+      autoThought.trim() &&
+      internalContext
     ) {
       void generateAlternatives();
     }
@@ -101,6 +104,7 @@ export function useDeepAlternativeThoughts({
     alternativeThoughts.length,
     autoThought,
     generateAlternatives,
+    internalContext,
     step,
     thoughtsLoading,
   ]);

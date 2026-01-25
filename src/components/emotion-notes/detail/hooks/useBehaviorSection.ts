@@ -26,6 +26,7 @@ export default function useBehaviorSection({
 }: UseBehaviorSectionOptions) {
   const [behaviorLabel, setBehaviorLabel] = useState("");
   const [behaviorDescription, setBehaviorDescription] = useState("");
+  const [behaviorErrorTags, setBehaviorErrorTags] = useState<string[]>([]);
   const [details, setDetails] = useState<EmotionNoteBehaviorDetail[]>([]);
   const [editingBehaviorId, setEditingBehaviorId] = useState<number | null>(
     null,
@@ -33,6 +34,9 @@ export default function useBehaviorSection({
   const [editingBehaviorLabel, setEditingBehaviorLabel] = useState("");
   const [editingBehaviorDescription, setEditingBehaviorDescription] =
     useState("");
+  const [editingBehaviorErrorTags, setEditingBehaviorErrorTags] = useState<
+    string[]
+  >([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -72,6 +76,7 @@ export default function useBehaviorSection({
       note_id: ensuredNoteId,
       behavior_label: behaviorLabel.trim(),
       behavior_description: behaviorDescription.trim(),
+      error_tags: behaviorErrorTags,
     };
 
     if (!payload.behavior_label || !payload.behavior_description) {
@@ -88,9 +93,11 @@ export default function useBehaviorSection({
 
     setBehaviorLabel("");
     setBehaviorDescription("");
+    setBehaviorErrorTags([]);
     await loadDetails();
   }, [
     behaviorDescription,
+    behaviorErrorTags,
     behaviorLabel,
     ensureNoteId,
     loadDetails,
@@ -102,12 +109,14 @@ export default function useBehaviorSection({
     setEditingBehaviorId(detail.id);
     setEditingBehaviorLabel(detail.behavior_label);
     setEditingBehaviorDescription(detail.behavior_description);
+    setEditingBehaviorErrorTags(detail.error_tags ?? []);
   }, []);
 
   const cancelEditing = useCallback(() => {
     setEditingBehaviorId(null);
     setEditingBehaviorLabel("");
     setEditingBehaviorDescription("");
+    setEditingBehaviorErrorTags([]);
   }, []);
 
   const handleUpdate = useCallback(
@@ -123,6 +132,7 @@ export default function useBehaviorSection({
         id: detailId,
         behavior_label: editingBehaviorLabel.trim(),
         behavior_description: editingBehaviorDescription.trim(),
+        error_tags: editingBehaviorErrorTags,
       };
 
       if (!payload.behavior_label || !payload.behavior_description) {
@@ -146,6 +156,7 @@ export default function useBehaviorSection({
     [
       cancelEditing,
       editingBehaviorDescription,
+      editingBehaviorErrorTags,
       editingBehaviorLabel,
       loadDetails,
       requireAccessToken,
@@ -179,14 +190,18 @@ export default function useBehaviorSection({
   return {
     behaviorLabel,
     behaviorDescription,
+    behaviorErrorTags,
     details,
     editingBehaviorId,
     editingBehaviorLabel,
     editingBehaviorDescription,
+    editingBehaviorErrorTags,
     setBehaviorLabel,
     setBehaviorDescription,
+    setBehaviorErrorTags,
     setEditingBehaviorLabel,
     setEditingBehaviorDescription,
+    setEditingBehaviorErrorTags,
     setDetails,
     isUpdating,
     deletingId,

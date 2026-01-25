@@ -1,25 +1,28 @@
 // src/lib/ai.ts
 // gpt
+import type { CognitiveBehaviorId } from "./constants/behaviors";
 import {
   COGNITIVE_ERRORS,
   COGNITIVE_ERRORS_BY_ID,
   COGNITIVE_ERRORS_BY_INDEX,
 } from "./constants/errors";
 import {
-  generateBehaviorSuggestions as gptGenerateBehaviorSuggestions,
-  type ErrorIndex, // (호환) 기존 단일 호출
   analyzeCognitiveErrorDetails as gptAnalyzeCognitiveErrorDetails,
   analyzeDeepCognitiveErrorDetails as gptAnalyzeDeepCognitiveErrorDetails,
-  generateDeepAlternativeThoughts as gptGenerateDeepAlternativeThoughts,
-  generateDeepAutoThoughtAndSummary as gptGenerateDeepAutoThoughtAndSummary,
+  generateBehaviorSuggestions as gptGenerateBehaviorSuggestions,
   generateBibleVerse as gptGenerateBibleVerse,
   generateBurnsEmpathy as gptGenerateBurnsEmpathy,
   generateContextualAlternativeThoughts as gptGenerateContextualAlternativeThoughts,
+  generateDeepAlternativeThoughts as gptGenerateDeepAlternativeThoughts,
+  generateDeepSdtAutomaticThoughts as gptGenerateDeepSdtAutomaticThoughts,
   generateExtendedAutomaticThoughts as gptGenerateExtendedAutomaticThoughts,
+  rankCognitiveErrors as gptRankCognitiveErrors,
   rankDeepCognitiveErrors as gptRankDeepCognitiveErrors,
-  rankCognitiveErrors as gptRankCognitiveErrors
+  type ErrorIndex,
 } from "./gpt";
-import type { CognitiveBehaviorId } from "./constants/behaviors";
+import type { DeepAutoThoughtResult } from "./gpt/deepThought";
+import type { DeepInternalContext } from "./gpt/deepContext";
+import { generateDeepInternalContext } from "./gpt/deepContext";
 
 export type ExtendedAutomaticThought = {
   category: string;
@@ -79,11 +82,6 @@ export type AlternativeThoughtItem = {
   techniqueDescription: string;
 };
 
-export type DeepThoughtResult = {
-  autoThought: string;
-  summary: string;
-};
-
 export type BibleVerseResult = {
   book: string;
   chapter: number | null;
@@ -98,10 +96,31 @@ export type BehaviorSuggestionItem = {
   suggestion: string;
 };
 
+export async function createDeepInternalContext(
+  main: {
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  },
+  subs: Array<{
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  }>,
+): Promise<DeepInternalContext> {
+  return generateDeepInternalContext(main, subs);
+}
+
 // 1) 확장 자동사고
 export async function generateExtendedAutomaticThoughts(
   situation: string,
-  emotion: string
+  emotion: string,
 ): Promise<ExtendedAutomaticThoughtsResult> {
   return gptGenerateExtendedAutomaticThoughts(situation, emotion);
 }
@@ -109,7 +128,7 @@ export async function generateExtendedAutomaticThoughts(
 // 2.a) 인지오류 랭킹(10개 유력순)
 export async function rankCognitiveErrors(
   situation: string,
-  thought: string
+  thought: string,
 ): Promise<CognitiveErrorRankResult> {
   return gptRankCognitiveErrors(situation, thought);
 }
@@ -118,7 +137,7 @@ export async function rankCognitiveErrors(
 export async function analyzeCognitiveErrorDetails(
   situation: string,
   thought: string,
-  candidates: ErrorIndex[]
+  candidates: ErrorIndex[],
 ): Promise<CognitiveErrorDetailResult> {
   return gptAnalyzeCognitiveErrorDetails(situation, thought, candidates);
 }
@@ -128,17 +147,17 @@ export async function generateContextualAlternativeThoughts(
   situation: string,
   emotion: string,
   thought: string,
-  cognitiveErrors: Array<string | { title: string; detail?: string }>
+  cognitiveErrors: Array<string | { title: string; detail?: string }>,
 ): Promise<AlternativeThoughtItem[]> {
   return gptGenerateContextualAlternativeThoughts(
     situation,
     emotion,
     thought,
-    cognitiveErrors
+    cognitiveErrors,
   );
 }
 
-export async function generateDeepAutoThoughtAndSummary(
+export async function generateDeepAutoThoughts(
   situation: string,
   emotion: string,
   main: {
@@ -157,28 +176,34 @@ export async function generateDeepAutoThoughtAndSummary(
     cognitiveErrors: Array<{ title: string; detail: string }>;
     alternatives: string[];
   }>,
-): Promise<DeepThoughtResult> {
-  return gptGenerateDeepAutoThoughtAndSummary(situation, emotion, main, subs);
+  internal: DeepInternalContext,
+): Promise<DeepAutoThoughtResult> {
+  return gptGenerateDeepSdtAutomaticThoughts(
+    situation,
+    emotion,
+    main,
+    subs,
+    internal,
+  );
 }
 
 export async function rankDeepCognitiveErrors(
   situation: string,
   thought: string,
-  summary: string,
 ) {
-  return gptRankDeepCognitiveErrors(situation, thought, summary);
+  return gptRankDeepCognitiveErrors(situation, thought);
 }
 
 export async function analyzeDeepCognitiveErrorDetails(
   situation: string,
   thought: string,
-  summary: string,
+  internal: DeepInternalContext,
   candidates: ErrorIndex[],
 ) {
   return gptAnalyzeDeepCognitiveErrorDetails(
     situation,
     thought,
-    summary,
+    internal,
     candidates,
   );
 }
@@ -187,7 +212,7 @@ export async function generateDeepAlternativeThoughts(
   situation: string,
   emotion: string,
   thought: string,
-  summary: string,
+  internal: DeepInternalContext,
   cognitiveErrors: Array<string | { title: string; detail?: string }>,
   previousAlternatives: string[],
 ): Promise<AlternativeThoughtItem[]> {
@@ -195,7 +220,7 @@ export async function generateDeepAlternativeThoughts(
     situation,
     emotion,
     thought,
-    summary,
+    internal,
     cognitiveErrors,
     previousAlternatives,
   );
@@ -204,7 +229,7 @@ export async function generateDeepAlternativeThoughts(
 // 4) 성경구절
 export async function generateBibleVerse(
   situation: string,
-  emotion: string
+  emotion: string,
 ): Promise<BibleVerseResult> {
   return gptGenerateBibleVerse(situation, emotion);
 }
@@ -214,7 +239,7 @@ export async function generateBurnsEmpathy(
   situation: string,
   emotion: string,
   thought: string,
-  intensity: number | null
+  intensity: number | null,
 ): Promise<BurnsEmpathyResult> {
   return gptGenerateBurnsEmpathy(situation, emotion, thought, intensity);
 }
@@ -235,13 +260,13 @@ export async function generateBehaviorSuggestions(
     category: string;
     description: string;
     usage_description: string;
-  }>
+  }>,
 ): Promise<BehaviorSuggestionItem[]> {
   return gptGenerateBehaviorSuggestions(
     situation,
     emotionThoughtPairs,
     selectedAlternativeThought,
     cognitiveErrors,
-    behaviors
+    behaviors,
   );
 }

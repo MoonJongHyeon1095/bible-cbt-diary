@@ -6,6 +6,10 @@ import {
   extractJsonObject,
   isValidIndex,
 } from "./cognitiveRank";
+import {
+  type DeepInternalContext,
+  formatDeepInternalContext,
+} from "./deepContext";
 
 export type DeepCognitiveErrorDetailResult = {
   errors: Array<{
@@ -23,7 +27,12 @@ type DetailLlmResponseShape = {
 
 const DETAIL_SYSTEM_PROMPT = `
 You are an expert who analyzes "cognitive distortions" in detail from a Cognitive Behavioral Therapy (CBT) perspective.
-The input includes [Situation], [Automatic Thought], [Summary], and a list of candidate cognitive distortion indices (candidates).
+The input includes [Situation], [Automatic Thought], [Internal Context], and a list of candidate cognitive distortion indices (candidates).
+
+[Internal Context structure]
+- patternSummary: repeatedThemes (2), triggerPatterns (2), emotionShifts (1), distortionPatterns (2), alternativePatterns (1)
+- openQuestions: exactly 2 questions
+- nextStepHint: one short sentence
 
 Your goals:
 - Write analyses ONLY for the cognitive distortion indices included in candidates. (No other indices allowed.)
@@ -32,7 +41,7 @@ Your goals:
 Most important rules (must follow):
 1) Each analysis MUST be at least 3 sentences. (3–5 sentences total)
 2) Do NOT provide definitions or textbook explanations. Instead, point out the inference jump(s), distortions, or reasoning gaps that appear in the user’s wording.
-3) The analysis MUST concretely reflect the user’s situation, summary, and underlying thought.
+3) The analysis MUST concretely reflect the user’s situation, internal context, and underlying thought.
 4) The analysis MUST end by pointing out that the emotion could intensify and provide a specific example of a clarifying question.
 5) Write analyses in the order of candidates, but if the evidence is weak, tone adjustments like "가능성은 낮지만" are allowed.
 6) Output language: All string values in the JSON (especially "analysis") MUST be written in Korean. Do NOT use English.
@@ -83,7 +92,7 @@ function fallbackDetail(candidates: ErrorIndex[]): DeepCognitiveErrorDetailResul
 export async function analyzeDeepCognitiveErrorDetails(
   situation: string,
   thought: string,
-  summary: string,
+  internal: DeepInternalContext,
   candidates: ErrorIndex[],
 ): Promise<DeepCognitiveErrorDetailResult> {
   const uniq = Array.from(new Set(candidates)).filter((x) =>
@@ -97,8 +106,8 @@ ${situation}
 [Automatic Thought]
 ${thought}
 
-[Summary]
-${summary}
+[Internal Context - Structured]
+${formatDeepInternalContext(internal)}
 
 [candidates]
 ${uniq.join(", ")}

@@ -4,6 +4,7 @@ import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
+import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -27,6 +28,11 @@ import styles from "./EmotionNoteDetailPage.module.css";
 import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
 import ErrorDetailSection from "./ErrorDetailSection";
+import { PatternDetailsAddSection } from "./add/PatternDetailsAddSection";
+import { PatternErrorAddSection } from "./add/PatternErrorAddSection";
+import { PatternAlternativesAddSection } from "./add/PatternAlternativesAddSection";
+import { PatternBehaviorAddSection } from "./add/PatternBehaviorAddSection";
+import { PatternEditModal } from "./add/PatternEditModal";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
 import ThoughtDetailSection from "./ThoughtDetailSection";
 
@@ -84,6 +90,13 @@ export default function EmotionNoteDetailPage({
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [addModalSection, setAddModalSection] = useState<SectionKey | null>(
+    null,
+  );
+  const [isAddingThought, setIsAddingThought] = useState(false);
+  const [isAddingError, setIsAddingError] = useState(false);
+  const [isAddingAlternative, setIsAddingAlternative] = useState(false);
+  const [isAddingBehavior, setIsAddingBehavior] = useState(false);
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const createModalHandler =
     (color: string, icon: ReactNode) =>
@@ -199,6 +212,30 @@ export default function EmotionNoteDetailPage({
     alternativeSection.onCancelEditing();
     behaviorSection.onCancelEditing();
   }, [alternativeSection, behaviorSection, errorSection, thoughtSection]);
+
+  const handleAddThought = useCallback(async () => {
+    setIsAddingThought(true);
+    await thoughtSection.handleAdd();
+    setIsAddingThought(false);
+  }, [thoughtSection]);
+
+  const handleAddError = useCallback(async () => {
+    setIsAddingError(true);
+    await errorSection.handleAdd();
+    setIsAddingError(false);
+  }, [errorSection]);
+
+  const handleAddAlternative = useCallback(async () => {
+    setIsAddingAlternative(true);
+    await alternativeSection.handleAdd();
+    setIsAddingAlternative(false);
+  }, [alternativeSection]);
+
+  const handleAddBehavior = useCallback(async () => {
+    setIsAddingBehavior(true);
+    await behaviorSection.handleAdd();
+    setIsAddingBehavior(false);
+  }, [behaviorSection]);
 
   const handleSelectDetail = (section: SectionKey, detailId: number) => {
     const isSameSelection =
@@ -338,22 +375,25 @@ export default function EmotionNoteDetailPage({
 
   if (!userEmail && !isLoading) {
     return (
-      <div className={pageStyles.page}>
-        <AppHeader />
-        <main className={pageStyles.main}>
-          <div className={pageStyles.shell}>
-            <RequireLoginPrompt />
-          </div>
-        </main>
-      </div>
+      <CbtToastProvider>
+        <div className={pageStyles.page}>
+          <AppHeader />
+          <main className={pageStyles.main}>
+            <div className={pageStyles.shell}>
+              <RequireLoginPrompt />
+            </div>
+          </main>
+        </div>
+      </CbtToastProvider>
     );
   }
 
   return (
-    <div className={pageStyles.page}>
-      <AppHeader />
-      <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
-        <div className={pageStyles.shell}>
+    <CbtToastProvider>
+      <div className={pageStyles.page}>
+        <AppHeader />
+        <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
+          <div className={pageStyles.shell}>
           <section className={styles.header}>
             <div className={styles.headerActions}>
               {noteId ? (
@@ -483,7 +523,7 @@ export default function EmotionNoteDetailPage({
           label="추가"
           icon={<Plus size={26} />}
           helperText="새 항목 추가"
-          onClick={() => {}}
+          onClick={() => setAddModalSection(selectedSection)}
           style={{
             bottom: shouldShowSave ? "18vh" : "25vh",
             ...selectedFabStyle,
@@ -615,6 +655,92 @@ export default function EmotionNoteDetailPage({
           />
         </>
       ) : null}
+      <PatternEditModal
+        open={addModalSection === "thought"}
+        title="배후의 자동 사고 추가"
+        hideClose
+        chromeless
+        onOpenChange={(open) => {
+          if (!open) setAddModalSection(null);
+        }}
+      >
+        <PatternDetailsAddSection
+          triggerText={triggerText}
+          automaticThought={thoughtSection.detailThought}
+          emotion={thoughtSection.detailEmotion}
+          loading={isAddingThought}
+          onChangeAutomaticThought={thoughtSection.setDetailThought}
+          onSelectEmotion={thoughtSection.setDetailEmotion}
+          onAddDetail={handleAddThought}
+          onClose={() => setAddModalSection(null)}
+        />
+      </PatternEditModal>
+      <PatternEditModal
+        open={addModalSection === "error"}
+        title="인지오류 추가"
+        hideClose
+        chromeless
+        onOpenChange={(open) => {
+          if (!open) setAddModalSection(null);
+        }}
+      >
+        <PatternErrorAddSection
+          triggerText={triggerText}
+          details={thoughtSection.details}
+          errorLabel={errorSection.errorLabel}
+          errorDescription={errorSection.errorDescription}
+          loading={isAddingError}
+          onChangeErrorLabel={errorSection.setErrorLabel}
+          onChangeErrorDescription={errorSection.setErrorDescription}
+          onAddErrorDetail={handleAddError}
+          onClose={() => setAddModalSection(null)}
+        />
+      </PatternEditModal>
+      <PatternEditModal
+        open={addModalSection === "alternative"}
+        title="대안적 접근 추가"
+        hideClose
+        chromeless
+        onOpenChange={(open) => {
+          if (!open) setAddModalSection(null);
+        }}
+      >
+        <PatternAlternativesAddSection
+          triggerText={triggerText}
+          details={thoughtSection.details}
+          errorDetails={errorSection.details}
+          alternativeText={alternativeSection.alternativeText}
+          loading={isAddingAlternative}
+          onChangeAlternativeText={alternativeSection.setAlternativeText}
+          onAddAlternative={handleAddAlternative}
+          onClose={() => setAddModalSection(null)}
+        />
+      </PatternEditModal>
+      <PatternEditModal
+        open={addModalSection === "behavior"}
+        title="행동 반응 추가"
+        hideClose
+        chromeless
+        onOpenChange={(open) => {
+          if (!open) setAddModalSection(null);
+        }}
+      >
+        <PatternBehaviorAddSection
+          triggerText={triggerText}
+          details={thoughtSection.details}
+          errorDetails={errorSection.details}
+          alternatives={alternativeSection.details}
+          behaviorLabel={behaviorSection.behaviorLabel}
+          behaviorDescription={behaviorSection.behaviorDescription}
+          behaviorErrorTags={behaviorSection.behaviorErrorTags}
+          loading={isAddingBehavior}
+          onChangeBehaviorLabel={behaviorSection.setBehaviorLabel}
+          onChangeBehaviorDescription={behaviorSection.setBehaviorDescription}
+          onChangeBehaviorErrorTags={behaviorSection.setBehaviorErrorTags}
+          onAddBehaviorDetail={handleAddBehavior}
+          onClose={() => setAddModalSection(null)}
+        />
+      </PatternEditModal>
       <DetailSectionItemModal
         isOpen={Boolean(modalContent)}
         title={modalContent?.title ?? ""}
@@ -624,9 +750,10 @@ export default function EmotionNoteDetailPage({
         badgeText={modalContent?.badgeText ?? null}
         onClose={() => setModalContent(null)}
       />
-      {copyMessage ? (
-        <div className={styles.copyToast}>{copyMessage}</div>
-      ) : null}
-    </div>
+        {copyMessage ? (
+          <div className={styles.copyToast}>{copyMessage}</div>
+        ) : null}
+      </div>
+    </CbtToastProvider>
   );
 }

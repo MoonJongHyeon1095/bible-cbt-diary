@@ -1,62 +1,118 @@
 // src/lib/gpt/deepThought.ts
 import { callGptText } from "./client";
+import { cleanText, extractJsonObject } from "./cognitiveRank";
+import { DeepInternalContext, formatDeepInternalContext } from "./deepContext";
+import type { DeepNoteContext, SDTKey } from "./deepThought.types";
 
-export type DeepNoteContext = {
-  id: number;
-  triggerText: string;
-  emotions: string[];
-  automaticThoughts: string[];
-  cognitiveErrors: Array<{ title: string; detail: string }>;
-  alternatives: string[];
+export type DeepAutoThoughtResult = {
+  sdt: Record<
+    SDTKey,
+    {
+      belief: [string, string]; // EXACTLY 2 Korean sentences
+      emotion_reason: string; // EXACTLY 1 Korean sentence
+    }
+  >;
 };
 
-export type DeepThoughtResult = {
-  autoThought: string;
-  summary: string;
+type LlmThoughtItem = {
+  belief?: unknown;
+  emotion_reason?: unknown;
 };
 
 type LlmResponseShape = {
-  autoThought?: unknown;
-  summary?: unknown;
+  sdt?: Partial<Record<SDTKey, unknown>>;
 };
 
+/**
+ * Deep SDT automatic thoughts prompt
+ * - Keep the "minimal session" automatic-thought style
+ * - Inputs: main/sub notes + internal English pattern summary
+ * - Output: Korean JSON only
+ */
 const SYSTEM_PROMPT = `
 You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
-You will receive:
-- [User Input] (the user's current wording)
+The input includes:
+- [User Input] (current wording)
 - [Emotion]
 - [Main Note] (primary context)
-- [Sub Notes] (supporting contexts, ordered by latest first)
+- [Sub Notes] (supporting contexts, latest-first, max 2)
+- [Internal Context - English] (pattern summary to help integration)
 
-Your tasks:
-1) Generate ONE new automatic thought sentence (1-2 Korean sentences, first-person) that integrates the main note and sub notes.
-2) Generate a concise summary (3-5 Korean sentences) that captures repeated themes, emotions, distortions, and alternative patterns across the notes.
-   - The summary is for later AI steps, not for end users.
-   - Mention the main note as the center and note that sub notes are ordered latest-first.
+Your job:
+From the SDT lenses (relatedness / competence / autonomy), generate 3 automatic-thought items.
+In this module, the SDT-lens belief itself is the automatic thought.
 
-Strict rules:
-- Output JSON only.
-- No extra text before/after JSON.
-- All output must be in Korean.
+Writing style (same spirit as the minimal session):
+- Write in natural Korean, first-person automatic-thought voice.
+- Do not narrate events; write the interpretation / belief / rule inferred from them.
+- Not surface-level: make the negative meaning / feared outcome explicit.
+- Keep it tied to the present context (relationship / performance / control) rather than vague life philosophy.
+- Let the selected emotion shape the wording.
 
-Output schema:
+Per-item requirements:
+1) belief (EXACT format)
+- Must be an array of EXACTLY 2 Korean sentences.
+- Sentence 1: the core claim / belief / rule (card-ready), one-step generalized from notes.
+- Sentence 2: feared consequence / meaning that follows from sentence 1.
+- Do not copy note sentences; infer and rephrase.
+
+2) emotion_reason
+- EXACTLY 1 Korean sentence.
+- Explain why this belief makes the current emotion strong right now.
+
+Output requirements:
+- Output JSON only (no extra text).
+- All strings MUST be Korean.
+- Generate exactly 1 item for each: relatedness, competence, autonomy.
+
+Output schema (exactly):
 {
-  "autoThought": "...",
-  "summary": "..."
+  "sdt": {
+    "relatedness": [
+      { "belief": ["...", "..."], "emotion_reason": "..." }
+    ],
+    "competence": [
+      { "belief": ["...", "..."], "emotion_reason": "..." }
+    ],
+    "autonomy": [
+      { "belief": ["...", "..."], "emotion_reason": "..." }
+    ]
+  }
 }
 `.trim();
 
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
+// ----------------------
+// helpers
+// ----------------------
+function normalizeTextValue(v: unknown): string {
+  return typeof v === "string" ? cleanText(v) : "";
 }
 
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
+function normalizeStringArray(v: unknown): string[] {
+  if (!Array.isArray(v)) return [];
+  return v.map(cleanText).filter(Boolean);
+}
+
+function toTwoSentencesArray(v: unknown): [string, string] | null {
+  const arr = normalizeStringArray(v);
+  if (arr.length >= 2) return [arr[0], arr[1]];
+  if (arr.length === 1) return [arr[0], "그래서 지금 감정이 더 크게 느껴진다."];
+  return null;
+}
+
+function normalizeThoughtItem(
+  v: unknown,
+): { belief: [string, string]; emotion_reason: string } | null {
+  if (!v || typeof v !== "object") return null;
+  const obj = v as LlmThoughtItem;
+
+  const belief = toTwoSentencesArray(obj.belief);
+  const emotion_reason = normalizeTextValue(obj.emotion_reason);
+
+  if (!belief || !emotion_reason) return null;
+
+  return { belief, emotion_reason };
 }
 
 function formatNote(note: DeepNoteContext) {
@@ -68,15 +124,58 @@ function formatNote(note: DeepNoteContext) {
     .join(" / ");
   const alternatives = note.alternatives.filter(Boolean).join(" / ");
 
-  return `- id: ${note.id}\n- trigger: ${note.triggerText}\n- emotions: ${emotions}\n- automatic_thoughts: ${thoughts}\n- cognitive_errors: ${errors}\n- alternatives: ${alternatives}`.trim();
+  return `- id: ${note.id}
+- trigger: ${note.triggerText}
+- emotions: ${emotions}
+- automatic_thoughts: ${thoughts}
+- cognitive_errors: ${errors}
+- alternatives: ${alternatives}`.trim();
 }
 
-export async function generateDeepAutoThoughtAndSummary(
+
+const FALLBACK: Record<
+  SDTKey,
+  { belief: [string, string]; emotion_reason: string }
+> = {
+  relatedness: {
+    belief: [
+      "나는 내 마음을 드러내면 상대가 나를 부담스러워할 거라고 느낀다.",
+      "그러면 결국 나는 이해받지 못하고 더 멀어질 것 같아 두렵다.",
+    ],
+    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
+  },
+  competence: {
+    belief: [
+      "나는 기대를 충족하지 못하면 곧바로 무가치해질 것 같다고 믿는다.",
+      "그래서 작은 흔들림도 실패로 이어질 것 같아 불안해진다.",
+    ],
+    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
+  },
+  autonomy: {
+    belief: [
+      "나는 상황이 내 의지와 상관없이 흘러가고 있다고 느낀다.",
+      "그래서 결국 나는 끌려다니며 더 나빠질 것 같아 답답하다.",
+    ],
+    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
+  },
+};
+
+function pickFirstItem(arr: unknown): unknown {
+  return Array.isArray(arr) ? arr[0] : null;
+}
+
+// ----------------------
+// main API
+// ----------------------
+export async function generateDeepSdtAutomaticThoughts(
   userInput: string,
   emotion: string,
   main: DeepNoteContext,
   subs: DeepNoteContext[],
-): Promise<DeepThoughtResult> {
+  internal: DeepInternalContext,
+): Promise<DeepAutoThoughtResult> {
+  const subs2 = subs.slice(0, 2);
+
   const prompt = `
 [User Input]
 ${userInput}
@@ -87,8 +186,11 @@ ${emotion}
 [Main Note]
 ${formatNote(main)}
 
-[Sub Notes] (latest first)
-${subs.map(formatNote).join("\n\n") || "(none)"}
+[Sub Notes] (latest first, max 2)
+${subs2.map(formatNote).join("\n\n") || "(none)"}
+
+[Internal Context - English]
+${formatDeepInternalContext(internal)}
 `.trim();
 
   try {
@@ -96,24 +198,38 @@ ${subs.map(formatNote).join("\n\n") || "(none)"}
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
     });
+
     const jsonText = extractJsonObject(raw);
     if (!jsonText) throw new Error("No JSON object in LLM output");
 
     const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const autoThought = cleanText(parsed.autoThought);
-    const summary = cleanText(parsed.summary);
+    const sdt = (parsed.sdt ?? {}) as Partial<Record<SDTKey, unknown>>;
 
-    if (!autoThought || !summary) {
-      throw new Error("Missing deep thought fields");
-    }
+    // schema expects arrays with 1 object each
+    const relItem =
+      normalizeThoughtItem(pickFirstItem(sdt.relatedness)) ??
+      FALLBACK.relatedness;
+    const comItem =
+      normalizeThoughtItem(pickFirstItem(sdt.competence)) ??
+      FALLBACK.competence;
+    const autItem =
+      normalizeThoughtItem(pickFirstItem(sdt.autonomy)) ?? FALLBACK.autonomy;
 
-    return { autoThought, summary };
-  } catch (error) {
-    console.error("deep auto thought error:", error);
     return {
-      autoThought: userInput.trim() || "지금 마음이 복잡하고 불안하다.",
-      summary:
-        "메인 노트를 중심으로 여러 기록이 연결되어 있습니다. 최근 기록일수록 상황의 압박감이 강하게 반복됩니다. 비슷한 감정과 해석이 반복되어 왜곡이 강화될 수 있습니다. 대안사고가 일부 존재하지만 지금 상황에서는 충분히 적용되지 못한 흐름입니다.",
+      sdt: {
+        relatedness: relItem,
+        competence: comItem,
+        autonomy: autItem,
+      },
+    };
+  } catch (error) {
+    console.error("deep sdt automatic thoughts error:", error);
+    return {
+      sdt: {
+        relatedness: FALLBACK.relatedness,
+        competence: FALLBACK.competence,
+        autonomy: FALLBACK.autonomy,
+      },
     };
   }
 }

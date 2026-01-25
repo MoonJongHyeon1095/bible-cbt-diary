@@ -1,0 +1,116 @@
+.aiButton {
+  border: 1px solid #fda4af;
+  color: #be123c;
+  background: #fff;
+}
+
+.aiButton:hover {
+  background: #ffe4e6;
+}
+
+.saveButton {
+  background: #f43f5e;
+  color: #fff;
+}
+
+.saveButton:hover {
+  background: #e11d48;
+}
+
+.sectionStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionTitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.sectionSubtitle {
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.selectedLabel {
+  margin-bottom: 8px;
+  font-size: 0.75rem;
+  color: #475569;
+}
+
+.selectedChip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  padding: 4px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #be123c;
+}
+
+.textarea {
+  min-height: 120px;
+  border: 1px solid #fecdd3;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 8px 12px;
+  font-size: 16px;
+  line-height: 1.85;
+}
+
+.errorBox {
+  border-radius: 8px;
+  border: 1px solid #fecdd3;
+  background: #fff1f2;
+  padding: 8px 12px;
+  font-size: 0.75rem;
+  color: #be123c;
+}
+
+.cardContent {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.thoughtTag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid #ffe4e6;
+  background: #fff1f2;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #be123c;
+}
+
+.suggestionText {
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.tagSelected {
+  border: 1px solid #fecdd3;
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.tagUnselected {
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  color: #334155;
+}
+
+.tagUnselected:hover {
+  border-color: #fda4af;
+  background: #fff1f2;
+}
+
+.icon {
+  margin-right: 4px;
+}

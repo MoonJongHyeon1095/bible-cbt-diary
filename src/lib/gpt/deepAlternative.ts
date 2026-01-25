@@ -1,6 +1,10 @@
 // src/lib/gpt/deepAlternative.ts
 import { callGptText } from "./client";
 import type { AlternativeThought, TechniqueType } from "./alternative";
+import {
+  type DeepInternalContext,
+  formatDeepInternalContext,
+} from "./deepContext";
 
 const TECHNIQUES: Array<{
   technique: TechniqueType;
@@ -58,8 +62,13 @@ type LlmResponseShape = {
 const SYSTEM_PROMPT = `
 You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
-Based on the user's [Situation], [Emotion], [Negative Automatic Thought], [Identified Cognitive Distortions], [Summary],
+Based on the user's [Situation], [Emotion], [Negative Automatic Thought], [Identified Cognitive Distortions], [Internal Context],
 and [Previous Alternatives], generate exactly ONE alternative thought for each of the three techniques below.
+
+[Internal Context structure]
+- patternSummary: repeatedThemes (2), triggerPatterns (2), emotionShifts (1), distortionPatterns (2), alternativePatterns (1)
+- openQuestions: exactly 2 questions
+- nextStepHint: one short sentence
 
 [Techniques]
 1) REALITY_CHECK
@@ -78,7 +87,7 @@ and [Previous Alternatives], generate exactly ONE alternative thought for each o
 - Write 3–5 Korean sentences.
 
 [Output rules]
-- You MUST reflect the user's situation, emotion, negative automatic thought, cognitive distortions, and summary.
+- You MUST reflect the user's situation, emotion, negative automatic thought, cognitive distortions, and internal context.
 - You MUST reference or adapt prior alternatives, but do NOT copy them verbatim.
 - No baseless optimism or exaggerated positivity.
 - Avoid content overlap across techniques (each should feel meaningfully different).
@@ -135,7 +144,7 @@ export async function generateDeepAlternativeThoughts(
   situation: string,
   emotion: string,
   thought: string,
-  summary: string,
+  internal: DeepInternalContext,
   cognitiveErrors: Array<string | { title: string; detail?: string }>,
   previousAlternatives: string[],
 ): Promise<AlternativeThought[]> {
@@ -158,11 +167,11 @@ ${emotion}
 [Negative Automatic Thought]
 ${thought}
 
+[Internal Context - Structured]
+${formatDeepInternalContext(internal)}
+
 [Identified Cognitive Distortions]
 ${cognitiveErrorText}
-
-[Summary]
-${summary}
 
 [Previous Alternatives]
 ${previousAltText || "(none)"}

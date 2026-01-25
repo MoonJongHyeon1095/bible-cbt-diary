@@ -1,32 +1,18 @@
-import { generateDeepAutoThoughtAndSummary } from "@/lib/ai";
+import { generateDeepAutoThoughts } from "@/lib/ai";
 import type { EmotionNote } from "@/lib/types/types";
+import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import type { DeepAutoThoughtResult } from "@/lib/gpt/deepThought";
+import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const buildContext = (note: EmotionNote) => {
-  return {
-    id: note.id,
-    triggerText: note.trigger_text,
-    emotions: (note.thought_details ?? [])
-      .map((detail) => detail.emotion)
-      .filter(Boolean),
-    automaticThoughts: (note.thought_details ?? [])
-      .map((detail) => detail.automatic_thought)
-      .filter(Boolean),
-    cognitiveErrors: (note.error_details ?? []).map((detail) => ({
-      title: detail.error_label,
-      detail: detail.error_description,
-    })),
-    alternatives: (note.alternative_details ?? [])
-      .map((detail) => detail.alternative)
-      .filter(Boolean),
-  };
-};
+const buildContext = (note: EmotionNote) => buildDeepNoteContext(note);
 
 type UseDeepAutoThoughtParams = {
   userInput: string;
   emotion: string;
   mainNote: EmotionNote | null;
   subNotes: EmotionNote[];
+  internalContext: DeepInternalContext | null;
 };
 
 export function useDeepAutoThought({
@@ -34,9 +20,10 @@ export function useDeepAutoThought({
   emotion,
   mainNote,
   subNotes,
+  internalContext,
 }: UseDeepAutoThoughtParams) {
   const [autoThought, setAutoThought] = useState("");
-  const [summary, setSummary] = useState("");
+  const [result, setResult] = useState<DeepAutoThoughtResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -52,35 +39,41 @@ export function useDeepAutoThought({
   }, [emotion, mainNote?.id, subNotes, userInput]);
 
   const loadThought = useCallback(async () => {
-    if (!userInput.trim() || !emotion || !mainNote) return;
+    if (!userInput.trim() || !emotion || !mainNote || !internalContext) return;
     setLoading(true);
     setError(null);
     try {
       const mainContext = buildContext(mainNote);
       const subContexts = subNotes.map(buildContext);
-      const result = await generateDeepAutoThoughtAndSummary(
+      const sdt = await generateDeepAutoThoughts(
         userInput,
         emotion,
         mainContext,
         subContexts,
+        internalContext,
       );
-      setAutoThought(result.autoThought);
-      setSummary(result.summary);
+      setResult(sdt);
+      const beliefs = [
+        ...sdt.sdt.relatedness.belief,
+        ...sdt.sdt.competence.belief,
+        ...sdt.sdt.autonomy.belief,
+      ].filter(Boolean);
+      setAutoThought(beliefs.join(" "));
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
       setLoading(false);
     }
-  }, [emotion, mainNote, subNotes, userInput]);
+  }, [emotion, internalContext, mainNote, subNotes, userInput]);
 
   useEffect(() => {
-    if (!userInput.trim() || !emotion || !mainNote) return;
+    if (!userInput.trim() || !emotion || !mainNote || !internalContext) return;
     void loadThought();
-  }, [loadThought, requestKey, userInput, emotion, mainNote]);
+  }, [loadThought, requestKey, userInput, emotion, mainNote, internalContext]);
 
   return {
     autoThought,
-    summary,
+    result,
     loading,
     error,
     reload: loadThought,

@@ -1,14 +1,14 @@
-import { RefreshCw } from "lucide-react";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
 import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
 import { MinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/components/MinimalCognitiveErrorCard";
 import { MinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/MinimalCognitiveErrorErrorState";
-import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRanking";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
+import { RefreshCw } from "lucide-react";
+import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRanking";
 
 interface DeepCognitiveErrorSectionProps {
   userInput: string;

@@ -6,8 +6,8 @@ import type {
   EmotionNoteDetail,
   EmotionNoteErrorDetail,
   EmotionNoteWithDetails,
-} from "@/lib/types";
-import { buildAuthHeaders } from "@/components/utils/api";
+} from "@/lib/types/types";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 export const fetchEmotionNote = async (noteId: number, accessToken: string) => {
   const response = await fetch(`/api/emotion-notes?id=${noteId}`, {
@@ -112,10 +112,7 @@ export const saveEmotionNote = async (
   return { response, data };
 };
 
-export const deleteEmotionNote = async (
-  noteId: number,
-  accessToken: string,
-) =>
+export const deleteEmotionNote = async (noteId: number, accessToken: string) =>
   fetch("/api/emotion-notes", {
     method: "DELETE",
     headers: {
@@ -243,7 +240,11 @@ export const deleteAlternativeDetail = async (
   });
 
 export const createBehaviorDetail = async (
-  payload: { note_id: number; behavior_label: string; behavior_description: string },
+  payload: {
+    note_id: number;
+    behavior_label: string;
+    behavior_description: string;
+  },
   accessToken: string,
 ) =>
   fetch("/api/emotion-behavior-details", {

@@ -1,11 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { AlertCircle } from "lucide-react";
-import type { EmotionNoteErrorDetail } from "@/lib/types";
-import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
-import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
 import DetailSectionBadge from "@/components/emotion-notes/detail/common/DetailSectionBadge";
+import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
+import type { EmotionNoteErrorDetail } from "@/lib/types/types";
+import { AlertCircle } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
+import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type ErrorDetailSectionProps = {
@@ -22,7 +22,11 @@ type ErrorDetailSectionProps = {
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
-  onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
+  onOpenModal?: (
+    title: string,
+    body: string,
+    badgeText?: string | null,
+  ) => void;
 };
 
 export default function ErrorDetailSection(props: ErrorDetailSectionProps) {
@@ -89,24 +93,24 @@ export default function ErrorDetailSection(props: ErrorDetailSectionProps) {
               tabIndex={onSelectDetail ? 0 : undefined}
             >
               {editingErrorId === detail.id ? (
-                    <div className={styles.detailEdit}>
-                      {editingErrorLabel ? (
-                        <div className={styles.detailEditBadge}>
-                          <DetailSectionBadge text={editingErrorLabel} />
-                        </div>
-                      ) : null}
-                      <textarea
-                        ref={editTextareaRef}
-                        value={editingErrorDescription}
-                        onChange={(event) =>
-                          onChangeEditingErrorDescription(event.target.value)
-                        }
-                        onFocus={resizeEditTextarea}
-                        onInput={resizeEditTextarea}
-                        rows={2}
-                        className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                      />
+                <div className={styles.detailEdit}>
+                  {editingErrorLabel ? (
+                    <div className={styles.detailEditBadge}>
+                      <DetailSectionBadge text={editingErrorLabel} />
                     </div>
+                  ) : null}
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editingErrorDescription}
+                    onChange={(event) =>
+                      onChangeEditingErrorDescription(event.target.value)
+                    }
+                    onFocus={resizeEditTextarea}
+                    onInput={resizeEditTextarea}
+                    rows={2}
+                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
+                  />
+                </div>
               ) : (
                 <>
                   <DetailSectionItem

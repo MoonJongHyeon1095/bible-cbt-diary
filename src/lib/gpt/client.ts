@@ -2,7 +2,7 @@
 "use client";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { buildAuthHeaders } from "@/components/utils/api";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 export type GptCallOptions = { systemPrompt?: string; model?: string };
 

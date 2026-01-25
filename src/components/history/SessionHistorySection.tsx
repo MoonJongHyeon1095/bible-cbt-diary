@@ -1,19 +1,19 @@
 "use client";
 
-import type { SessionHistory } from "@/lib/cbtTypes";
-import { normalizeSelectedCognitiveErrors } from "@/lib/normalizeSelectedCognitiveErrors";
+import Button from "@/components/ui/Button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { formatKoreanDateTime } from "@/lib/time";
+import type { SessionHistory } from "@/lib/types/cbtTypes";
+import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
+import { formatKoreanDateTime } from "@/lib/utils/time";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Button from "@/components/ui/Button";
+import styles from "./SessionHistorySection.module.css";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
   SessionHistoryChipRow,
   SessionHistorySectionItalic,
   SessionHistorySectionText,
 } from "./SessionHistorySectionCard";
-import styles from "./SessionHistorySection.module.css";
 import {
   deleteAllSessionHistories,
   deleteSessionHistory,
@@ -311,7 +311,9 @@ export default function SessionHistorySection() {
                       {history.emotionThoughtPairs.map((pair, index) => (
                         <div key={`${history.id}-pair-${index}`}>
                           <SessionHistoryChipRow>
-                            <SessionHistoryChip>{pair.emotion}</SessionHistoryChip>
+                            <SessionHistoryChip>
+                              {pair.emotion}
+                            </SessionHistoryChip>
                             {pair.intensity != null && (
                               <SessionHistoryChip>
                                 강도 {pair.intensity}/100
@@ -331,7 +333,9 @@ export default function SessionHistorySection() {
                       {history.selectedCognitiveErrors.map((error, index) => (
                         <div key={`${history.id}-error-${index}`}>
                           <SessionHistoryChipRow>
-                            <SessionHistoryChip>{error.title}</SessionHistoryChip>
+                            <SessionHistoryChip>
+                              {error.title}
+                            </SessionHistoryChip>
                           </SessionHistoryChipRow>
                           {error.detail ? (
                             <SessionHistorySectionText>
@@ -368,7 +372,8 @@ export default function SessionHistorySection() {
                     <SessionHistorySectionCard title="성경 말씀">
                       <SessionHistoryChipRow>
                         <SessionHistoryChip>
-                          {formatScriptureReference(history.bibleVerse) || "말씀"}
+                          {formatScriptureReference(history.bibleVerse) ||
+                            "말씀"}
                         </SessionHistoryChip>
                       </SessionHistoryChipRow>
                       <SessionHistorySectionItalic>
@@ -386,8 +391,8 @@ export default function SessionHistorySection() {
         <div ref={sentinelRef} className={styles.loadMore}>
           {isLoadingMore ? (
             <>
-              <span className={styles.loadMoreSpinner} aria-hidden />
-              더 불러오는 중...
+              <span className={styles.loadMoreSpinner} aria-hidden />더 불러오는
+              중...
             </>
           ) : (
             "스크롤하여 더 보기"

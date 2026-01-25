@@ -1,8 +1,8 @@
 "use client";
 
-import type { EmotionNote } from "@/lib/types";
-import { buildAuthHeaders } from "@/components/utils/api";
-import { getKstMonthRange } from "@/lib/time";
+import type { EmotionNote } from "@/lib/types/types";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import { getKstMonthRange } from "@/lib/utils/time";
 
 export const fetchEmotionNotesByRange = async (
   start: Date,

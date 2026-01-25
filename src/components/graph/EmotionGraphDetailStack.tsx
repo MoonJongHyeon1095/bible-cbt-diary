@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import type { ReactNode } from "react";
-import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
-import type { EmotionNote } from "@/lib/types";
-import { formatKoreanDateTime } from "@/lib/time";
 import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
+import type { EmotionNote } from "@/lib/types/types";
+import { formatKoreanDateTime } from "@/lib/utils/time";
+import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
+import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import styles from "./EmotionGraphSection.module.css";
 
 type ModalContent = {

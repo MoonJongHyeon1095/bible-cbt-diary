@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import type { EmotionNote } from "@/lib/types/types";
 import { useRouter } from "next/navigation";
-import type { EmotionNote } from "@/lib/types";
+import { useCallback, useEffect, useState } from "react";
 import {
   deleteEmotionNote,
   fetchEmotionNote,
@@ -227,7 +227,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     onCancelEditing: errorSectionState.cancelEditing,
     onUpdate: errorSectionState.handleUpdate,
     onDelete: errorSectionState.handleDelete,
-    onChangeEditingErrorDescription: errorSectionState.setEditingErrorDescription,
+    onChangeEditingErrorDescription:
+      errorSectionState.setEditingErrorDescription,
   };
 
   const alternativeSection = {
@@ -240,7 +241,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     onCancelEditing: alternativeSectionState.cancelEditing,
     onUpdate: alternativeSectionState.handleUpdate,
     onDelete: alternativeSectionState.handleDelete,
-    onChangeEditingAlternativeText: alternativeSectionState.setEditingAlternativeText,
+    onChangeEditingAlternativeText:
+      alternativeSectionState.setEditingAlternativeText,
   };
 
   const behaviorSection = {

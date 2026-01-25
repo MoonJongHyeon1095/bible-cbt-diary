@@ -6,7 +6,7 @@ import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
-import { formatKoreanDateTime } from "@/lib/time";
+import { formatKoreanDateTime } from "@/lib/utils/time";
 import {
   AlertCircle,
   Brain,
@@ -198,12 +198,7 @@ export default function EmotionNoteDetailPage({
     errorSection.onCancelEditing();
     alternativeSection.onCancelEditing();
     behaviorSection.onCancelEditing();
-  }, [
-    alternativeSection,
-    behaviorSection,
-    errorSection,
-    thoughtSection,
-  ]);
+  }, [alternativeSection, behaviorSection, errorSection, thoughtSection]);
 
   const handleSelectDetail = (section: SectionKey, detailId: number) => {
     const isSameSelection =

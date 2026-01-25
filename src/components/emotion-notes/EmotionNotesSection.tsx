@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNote } from "@/lib/types/types";
 import Link from "next/link";
-import type { EmotionNote } from "@/lib/types";
 import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNotesSection.module.css";
 
@@ -31,7 +31,9 @@ export default function EmotionNotesSection({
       </div>
 
       <EmotionNoteListSection
-        title={notes.length > 0 ? `오늘 ${notes.length}개의 기록이 있습니다` : ""}
+        title={
+          notes.length > 0 ? `오늘 ${notes.length}개의 기록이 있습니다` : ""
+        }
         notes={notes}
         isLoading={isLoading}
       />

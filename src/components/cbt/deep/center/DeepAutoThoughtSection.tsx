@@ -1,12 +1,12 @@
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { MinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/MinimalAutoThoughtTextSection";
 import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
 import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
-import { MinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/MinimalAutoThoughtTextSection";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import type { EmotionNote } from "@/lib/types";
-import { useDeepAutoThought } from "../hooks/useDeepAutoThought";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
+import type { EmotionNote } from "@/lib/types/types";
+import { useDeepAutoThought } from "../hooks/useDeepAutoThought";
 
 interface DeepAutoThoughtSectionProps {
   userInput: string;

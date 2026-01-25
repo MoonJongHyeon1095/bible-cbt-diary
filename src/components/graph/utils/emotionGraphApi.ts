@@ -1,7 +1,7 @@
 "use client";
 
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types";
-import { buildAuthHeaders } from "@/components/utils/api";
+import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/types";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 export type EmotionNoteGroupSummary = {
   id: number;

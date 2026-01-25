@@ -1,5 +1,5 @@
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 
 const getMetaByTitle = (title: string) =>
   COGNITIVE_ERRORS.find((error) => error.title === title);

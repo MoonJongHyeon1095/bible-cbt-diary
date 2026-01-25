@@ -1,14 +1,14 @@
 "use client";
 
+import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import EmotionNotesSection from "@/components/emotion-notes/EmotionNotesSection";
+import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
 import AppHeader from "@/components/header/AppHeader";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { EmotionNote } from "@/lib/types";
+import type { EmotionNote } from "@/lib/types/types";
+import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { formatKoreanDateTime } from "@/lib/time";
 import styles from "../page.module.css";
-import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
-import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
 
 type SessionUser = {
   id: string;

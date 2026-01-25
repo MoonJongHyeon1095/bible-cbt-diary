@@ -1,23 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import type { EmotionNote } from "@/lib/types";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
-import { CbtToastProvider, useCbtToast } from "@/components/cbt/common/CbtToast";
+import {
+  CbtToastProvider,
+  useCbtToast,
+} from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
-import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
-import { saveDeepSessionAPI } from "@/components/cbt/utils/api";
-import { formatAutoTitle } from "@/components/cbt/utils/formatAutoTitle";
-import { fetchEmotionGraph, fetchEmotionNoteById } from "@/components/graph/utils/emotionGraphApi";
 import { MinimalEmotionSection } from "@/components/cbt/minimal/center/MinimalEmotionSection";
 import { MinimalFloatingBackButton } from "@/components/cbt/minimal/common/MinimalFloatingBackButton";
 import { MinimalFloatingHomeButton } from "@/components/cbt/minimal/common/MinimalFloatingHomeButton";
-import { MinimalSavingModal } from "@/components/cbt/minimal/common/MinimalSavingModal";
 import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
+import { MinimalSavingModal } from "@/components/cbt/minimal/common/MinimalSavingModal";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
-import { DeepIncidentSection } from "./center/DeepIncidentSection";
+import { saveDeepSessionAPI } from "@/components/cbt/utils/api";
+import { formatAutoTitle } from "@/components/cbt/utils/formatAutoTitle";
+import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
+import {
+  fetchEmotionGraph,
+  fetchEmotionNoteById,
+} from "@/components/graph/utils/emotionGraphApi";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
+import type { EmotionNote } from "@/lib/types/types";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { DeepAutoThoughtSection } from "./center/DeepAutoThoughtSection";
+import { DeepIncidentSection } from "./center/DeepIncidentSection";
 import { DeepCognitiveErrorSection } from "./left/DeepCognitiveErrorSection";
 import { DeepAlternativeThoughtSection } from "./right/DeepAlternativeThoughtSection";
 
@@ -134,7 +140,10 @@ function DeepSessionPageContent() {
         setNotesError(null);
 
         if (groupId) {
-          const { response, data } = await fetchEmotionGraph(accessToken, groupId);
+          const { response, data } = await fetchEmotionGraph(
+            accessToken,
+            groupId,
+          );
           if (requestId !== requestIdRef.current) return;
           if (!response.ok) {
             setNotesError("노트를 불러오지 못했습니다.");

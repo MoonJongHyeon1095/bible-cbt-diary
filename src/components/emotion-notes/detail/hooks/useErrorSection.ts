@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNoteErrorDetail } from "@/lib/types/types";
 import { useCallback, useState } from "react";
-import type { EmotionNoteErrorDetail } from "@/lib/types";
 import {
   createErrorDetail,
   deleteErrorDetail,

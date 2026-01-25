@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getUserFromRequest } from "@/lib/auth/session";
-import { getKstDayRange } from "@/lib/time";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getKstDayRange } from "@/lib/utils/time";
+import { NextResponse } from "next/server";
 
 const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date());
@@ -51,10 +51,22 @@ export async function GET(request: Request) {
       )
       .eq("user_id", user.id)
       .eq("id", noteId)
-      .order("created_at", { ascending: true, foreignTable: "emotion_note_details" })
-      .order("created_at", { ascending: true, foreignTable: "emotion_error_details" })
-      .order("created_at", { ascending: true, foreignTable: "emotion_alternative_details" })
-      .order("created_at", { ascending: true, foreignTable: "emotion_behavior_details" })
+      .order("created_at", {
+        ascending: true,
+        foreignTable: "emotion_note_details",
+      })
+      .order("created_at", {
+        ascending: true,
+        foreignTable: "emotion_error_details",
+      })
+      .order("created_at", {
+        ascending: true,
+        foreignTable: "emotion_alternative_details",
+      })
+      .order("created_at", {
+        ascending: true,
+        foreignTable: "emotion_behavior_details",
+      })
       .maybeSingle();
 
     if (error) {

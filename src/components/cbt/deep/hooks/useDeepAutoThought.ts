@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
 import { generateDeepAutoThoughtAndSummary } from "@/lib/ai";
-import type { EmotionNote } from "@/lib/types";
+import type { EmotionNote } from "@/lib/types/types";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 const buildContext = (note: EmotionNote) => {
   return {

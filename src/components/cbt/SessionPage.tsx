@@ -1,24 +1,39 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import type { EmotionThoughtPair, SelectedCognitiveError, SessionHistory } from "@/lib/cbtTypes";
-import { CbtToastProvider, useCbtToast } from "@/components/cbt/common/CbtToast";
+import {
+  CbtToastProvider,
+  useCbtToast,
+} from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
+import {
+  saveMinimalPatternAPI,
+  saveSessionHistoryAPI,
+} from "@/components/cbt/utils/api";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
-import { saveMinimalPatternAPI, saveSessionHistoryAPI } from "@/components/cbt/utils/api";
-import { formatKoreanDateTime } from "@/lib/time";
-import { MinimalIncidentSection } from "./minimal/center/MinimalIncidentSection";
-import { MinimalEmotionSection } from "./minimal/center/MinimalEmotionSection";
+import type {
+  EmotionThoughtPair,
+  SelectedCognitiveError,
+  SessionHistory,
+} from "@/lib/types/cbtTypes";
+import { formatKoreanDateTime } from "@/lib/utils/time";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useRef, useState } from "react";
 import { MinimalAutoThoughtSection } from "./minimal/center/MinimalAutoThoughtSection";
-import { MinimalCognitiveErrorSection } from "./minimal/left/MinimalCognitiveErrorSection";
-import { MinimalAlternativeThoughtSection } from "./minimal/right/MinimalAlternativeThoughtSection";
+import { MinimalEmotionSection } from "./minimal/center/MinimalEmotionSection";
+import { MinimalIncidentSection } from "./minimal/center/MinimalIncidentSection";
 import { MinimalFloatingBackButton } from "./minimal/common/MinimalFloatingBackButton";
 import { MinimalFloatingHomeButton } from "./minimal/common/MinimalFloatingHomeButton";
 import { MinimalSavingModal } from "./minimal/common/MinimalSavingModal";
+import { MinimalCognitiveErrorSection } from "./minimal/left/MinimalCognitiveErrorSection";
 import styles from "./minimal/MinimalStyles.module.css";
+import { MinimalAlternativeThoughtSection } from "./minimal/right/MinimalAlternativeThoughtSection";
 
-type MinimalStep = "incident" | "emotion" | "thought" | "errors" | "alternative";
+type MinimalStep =
+  | "incident"
+  | "emotion"
+  | "thought"
+  | "errors"
+  | "alternative";
 
 function SessionPageContent() {
   const router = useRouter();
@@ -43,7 +58,9 @@ function SessionPageContent() {
     },
   });
   const dateParam = searchParams.get("date");
-  const hasDateParam = Boolean(dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam));
+  const hasDateParam = Boolean(
+    dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam),
+  );
   const dateLabel = hasDateParam
     ? formatKoreanDateTime(`${dateParam}T00:00:00+09:00`, {
         month: "long",

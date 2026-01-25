@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNoteAlternativeDetail } from "@/lib/types/types";
 import { useCallback, useState } from "react";
-import type { EmotionNoteAlternativeDetail } from "@/lib/types";
 import {
   createAlternativeDetail,
   deleteAlternativeDetail,
@@ -26,8 +26,9 @@ export default function useAlternativeSection({
 }: UseAlternativeSectionOptions) {
   const [alternativeText, setAlternativeText] = useState("");
   const [details, setDetails] = useState<EmotionNoteAlternativeDetail[]>([]);
-  const [editingAlternativeId, setEditingAlternativeId] =
-    useState<number | null>(null);
+  const [editingAlternativeId, setEditingAlternativeId] = useState<
+    number | null
+  >(null);
   const [editingAlternativeText, setEditingAlternativeText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);

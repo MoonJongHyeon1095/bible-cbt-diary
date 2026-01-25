@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { generateDeepAlternativeThoughts } from "@/lib/ai";
 import { AlternativeThought } from "@/lib/gpt/alternative";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const alternativeThoughtsCache = new Map<string, AlternativeThought[]>();
 
@@ -97,7 +97,13 @@ export function useDeepAlternativeThoughts({
     ) {
       void generateAlternatives();
     }
-  }, [alternativeThoughts.length, autoThought, generateAlternatives, step, thoughtsLoading]);
+  }, [
+    alternativeThoughts.length,
+    autoThought,
+    generateAlternatives,
+    step,
+    thoughtsLoading,
+  ]);
 
   return {
     alternativeThoughts,

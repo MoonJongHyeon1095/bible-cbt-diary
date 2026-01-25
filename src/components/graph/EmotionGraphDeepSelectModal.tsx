@@ -1,8 +1,8 @@
 "use client";
 
-import type { EmotionNote } from "@/lib/types";
-import Button from "@/components/ui/Button";
 import { useModalOpen } from "@/components/common/useModalOpen";
+import Button from "@/components/ui/Button";
+import type { EmotionNote } from "@/lib/types/types";
 import styles from "./EmotionGraphSection.module.css";
 
 type EmotionGraphDeepSelectModalProps = {
@@ -79,9 +79,7 @@ export default function EmotionGraphDeepSelectModal({
                       <span className={styles.deepNoteTitle}>
                         {note.title || "감정 노트"}
                       </span>
-                      <p className={styles.deepNoteText}>
-                        {note.trigger_text}
-                      </p>
+                      <p className={styles.deepNoteText}>{note.trigger_text}</p>
                     </div>
                     <span className={styles.deepNoteMeta}>#{note.id}</span>
                   </button>

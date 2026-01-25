@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/types";
 import { useEffect, useState } from "react";
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types";
 import {
   fetchEmotionGraph,
   fetchEmotionNoteById,
@@ -32,7 +32,10 @@ export const useEmotionGraphData = ({
       }
       setIsLoading(true);
       if (groupId) {
-        const { response, data } = await fetchEmotionGraph(accessToken, groupId);
+        const { response, data } = await fetchEmotionGraph(
+          accessToken,
+          groupId,
+        );
         if (!response.ok) {
           setNotes([]);
           setMiddles([]);

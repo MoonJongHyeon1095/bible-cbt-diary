@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
 import { generateContextualAlternativeThoughts } from "@/lib/ai";
 import { AlternativeThought } from "@/lib/gpt/alternative";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
-} from "@/lib/cbtTypes";
+} from "@/lib/types/cbtTypes";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const alternativeThoughtsCache = new Map<string, AlternativeThought[]>();
 

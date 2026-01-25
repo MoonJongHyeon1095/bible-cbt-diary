@@ -1,11 +1,11 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { Footprints } from "lucide-react";
-import type { EmotionNoteBehaviorDetail } from "@/lib/types";
-import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
-import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
 import DetailSectionBadge from "@/components/emotion-notes/detail/common/DetailSectionBadge";
+import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
+import type { EmotionNoteBehaviorDetail } from "@/lib/types/types";
+import { Footprints } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
+import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type BehaviorDetailSectionProps = {
@@ -22,7 +22,11 @@ type BehaviorDetailSectionProps = {
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
-  onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
+  onOpenModal?: (
+    title: string,
+    body: string,
+    badgeText?: string | null,
+  ) => void;
 };
 
 export default function BehaviorDetailSection(
@@ -91,24 +95,24 @@ export default function BehaviorDetailSection(
               tabIndex={onSelectDetail ? 0 : undefined}
             >
               {editingBehaviorId === detail.id ? (
-                    <div className={styles.detailEdit}>
-                      {editingBehaviorLabel ? (
-                        <div className={styles.detailEditBadge}>
-                          <DetailSectionBadge text={editingBehaviorLabel} />
-                        </div>
-                      ) : null}
-                      <textarea
-                        ref={editTextareaRef}
-                        value={editingBehaviorDescription}
-                        onChange={(event) =>
-                          onChangeEditingBehaviorDescription(event.target.value)
-                        }
-                        onFocus={resizeEditTextarea}
-                        onInput={resizeEditTextarea}
-                        rows={2}
-                        className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                      />
+                <div className={styles.detailEdit}>
+                  {editingBehaviorLabel ? (
+                    <div className={styles.detailEditBadge}>
+                      <DetailSectionBadge text={editingBehaviorLabel} />
                     </div>
+                  ) : null}
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editingBehaviorDescription}
+                    onChange={(event) =>
+                      onChangeEditingBehaviorDescription(event.target.value)
+                    }
+                    onFocus={resizeEditTextarea}
+                    onInput={resizeEditTextarea}
+                    rows={2}
+                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
+                  />
+                </div>
               ) : (
                 <>
                   <DetailSectionItem

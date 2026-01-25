@@ -1,7 +1,10 @@
 "use client";
 
-import { buildAuthHeaders } from "@/components/utils/api";
-import type { SelectedCognitiveError, SessionHistory } from "@/lib/cbtTypes";
+import type {
+  SelectedCognitiveError,
+  SessionHistory,
+} from "@/lib/types/cbtTypes";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { formatAutoTitle } from "./formatAutoTitle";
 
 export type MinimalSavePayload = {

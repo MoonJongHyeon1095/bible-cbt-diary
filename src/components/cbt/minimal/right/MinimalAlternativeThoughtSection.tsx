@@ -1,14 +1,17 @@
+import { useAlternativeThoughts } from "@/components/cbt/hooks/useAlternativeThoughts";
+import Button from "@/components/ui/Button";
+import type {
+  EmotionThoughtPair,
+  SelectedCognitiveError,
+} from "@/lib/types/cbtTypes";
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { EmotionThoughtPair, SelectedCognitiveError } from "@/lib/cbtTypes";
 import { MinimalFloatingNextButton } from "../common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "../common/MinimalLoadingState";
 import { MinimalStepHeaderSection } from "../common/MinimalStepHeaderSection";
-import { useAlternativeThoughts } from "@/components/cbt/hooks/useAlternativeThoughts";
+import styles from "../MinimalStyles.module.css";
 import { MinimalAlternativeThoughtBodySection } from "./components/MinimalAlternativeThoughtBodySection";
 import { MinimalAlternativeThoughtErrorState } from "./components/MinimalAlternativeThoughtErrorState";
-import styles from "../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
 
 interface MinimalAlternativeThoughtSectionProps {
   userInput: string;

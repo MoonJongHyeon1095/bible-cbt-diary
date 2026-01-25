@@ -4,9 +4,15 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 import Button from "@/components/ui/Button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/time";
-import type { EmotionNote } from "@/lib/types";
-import { ChevronLeft, ChevronRight, CornerDownLeft, Plus, Search } from "lucide-react";
+import type { EmotionNote } from "@/lib/types/types";
+import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CornerDownLeft,
+  Plus,
+  Search,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionCalendarSection.module.css";

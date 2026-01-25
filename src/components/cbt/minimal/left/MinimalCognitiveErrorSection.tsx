@@ -1,7 +1,7 @@
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCognitiveErrorRanking } from "@/components/cbt/hooks/useCognitiveErrorRanking";
 import Button from "@/components/ui/Button";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { RefreshCw } from "lucide-react";
 import { MinimalFloatingNextButton } from "../common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "../common/MinimalLoadingState";

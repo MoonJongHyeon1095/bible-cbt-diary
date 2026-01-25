@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNoteBehaviorDetail } from "@/lib/types/types";
 import { useCallback, useState } from "react";
-import type { EmotionNoteBehaviorDetail } from "@/lib/types";
 import {
   createBehaviorDetail,
   deleteBehaviorDetail,
@@ -27,7 +27,9 @@ export default function useBehaviorSection({
   const [behaviorLabel, setBehaviorLabel] = useState("");
   const [behaviorDescription, setBehaviorDescription] = useState("");
   const [details, setDetails] = useState<EmotionNoteBehaviorDetail[]>([]);
-  const [editingBehaviorId, setEditingBehaviorId] = useState<number | null>(null);
+  const [editingBehaviorId, setEditingBehaviorId] = useState<number | null>(
+    null,
+  );
   const [editingBehaviorLabel, setEditingBehaviorLabel] = useState("");
   const [editingBehaviorDescription, setEditingBehaviorDescription] =
     useState("");

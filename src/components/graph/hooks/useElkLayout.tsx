@@ -1,8 +1,8 @@
 "use client";
 
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types";
-import ELK from "elkjs/lib/elk.bundled.js";
+import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/types";
 import type { ElkNode } from "elkjs/lib/elk-api";
+import ELK from "elkjs/lib/elk.bundled.js";
 import { useEffect, useState } from "react";
 import type { Edge, Node } from "reactflow";
 import { MarkerType } from "reactflow";
@@ -156,7 +156,7 @@ export const useElkLayout = (
       const activeTheme = themeColor ?? INDIGO;
       const edgeColor = `rgb(${activeTheme[0]}, ${activeTheme[1]}, ${activeTheme[2]})`;
       const nextNodes =
-        (result.children
+        result.children
           ?.map((child) => {
             if (!isPositionedElkNode(child)) return null;
             const note = notesById.get(child.id);
@@ -201,8 +201,7 @@ export const useElkLayout = (
               },
             } as Node;
           })
-          .filter((node): node is Node => node !== null)) ??
-        [];
+          .filter((node): node is Node => node !== null) ?? [];
 
       const filteredMiddles = middles.filter(
         (middle) =>
@@ -222,7 +221,9 @@ export const useElkLayout = (
         const group = edgesBySource.get(sourceId) ?? [];
         const index = group.findIndex((item) => item.id === middle.id);
         const offset =
-          group.length > 1 ? (index - (group.length - 1) / 2) * EDGE_OFFSET_STEP : 0;
+          group.length > 1
+            ? (index - (group.length - 1) / 2) * EDGE_OFFSET_STEP
+            : 0;
         return {
           id: `edge-${middle.id}`,
           source: sourceId,

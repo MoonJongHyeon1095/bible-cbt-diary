@@ -1,7 +1,7 @@
 "use client";
 
-import { buildAuthHeaders } from "@/components/utils/api";
-import type { SessionHistory } from "@/lib/cbtTypes";
+import type { SessionHistory } from "@/lib/types/cbtTypes";
+import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 type FetchSessionHistoriesOptions = {
   limit?: number;
@@ -29,10 +29,7 @@ export const fetchSessionHistories = async (
   return { response, data };
 };
 
-export const deleteSessionHistory = async (
-  accessToken: string,
-  id: string,
-) => {
+export const deleteSessionHistory = async (accessToken: string, id: string) => {
   const response = await fetch(`/api/session-history?id=${id}`, {
     method: "DELETE",
     headers: buildAuthHeaders(accessToken),

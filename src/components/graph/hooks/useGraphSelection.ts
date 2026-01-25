@@ -1,7 +1,7 @@
 "use client";
 
+import type { EmotionNote } from "@/lib/types/types";
 import { useEffect, useMemo, useState } from "react";
-import type { EmotionNote } from "@/lib/types";
 
 export const useGraphSelection = (notes: EmotionNote[]) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);

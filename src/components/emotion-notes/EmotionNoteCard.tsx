@@ -1,7 +1,7 @@
 "use client";
 
-import { formatKoreanDateTime } from "@/lib/time";
-import type { EmotionNote } from "@/lib/types";
+import type { EmotionNote } from "@/lib/types/types";
+import { formatKoreanDateTime } from "@/lib/utils/time";
 import { Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

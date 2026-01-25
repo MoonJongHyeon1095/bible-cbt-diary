@@ -1,7 +1,7 @@
+import type { EmotionNote } from "@/lib/types/types";
 import type { Ref } from "react";
 import EmotionNoteList from "./EmotionNoteList";
 import styles from "./EmotionNotesSection.module.css";
-import type { EmotionNote } from "@/lib/types";
 
 type EmotionNoteListSectionProps = {
   title?: string | null;

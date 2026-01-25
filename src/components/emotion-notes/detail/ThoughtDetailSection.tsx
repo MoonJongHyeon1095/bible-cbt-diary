@@ -2,7 +2,7 @@
 
 import DetailSectionBadge from "@/components/emotion-notes/detail/common/DetailSectionBadge";
 import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
-import type { EmotionNoteDetail } from "@/lib/types";
+import type { EmotionNoteDetail } from "@/lib/types/types";
 import { Brain } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
 import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
@@ -29,9 +29,7 @@ type ThoughtDetailSectionProps = {
   ) => void;
 };
 
-export default function ThoughtDetailSection(
-  props: ThoughtDetailSectionProps,
-) {
+export default function ThoughtDetailSection(props: ThoughtDetailSectionProps) {
   const {
     details,
     editingThoughtId,

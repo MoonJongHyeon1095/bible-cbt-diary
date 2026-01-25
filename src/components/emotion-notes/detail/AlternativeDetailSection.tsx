@@ -1,10 +1,10 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
-import { Lightbulb } from "lucide-react";
-import type { EmotionNoteAlternativeDetail } from "@/lib/types";
-import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import DetailSectionItem from "@/components/emotion-notes/detail/common/DetailSectionItem";
+import type { EmotionNoteAlternativeDetail } from "@/lib/types/types";
+import { Lightbulb } from "lucide-react";
+import { useLayoutEffect, useRef } from "react";
+import EmotionDetailSectionCard from "./EmotionDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type AlternativeDetailSectionProps = {
@@ -20,7 +20,11 @@ type AlternativeDetailSectionProps = {
   onSelectDetail?: (detailId: number) => void;
   selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
-  onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
+  onOpenModal?: (
+    title: string,
+    body: string,
+    badgeText?: string | null,
+  ) => void;
 };
 
 export default function AlternativeDetailSection(
@@ -87,20 +91,20 @@ export default function AlternativeDetailSection(
               role={onSelectDetail ? "button" : undefined}
               tabIndex={onSelectDetail ? 0 : undefined}
             >
-                  {editingAlternativeId === detail.id ? (
-                    <div className={styles.detailEdit}>
-                      <textarea
-                        ref={editTextareaRef}
-                        value={editingAlternativeText}
-                        onChange={(event) =>
-                          onChangeEditingAlternativeText(event.target.value)
-                        }
-                        onFocus={resizeEditTextarea}
-                        onInput={resizeEditTextarea}
-                        rows={2}
-                        className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                      />
-                    </div>
+              {editingAlternativeId === detail.id ? (
+                <div className={styles.detailEdit}>
+                  <textarea
+                    ref={editTextareaRef}
+                    value={editingAlternativeText}
+                    onChange={(event) =>
+                      onChangeEditingAlternativeText(event.target.value)
+                    }
+                    onFocus={resizeEditTextarea}
+                    onInput={resizeEditTextarea}
+                    rows={2}
+                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
+                  />
+                </div>
               ) : (
                 <>
                   {null}

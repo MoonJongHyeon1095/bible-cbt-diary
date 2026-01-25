@@ -1,14 +1,14 @@
-import { RefreshCw } from "lucide-react";
-import { useEffect, useState } from "react";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
 import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
 import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { MinimalAlternativeThoughtBodySection } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtBodySection";
 import { MinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtErrorState";
-import { useDeepAlternativeThoughts } from "../hooks/useDeepAlternativeThoughts";
-import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
+import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
+import { RefreshCw } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useDeepAlternativeThoughts } from "../hooks/useDeepAlternativeThoughts";
 
 interface DeepAlternativeThoughtSectionProps {
   userInput: string;

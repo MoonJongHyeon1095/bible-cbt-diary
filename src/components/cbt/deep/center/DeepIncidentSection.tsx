@@ -1,13 +1,13 @@
-import { validateUserText } from "@/components/cbt/utils/validation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useAutoResizeTextarea } from "@/components/cbt/hooks/useAutoResizeTextarea";
 import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
 import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
-import { useRef } from "react";
-import { useAutoResizeTextarea } from "@/components/cbt/hooks/useAutoResizeTextarea";
-import type { EmotionNote } from "@/lib/types";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
-import deepStyles from "../DeepStyles.module.css";
+import { validateUserText } from "@/components/cbt/utils/validation";
 import Button from "@/components/ui/Button";
+import type { EmotionNote } from "@/lib/types/types";
+import { useRef } from "react";
+import deepStyles from "../DeepStyles.module.css";
 
 interface DeepIncidentSectionProps {
   userInput: string;
@@ -68,7 +68,9 @@ export function DeepIncidentSection({
     });
   const description = (
     <div className={deepStyles.triggerList}>
-      <div className={`${deepStyles.triggerItem} ${deepStyles.triggerItemMain}`}>
+      <div
+        className={`${deepStyles.triggerItem} ${deepStyles.triggerItemMain}`}
+      >
         <p className={deepStyles.triggerText}>{mainNote.trigger_text}</p>
       </div>
       {sortedSubs.map((note, index) => {

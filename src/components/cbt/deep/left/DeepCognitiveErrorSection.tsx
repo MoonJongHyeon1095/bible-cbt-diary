@@ -1,28 +1,30 @@
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import { useCognitiveErrorRanking } from "@/components/cbt/hooks/useCognitiveErrorRanking";
-import Button from "@/components/ui/Button";
-import type { SelectedCognitiveError } from "@/lib/cbtTypes";
 import { RefreshCw } from "lucide-react";
-import { MinimalFloatingNextButton } from "../common/MinimalFloatingNextButton";
-import { MinimalLoadingState } from "../common/MinimalLoadingState";
-import { MinimalStepHeaderSection } from "../common/MinimalStepHeaderSection";
-import styles from "../MinimalStyles.module.css";
-import { MinimalCognitiveErrorCard } from "./components/MinimalCognitiveErrorCard";
-import { MinimalCognitiveErrorErrorState } from "./components/MinimalCognitiveErrorErrorState";
+import type { SelectedCognitiveError } from "@/lib/cbtTypes";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
+import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
+import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
+import { MinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/components/MinimalCognitiveErrorCard";
+import { MinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/MinimalCognitiveErrorErrorState";
+import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRanking";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
+import Button from "@/components/ui/Button";
 
-interface MinimalCognitiveErrorSectionProps {
+interface DeepCognitiveErrorSectionProps {
   userInput: string;
   thought: string;
+  summary: string;
   onSelect: (errors: SelectedCognitiveError[]) => void;
 }
 
-const HEADER_TEXT = "혹시 이런 경향이\u00a0있지 않을까요?";
+const HEADER_TEXT = "이제는 익숙한 오류일지도 모르겠군요.";
 
-export function MinimalCognitiveErrorSection({
+export function DeepCognitiveErrorSection({
   userInput,
   thought,
+  summary,
   onSelect,
-}: MinimalCognitiveErrorSectionProps) {
+}: DeepCognitiveErrorSectionProps) {
   const { pushToast } = useCbtToast();
   const {
     currentRankItem,
@@ -33,7 +35,7 @@ export function MinimalCognitiveErrorSection({
     rankLoading,
     handleNext,
     reload,
-  } = useCognitiveErrorRanking({ userInput, thought });
+  } = useDeepCognitiveErrorRanking({ userInput, thought, summary });
 
   const handleSelect = () => {
     if (!currentRankItem) {

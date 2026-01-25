@@ -6,4 +6,8 @@ export * from "./burns";
 export * from "./client";
 export * from "./cognitiveAnalysis";
 export * from "./cognitiveRank";
+export * from "./deepAlternative";
+export * from "./deepCognitiveAnalysis";
+export * from "./deepCognitiveRank";
+export * from "./deepThought";
 export * from "./thoughts";

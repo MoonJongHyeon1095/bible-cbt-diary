@@ -9,6 +9,7 @@ export type EmotionNote = {
   behavior_labels?: string[];
   thought_details?: EmotionNoteDetail[];
   error_details?: EmotionNoteErrorDetail[];
+  alternative_details?: EmotionNoteAlternativeDetail[];
   behavior_details?: EmotionNoteBehaviorDetail[];
 };
 

@@ -72,3 +72,33 @@ export async function saveSessionHistoryAPI(
   const response = await res.json().catch(() => ({}));
   return { ok: res.ok, payload: response };
 }
+
+export async function saveDeepSessionAPI(
+  accessToken: string,
+  payload: {
+    title: string;
+    trigger_text: string;
+    emotion: string;
+    automatic_thought: string;
+    selected_cognitive_error: SelectedCognitiveError | null;
+    selected_alternative_thought: string;
+    main_id: number;
+    sub_ids: number[];
+    group_id: number | null;
+  },
+) {
+  const res = await fetch("/api/deep-session", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...buildAuthHeaders(accessToken),
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const response = await res.json().catch(() => ({}));
+  return { ok: res.ok, payload: response } as {
+    ok: boolean;
+    payload: { noteId?: number; groupId?: number };
+  };
+}

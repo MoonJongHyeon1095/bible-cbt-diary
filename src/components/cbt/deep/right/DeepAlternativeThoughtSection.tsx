@@ -1,33 +1,39 @@
 import { RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { EmotionThoughtPair, SelectedCognitiveError } from "@/lib/cbtTypes";
-import { MinimalFloatingNextButton } from "../common/MinimalFloatingNextButton";
-import { MinimalLoadingState } from "../common/MinimalLoadingState";
-import { MinimalStepHeaderSection } from "../common/MinimalStepHeaderSection";
-import { useAlternativeThoughts } from "@/components/cbt/hooks/useAlternativeThoughts";
-import { MinimalAlternativeThoughtBodySection } from "./components/MinimalAlternativeThoughtBodySection";
-import { MinimalAlternativeThoughtErrorState } from "./components/MinimalAlternativeThoughtErrorState";
-import styles from "../MinimalStyles.module.css";
+import type { SelectedCognitiveError } from "@/lib/cbtTypes";
+import { MinimalFloatingNextButton } from "@/components/cbt/minimal/common/MinimalFloatingNextButton";
+import { MinimalLoadingState } from "@/components/cbt/minimal/common/MinimalLoadingState";
+import { MinimalStepHeaderSection } from "@/components/cbt/minimal/common/MinimalStepHeaderSection";
+import { MinimalAlternativeThoughtBodySection } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtBodySection";
+import { MinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/MinimalAlternativeThoughtErrorState";
+import { useDeepAlternativeThoughts } from "../hooks/useDeepAlternativeThoughts";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
 
-interface MinimalAlternativeThoughtSectionProps {
+interface DeepAlternativeThoughtSectionProps {
   userInput: string;
-  emotionThoughtPairs: EmotionThoughtPair[];
+  emotion: string;
+  autoThought: string;
+  summary: string;
   selectedCognitiveErrors: SelectedCognitiveError[];
+  previousAlternatives: string[];
   seed: number;
   onSelect: (thought: string) => void;
 }
 
-const TITLE = "어떤 생각이 마음에\u00a0와닿나요?";
+const TITLE = "그럼에도 새로운 목소리가 필요합니다.";
 const DESCRIPTION = "가장 힘이 되는 생각을 골라주세요.";
 
-export function MinimalAlternativeThoughtSection({
+export function DeepAlternativeThoughtSection({
   userInput,
-  emotionThoughtPairs,
+  emotion,
+  autoThought,
+  summary,
   selectedCognitiveErrors,
+  previousAlternatives,
   seed,
   onSelect,
-}: MinimalAlternativeThoughtSectionProps) {
+}: DeepAlternativeThoughtSectionProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const {
@@ -35,11 +41,14 @@ export function MinimalAlternativeThoughtSection({
     thoughtsLoading,
     thoughtsError,
     generateAlternatives,
-  } = useAlternativeThoughts({
+  } = useDeepAlternativeThoughts({
     step: 4,
     userInput,
-    emotionThoughtPairs,
+    emotion,
+    autoThought,
+    summary,
     selectedCognitiveErrors,
+    previousAlternatives,
   });
 
   useEffect(() => {

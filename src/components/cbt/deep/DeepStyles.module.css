@@ -1,0 +1,42 @@
+.triggerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.triggerItem {
+  padding: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Noto Serif KR", "Iropke Batang", "Nanum Myeongjo", serif;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.triggerItemMain {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.triggerText {
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 32px);
+}
+
+.titleBreak {
+  display: none;
+}
+
+.descriptionLine {
+  display: block;
+}
+
+@media (max-width: 700px) {
+  .titleBreak {
+    display: block;
+    height: 0;
+  }
+}

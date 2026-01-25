@@ -4,7 +4,11 @@ import { useState } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import styles from "../EmotionGraphSection.module.css";
 
-export type EmotionNoteDetailSection = "emotion" | "error" | "behavior";
+export type EmotionNoteDetailSection =
+  | "emotion"
+  | "error"
+  | "alternative"
+  | "behavior";
 
 export type EmotionNoteDetailItem = {
   id: string;
@@ -16,6 +20,7 @@ export type EmotionNoteDetailNodeData = {
   items: {
     emotion: EmotionNoteDetailItem[];
     error: EmotionNoteDetailItem[];
+    alternative: EmotionNoteDetailItem[];
     behavior: EmotionNoteDetailItem[];
   };
 };
@@ -23,12 +28,14 @@ export type EmotionNoteDetailNodeData = {
 const SECTION_LABELS: Record<EmotionNoteDetailSection, string> = {
   emotion: "감정",
   error: "인지오류",
+  alternative: "대안사고",
   behavior: "행동 반응",
 };
 
 const SECTION_ORDER: EmotionNoteDetailSection[] = [
   "emotion",
   "error",
+  "alternative",
   "behavior",
 ];
 
@@ -44,6 +51,9 @@ const buildSectionClass = (section: EmotionNoteDetailSection) => {
   if (section === "error") {
     return styles.detailSectionError;
   }
+  if (section === "alternative") {
+    return styles.detailSectionAlternative;
+  }
   return styles.detailSectionBehavior;
 };
 
@@ -53,6 +63,9 @@ const buildItemClass = (section: EmotionNoteDetailSection) => {
   }
   if (section === "error") {
     return styles.detailItemError;
+  }
+  if (section === "alternative") {
+    return styles.detailItemAlternative;
   }
   return styles.detailItemBehavior;
 };

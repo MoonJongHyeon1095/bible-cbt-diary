@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getUserFromRequest } from "@/lib/auth/session";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const user = await getUserFromRequest(request);
@@ -32,6 +32,7 @@ export async function GET(request: Request) {
       group_id,
       emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
       emotion_error_details(id,note_id,error_label,error_description,created_at),
+      emotion_alternative_details(id,note_id,alternative,created_at),
       emotion_behavior_details(
         id,
         note_id,
@@ -61,7 +62,11 @@ export async function GET(request: Request) {
 
   if (middleError) {
     return NextResponse.json(
-      { notes: notes ?? [], middles: [], message: "연결 정보를 불러오지 못했습니다." },
+      {
+        notes: notes ?? [],
+        middles: [],
+        message: "연결 정보를 불러오지 못했습니다.",
+      },
       { status: 500 },
     );
   }
@@ -101,6 +106,7 @@ export async function GET(request: Request) {
         behavior_labels: behaviorLabels,
         thought_details: note.emotion_note_details ?? [],
         error_details: note.emotion_error_details ?? [],
+        alternative_details: note.emotion_alternative_details ?? [],
         behavior_details: note.emotion_behavior_details ?? [],
       };
     }) ?? [];

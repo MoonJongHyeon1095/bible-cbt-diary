@@ -9,6 +9,12 @@ import styles from "../EmotionGraphSection.module.css";
 
 type NodeMeta = EmotionNoteNodeData & { note: EmotionNote };
 
+const truncateText = (value: string, maxLength: number) => {
+  const trimmed = value.trim();
+  if (trimmed.length <= maxLength) return trimmed;
+  return `${trimmed.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+};
+
 const buildInDegreeMap = (middles: EmotionNoteMiddle[]) => {
   const map = new Map<number, number>();
   middles.forEach((middle) => {
@@ -34,6 +40,15 @@ const buildChips = (note: EmotionNote): EmotionNoteChip[] => {
       label: detail.error_label || "인지 오류",
       body: detail.error_description || "",
       section: "error",
+    });
+  });
+  (note.alternative_details ?? []).forEach((detail) => {
+    const label = truncateText(detail.alternative || "대안사고", 32);
+    chips.push({
+      id: `alternative-${detail.id}`,
+      label: label || "대안사고",
+      body: detail.alternative || "",
+      section: "alternative",
     });
   });
   (note.behavior_details ?? []).forEach((detail) => {

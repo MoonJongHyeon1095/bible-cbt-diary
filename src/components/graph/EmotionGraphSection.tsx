@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import ReactFlow, {
   Background,
   Controls,
@@ -29,13 +30,20 @@ export default function EmotionGraphSection({
   noteId,
   groupId,
 }: EmotionGraphSectionProps) {
+  const router = useRouter();
   const { notes, middles, isLoading } = useEmotionGraphData({
     accessToken,
     groupId,
     noteId,
   });
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
+  const [isDeepSelecting, setIsDeepSelecting] = useState(false);
+  const [selectedSubIds, setSelectedSubIds] = useState<string[]>([]);
   const [rfInstance, setRfInstance] = useState<ReactFlowInstance | null>(null);
+  const [detailSize, setDetailSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [selectedCenter, setSelectedCenter] = useState<{
     x: number;
     y: number;
@@ -52,7 +60,9 @@ export default function EmotionGraphSection({
     timelineEdges,
     selectedNodeId,
     selectedCenter,
+    detailSize,
   );
+  const detailNodeId = selectedNodeId ? `detail-${selectedNodeId}` : null;
 
   useEffect(() => {
     if (
@@ -61,7 +71,15 @@ export default function EmotionGraphSection({
     ) {
       setSelectedNodeId(null);
     }
+    if (!selectedNodeId) {
+      setIsDeepSelecting(false);
+      setSelectedSubIds([]);
+    }
   }, [notes, selectedNodeId]);
+
+  useEffect(() => {
+    setDetailSize(null);
+  }, [selectedNodeId]);
 
   useEffect(() => {
     if (!rfInstance || !selectedNodeId) {
@@ -92,6 +110,33 @@ export default function EmotionGraphSection({
     });
   }, [displayNodes, rfInstance, selectedNodeId]);
 
+  useEffect(() => {
+    if (!rfInstance || !detailNodeId) {
+      return;
+    }
+    const node = rfInstance.getNode(detailNodeId);
+    if (!node) {
+      return;
+    }
+    const width = node.width;
+    const height = node.height;
+    if (typeof width !== "number" || typeof height !== "number") {
+      return;
+    }
+    setDetailSize((prev) => {
+      if (!prev) {
+        return { width, height };
+      }
+      if (
+        Math.abs(prev.width - width) < 0.5 &&
+        Math.abs(prev.height - height) < 0.5
+      ) {
+        return prev;
+      }
+      return { width, height };
+    });
+  }, [detailNodeId, displayNodes, rfInstance]);
+
   const nodeTypes = useMemo(
     () => ({ emotion: EmotionNoteNode, detail: EmotionNoteDetailNode }),
     [],
@@ -106,6 +151,39 @@ export default function EmotionGraphSection({
 
   const emptyState = !isLoading && notes.length === 0;
   const needsNote = !isLoading && !noteId && !groupId;
+  const mainNote = selectedNodeId
+    ? notes.find((note) => String(note.id) === selectedNodeId) ?? null
+    : null;
+  const selectableNotes = notes.filter(
+    (note) => String(note.id) !== selectedNodeId,
+  );
+  const sortedSelectableNotes = [...selectableNotes].sort(
+    (a, b) => b.id - a.id,
+  );
+
+  const openDeep = () => {
+    if (!selectedNodeId) return;
+    if (!groupId) {
+      router.push(`/session/deep?mainId=${selectedNodeId}`);
+      return;
+    }
+    setSelectedSubIds([]);
+    setIsDeepSelecting(true);
+  };
+
+  const handleToggleSub = (id: string) => {
+    setSelectedSubIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      if (prev.length >= 2) {
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const canConfirmDeep = selectedSubIds.length >= 1;
 
   return (
     <section className={styles.section}>
@@ -146,6 +224,9 @@ export default function EmotionGraphSection({
               setSelectedCenter(null);
             }}
             onNodeClick={(_, node) => {
+              if (isDeepSelecting) {
+                return;
+              }
               if (node.type === "detail") {
                 return;
               }
@@ -172,8 +253,100 @@ export default function EmotionGraphSection({
             label="Go Deeper"
             helperText="Go Deeper"
             icon={<Route size={20} />}
-            onClick={() => {}}
+            onClick={openDeep}
           />
+        ) : null}
+        {isDeepSelecting && mainNote ? (
+          <div className={styles.deepOverlay} role="dialog" aria-modal="true">
+            <div className={styles.deepOverlayCard}>
+              <div className={styles.deepOverlayHeader}>
+                <div>
+                  <p className={styles.deepOverlayLabel}>Go Deeper</p>
+                  <h3 className={styles.deepOverlayTitle}>
+                    함께 볼 노트를 선택하세요
+                  </h3>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => {
+                    setIsDeepSelecting(false);
+                    setSelectedSubIds([]);
+                  }}
+                >
+                  닫기
+                </Button>
+              </div>
+              <div className={styles.deepOverlayBody}>
+                <div className={styles.deepOverlaySection}>
+                  <p className={styles.deepOverlaySectionTitle}>Main</p>
+                  <div className={styles.deepNoteCard}>
+                    <span className={styles.deepNoteTitle}>
+                      {mainNote.title || "감정 노트"}
+                    </span>
+                    <p className={styles.deepNoteText}>
+                      {mainNote.trigger_text}
+                    </p>
+                    <span className={styles.deepNoteMeta}>
+                      #{mainNote.id}
+                    </span>
+                  </div>
+                </div>
+                <div className={styles.deepOverlaySection}>
+                  <p className={styles.deepOverlaySectionTitle}>
+                    Sub (최대 2개 선택)
+                  </p>
+                  <div className={styles.deepNoteList}>
+                    {sortedSelectableNotes.map((note) => {
+                      const id = String(note.id);
+                      const checked = selectedSubIds.includes(id);
+                      return (
+                        <button
+                          key={note.id}
+                          type="button"
+                          className={`${styles.deepNotePick} ${
+                            checked ? styles.deepNotePickActive : ""
+                          }`}
+                          onClick={() => handleToggleSub(id)}
+                        >
+                          <div>
+                            <span className={styles.deepNoteTitle}>
+                              {note.title || "감정 노트"}
+                            </span>
+                            <p className={styles.deepNoteText}>
+                              {note.trigger_text}
+                            </p>
+                          </div>
+                          <span className={styles.deepNoteMeta}>
+                            #{note.id}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div className={styles.deepOverlayFooter}>
+                <span className={styles.deepOverlayHint}>
+                  최소 1개, 최대 2개를 선택해주세요.
+                </span>
+                <Button
+                  type="button"
+                  onClick={() => {
+                    if (!canConfirmDeep) return;
+                    router.push(
+                      `/session/deep?mainId=${selectedNodeId}&subIds=${selectedSubIds.join(
+                        ",",
+                      )}&groupId=${groupId}`,
+                    );
+                  }}
+                  disabled={!canConfirmDeep}
+                >
+                  Deep Session 시작
+                </Button>
+              </div>
+            </div>
+          </div>
         ) : null}
       </div>
     </section>

@@ -9,10 +9,14 @@ import {
   generateBehaviorSuggestions as gptGenerateBehaviorSuggestions,
   type ErrorIndex, // (호환) 기존 단일 호출
   analyzeCognitiveErrorDetails as gptAnalyzeCognitiveErrorDetails,
+  analyzeDeepCognitiveErrorDetails as gptAnalyzeDeepCognitiveErrorDetails,
+  generateDeepAlternativeThoughts as gptGenerateDeepAlternativeThoughts,
+  generateDeepAutoThoughtAndSummary as gptGenerateDeepAutoThoughtAndSummary,
   generateBibleVerse as gptGenerateBibleVerse,
   generateBurnsEmpathy as gptGenerateBurnsEmpathy,
   generateContextualAlternativeThoughts as gptGenerateContextualAlternativeThoughts,
   generateExtendedAutomaticThoughts as gptGenerateExtendedAutomaticThoughts,
+  rankDeepCognitiveErrors as gptRankDeepCognitiveErrors,
   rankCognitiveErrors as gptRankCognitiveErrors
 } from "./gpt";
 import type { CognitiveBehaviorId } from "./constants/behaviors";
@@ -75,6 +79,11 @@ export type AlternativeThoughtItem = {
   techniqueDescription: string;
 };
 
+export type DeepThoughtResult = {
+  autoThought: string;
+  summary: string;
+};
+
 export type BibleVerseResult = {
   book: string;
   chapter: number | null;
@@ -126,6 +135,69 @@ export async function generateContextualAlternativeThoughts(
     emotion,
     thought,
     cognitiveErrors
+  );
+}
+
+export async function generateDeepAutoThoughtAndSummary(
+  situation: string,
+  emotion: string,
+  main: {
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  },
+  subs: Array<{
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  }>,
+): Promise<DeepThoughtResult> {
+  return gptGenerateDeepAutoThoughtAndSummary(situation, emotion, main, subs);
+}
+
+export async function rankDeepCognitiveErrors(
+  situation: string,
+  thought: string,
+  summary: string,
+) {
+  return gptRankDeepCognitiveErrors(situation, thought, summary);
+}
+
+export async function analyzeDeepCognitiveErrorDetails(
+  situation: string,
+  thought: string,
+  summary: string,
+  candidates: ErrorIndex[],
+) {
+  return gptAnalyzeDeepCognitiveErrorDetails(
+    situation,
+    thought,
+    summary,
+    candidates,
+  );
+}
+
+export async function generateDeepAlternativeThoughts(
+  situation: string,
+  emotion: string,
+  thought: string,
+  summary: string,
+  cognitiveErrors: Array<string | { title: string; detail?: string }>,
+  previousAlternatives: string[],
+): Promise<AlternativeThoughtItem[]> {
+  return gptGenerateDeepAlternativeThoughts(
+    situation,
+    emotion,
+    thought,
+    summary,
+    cognitiveErrors,
+    previousAlternatives,
   );
 }
 

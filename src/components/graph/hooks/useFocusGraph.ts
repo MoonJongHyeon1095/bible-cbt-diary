@@ -16,6 +16,7 @@ type TimelineNode = Node<EmotionNoteNodeData & { note: { id: number } }>;
 const splitChipsBySection = (chips: EmotionNoteChip[]) => ({
   emotion: chips.filter((chip) => chip.section === "emotion"),
   error: chips.filter((chip) => chip.section === "error"),
+  alternative: chips.filter((chip) => chip.section === "alternative"),
   behavior: chips.filter((chip) => chip.section === "behavior"),
 });
 
@@ -30,6 +31,7 @@ const buildDetailItems = (chips: EmotionNoteChip[]) => {
   return {
     emotion: buildItems(sections.emotion),
     error: buildItems(sections.error),
+    alternative: buildItems(sections.alternative),
     behavior: buildItems(sections.behavior),
   };
 };
@@ -39,6 +41,7 @@ export const useFocusGraph = (
   timelineEdges: Edge[],
   selectedNodeId: string | null,
   centerOverride: { x: number; y: number } | null,
+  detailSize: { width: number; height: number } | null,
 ) => {
   return useMemo(() => {
     if (!selectedNodeId) {
@@ -80,8 +83,14 @@ export const useFocusGraph = (
           }
         : { x: 0, y: 0 };
     const radius = selectedNode ? selectedNode.data.size / 2 : 55;
-    const detailWidth = 280;
-    const detailOffset = 0;
+    const detailWidth = detailSize?.width ?? 280;
+    const detailHeight = detailSize?.height ?? 320;
+    const detailDistance = radius + 100;
+    const detailAngle = (210 * Math.PI) / 180;
+    const detailCenter = {
+      x: center.x + Math.cos(detailAngle) * detailDistance,
+      y: center.y + Math.sin(detailAngle) * detailDistance,
+    };
     const detailItems = buildDetailItems(selectedNode?.data.chips ?? []);
     const detailNodeId = `detail-${selectedNodeId}`;
     const detailNodes: Node<EmotionNoteDetailNodeData>[] = [
@@ -89,8 +98,8 @@ export const useFocusGraph = (
         id: detailNodeId,
         type: "detail",
         position: {
-          x: center.x - detailWidth / 2,
-          y: center.y + radius + detailOffset,
+          x: detailCenter.x - detailWidth / 2,
+          y: detailCenter.y - detailHeight / 2,
         },
         data: {
           items: detailItems,
@@ -107,5 +116,11 @@ export const useFocusGraph = (
       displayNodes: [...nodes, ...detailNodes],
       displayEdges: edges,
     };
-  }, [centerOverride, selectedNodeId, timelineEdges, timelineNodes]);
+  }, [
+    centerOverride,
+    detailSize,
+    selectedNodeId,
+    timelineEdges,
+    timelineNodes,
+  ]);
 };

@@ -21,7 +21,12 @@ export function MinimalStepHeaderSection({
       {title && (
         <h1 className={`${styles.title} ${titleClassName ?? ""}`}>{title}</h1>
       )}
-      {description && <p className={styles.description}>{description}</p>}
+      {description &&
+        (typeof description === "string" ? (
+          <p className={styles.description}>{description}</p>
+        ) : (
+          <div className={styles.description}>{description}</div>
+        ))}
       {children}
     </div>
   );

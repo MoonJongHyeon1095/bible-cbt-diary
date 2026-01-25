@@ -172,6 +172,49 @@
   place-items: center;
 }
 
+.nodeLongPressOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(236, 241, 255, 0.18);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  pointer-events: none;
+  color: #e9efff;
+}
+
+.nodeLongPressOverlayActive {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.nodeLongPressOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(18, 22, 36, var(--press-fill, 0.25));
+  transition: background 0.08s linear;
+}
+
+.nodeLongPressIcon,
+.nodeLongPressText {
+  position: relative;
+  z-index: 1;
+}
+
+.nodeLongPressText {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
 .nodeLabel {
   display: flex;
   flex-direction: column;

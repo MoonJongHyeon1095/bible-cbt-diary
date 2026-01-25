@@ -2,6 +2,7 @@
 
 import AppHeader from "@/components/header/AppHeader";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
+import EmotionGraphGroupList from "@/components/graph/EmotionGraphGroupList";
 import EmotionGraphSection from "@/components/graph/EmotionGraphSection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
@@ -65,11 +66,15 @@ export default function GraphPage() {
       <main className={styles.main}>
         <div className={styles.shell}>
           {user && accessToken ? (
-            <EmotionGraphSection
-              accessToken={accessToken}
-              noteId={noteId}
-              groupId={groupId}
-            />
+            groupId || noteId ? (
+              <EmotionGraphSection
+                accessToken={accessToken}
+                noteId={noteId}
+                groupId={groupId}
+              />
+            ) : (
+              <EmotionGraphGroupList accessToken={accessToken} />
+            )
           ) : (
             <RequireLoginPrompt />
           )}

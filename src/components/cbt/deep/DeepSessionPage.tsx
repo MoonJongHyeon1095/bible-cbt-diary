@@ -224,7 +224,7 @@ function DeepSessionPageContent() {
 
     try {
       const result = await saveDeepSessionAPI(accessToken, {
-        title: formatAutoTitle(new Date()),
+        title: formatAutoTitle(new Date(), selectedEmotion),
         trigger_text: userInput,
         emotion: selectedEmotion,
         automatic_thought: autoThought,

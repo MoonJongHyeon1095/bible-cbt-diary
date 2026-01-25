@@ -3,6 +3,12 @@
 import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types";
 import { buildAuthHeaders } from "@/components/utils/api";
 
+export type EmotionNoteGroupSummary = {
+  id: number;
+  created_at: string;
+  note_count: number;
+};
+
 export const fetchEmotionGraph = async (
   accessToken: string,
   groupId: number,
@@ -17,6 +23,18 @@ export const fetchEmotionGraph = async (
         middles: EmotionNoteMiddle[];
       })
     : { notes: [], middles: [] };
+
+  return { response, data };
+};
+
+export const fetchEmotionNoteGroups = async (accessToken: string) => {
+  const response = await fetch("/api/emotion-note-graph/group-list", {
+    headers: buildAuthHeaders(accessToken),
+  });
+
+  const data = response.ok
+    ? ((await response.json()) as { groups: EmotionNoteGroupSummary[] })
+    : { groups: [] };
 
   return { response, data };
 };

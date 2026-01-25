@@ -33,6 +33,7 @@ export const useGraphSelection = (notes: EmotionNote[]) => {
   );
 
   const clearSelection = () => setSelectedNodeId(null);
+  const selectNode = (nodeId: string) => setSelectedNodeId(nodeId);
   const toggleSelection = (nodeId: string) =>
     setSelectedNodeId((prev) => (prev === nodeId ? null : nodeId));
 
@@ -42,6 +43,7 @@ export const useGraphSelection = (notes: EmotionNote[]) => {
     selectableNotes,
     sortedSelectableNotes,
     clearSelection,
+    selectNode,
     toggleSelection,
   };
 };

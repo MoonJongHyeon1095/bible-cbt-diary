@@ -1,4 +1,8 @@
-export function formatAutoTitle(date: Date) {
+export function formatAutoTitle(date: Date, emotion?: string) {
+  const normalizedEmotion = emotion?.trim();
+  if (normalizedEmotion) {
+    return `${normalizedEmotion}의 기록`;
+  }
   const pad = (value: number) => value.toString().padStart(2, "0");
   const yy = date.getFullYear().toString().slice(2);
   const mm = pad(date.getMonth() + 1);

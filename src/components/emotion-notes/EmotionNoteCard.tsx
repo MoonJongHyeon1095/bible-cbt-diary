@@ -34,7 +34,7 @@ export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
   const behaviorTags = note.behavior_labels ?? [];
   const graphHref = note.group_id
     ? `/graph?groupId=${note.group_id}`
-    : `/graph?noteId=${note.id}`;
+    : `/session/deep?mainId=${note.id}`;
 
   useEffect(() => {
     return () => {

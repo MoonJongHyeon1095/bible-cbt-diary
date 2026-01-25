@@ -2,9 +2,9 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import Button from "@/components/ui/Button";
-import { Route } from "lucide-react";
+import { BookSearch, LayoutDashboard } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import EmotionGraphCanvas from "./EmotionGraphCanvas";
 import EmotionGraphDeepOverlay from "./EmotionGraphDeepOverlay";
 import EmotionGraphDetailStack from "./EmotionGraphDetailStack";
@@ -14,6 +14,7 @@ import { useEmotionGraphData } from "./hooks/useEmotionGraphData";
 import { useGraphDeepSelection } from "./hooks/useGraphDeepSelection";
 import { useGraphDisplay } from "./hooks/useGraphDisplay";
 import { useGraphSelection } from "./hooks/useGraphSelection";
+import { getGroupThemeColor } from "./utils/graphColors";
 
 type EmotionGraphSectionProps = {
   accessToken: string;
@@ -32,12 +33,17 @@ export default function EmotionGraphSection({
     groupId,
     noteId,
   });
-  const { elkNodes, elkEdges } = useElkLayout(notes, middles);
+  const themeColor = useMemo(
+    () => (groupId ? getGroupThemeColor(groupId).rgb : undefined),
+    [groupId],
+  );
+  const { elkNodes, elkEdges } = useElkLayout(notes, middles, themeColor);
   const {
     selectedNodeId,
     selectedNote,
     sortedSelectableNotes,
     clearSelection,
+    selectNode,
     toggleSelection,
   } = useGraphSelection(notes);
   const {
@@ -53,6 +59,30 @@ export default function EmotionGraphSection({
     elkEdges,
     selectedNodeId,
   );
+  const longPressTriggeredRef = useRef(false);
+  const displayNodesWithHandlers = useMemo(
+    () =>
+      displayNodes.map((node) => ({
+        ...node,
+        data: {
+          ...node.data,
+          onLongPress: (nodeId: string) => {
+            longPressTriggeredRef.current = true;
+            window.setTimeout(() => {
+              longPressTriggeredRef.current = false;
+            }, 250);
+            selectNode(nodeId);
+            if (!groupId) {
+              router.push(`/session/deep?mainId=${nodeId}`);
+              return;
+            }
+            closeDeepSelection();
+            setIsDeepSelecting(true);
+          },
+        },
+      })),
+    [closeDeepSelection, displayNodes, groupId, router, selectNode, setIsDeepSelecting],
+  );
   const layoutKey = useMemo(() => {
     const nodeKey = elkNodes.map((node) => node.id).join("|");
     const edgeKey = elkEdges.map((edge) => edge.id).join("|");
@@ -63,14 +93,12 @@ export default function EmotionGraphSection({
   const needsNote = !isLoading && !noteId && !groupId;
   const noteCount = notes.length;
 
-  const openDeep = () => {
-    if (!selectedNodeId) return;
-    if (!groupId) {
-      router.push(`/session/deep?mainId=${selectedNodeId}`);
+  const handleNodeClick = (nodeId: string) => {
+    if (longPressTriggeredRef.current) {
+      longPressTriggeredRef.current = false;
       return;
     }
-    closeDeepSelection();
-    setIsDeepSelecting(true);
+    toggleSelection(nodeId);
   };
 
   return (
@@ -85,30 +113,30 @@ export default function EmotionGraphSection({
         <Button
           type="button"
           variant="ghost"
-          onClick={clearSelection}
-          disabled={!selectedNodeId}
+          onClick={() => router.push("/graph")}
         >
-          전체 보기
+          <LayoutDashboard size={18} />
+          목록보기
         </Button>
       </div>
 
       <EmotionGraphCanvas
         graphKey={layoutKey}
-        displayNodes={displayNodes}
+        displayNodes={displayNodesWithHandlers}
         displayEdges={displayEdges}
         isLoading={isLoading}
         needsNote={needsNote}
         emptyState={emptyState}
         isDeepSelecting={isDeepSelecting}
         onClearSelection={clearSelection}
-        onSelectNode={toggleSelection}
+        onSelectNode={handleNodeClick}
       >
-        {selectedNodeId ? (
+        {selectedNote ? (
           <FloatingActionButton
-            label="Go Deeper"
-            helperText="Go Deeper"
-            icon={<Route size={20} />}
-            onClick={openDeep}
+            label="상세조회"
+            helperText="상세조회"
+            icon={<BookSearch size={20} />}
+            onClick={() => router.push(`/detail/${selectedNote.id}`)}
           />
         ) : null}
         <EmotionGraphDeepOverlay

@@ -7,6 +7,18 @@ import type { Edge, Node } from "reactflow";
 import { MarkerType } from "reactflow";
 import styles from "../EmotionGraphSection.module.css";
 
+const BASE_NODE_SIZE = 130;
+const NODE_SIZE_STEP = 14;
+const NODE_SIZE_MAX_EXTRA = 120;
+const SPREAD_STEP = 72;
+const SLOPE_STEP = 40;
+const GRAPH_PADDING = 12;
+const EDGE_OFFSET_STEP = 24;
+const EDGE_WIDTH = 2.2;
+const INDIGO: [number, number, number] = [79, 70, 229];
+const BASE_BLUE: [number, number, number] = [230, 232, 246];
+const BORDER_BASE: [number, number, number] = [150, 160, 214];
+
 const buildOutDegreeMap = (middles: EmotionNoteMiddle[]) => {
   const map = new Map<number, number>();
   middles.forEach((middle) => {
@@ -18,13 +30,19 @@ const buildOutDegreeMap = (middles: EmotionNoteMiddle[]) => {
 
 const getNodeSize = (noteId: number, outDegreeMap: Map<number, number>) => {
   const outDegree = outDegreeMap.get(noteId) ?? 0;
-  return 130 + Math.min(120, outDegree * 14);
+  return (
+    BASE_NODE_SIZE + Math.min(NODE_SIZE_MAX_EXTRA, outDegree * NODE_SIZE_STEP)
+  );
 };
 
 const lerp = (start: number, end: number, t: number) =>
   start + (end - start) * t;
 
-const mixColor = (start: [number, number, number], end: [number, number, number], t: number) => {
+const mixColor = (
+  start: [number, number, number],
+  end: [number, number, number],
+  t: number,
+) => {
   const clamped = Math.max(0, Math.min(1, t));
   const r = Math.round(lerp(start[0], end[0], clamped));
   const g = Math.round(lerp(start[1], end[1], clamped));
@@ -32,9 +50,35 @@ const mixColor = (start: [number, number, number], end: [number, number, number]
   return `rgb(${r}, ${g}, ${b})`;
 };
 
+const toRgba = (rgb: string, alpha: number) =>
+  rgb.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
+
+const createTimeIndex = (notes: EmotionNote[]) => {
+  const order = notes
+    .slice()
+    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .map((note) => String(note.id));
+  const map = new Map<string, number>();
+  order.forEach((id, index) => {
+    map.set(id, index);
+  });
+  return map;
+};
+
+const buildSpreadOffsets = (children: { id: string }[]) => {
+  const offsets = new Map<string, number>();
+  children.forEach((child, index) => {
+    const tier = Math.floor(index / 2) + 1;
+    const direction = index === 0 ? 0 : index % 2 === 1 ? 1 : -1;
+    offsets.set(child.id, direction * SPREAD_STEP * tier);
+  });
+  return offsets;
+};
+
 export const useElkLayout = (
   notes: EmotionNote[],
   middles: EmotionNoteMiddle[],
+  themeColor?: [number, number, number],
 ) => {
   const [elkNodes, setElkNodes] = useState<Node[]>([]);
   const [elkEdges, setElkEdges] = useState<Edge[]>([]);
@@ -50,6 +94,7 @@ export const useElkLayout = (
       const outDegreeMap = buildOutDegreeMap(middles);
       const maxOutDegree = Math.max(1, ...outDegreeMap.values());
       const nodeIds = new Set(notes.map((note) => String(note.id)));
+      const notesById = new Map(notes.map((note) => [String(note.id), note]));
       const elkNodesInput = notes.map((note) => {
         const size = getNodeSize(note.id, outDegreeMap);
         return {
@@ -88,16 +133,7 @@ export const useElkLayout = (
       }
       let minX = Infinity;
       let minY = Infinity;
-      const spreadStep = 72;
-      const slopeStep = 40;
-      const timeOrder = notes
-        .slice()
-        .sort((a, b) => a.created_at.localeCompare(b.created_at))
-        .map((note) => String(note.id));
-      const timeIndex = new Map<string, number>();
-      timeOrder.forEach((id, index) => {
-        timeIndex.set(id, index);
-      });
+      const timeIndex = createTimeIndex(notes);
       const orderedChildren = (result.children ?? [])
         .filter(
           (child: any) =>
@@ -105,12 +141,7 @@ export const useElkLayout = (
         )
         .slice()
         .sort((a: any, b: any) => a.x - b.x);
-      const spreadOffsets = new Map<string, number>();
-      orderedChildren.forEach((child: any, index: number) => {
-        const tier = Math.floor(index / 2) + 1;
-        const direction = index === 0 ? 0 : index % 2 === 1 ? 1 : -1;
-        spreadOffsets.set(child.id, direction * spreadStep * tier);
-      });
+      const spreadOffsets = buildSpreadOffsets(orderedChildren);
       result.children?.forEach((child: any) => {
         if (typeof child.x !== "number" || typeof child.y !== "number") {
           return;
@@ -120,14 +151,16 @@ export const useElkLayout = (
       });
       const offsetX = Number.isFinite(minX) ? minX : 0;
       const offsetY = Number.isFinite(minY) ? minY : 0;
-      const padding = 12;
+      const padding = GRAPH_PADDING;
+      const activeTheme = themeColor ?? INDIGO;
+      const edgeColor = `rgb(${activeTheme[0]}, ${activeTheme[1]}, ${activeTheme[2]})`;
       const nextNodes =
         (result.children
           ?.map((child: any) => {
             if (typeof child.x !== "number" || typeof child.y !== "number") {
               return null;
             }
-            const note = notes.find((item) => String(item.id) === child.id);
+            const note = notesById.get(child.id);
             if (!note) {
               return null;
             }
@@ -135,14 +168,10 @@ export const useElkLayout = (
             const outDegree = outDegreeMap.get(note.id) ?? 0;
             const intensity =
               maxOutDegree > 0 ? Math.min(1, outDegree / maxOutDegree) : 0;
-            const indigo: [number, number, number] = [79, 70, 229];
-            const baseColor: [number, number, number] = [230, 232, 246];
-            const fillRgb = mixColor(baseColor, indigo, intensity * 0.75);
-            const borderRgb = mixColor([150, 160, 214], indigo, intensity);
-            const fill = fillRgb.replace("rgb(", "rgba(").replace(")", ", 0.45)");
-            const border = borderRgb
-              .replace("rgb(", "rgba(")
-              .replace(")", ", 0.75)");
+            const fillRgb = mixColor(BASE_BLUE, activeTheme, intensity * 0.75);
+            const borderRgb = mixColor(BORDER_BASE, activeTheme, intensity);
+            const fill = toRgba(fillRgb, 0.45);
+            const border = toRgba(borderRgb, 0.75);
             const labelText =
               note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
             const label = (
@@ -152,7 +181,7 @@ export const useElkLayout = (
               </div>
             );
             const spreadY = spreadOffsets.get(child.id) ?? 0;
-            const timeOffset = (timeIndex.get(child.id) ?? 0) * slopeStep;
+            const timeOffset = (timeIndex.get(child.id) ?? 0) * SLOPE_STEP;
             return {
               id: String(note.id),
               type: "emotion",
@@ -190,23 +219,23 @@ export const useElkLayout = (
       });
 
       const nextEdges = filteredMiddles.map((middle) => {
-          const sourceId = String(middle.from_note_id);
-          const group = edgesBySource.get(sourceId) ?? [];
-          const index = group.findIndex((item) => item.id === middle.id);
-          const offset =
-            group.length > 1 ? (index - (group.length - 1) / 2) * 24 : 0;
-          return {
-            id: `edge-${middle.id}`,
-            source: sourceId,
-            target: String(middle.to_note_id),
-            type: "smoothstep",
-            sourceHandle: "right",
-            targetHandle: "left",
-            markerEnd: { type: MarkerType.ArrowClosed },
-            style: { stroke: "#4f46e5", strokeWidth: 2.2 },
-            pathOptions: { offset, borderRadius: 24 },
-          };
-        }) as Edge[];
+        const sourceId = String(middle.from_note_id);
+        const group = edgesBySource.get(sourceId) ?? [];
+        const index = group.findIndex((item) => item.id === middle.id);
+        const offset =
+          group.length > 1 ? (index - (group.length - 1) / 2) * EDGE_OFFSET_STEP : 0;
+        return {
+          id: `edge-${middle.id}`,
+          source: sourceId,
+          target: String(middle.to_note_id),
+          type: "smoothstep",
+          sourceHandle: "right",
+          targetHandle: "left",
+          markerEnd: { type: MarkerType.ArrowClosed },
+          style: { stroke: edgeColor, strokeWidth: EDGE_WIDTH },
+          pathOptions: { offset, borderRadius: 24 },
+        };
+      }) as Edge[];
 
       setElkNodes(nextNodes);
       setElkEdges(nextEdges);
@@ -217,5 +246,5 @@ export const useElkLayout = (
     };
   }, [middles, notes]);
 
-  return { elkNodes, elkEdges, getNodeSize };
+  return { elkNodes, elkEdges };
 };

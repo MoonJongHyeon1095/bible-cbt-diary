@@ -30,7 +30,7 @@ export async function saveMinimalPatternAPI(
       ...buildAuthHeaders(accessToken),
     },
     body: JSON.stringify({
-      title: formatAutoTitle(new Date()),
+      title: formatAutoTitle(new Date(), emotion),
       triggerText,
       emotion,
       automaticThought,

@@ -52,7 +52,20 @@ export function DeepIncidentSection({
     onNext();
   };
 
-  const sortedSubs = [...subNotes].sort((a, b) => b.id - a.id);
+  const normalizeTrigger = (value: string) =>
+    value.trim().toLowerCase().replace(/\s+/g, " ");
+  const mainTriggerKey = normalizeTrigger(mainNote.trigger_text ?? "");
+  const seenTriggers = new Set<string>(mainTriggerKey ? [mainTriggerKey] : []);
+  const sortedSubs = [...subNotes]
+    .sort((a, b) => b.id - a.id)
+    .filter((note) => {
+      const key = normalizeTrigger(note.trigger_text ?? "");
+      if (!key || seenTriggers.has(key)) {
+        return false;
+      }
+      seenTriggers.add(key);
+      return true;
+    });
   const description = (
     <div className={deepStyles.triggerList}>
       <div className={`${deepStyles.triggerItem} ${deepStyles.triggerItemMain}`}>

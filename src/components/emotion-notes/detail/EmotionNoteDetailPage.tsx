@@ -3,7 +3,10 @@
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
+import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
+import Button from "@/components/ui/Button";
+import { formatKoreanDateTime } from "@/lib/time";
 import {
   AlertCircle,
   Brain,
@@ -12,23 +15,20 @@ import {
   List,
   Pencil,
   Plus,
+  Trash2,
   Upload,
   X,
-  Trash2,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { formatKoreanDateTime } from "@/lib/time";
+import { useEffect, useRef, useState } from "react";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
-import ErrorDetailSection from "./ErrorDetailSection";
-import ThoughtDetailSection from "./ThoughtDetailSection";
 import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
+import ErrorDetailSection from "./ErrorDetailSection";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
-import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
-import Button from "@/components/ui/Button";
+import ThoughtDetailSection from "./ThoughtDetailSection";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
@@ -77,7 +77,9 @@ export default function EmotionNoteDetailPage({
     behaviorSection,
   } = useEmotionNoteDetail(noteId);
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const [selectedSection, setSelectedSection] = useState<SectionKey | null>(null);
+  const [selectedSection, setSelectedSection] = useState<SectionKey | null>(
+    null,
+  );
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
@@ -103,7 +105,11 @@ export default function EmotionNoteDetailPage({
     selectedSection === "thought"
       ? { backgroundColor: "#ffd300", color: "#2b2400", borderColor: "#d7b800" }
       : selectedSection === "error"
-        ? { backgroundColor: "#ff4fd8", color: "#2b0020", borderColor: "#d63cb8" }
+        ? {
+            backgroundColor: "#ff4fd8",
+            color: "#2b0020",
+            borderColor: "#d63cb8",
+          }
         : selectedSection === "alternative"
           ? {
               backgroundColor: "#36d94a",
@@ -218,9 +224,7 @@ export default function EmotionNoteDetailPage({
         <ThoughtDetailSection
           {...thoughtSection}
           formatDateTime={formatDateTime}
-          onSelectDetail={(detailId) =>
-            handleSelectDetail("thought", detailId)
-          }
+          onSelectDetail={(detailId) => handleSelectDetail("thought", detailId)}
           selectedDetailId={
             selectedItem?.section === "thought" ? selectedItem.id : null
           }
@@ -293,7 +297,9 @@ export default function EmotionNoteDetailPage({
         <BehaviorDetailSection
           {...behaviorSection}
           formatDateTime={formatDateTime}
-          onSelectDetail={(detailId) => handleSelectDetail("behavior", detailId)}
+          onSelectDetail={(detailId) =>
+            handleSelectDetail("behavior", detailId)
+          }
           selectedDetailId={
             selectedItem?.section === "behavior" ? selectedItem.id : null
           }
@@ -349,14 +355,6 @@ export default function EmotionNoteDetailPage({
       <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
         <div className={pageStyles.shell}>
           <section className={styles.header}>
-            <div>
-              <p className={styles.subtitle}>
-                {isNew ? "새 기록" : "감정 기록 상세"}
-              </p>
-              <h2 className={styles.title}>
-                {note?.title || (isNew ? "새로운 감정을 적어볼까요?" : "기록")}
-              </h2>
-            </div>
             <div className={styles.headerActions}>
               {noteId ? (
                 <Button

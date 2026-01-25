@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { LogIn, LogOut } from "lucide-react";
 import AppTabs from "@/components/tab/AppTabs";
-import LogoSection from "./LogoSection";
-import AuthModal from "./AuthModal";
 import Button from "@/components/ui/Button";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { LogIn, LogOut } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
+import AuthModal from "./AuthModal";
+import CompactNav from "./navigation/CompactNav";
 
 type SessionUser = {
   id: string;
@@ -50,7 +50,7 @@ export default function AppHeader() {
   return (
     <header className={styles.header}>
       <div className={styles.logoSlot}>
-        <LogoSection />
+        <CompactNav />
       </div>
       <div className={styles.tabsSlot}>
         <AppTabs />

@@ -1,0 +1,65 @@
+.menuButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(18, 21, 28, 0.8);
+  color: #f2f5fb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.menuButton:hover {
+  background: rgba(25, 30, 40, 0.9);
+}
+
+.drawerHeader {
+  padding: 16px;
+  display: flex;
+  justify-content: flex-end;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.closeButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(18, 21, 28, 0.8);
+  color: #f1f4fb;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.drawerList {
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  overflow: auto;
+}
+
+.drawerItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #e5e9f5;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.drawerItemActive {
+  background: linear-gradient(90deg, rgba(59, 71, 118, 0.9), rgba(38, 49, 82, 0.95));
+  border-color: rgba(143, 167, 255, 0.35);
+  color: #f6f8ff;
+}

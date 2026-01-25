@@ -42,7 +42,6 @@ export async function POST(request: Request) {
         user_id: user.id,
         title,
         trigger_text: triggerText,
-        behavior: "",
       })
       .select("id")
       .single();

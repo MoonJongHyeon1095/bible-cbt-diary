@@ -1,6 +1,6 @@
 "use client";
 
-import { CalendarDays, ChartColumn, Home, ListChecks, Sun } from "lucide-react";
+import { CalendarDays, Home, ListChecks, Sun, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "./AppTabs.module.css";
@@ -12,7 +12,7 @@ export default function AppTabs() {
     { href: "/today", label: "오늘", icon: Sun },
     { href: "/month", label: "월별", icon: CalendarDays },
     { href: "/records", label: "기록", icon: ListChecks },
-    { href: "/stats", label: "통계", icon: ChartColumn },
+    { href: "/graph", label: "그래프", icon: Waypoints },
   ];
 
   return (

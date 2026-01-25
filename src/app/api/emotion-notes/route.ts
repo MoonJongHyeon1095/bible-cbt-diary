@@ -34,6 +34,7 @@ export async function GET(request: Request) {
         id,
         title,
         trigger_text,
+        group_id,
         created_at,
         emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
         emotion_error_details(id,note_id,error_label,error_description,created_at),
@@ -68,6 +69,7 @@ export async function GET(request: Request) {
           id: data.id,
           title: data.title,
           trigger_text: data.trigger_text,
+          group_id: data.group_id ?? null,
           created_at: data.created_at,
           thought_details: data.emotion_note_details ?? [],
           error_details: data.emotion_error_details ?? [],
@@ -96,6 +98,7 @@ export async function GET(request: Request) {
       id,
       title,
       trigger_text,
+      group_id,
       created_at,
       emotion_note_details(emotion),
       emotion_error_details(error_label),
@@ -142,6 +145,7 @@ export async function GET(request: Request) {
         id: note.id,
         title: note.title,
         trigger_text: note.trigger_text,
+        group_id: note.group_id ?? null,
         created_at: note.created_at,
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
@@ -165,12 +169,10 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as {
     title?: string;
     trigger_text?: string;
-    behavior?: string;
   };
 
   const title = String(payload.title ?? "").trim();
   const triggerText = String(payload.trigger_text ?? "").trim();
-  const behavior = String(payload.behavior ?? "").trim();
 
   if (!title || !triggerText) {
     return NextResponse.json(
@@ -183,10 +185,9 @@ export async function POST(request: Request) {
   const { data, error } = await supabase
     .from("emotion_notes")
     .insert({
-    user_id: user.id,
-    title,
-    trigger_text: triggerText,
-    behavior,
+      user_id: user.id,
+      title,
+      trigger_text: triggerText,
     })
     .select("id")
     .single();
@@ -219,7 +220,6 @@ export async function PATCH(request: Request) {
     id?: number;
     title?: string;
     trigger_text?: string;
-    behavior?: string;
   };
 
   const noteId = Number(payload.id ?? "");
@@ -233,7 +233,6 @@ export async function PATCH(request: Request) {
   const updatePayload: {
     title?: string;
     trigger_text?: string;
-    behavior?: string;
     updated_at?: string;
   } = {
     updated_at: new Date().toISOString(),
@@ -244,9 +243,6 @@ export async function PATCH(request: Request) {
   }
   if (payload.trigger_text !== undefined) {
     updatePayload.trigger_text = String(payload.trigger_text).trim();
-  }
-  if (payload.behavior !== undefined) {
-    updatePayload.behavior = String(payload.behavior).trim();
   }
 
   const supabase = createSupabaseAdminClient();

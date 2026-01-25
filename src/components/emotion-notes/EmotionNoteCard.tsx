@@ -1,6 +1,11 @@
+"use client";
+
 import { formatKoreanDateTime } from "@/lib/time";
 import type { EmotionNote } from "@/lib/types";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
+import { useEffect, useRef } from "react";
 import styles from "./EmotionNotesSection.module.css";
 
 type EmotionNoteCardProps = {
@@ -8,6 +13,10 @@ type EmotionNoteCardProps = {
 };
 
 export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
+  const router = useRouter();
+  const longPressTimeoutRef = useRef<number | null>(null);
+  const longPressTriggeredRef = useRef(false);
+
   const timeLabel = formatKoreanDateTime(note.created_at, {
     hour: "2-digit",
     minute: "2-digit",
@@ -15,9 +24,51 @@ export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
   const behaviorTags = note.behavior_labels ?? [];
+  const graphHref = note.group_id
+    ? `/graph?groupId=${note.group_id}`
+    : `/graph?noteId=${note.id}`;
+
+  useEffect(() => {
+    return () => {
+      if (longPressTimeoutRef.current !== null) {
+        window.clearTimeout(longPressTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const clearLongPress = () => {
+    if (longPressTimeoutRef.current !== null) {
+      window.clearTimeout(longPressTimeoutRef.current);
+      longPressTimeoutRef.current = null;
+    }
+  };
+
+  const handlePointerDown = () => {
+    clearLongPress();
+    longPressTriggeredRef.current = false;
+    longPressTimeoutRef.current = window.setTimeout(() => {
+      longPressTriggeredRef.current = true;
+      router.push(graphHref);
+    }, 600);
+  };
+
+  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (longPressTriggeredRef.current) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+  };
 
   return (
-    <Link href={`/detail/${note.id}`} className={styles.noteCard}>
+    <Link
+      href={`/detail/${note.id}`}
+      className={styles.noteCard}
+      onPointerDown={handlePointerDown}
+      onPointerUp={clearLongPress}
+      onPointerLeave={clearLongPress}
+      onPointerCancel={clearLongPress}
+      onClick={handleClick}
+    >
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
         <span className={styles.noteTime}>{timeLabel}</span>

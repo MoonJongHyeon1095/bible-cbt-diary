@@ -2,11 +2,14 @@ export type EmotionNote = {
   id: number;
   title: string;
   trigger_text: string;
-  behavior: string | null;
   created_at: string;
+  group_id?: number | null;
   emotion_labels?: string[];
   error_labels?: string[];
   behavior_labels?: string[];
+  thought_details?: EmotionNoteDetail[];
+  error_details?: EmotionNoteErrorDetail[];
+  behavior_details?: EmotionNoteBehaviorDetail[];
 };
 
 export type EmotionNoteWithDetails = EmotionNote & {
@@ -45,5 +48,12 @@ export type EmotionNoteBehaviorDetail = {
   behavior_label: string;
   behavior_description: string;
   error_tags: string[] | null;
+  created_at: string;
+};
+
+export type EmotionNoteMiddle = {
+  id: number;
+  from_note_id: number;
+  to_note_id: number;
   created_at: string;
 };

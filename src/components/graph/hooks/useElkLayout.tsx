@@ -75,8 +75,8 @@ export const useElkLayout = (
         layoutOptions: {
           "elk.algorithm": "mrtree",
           "elk.direction": "RIGHT",
-          "elk.spacing.nodeNode": "240",
-          "elk.spacing.edgeNode": "160",
+          "elk.spacing.nodeNode": "320",
+          "elk.spacing.edgeNode": "220",
           "elk.edgeRouting": "SPLINES",
         },
         children: elkNodesInput,
@@ -88,8 +88,8 @@ export const useElkLayout = (
       }
       let minX = Infinity;
       let minY = Infinity;
-      const spreadStep = 48;
-      const slopeStep = 26;
+      const spreadStep = 72;
+      const slopeStep = 40;
       const timeOrder = notes
         .slice()
         .sort((a, b) => a.created_at.localeCompare(b.created_at))
@@ -135,10 +135,14 @@ export const useElkLayout = (
             const outDegree = outDegreeMap.get(note.id) ?? 0;
             const intensity =
               maxOutDegree > 0 ? Math.min(1, outDegree / maxOutDegree) : 0;
-            const baseColor: [number, number, number] = [250, 245, 235];
             const indigo: [number, number, number] = [79, 70, 229];
-            const fill = mixColor(baseColor, indigo, intensity * 0.6);
-            const border = mixColor([124, 110, 86], indigo, intensity * 0.7);
+            const baseColor: [number, number, number] = [230, 232, 246];
+            const fillRgb = mixColor(baseColor, indigo, intensity * 0.75);
+            const borderRgb = mixColor([150, 160, 214], indigo, intensity);
+            const fill = fillRgb.replace("rgb(", "rgba(").replace(")", ", 0.45)");
+            const border = borderRgb
+              .replace("rgb(", "rgba(")
+              .replace(")", ", 0.75)");
             const labelText =
               note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
             const label = (
@@ -165,7 +169,7 @@ export const useElkLayout = (
                 zIndex: 2,
                 background: fill,
                 borderColor: border,
-                color: intensity > 0.35 ? "#f7f5f1" : "#1f2328",
+                color: "#eef2ff",
               },
             } as Node;
           })
@@ -199,7 +203,7 @@ export const useElkLayout = (
             sourceHandle: "right",
             targetHandle: "left",
             markerEnd: { type: MarkerType.ArrowClosed },
-            style: { stroke: "#8c9bff", strokeWidth: 2.2 },
+            style: { stroke: "#4f46e5", strokeWidth: 2.2 },
             pathOptions: { offset, borderRadius: 24 },
           };
         }) as Edge[];

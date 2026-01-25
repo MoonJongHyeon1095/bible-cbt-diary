@@ -29,14 +29,99 @@
   font-size: 0.9rem;
 }
 
-.graphShell {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 24px;
-  box-shadow: var(--shadow);
-  overflow: hidden;
+.graphCanvas {
   height: clamp(420px, 70vh, 760px);
   position: relative;
+}
+
+.detailStackWrap {
+  position: absolute;
+  left: 16px;
+  top: 16px;
+  width: min(38%, 420px);
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  z-index: 3;
+}
+
+.detailStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detailStackSection {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.detailStackHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #f5f7fa;
+  text-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.detailStackDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(15, 18, 24, 0.5);
+}
+
+.detailStackLabel {
+  flex: 1;
+}
+
+.detailStackCount {
+  font-size: 0.72rem;
+  color: rgba(245, 247, 250, 0.75);
+}
+
+.detailStackList {
+  display: grid;
+  gap: 6px;
+}
+
+.detailStackItem {
+  background: rgba(14, 16, 22, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 8px 10px;
+  display: grid;
+  gap: 0;
+  color: #eef1f5;
+  cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.detailStackItem:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.detailStackItemTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  width: 100%;
+}
+
+.detailStackHeader:focus-visible,
+.detailStackItem:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.55);
+  outline-offset: 2px;
 }
 
 .graph {
@@ -74,8 +159,9 @@
   font-size: 0.75rem;
   line-height: 1.2;
   box-shadow: 0 12px 26px rgba(0, 0, 0, 0.22);
-  overflow: visible;
-  position: relative;
+  overflow: hidden;
+  position: absolute;
+  box-sizing: border-box;
 }
 
 .nodeContent {
@@ -109,56 +195,6 @@
   font-size: 0.65rem;
 }
 
-.detailPanel {
-  background: #14171d;
-  border: 1px solid rgba(120, 130, 150, 0.35);
-  border-radius: 18px;
-  color: #f3f5f7;
-  box-shadow: 0 18px 28px rgba(0, 0, 0, 0.4);
-  padding: 14px 16px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detailPanelHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.detailPanelLabel {
-  margin: 0;
-  font-size: 0.7rem;
-  color: rgba(220, 226, 238, 0.7);
-  letter-spacing: 0.02em;
-}
-
-.detailPanelTitle {
-  margin: 4px 0 0;
-  font-size: 0.95rem;
-  font-weight: 600;
-}
-
-.detailPanelCount {
-  min-width: 32px;
-  height: 32px;
-  border-radius: 999px;
-  border: 1px solid rgba(143, 167, 200, 0.4);
-  display: grid;
-  place-items: center;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #b9c9e8;
-  background: rgba(34, 41, 52, 0.65);
-}
-
-.detailPanelBody {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
 
 .detailSection {
   background: rgba(22, 26, 33, 0.6);
@@ -285,9 +321,13 @@
 }
 
 .graph :global(.react-flow__controls button) {
-  background: var(--surface);
-  border-color: var(--border);
-  color: var(--text);
+  background: rgba(18, 21, 27, 0.9);
+  border-color: rgba(255, 255, 255, 0.25);
+  color: #f5f7fa;
+}
+
+.graph :global(.react-flow__controls button svg) {
+  color: #f5f7fa;
 }
 
 .deepOverlay {
@@ -426,7 +466,7 @@
     align-items: flex-start;
   }
 
-  .graphShell {
+  .graphCanvas {
     height: 70vh;
   }
 }

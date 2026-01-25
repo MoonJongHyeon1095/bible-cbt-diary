@@ -2,8 +2,13 @@
 
 import type { ReactNode } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
-import type { EmotionNoteDetailSection } from "./EmotionNoteDetailNode";
 import styles from "../EmotionGraphSection.module.css";
+
+export type EmotionNoteDetailSection =
+  | "emotion"
+  | "error"
+  | "alternative"
+  | "behavior";
 
 export type EmotionNoteChip = {
   id: string;
@@ -34,12 +39,6 @@ export default function EmotionNoteNode({
         position={Position.Right}
         id="right"
         className={styles.graphHandle}
-      />
-      <Handle
-        type="source"
-        position={Position.Top}
-        id="detail-source"
-        className={`${styles.graphHandle} ${styles.graphHandleCenter}`}
       />
       {data.label}
     </div>

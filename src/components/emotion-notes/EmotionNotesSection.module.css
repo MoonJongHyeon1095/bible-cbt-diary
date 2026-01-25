@@ -103,6 +103,8 @@
     border-color 0.2s ease,
     transform 0.2s ease;
   cursor: pointer;
+  position: relative;
+  overflow: hidden;
 }
 
 .noteCard:hover {
@@ -138,6 +140,54 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
+}
+
+.longPressOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  opacity: 0;
+  transform: scale(0.98);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  pointer-events: none;
+  color: #111318;
+}
+
+.longPressOverlayActive {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.longPressOverlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, var(--press-fill, 0.35));
+  transition: background 0.08s linear;
+}
+
+.longPressIcon,
+.longPressText {
+  position: relative;
+  z-index: 1;
+}
+
+.longPressIcon {
+  width: 22px;
+  height: 22px;
+}
+
+.longPressText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
 .noteTags {

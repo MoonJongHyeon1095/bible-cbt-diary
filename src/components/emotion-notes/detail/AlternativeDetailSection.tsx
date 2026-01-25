@@ -23,21 +23,20 @@ type AlternativeDetailSectionProps = {
   onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
 };
 
-export default function AlternativeDetailSection({
-  details,
-  editingAlternativeId,
-  editingAlternativeText,
-  onStartEditing,
-  onCancelEditing,
-  onUpdate,
-  onDelete,
-  onChangeEditingAlternativeText,
-  formatDateTime,
-  onSelectDetail,
-  selectedDetailId,
-  onCopyText,
-  onOpenModal,
-}: AlternativeDetailSectionProps) {
+export default function AlternativeDetailSection(
+  props: AlternativeDetailSectionProps,
+) {
+  const {
+    details,
+    editingAlternativeId,
+    editingAlternativeText,
+    onChangeEditingAlternativeText,
+    formatDateTime,
+    onSelectDetail,
+    selectedDetailId,
+    onCopyText,
+    onOpenModal,
+  } = props;
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const resizeEditTextarea = () => {
     const element = editTextareaRef.current;

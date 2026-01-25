@@ -25,22 +25,19 @@ type ErrorDetailSectionProps = {
   onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
 };
 
-export default function ErrorDetailSection({
-  details,
-  editingErrorId,
-  editingErrorLabel,
-  editingErrorDescription,
-  onStartEditing,
-  onCancelEditing,
-  onUpdate,
-  onDelete,
-  onChangeEditingErrorDescription,
-  formatDateTime,
-  onSelectDetail,
-  selectedDetailId,
-  onCopyText,
-  onOpenModal,
-}: ErrorDetailSectionProps) {
+export default function ErrorDetailSection(props: ErrorDetailSectionProps) {
+  const {
+    details,
+    editingErrorId,
+    editingErrorLabel,
+    editingErrorDescription,
+    onChangeEditingErrorDescription,
+    formatDateTime,
+    onSelectDetail,
+    selectedDetailId,
+    onCopyText,
+    onOpenModal,
+  } = props;
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const resizeEditTextarea = () => {
     const element = editTextareaRef.current;

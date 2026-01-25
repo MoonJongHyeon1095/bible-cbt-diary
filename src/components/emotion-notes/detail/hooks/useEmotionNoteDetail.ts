@@ -38,6 +38,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
     setError,
   });
+  const { setDetails: setThoughtDetails } = thoughtSectionState;
 
   const errorSectionState = useErrorSection({
     noteId,
@@ -46,6 +47,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
     setError,
   });
+  const { setDetails: setErrorDetails } = errorSectionState;
 
   const alternativeSectionState = useAlternativeSection({
     noteId,
@@ -54,6 +56,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
     setError,
   });
+  const { setDetails: setAlternativeDetails } = alternativeSectionState;
 
   const behaviorSectionState = useBehaviorSection({
     noteId,
@@ -62,6 +65,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
     setError,
   });
+  const { setDetails: setBehaviorDetails } = behaviorSectionState;
 
   const loadUser = useCallback(async () => {
     const { data } = await supabase.auth.getUser();
@@ -73,10 +77,10 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
       setNote(null);
       setTitle("");
       setTriggerText("");
-      thoughtSectionState.setDetails([]);
-      errorSectionState.setDetails([]);
-      alternativeSectionState.setDetails([]);
-      behaviorSectionState.setDetails([]);
+      setThoughtDetails([]);
+      setErrorDetails([]);
+      setAlternativeDetails([]);
+      setBehaviorDetails([]);
       return;
     }
 
@@ -99,18 +103,18 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     setNote(data.note);
     setTitle(data.note.title);
     setTriggerText(data.note.trigger_text);
-    thoughtSectionState.setDetails(data.note.thought_details ?? []);
-    errorSectionState.setDetails(data.note.error_details ?? []);
-    alternativeSectionState.setDetails(data.note.alternative_details ?? []);
-    behaviorSectionState.setDetails(data.note.behavior_details ?? []);
+    setThoughtDetails(data.note.thought_details ?? []);
+    setErrorDetails(data.note.error_details ?? []);
+    setAlternativeDetails(data.note.alternative_details ?? []);
+    setBehaviorDetails(data.note.behavior_details ?? []);
   }, [
-    alternativeSectionState.setDetails,
-    behaviorSectionState.setDetails,
-    errorSectionState.setDetails,
     getAccessToken,
     noteId,
     setError,
-    thoughtSectionState.setDetails,
+    setAlternativeDetails,
+    setBehaviorDetails,
+    setErrorDetails,
+    setThoughtDetails,
   ]);
 
   useEffect(() => {

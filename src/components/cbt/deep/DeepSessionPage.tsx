@@ -183,6 +183,8 @@ function DeepSessionPageContent() {
     groupIdParam,
     mainId,
     loadKey,
+    mainNote,
+    notesLoading,
     supabase,
     subIdSet,
     subIds.length,

@@ -45,6 +45,7 @@ export default function EmotionGraphGroupList({
 }: EmotionGraphGroupListProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const nodesRef = useRef<GroupNode[]>([]);
   const [nodes, setNodes] = useState<GroupNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [size, setSize] = useState({ width: 0, height: 0 });
@@ -75,10 +76,14 @@ export default function EmotionGraphGroupList({
   }, [accessToken]);
 
   useEffect(() => {
+    nodesRef.current = nodes;
+  }, [nodes]);
+
+  useEffect(() => {
     if (nodes.length === 0 || size.width === 0 || size.height === 0) {
       return;
     }
-    const simNodes = nodes.map((node) => ({ ...node }));
+    const simNodes = nodesRef.current.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
       .force("charge", forceManyBody().strength(-20))
       .force("center", forceCenter(size.width / 2, size.height / 2))

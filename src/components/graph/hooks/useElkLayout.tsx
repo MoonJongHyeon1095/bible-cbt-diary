@@ -2,6 +2,7 @@
 
 import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types";
 import ELK from "elkjs/lib/elk.bundled.js";
+import type { ElkNode } from "elkjs/lib/elk-api";
 import { useEffect, useState } from "react";
 import type { Edge, Node } from "reactflow";
 import { MarkerType } from "reactflow";
@@ -75,6 +76,11 @@ const buildSpreadOffsets = (children: { id: string }[]) => {
   return offsets;
 };
 
+type PositionedElkNode = ElkNode & { x: number; y: number };
+
+const isPositionedElkNode = (node: ElkNode): node is PositionedElkNode =>
+  typeof node.x === "number" && typeof node.y === "number";
+
 export const useElkLayout = (
   notes: EmotionNote[],
   middles: EmotionNoteMiddle[],
@@ -135,17 +141,12 @@ export const useElkLayout = (
       let minY = Infinity;
       const timeIndex = createTimeIndex(notes);
       const orderedChildren = (result.children ?? [])
-        .filter(
-          (child: any) =>
-            typeof child.x === "number" && typeof child.y === "number",
-        )
+        .filter(isPositionedElkNode)
         .slice()
-        .sort((a: any, b: any) => a.x - b.x);
+        .sort((a, b) => a.x - b.x);
       const spreadOffsets = buildSpreadOffsets(orderedChildren);
-      result.children?.forEach((child: any) => {
-        if (typeof child.x !== "number" || typeof child.y !== "number") {
-          return;
-        }
+      result.children?.forEach((child) => {
+        if (!isPositionedElkNode(child)) return;
         minX = Math.min(minX, child.x);
         minY = Math.min(minY, child.y);
       });
@@ -156,10 +157,8 @@ export const useElkLayout = (
       const edgeColor = `rgb(${activeTheme[0]}, ${activeTheme[1]}, ${activeTheme[2]})`;
       const nextNodes =
         (result.children
-          ?.map((child: any) => {
-            if (typeof child.x !== "number" || typeof child.y !== "number") {
-              return null;
-            }
+          ?.map((child) => {
+            if (!isPositionedElkNode(child)) return null;
             const note = notesById.get(child.id);
             if (!note) {
               return null;
@@ -244,7 +243,7 @@ export const useElkLayout = (
     return () => {
       cancelled = true;
     };
-  }, [middles, notes]);
+  }, [middles, notes, themeColor]);
 
   return { elkNodes, elkEdges };
 };

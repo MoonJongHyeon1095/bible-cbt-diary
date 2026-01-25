@@ -6,7 +6,7 @@ import EmotionGraphGroupList from "@/components/graph/EmotionGraphGroupList";
 import EmotionGraphSection from "@/components/graph/EmotionGraphSection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import styles from "../page.module.css";
 
 type SessionUser = {
@@ -14,7 +14,7 @@ type SessionUser = {
   email: string | null;
 };
 
-export default function GraphPage() {
+function GraphPageContent() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -81,5 +81,24 @@ export default function GraphPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function GraphPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className={styles.page}>
+          <AppHeader />
+          <main className={styles.main}>
+            <div className={styles.shell}>
+              <div className={styles.emptyAuth}>그래프를 불러오는 중...</div>
+            </div>
+          </main>
+        </div>
+      }
+    >
+      <GraphPageContent />
+    </Suspense>
   );
 }

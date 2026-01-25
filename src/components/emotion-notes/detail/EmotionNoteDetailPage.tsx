@@ -334,7 +334,7 @@ export default function EmotionNoteDetailPage({
       return;
     }
     clearEditing();
-  }, [hasEditing, selectedItem]);
+  }, [clearEditing, hasEditing, selectedItem]);
 
   if (!userEmail && !isLoading) {
     return (

@@ -29,22 +29,21 @@ type ThoughtDetailSectionProps = {
   ) => void;
 };
 
-export default function ThoughtDetailSection({
-  details,
-  editingThoughtId,
-  editingThoughtText,
-  editingEmotionText,
-  onStartEditing,
-  onCancelEditing,
-  onUpdate,
-  onDelete,
-  onChangeEditingThoughtText,
-  formatDateTime,
-  onSelectDetail,
-  selectedDetailId,
-  onCopyText,
-  onOpenModal,
-}: ThoughtDetailSectionProps) {
+export default function ThoughtDetailSection(
+  props: ThoughtDetailSectionProps,
+) {
+  const {
+    details,
+    editingThoughtId,
+    editingThoughtText,
+    editingEmotionText,
+    onChangeEditingThoughtText,
+    formatDateTime,
+    onSelectDetail,
+    selectedDetailId,
+    onCopyText,
+    onOpenModal,
+  } = props;
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const resizeEditTextarea = () => {
     const element = editTextareaRef.current;

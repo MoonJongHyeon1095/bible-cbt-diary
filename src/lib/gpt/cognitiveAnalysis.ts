@@ -98,8 +98,6 @@ Cognitive distortion index meanings:
 
 function fallbackDetail(
   candidates: ErrorIndex[],
-  _situation: string,
-  _thought: string
 ): CognitiveErrorDetailResult {
   const make = (idx: ErrorIndex) => {
     if (idx === 1) {
@@ -175,7 +173,7 @@ ${uniq.join(", ")}
 
     const missing = uniq.filter((c) => !errors.some((e) => e.index === c));
     if (missing.length > 0) {
-      errors.push(...fallbackDetail(missing, situation, thought).errors);
+      errors.push(...fallbackDetail(missing).errors);
     }
 
     errors.sort((a, b) => uniq.indexOf(a.index) - uniq.indexOf(b.index));
@@ -183,7 +181,7 @@ ${uniq.join(", ")}
     return { errors };
   } catch (e) {
     console.error("인지오류 상세 분석 실패(JSON):", e);
-    return fallbackDetail(uniq, situation, thought);
+    return fallbackDetail(uniq);
   }
 }
 

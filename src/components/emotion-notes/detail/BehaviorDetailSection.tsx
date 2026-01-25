@@ -25,22 +25,21 @@ type BehaviorDetailSectionProps = {
   onOpenModal?: (title: string, body: string, badgeText?: string | null) => void;
 };
 
-export default function BehaviorDetailSection({
-  details,
-  editingBehaviorId,
-  editingBehaviorLabel,
-  editingBehaviorDescription,
-  onStartEditing,
-  onCancelEditing,
-  onUpdate,
-  onDelete,
-  onChangeEditingBehaviorDescription,
-  formatDateTime,
-  onSelectDetail,
-  selectedDetailId,
-  onCopyText,
-  onOpenModal,
-}: BehaviorDetailSectionProps) {
+export default function BehaviorDetailSection(
+  props: BehaviorDetailSectionProps,
+) {
+  const {
+    details,
+    editingBehaviorId,
+    editingBehaviorLabel,
+    editingBehaviorDescription,
+    onChangeEditingBehaviorDescription,
+    formatDateTime,
+    onSelectDetail,
+    selectedDetailId,
+    onCopyText,
+    onOpenModal,
+  } = props;
   const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const resizeEditTextarea = () => {
     const element = editTextareaRef.current;

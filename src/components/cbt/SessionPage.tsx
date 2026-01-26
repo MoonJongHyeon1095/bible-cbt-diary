@@ -10,6 +10,7 @@ import {
   saveSessionHistoryAPI,
 } from "@/components/cbt/utils/api";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
+import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
@@ -17,7 +18,7 @@ import type {
 } from "@/lib/types/cbtTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MinimalAutoThoughtSection } from "./minimal/center/MinimalAutoThoughtSection";
 import { MinimalEmotionSection } from "./minimal/center/MinimalEmotionSection";
 import { MinimalIncidentSection } from "./minimal/center/MinimalIncidentSection";
@@ -79,6 +80,17 @@ function SessionPageContent() {
     "alternative",
   ];
   const currentStepIndex = stepOrder.indexOf(step);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      void flushTokenSessionUsage();
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      void flushTokenSessionUsage();
+    };
+  }, []);
 
   const handleBack = () => {
     if (currentStepIndex <= 0) return;
@@ -176,6 +188,7 @@ function SessionPageContent() {
 
       pushToast("세션 기록이 저장되었습니다.", "success");
       window.setTimeout(() => {
+        void flushTokenSessionUsage({ sessionCount: 1 });
         clearCbtSessionStorage();
         router.push(`/detail/${noteId}`);
       }, 180);

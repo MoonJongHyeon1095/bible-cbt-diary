@@ -151,6 +151,7 @@ export async function generateBehaviorSuggestions(
   selectedAlternativeThought: string,
   cognitiveErrors: Array<{ title: string; detail?: string }>,
   behaviors: BehaviorMeta[],
+  options?: { noteProposal?: boolean },
 ): Promise<BehaviorSuggestionItem[]> {
   const emotionThoughtText = emotionThoughtPairs
     .map((pair) => {
@@ -200,6 +201,7 @@ ${behaviorsText}
     const raw = await callGptText(prompt, {
       systemPrompt,
       model: "gpt-4o-mini",
+      noteProposal: options?.noteProposal,
     });
 
     const jsonText = extractJsonObject(raw);

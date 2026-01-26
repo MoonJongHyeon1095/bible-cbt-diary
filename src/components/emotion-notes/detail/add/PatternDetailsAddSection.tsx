@@ -4,7 +4,6 @@ import { Brain, Save, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { EMOTIONS } from "@/lib/constants/emotions";
 import { generateExtendedAutomaticThoughts } from "@/lib/ai";
-import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
 import Textarea from "@/components/ui/Textarea";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { AiActionBar } from "./common/AiActionBar";
@@ -79,6 +78,7 @@ export function PatternDetailsAddSection({
       const result = await generateExtendedAutomaticThoughts(
         triggerText,
         emotion,
+        { noteProposal: true },
       );
       setAiCandidates(
         result.sdtThoughts.map((item) => ({
@@ -125,7 +125,6 @@ export function PatternDetailsAddSection({
   };
 
   const handleClose = async () => {
-    await clearTokenSessionStorage();
     onClose?.();
   };
 

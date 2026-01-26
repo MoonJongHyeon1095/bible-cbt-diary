@@ -11,10 +11,10 @@ import styles from "../EmotionGraphSection.module.css";
 const BASE_NODE_SIZE = 130;
 const NODE_SIZE_STEP = 14;
 const NODE_SIZE_MAX_EXTRA = 120;
-const SPREAD_STEP = 72;
-const SLOPE_STEP = 40;
+const SPREAD_STEP = 140;
+const SLOPE_STEP = 90;
 const GRAPH_PADDING = 12;
-const EDGE_OFFSET_STEP = 24;
+const EDGE_OFFSET_STEP = 32;
 const EDGE_WIDTH = 2.2;
 const INDIGO: [number, number, number] = [79, 70, 229];
 const BASE_BLUE: [number, number, number] = [230, 232, 246];
@@ -167,8 +167,9 @@ export const useElkLayout = (
             const outDegree = outDegreeMap.get(note.id) ?? 0;
             const intensity =
               maxOutDegree > 0 ? Math.min(1, outDegree / maxOutDegree) : 0;
-            const fillRgb = mixColor(BASE_BLUE, activeTheme, intensity * 0.75);
-            const borderRgb = mixColor(BORDER_BASE, activeTheme, intensity);
+            const inverted = 1 - intensity;
+            const fillRgb = mixColor(BASE_BLUE, activeTheme, inverted * 0.75);
+            const borderRgb = mixColor(BORDER_BASE, activeTheme, inverted);
             const fill = toRgba(fillRgb, 0.45);
             const border = toRgba(borderRgb, 0.75);
             const labelText =

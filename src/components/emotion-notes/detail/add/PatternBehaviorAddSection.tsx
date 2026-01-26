@@ -5,7 +5,6 @@ import { generateBehaviorSuggestions } from "@/lib/ai";
 import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
 import { getRecommendedBehaviors } from "@/lib/constants/errorBehaviorMap";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
-import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
 import { Check, Footprints, Info, Loader2, Save, Sparkles } from "lucide-react";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -163,7 +162,6 @@ export function PatternBehaviorAddSection({
   };
 
   const handleClose = async () => {
-    await clearTokenSessionStorage();
     onClose?.();
   };
 
@@ -228,6 +226,7 @@ export function PatternBehaviorAddSection({
           detail: error.error_description,
         })),
         behaviorCandidates.map((item) => item.behavior),
+        { noteProposal: true },
       );
       const next: Record<string, string> = {};
       suggestions.forEach((item) => {

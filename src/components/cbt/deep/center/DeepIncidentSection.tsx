@@ -66,12 +66,25 @@ export function DeepIncidentSection({
       seenTriggers.add(key);
       return true;
     });
+  const buildNoteLines = (note: EmotionNote) => {
+    const thought = note.thought_details?.[0]?.automatic_thought;
+    const errorDetail = note.error_details?.[0];
+    const errorText =
+      errorDetail?.error_description || errorDetail?.error_label || "";
+    return [note.trigger_text, thought, errorText].filter(
+      (value): value is string => Boolean(value?.trim()),
+    );
+  };
   const description = (
     <div className={deepStyles.triggerList}>
       <div
         className={`${deepStyles.triggerItem} ${deepStyles.triggerItemMain}`}
       >
-        <p className={deepStyles.triggerText}>{mainNote.trigger_text}</p>
+        {buildNoteLines(mainNote).map((line, index) => (
+          <p key={`${mainNote.id}-main-${index}`} className={deepStyles.triggerText}>
+            {line}
+          </p>
+        ))}
       </div>
       {sortedSubs.map((note, index) => {
         const opacity = Math.max(0.28, 0.7 - index * 0.14);
@@ -82,7 +95,11 @@ export function DeepIncidentSection({
             className={deepStyles.triggerItem}
             style={{ opacity, transform: `scale(${scale})` }}
           >
-            <p className={deepStyles.triggerText}>{note.trigger_text}</p>
+            {buildNoteLines(note).map((line, lineIndex) => (
+              <p key={`${note.id}-${lineIndex}`} className={deepStyles.triggerText}>
+                {line}
+              </p>
+            ))}
           </div>
         );
       })}

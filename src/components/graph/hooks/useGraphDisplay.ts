@@ -40,9 +40,23 @@ export const useGraphDisplay = (
       };
     });
 
+    const displayEdges = timelineEdges.map((edge) => {
+      const isConnected =
+        edge.source === selectedNodeId || edge.target === selectedNodeId;
+      return {
+        ...edge,
+        style: {
+          ...edge.style,
+          stroke: isConnected ? "var(--accent)" : edge.style?.stroke,
+          strokeWidth: isConnected ? 3.2 : edge.style?.strokeWidth ?? 2,
+          opacity: isConnected ? 1 : 0.2,
+        },
+      };
+    });
+
     return {
       displayNodes,
-      displayEdges: timelineEdges,
+      displayEdges,
     };
   }, [selectedNodeId, timelineEdges, timelineNodes]);
 };

@@ -34,13 +34,17 @@ const buildUsageHeaders = async () => {
   return headers;
 };
 
-export const syncTokenUsage = async (usage: TokenUsage) => {
+export const syncTokenUsage = async (
+  usage: TokenUsage,
+  counts?: { session_count?: number },
+) => {
   const deviceId = getDeviceId();
   const headers = await buildUsageHeaders();
+  const payloadUsage = { ...usage, ...(counts ?? {}) };
   const response = await fetch(`${API_BASE}/api/token-usage`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ deviceId, usage }),
+    body: JSON.stringify({ deviceId, usage: payloadUsage }),
   });
 
   if (!response.ok) {

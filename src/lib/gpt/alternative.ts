@@ -217,7 +217,8 @@ export async function generateContextualAlternativeThoughts(
   situation: string,
   emotion: string,
   thought: string,
-  cognitiveErrors: Array<string | { title: string; detail?: string }>
+  cognitiveErrors: Array<string | { title: string; detail?: string }>,
+  options?: { noteProposal?: boolean }
 ): Promise<AlternativeThought[]> {
   const cognitiveErrorText = cognitiveErrors
     .map((err) => {
@@ -244,6 +245,7 @@ ${cognitiveErrorText}
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      noteProposal: options?.noteProposal,
     });
 
     const jsonText = extractJsonObject(raw);

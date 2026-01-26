@@ -5,7 +5,6 @@ import Textarea from "@/components/ui/Textarea";
 import { generateContextualAlternativeThoughts } from "@/lib/ai";
 import { EmotionNoteDetail, EmotionNoteErrorDetail } from "@/lib/types/types";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
-import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
 import { Lightbulb, Loader2, Save, Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { AiActionBar } from "./common/AiActionBar";
@@ -105,7 +104,6 @@ export function PatternAlternativesAddSection({
   };
 
   const handleClose = async () => {
-    await clearTokenSessionStorage();
     onClose?.();
   };
 
@@ -165,6 +163,7 @@ export function PatternAlternativesAddSection({
           title: error.error_label,
           detail: error.error_description,
         })),
+        { noteProposal: true },
       );
       setAiCandidates(result);
       setAiStep("suggestions");

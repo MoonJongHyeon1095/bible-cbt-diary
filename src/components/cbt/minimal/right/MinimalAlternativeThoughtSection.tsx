@@ -4,7 +4,7 @@ import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
 } from "@/lib/types/cbtTypes";
-import { RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MinimalFloatingNextButton } from "../common/MinimalFloatingNextButton";
 import { MinimalLoadingState } from "../common/MinimalLoadingState";
@@ -56,12 +56,17 @@ export function MinimalAlternativeThoughtSection({
 
   const currentThought = alternativeThoughts[currentIndex];
 
-  const handleNext = async () => {
-    if (currentIndex < alternativeThoughts.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      return;
-    }
-    await generateAlternatives({ force: true });
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < alternativeThoughts.length - 1;
+
+  const handlePrev = () => {
+    if (!canGoPrev) return;
+    setCurrentIndex((prev) => prev - 1);
+  };
+
+  const handleNext = () => {
+    if (!canGoNext) return;
+    setCurrentIndex((prev) => prev + 1);
   };
 
   if (thoughtsLoading) {
@@ -107,15 +112,28 @@ export function MinimalAlternativeThoughtSection({
             ariaLabel="이 생각으로 진행"
             disabled={!currentThought?.thought}
           />
-          <Button
-            type="button"
-            variant="unstyled"
-            onClick={() => void handleNext()}
-            aria-label="다른 생각 보기"
-            className={styles.smallIconButton}
-          >
-            <RefreshCw size={18} strokeWidth={2.5} />
-          </Button>
+          <div className={styles.controlRow}>
+            <Button
+              type="button"
+              variant="unstyled"
+              onClick={handlePrev}
+              aria-label="이전 생각 보기"
+              disabled={!canGoPrev}
+              className={styles.smallIconButton}
+            >
+              <ChevronLeft size={18} strokeWidth={2.5} />
+            </Button>
+            <Button
+              type="button"
+              variant="unstyled"
+              onClick={handleNext}
+              aria-label="다음 생각 보기"
+              disabled={!canGoNext}
+              className={styles.smallIconButton}
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

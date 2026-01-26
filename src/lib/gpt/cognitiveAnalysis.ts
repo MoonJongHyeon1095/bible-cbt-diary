@@ -126,7 +126,8 @@ function fallbackDetail(
 export async function analyzeCognitiveErrorDetails(
   situation: string,
   thought: string,
-  candidates: ErrorIndex[]
+  candidates: ErrorIndex[],
+  options?: { noteProposal?: boolean }
 ): Promise<CognitiveErrorDetailResult> {
   const uniq = Array.from(new Set(candidates)).filter((x) =>
     isValidIndex(x)
@@ -147,6 +148,7 @@ ${uniq.join(", ")}
     const raw = await callGptText(prompt, {
       systemPrompt: DETAIL_SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      noteProposal: options?.noteProposal,
     });
 
     const jsonText = extractJsonObject(raw);

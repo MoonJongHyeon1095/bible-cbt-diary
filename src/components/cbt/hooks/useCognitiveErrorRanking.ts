@@ -42,6 +42,7 @@ export function useCognitiveErrorRanking({
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const pendingDetailRef = useRef<Set<ErrorIndex>>(new Set());
+  const inFlightKeyRef = useRef<string | null>(null);
   const cacheKey = useMemo(
     () => `${userInput.trim()}::${thought.trim()}`,
     [userInput, thought],
@@ -85,6 +86,8 @@ export function useCognitiveErrorRanking({
   };
 
   const loadRanked = async () => {
+    if (inFlightKeyRef.current === cacheKey) return;
+    inFlightKeyRef.current = cacheKey;
     setRankLoading(true);
     resetState();
     try {
@@ -93,6 +96,9 @@ export function useCognitiveErrorRanking({
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
+      if (inFlightKeyRef.current === cacheKey) {
+        inFlightKeyRef.current = null;
+      }
       setRankLoading(false);
     }
   };
@@ -144,6 +150,9 @@ export function useCognitiveErrorRanking({
     const start = pageIndex * BATCH_SIZE;
     return ranked[start + withinIndex] ?? null;
   }, [pageIndex, ranked, withinIndex]);
+  const currentIndex = pageIndex * BATCH_SIZE + withinIndex;
+  const canPrev = currentIndex > 0;
+  const canNext = currentIndex < ranked.length - 1;
 
   const currentDetail = currentRankItem
     ? detailByIndex[currentRankItem.index]
@@ -163,7 +172,21 @@ export function useCognitiveErrorRanking({
       setPageIndex((prev) => prev + 1);
       return;
     }
-    void loadRanked();
+  };
+
+  const handlePrev = () => {
+    if (rankLoading || detailLoading) return;
+    if (withinIndex > 0) {
+      setWithinIndex((prev) => prev - 1);
+      return;
+    }
+    if (pageIndex > 0) {
+      const prevPage = pageIndex - 1;
+      const prevStart = prevPage * BATCH_SIZE;
+      const prevEnd = Math.min(prevStart + BATCH_SIZE, ranked.length);
+      setPageIndex(prevPage);
+      setWithinIndex(Math.max(prevEnd - prevStart - 1, 0));
+    }
   };
 
   return {
@@ -175,6 +198,9 @@ export function useCognitiveErrorRanking({
     rankLoading,
     detailLoading,
     handleNext,
+    handlePrev,
+    canPrev,
+    canNext,
     reload: loadRanked,
   };
 }

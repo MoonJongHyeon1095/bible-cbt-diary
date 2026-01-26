@@ -1,4 +1,4 @@
-import { RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import styles from "../../MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
 
@@ -6,6 +6,9 @@ interface MinimalAutoThoughtControlSectionProps {
   disabled: boolean;
   showCustomButton: boolean;
   onNextThought: () => void;
+  onPrevThought: () => void;
+  canGoPrev: boolean;
+  canGoNext: boolean;
   onEnableCustom: () => void;
 }
 
@@ -13,6 +16,9 @@ export function MinimalAutoThoughtControlSection({
   disabled,
   showCustomButton,
   onNextThought,
+  onPrevThought,
+  canGoPrev,
+  canGoNext,
   onEnableCustom,
 }: MinimalAutoThoughtControlSectionProps) {
   return (
@@ -20,12 +26,22 @@ export function MinimalAutoThoughtControlSection({
       <Button
         type="button"
         variant="unstyled"
-        onClick={onNextThought}
-        aria-label="다른 생각 보기"
-        disabled={disabled}
+        onClick={onPrevThought}
+        aria-label="이전 생각 보기"
+        disabled={disabled || !canGoPrev}
         className={styles.smallIconButton}
       >
-        <RefreshCw size={18} strokeWidth={2.5} />
+        <ChevronLeft size={18} strokeWidth={2.5} />
+      </Button>
+      <Button
+        type="button"
+        variant="unstyled"
+        onClick={onNextThought}
+        aria-label="다음 생각 보기"
+        disabled={disabled || !canGoNext}
+        className={styles.smallIconButton}
+      >
+        <ChevronRight size={18} strokeWidth={2.5} />
       </Button>
 
       {showCustomButton && (

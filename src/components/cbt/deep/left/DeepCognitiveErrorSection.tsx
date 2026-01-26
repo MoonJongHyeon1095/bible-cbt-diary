@@ -8,7 +8,7 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
-import { RefreshCw } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useDeepCognitiveErrorRanking } from "../hooks/useDeepCognitiveErrorRanking";
 
 interface DeepCognitiveErrorSectionProps {
@@ -35,6 +35,9 @@ export function DeepCognitiveErrorSection({
     error,
     rankLoading,
     handleNext,
+    handlePrev,
+    canPrev,
+    canNext,
     reload,
   } = useDeepCognitiveErrorRanking({
     userInput,
@@ -97,16 +100,28 @@ export function DeepCognitiveErrorSection({
             onClick={handleSelect}
             ariaLabel="이 오류로 진행"
           />
-          <Button
-            type="button"
-            variant="unstyled"
-            onClick={handleNext}
-            aria-label="다른 오류 보기"
-            disabled={rankLoading}
-            className={styles.smallIconButton}
-          >
-            <RefreshCw size={18} strokeWidth={2.5} />
-          </Button>
+          <div className={styles.controlRow}>
+            <Button
+              type="button"
+              variant="unstyled"
+              onClick={handlePrev}
+              aria-label="이전 오류 보기"
+              disabled={rankLoading || !canPrev}
+              className={styles.smallIconButton}
+            >
+              <ChevronLeft size={18} strokeWidth={2.5} />
+            </Button>
+            <Button
+              type="button"
+              variant="unstyled"
+              onClick={handleNext}
+              aria-label="다음 오류 보기"
+              disabled={rankLoading || !canNext}
+              className={styles.smallIconButton}
+            >
+              <ChevronRight size={18} strokeWidth={2.5} />
+            </Button>
+          </div>
         </div>
       </div>
     </div>

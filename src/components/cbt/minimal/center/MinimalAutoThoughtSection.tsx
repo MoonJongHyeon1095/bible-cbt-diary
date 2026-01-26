@@ -48,6 +48,9 @@ export function MinimalAutoThoughtSection({
     error,
     shouldShowCustom,
     goNextThought,
+    goPrevThought,
+    canGoPrev,
+    canGoNext,
     reloadThoughts,
   } = useAutoThoughtSuggestions({
     userInput,
@@ -129,6 +132,9 @@ export function MinimalAutoThoughtSection({
             disabled={loading}
             showCustomButton={shouldShowCustom}
             onNextThought={goNextThought}
+            onPrevThought={goPrevThought}
+            canGoPrev={canGoPrev}
+            canGoNext={canGoNext}
             onEnableCustom={() => onWantsCustomChange(true)}
           />
         )}

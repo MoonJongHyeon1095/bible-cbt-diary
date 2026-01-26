@@ -179,7 +179,8 @@ function toThoughtParts(item: { belief: string[]; emotion_reason: string }) {
 
 export async function generateExtendedAutomaticThoughts(
   situation: string,
-  emotion: string
+  emotion: string,
+  options?: { noteProposal?: boolean },
 ): Promise<ExtendedThoughtsResult> {
 const prompt = `[Situation]
 ${situation}
@@ -192,6 +193,7 @@ ${emotion}
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      noteProposal: options?.noteProposal,
     });
     const jsonText = extractJsonObject(raw);
     if (!jsonText) throw new Error("No JSON object in LLM output");

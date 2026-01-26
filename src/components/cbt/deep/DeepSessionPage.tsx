@@ -23,6 +23,7 @@ import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/types";
+import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DeepAutoThoughtSection } from "./center/DeepAutoThoughtSection";
@@ -78,9 +79,10 @@ function DeepSessionPageContent() {
   const [autoThought, setAutoThought] = useState("");
   const [internalContext, setInternalContext] =
     useState<DeepInternalContext | null>(null);
-  const [internalContextError, setInternalContextError] =
-    useState<string | null>(null);
-  const [internalContextLoading, setInternalContextLoading] = useState(false);
+  const [internalContextError, setInternalContextError] = useState<
+    string | null
+  >(null);
+  const internalContextInFlightRef = useRef(false);
   const [selectedCognitiveErrors, setSelectedCognitiveErrors] = useState<
     SelectedCognitiveError[]
   >([]);
@@ -96,6 +98,17 @@ function DeepSessionPageContent() {
     "alternative",
   ];
   const currentStepIndex = stepOrder.indexOf(step);
+
+  useEffect(() => {
+    const handlePageHide = () => {
+      void flushTokenSessionUsage();
+    };
+    window.addEventListener("pagehide", handlePageHide);
+    return () => {
+      window.removeEventListener("pagehide", handlePageHide);
+      void flushTokenSessionUsage();
+    };
+  }, []);
 
   const previousAlternatives = useMemo(() => {
     const notes = mainNote ? [mainNote, ...subNotes] : subNotes;
@@ -208,7 +221,7 @@ function DeepSessionPageContent() {
   ]);
 
   useEffect(() => {
-    if (!mainNote || notesLoading || internalContextLoading) return;
+    if (!mainNote || notesLoading || internalContextInFlightRef.current) return;
     const key = `${mainNote.id}:${subNotes.map((note) => note.id).join(",")}`;
     if (internalContextKeyRef.current === key && internalContext) return;
     internalContextKeyRef.current = key;
@@ -216,7 +229,7 @@ function DeepSessionPageContent() {
     const subContexts = subNotes.map(buildDeepNoteContext);
     let canceled = false;
 
-    setInternalContextLoading(true);
+    internalContextInFlightRef.current = true;
     setInternalContextError(null);
 
     createDeepInternalContext(mainContext, subContexts)
@@ -232,19 +245,13 @@ function DeepSessionPageContent() {
       })
       .finally(() => {
         if (canceled) return;
-        setInternalContextLoading(false);
+        internalContextInFlightRef.current = false;
       });
 
     return () => {
       canceled = true;
     };
-  }, [
-    mainNote,
-    notesLoading,
-    subNotes,
-    internalContext,
-    internalContextLoading,
-  ]);
+  }, [mainNote, notesLoading, subNotes, internalContext]);
 
   useEffect(() => {
     if (!internalContextError) return;
@@ -309,6 +316,7 @@ function DeepSessionPageContent() {
 
       pushToast("세션 기록이 저장되었습니다.", "success");
       window.setTimeout(() => {
+        void flushTokenSessionUsage({ sessionCount: 1 });
         clearCbtSessionStorage();
         router.push(`/detail/${noteId}`);
       }, 180);

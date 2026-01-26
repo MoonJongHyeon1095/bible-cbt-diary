@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
 import { analyzeCognitiveErrorDetails } from "@/lib/ai";
 import Textarea from "@/components/ui/Textarea";
-import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
 import type { EmotionNoteDetail } from "@/lib/types/types";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { AiActionBar } from "./common/AiActionBar";
@@ -87,7 +86,6 @@ export function PatternErrorAddSection({
   };
 
   const handleClose = async () => {
-    await clearTokenSessionStorage();
     onClose?.();
   };
 
@@ -104,7 +102,8 @@ export function PatternErrorAddSection({
       const result = await analyzeCognitiveErrorDetails(
         triggerText,
         selected.automatic_thought,
-        [meta.index]
+        [meta.index],
+        { noteProposal: true }
       );
       const analysis = result.errors[0]?.analysis;
       if (!analysis) {

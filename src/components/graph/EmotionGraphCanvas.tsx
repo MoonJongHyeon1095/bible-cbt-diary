@@ -11,6 +11,8 @@ import "reactflow/dist/style.css";
 import styles from "./EmotionGraphSection.module.css";
 import EmotionNoteNode from "./nodes/EmotionNoteNode";
 
+const NODE_TYPES = { emotion: EmotionNoteNode };
+
 type EmotionGraphCanvasProps = {
   children?: ReactNode;
   graphKey: string;
@@ -84,7 +86,7 @@ export default function EmotionGraphCanvas({
         maxZoom={1.6}
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         proOptions={{ hideAttribution: true }}
-        nodeTypes={{ emotion: EmotionNoteNode }}
+        nodeTypes={NODE_TYPES}
       >
         <Background gap={24} size={1} color="rgba(154,160,166,0.25)" />
       </ReactFlow>

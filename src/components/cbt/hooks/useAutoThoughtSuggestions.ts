@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { generateExtendedAutomaticThoughts } from "@/lib/ai";
 import {
   getAutoThoughtCache,
@@ -23,6 +23,7 @@ export function useAutoThoughtSuggestions({
   const [hasShownCustomPrompt, setHasShownCustomPrompt] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const inFlightKeyRef = useRef<string | null>(null);
 
   const cacheKey = useMemo(
     () => `${emotion}::${userInput.trim()}`,
@@ -31,6 +32,8 @@ export function useAutoThoughtSuggestions({
 
   const loadThoughts = async () => {
     if (!userInput.trim() || !emotion) return;
+    if (inFlightKeyRef.current === cacheKey) return;
+    inFlightKeyRef.current = cacheKey;
     setLoading(true);
     setError(null);
     onResetSelection();
@@ -54,6 +57,9 @@ export function useAutoThoughtSuggestions({
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
+      if (inFlightKeyRef.current === cacheKey) {
+        inFlightKeyRef.current = null;
+      }
       setLoading(false);
     }
   };
@@ -94,13 +100,19 @@ export function useAutoThoughtSuggestions({
     setAutoThoughtCache(cacheKey, entry);
   }, [cacheKey, currentIndex, hasShownCustomPrompt, thoughts]);
 
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < thoughts.length - 1;
+
+  const goPrevThought = () => {
+    if (!canGoPrev) return;
+    setCurrentIndex((prev) => prev - 1);
+    onResetSelection();
+  };
+
   const goNextThought = () => {
-    if (currentIndex < thoughts.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-      onResetSelection();
-      return;
-    }
-    void loadThoughts();
+    if (!canGoNext) return;
+    setCurrentIndex((prev) => prev + 1);
+    onResetSelection();
   };
 
   return {
@@ -109,6 +121,9 @@ export function useAutoThoughtSuggestions({
     error,
     shouldShowCustom: hasShownCustomPrompt,
     goNextThought,
+    goPrevThought,
+    canGoPrev,
+    canGoNext,
     reloadThoughts: loadThoughts,
   };
 }

@@ -153,6 +153,8 @@ create table public.token_usages (
   updated_at timestamp with time zone not null default now(),
   input_tokens bigint not null default 0,
   output_tokens bigint not null default 0,
+  session_count bigint not null default 0,
+  note_proposal_count bigint not null default 0,
   constraint token_usages_pkey primary key (id),
   constraint token_usages_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
   constraint token_usages_owner_check check (

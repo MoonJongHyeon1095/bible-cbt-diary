@@ -20,9 +20,9 @@ import {
   rankDeepCognitiveErrors as gptRankDeepCognitiveErrors,
   type ErrorIndex,
 } from "./gpt";
-import type { DeepAutoThoughtResult } from "./gpt/deepThought";
 import type { DeepInternalContext } from "./gpt/deepContext";
 import { generateDeepInternalContext } from "./gpt/deepContext";
+import type { DeepAutoThoughtResult } from "./gpt/deepThought";
 
 export type ExtendedAutomaticThought = {
   category: string;
@@ -121,8 +121,9 @@ export async function createDeepInternalContext(
 export async function generateExtendedAutomaticThoughts(
   situation: string,
   emotion: string,
+  options?: { noteProposal?: boolean },
 ): Promise<ExtendedAutomaticThoughtsResult> {
-  return gptGenerateExtendedAutomaticThoughts(situation, emotion);
+  return gptGenerateExtendedAutomaticThoughts(situation, emotion, options);
 }
 
 // 2.a) 인지오류 랭킹(10개 유력순)
@@ -138,8 +139,14 @@ export async function analyzeCognitiveErrorDetails(
   situation: string,
   thought: string,
   candidates: ErrorIndex[],
+  options?: { noteProposal?: boolean },
 ): Promise<CognitiveErrorDetailResult> {
-  return gptAnalyzeCognitiveErrorDetails(situation, thought, candidates);
+  return gptAnalyzeCognitiveErrorDetails(
+    situation,
+    thought,
+    candidates,
+    options,
+  );
 }
 
 // 3) 대안사고
@@ -148,12 +155,14 @@ export async function generateContextualAlternativeThoughts(
   emotion: string,
   thought: string,
   cognitiveErrors: Array<string | { title: string; detail?: string }>,
+  options?: { noteProposal?: boolean },
 ): Promise<AlternativeThoughtItem[]> {
   return gptGenerateContextualAlternativeThoughts(
     situation,
     emotion,
     thought,
     cognitiveErrors,
+    options,
   );
 }
 
@@ -261,6 +270,7 @@ export async function generateBehaviorSuggestions(
     description: string;
     usage_description: string;
   }>,
+  options?: { noteProposal?: boolean },
 ): Promise<BehaviorSuggestionItem[]> {
   return gptGenerateBehaviorSuggestions(
     situation,
@@ -268,5 +278,6 @@ export async function generateBehaviorSuggestions(
     selectedAlternativeThought,
     cognitiveErrors,
     behaviors,
+    options,
   );
 }

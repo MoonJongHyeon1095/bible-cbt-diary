@@ -8,7 +8,7 @@ export type DeepAutoThoughtResult = {
   sdt: Record<
     SDTKey,
     {
-      belief: [string, string]; // EXACTLY 2 Korean sentences
+      belief: [string, string, string]; // EXACTLY 3 Korean sentences
       emotion_reason: string; // EXACTLY 1 Korean sentence
     }
   >;
@@ -39,9 +39,13 @@ The input includes:
 - [Sub Notes] (supporting contexts, latest-first, max 2)
 - [Internal Context - English] (pattern summary to help integration)
 
-Your job:
-From the SDT lenses (relatedness / competence / autonomy), generate 3 automatic-thought items.
-In this module, the SDT-lens belief itself is the automatic thought.
+our goals:
+- Based on the situation the user experienced and the emotion they selected, your job is to articulate the hidden "underlying thought (automatic thought)" in clear sentences.
+- Focus only on revealing the "core claim" that makes the user feel the selected emotion right now.
+
+Important rules:
+- Must be written in Korean, as a natural first-person automatic thought. (e.g., "나는 …다", "분명 …일 것이다")
+- Consider the SDT perspectives (autonomy / relatedness / competence), generate 3 items.
 
 Writing style (same spirit as the minimal session):
 - Write in natural Korean, first-person automatic-thought voice.
@@ -51,15 +55,18 @@ Writing style (same spirit as the minimal session):
 - Let the selected emotion shape the wording.
 
 Per-item requirements:
-1) belief (EXACT format)
-- Must be an array of EXACTLY 2 Korean sentences.
-- Sentence 1: the core claim / belief / rule (card-ready), one-step generalized from notes.
-- Sentence 2: feared consequence / meaning that follows from sentence 1.
-- Do not copy note sentences; infer and rephrase.
+1) belief 
+- Must be an array of EXACTLY 3 Korean sentences.
+- Sentence 1~2: the hidden core claim / belief / viewpoint  (card-ready).
+- Sentence 3: the feared consequence / meaning / rule that follows from it.
+- Not a surface-level thought: make the negative belief/meaning/interpretation/feared outcome explicit.
+- Avoid vague life-philosophy statements. Keep it tightly connected to the current situation and relationship context.
+- Do NOT copy or restate the situation text; write a one-step-generalized belief/rule inferred from it.
+- Reflect the emotion label in the wording.
 
 2) emotion_reason
-- EXACTLY 1 Korean sentence.
-- Explain why this belief makes the current emotion strong right now.
+- one sentence explaining why the above belief creates the current emotion, referencing the selected emotion. 
+- Write only as supporting explanation to understand the belief.
 
 Output requirements:
 - Output JSON only (no extra text).
@@ -70,13 +77,13 @@ Output schema (exactly):
 {
   "sdt": {
     "relatedness": [
-      { "belief": ["...", "..."], "emotion_reason": "..." }
+      { "belief": ["...", "...", "..."], "emotion_reason": "..." }
     ],
     "competence": [
-      { "belief": ["...", "..."], "emotion_reason": "..." }
+      { "belief": ["...", "...",  "..."], "emotion_reason": "..." }
     ],
     "autonomy": [
-      { "belief": ["...", "..."], "emotion_reason": "..." }
+      { "belief": ["...", "...", "..."], "emotion_reason": "..." }
     ]
   }
 }
@@ -94,24 +101,30 @@ function normalizeStringArray(v: unknown): string[] {
   return v.map(cleanText).filter(Boolean);
 }
 
-function toTwoSentencesArray(v: unknown): [string, string] | null {
+function toThreeSentencesArray(v: unknown): [string, string, string] | null {
   const arr = normalizeStringArray(v);
-  if (arr.length >= 2) return [arr[0], arr[1]];
-  if (arr.length === 1) return [arr[0], "그래서 지금 감정이 더 크게 느껴진다."];
+  if (arr.length >= 3) return [arr[0], arr[1], arr[2]];
+  if (arr.length === 2)
+    return [arr[0], arr[1], "그래서 결국 더 불안해질 것 같다고 느낀다."];
+  if (arr.length === 1)
+    return [
+      arr[0],
+      "그래서 상황이 더 나빠질 것 같다고 생각한다.",
+      "그래서 결국 더 불안해질 것 같다고 느낀다.",
+    ];
   return null;
 }
 
 function normalizeThoughtItem(
   v: unknown,
-): { belief: [string, string]; emotion_reason: string } | null {
+): { belief: [string, string, string]; emotion_reason: string } | null {
   if (!v || typeof v !== "object") return null;
   const obj = v as LlmThoughtItem;
 
-  const belief = toTwoSentencesArray(obj.belief);
+  const belief = toThreeSentencesArray(obj.belief);
   const emotion_reason = normalizeTextValue(obj.emotion_reason);
 
   if (!belief || !emotion_reason) return null;
-
   return { belief, emotion_reason };
 }
 
@@ -132,14 +145,14 @@ function formatNote(note: DeepNoteContext) {
 - alternatives: ${alternatives}`.trim();
 }
 
-
 const FALLBACK: Record<
   SDTKey,
-  { belief: [string, string]; emotion_reason: string }
+  { belief: [string, string, string]; emotion_reason: string }
 > = {
   relatedness: {
     belief: [
       "나는 내 마음을 드러내면 상대가 나를 부담스러워할 거라고 느낀다.",
+      "그래서 상대가 나를 멀리할 거라고 믿는다.",
       "그러면 결국 나는 이해받지 못하고 더 멀어질 것 같아 두렵다.",
     ],
     emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
@@ -147,6 +160,7 @@ const FALLBACK: Record<
   competence: {
     belief: [
       "나는 기대를 충족하지 못하면 곧바로 무가치해질 것 같다고 믿는다.",
+      "내 가치는 내가 성취하는 것으로만 결정된다고 생각한다.",
       "그래서 작은 흔들림도 실패로 이어질 것 같아 불안해진다.",
     ],
     emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
@@ -154,6 +168,7 @@ const FALLBACK: Record<
   autonomy: {
     belief: [
       "나는 상황이 내 의지와 상관없이 흘러가고 있다고 느낀다.",
+      "그래서 내가 선택할 여지가 거의 없다고 생각한다.",
       "그래서 결국 나는 끌려다니며 더 나빠질 것 같아 답답하다.",
     ],
     emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",

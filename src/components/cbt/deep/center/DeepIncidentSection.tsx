@@ -14,7 +14,6 @@ interface DeepIncidentSectionProps {
   onInputChange: (value: string) => void;
   onNext: () => void;
   mainNote: EmotionNote;
-  subNotes: EmotionNote[];
 }
 
 export function DeepIncidentSection({
@@ -22,7 +21,6 @@ export function DeepIncidentSection({
   onInputChange,
   onNext,
   mainNote,
-  subNotes,
 }: DeepIncidentSectionProps) {
   const { pushToast } = useCbtToast();
   const title = (
@@ -52,20 +50,6 @@ export function DeepIncidentSection({
     onNext();
   };
 
-  const normalizeTrigger = (value: string) =>
-    value.trim().toLowerCase().replace(/\s+/g, " ");
-  const mainTriggerKey = normalizeTrigger(mainNote.trigger_text ?? "");
-  const seenTriggers = new Set<string>(mainTriggerKey ? [mainTriggerKey] : []);
-  const sortedSubs = [...subNotes]
-    .sort((a, b) => b.id - a.id)
-    .filter((note) => {
-      const key = normalizeTrigger(note.trigger_text ?? "");
-      if (!key || seenTriggers.has(key)) {
-        return false;
-      }
-      seenTriggers.add(key);
-      return true;
-    });
   const buildNoteLines = (note: EmotionNote) => {
     const thought = note.thought_details?.[0]?.automatic_thought;
     const errorDetail = note.error_details?.[0];
@@ -75,34 +59,29 @@ export function DeepIncidentSection({
       (value): value is string => Boolean(value?.trim()),
     );
   };
+  const noteLines = buildNoteLines(mainNote);
   const description = (
     <div className={deepStyles.triggerList}>
       <div
         className={`${deepStyles.triggerItem} ${deepStyles.triggerItemMain}`}
       >
-        {buildNoteLines(mainNote).map((line, index) => (
-          <p key={`${mainNote.id}-main-${index}`} className={deepStyles.triggerText}>
-            {line}
-          </p>
-        ))}
+        {noteLines.map((line, index) => {
+          const opacity = Math.max(0.45, 1 - index * 0.2);
+          const fontScale = Math.max(0.8, 1 - index * 0.1);
+          return (
+            <p
+              key={`${mainNote.id}-main-${index}`}
+              className={deepStyles.triggerText}
+              style={{
+                opacity,
+                fontSize: `${fontScale}em`,
+              }}
+            >
+              {line}
+            </p>
+          );
+        })}
       </div>
-      {sortedSubs.map((note, index) => {
-        const opacity = Math.max(0.28, 0.7 - index * 0.14);
-        const scale = Math.max(0.85, 1 - index * 0.06);
-        return (
-          <div
-            key={note.id}
-            className={deepStyles.triggerItem}
-            style={{ opacity, transform: `scale(${scale})` }}
-          >
-            {buildNoteLines(note).map((line, lineIndex) => (
-              <p key={`${note.id}-${lineIndex}`} className={deepStyles.triggerText}>
-                {line}
-              </p>
-            ))}
-          </div>
-        );
-      })}
     </div>
   );
 

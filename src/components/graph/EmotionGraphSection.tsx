@@ -4,7 +4,7 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import Button from "@/components/ui/Button";
 import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import EmotionGraphCanvas from "./EmotionGraphCanvas";
 import EmotionGraphDeepSelectModal from "./EmotionGraphDeepSelectModal";
 import EmotionGraphDetailStack from "./EmotionGraphDetailStack";
@@ -43,6 +43,7 @@ export default function EmotionGraphSection({
     selectedNote,
     sortedSelectableNotes,
     clearSelection,
+    selectNode,
     toggleSelection,
   } = useGraphSelection(notes);
   const {
@@ -80,6 +81,14 @@ export default function EmotionGraphSection({
   const handleNodeClick = (nodeId: string) => {
     toggleSelection(nodeId);
   };
+
+  useEffect(() => {
+    if (!noteId) return;
+    const nodeId = String(noteId);
+    if (notes.some((note) => String(note.id) === nodeId)) {
+      selectNode(nodeId);
+    }
+  }, [noteId, notes, selectNode]);
 
   return (
     <section className={styles.section}>

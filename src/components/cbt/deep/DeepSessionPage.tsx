@@ -318,7 +318,11 @@ function DeepSessionPageContent() {
       window.setTimeout(() => {
         void flushTokenSessionUsage({ sessionCount: 1 });
         clearCbtSessionStorage();
-        router.push(`/detail/${noteId}`);
+        if (groupId) {
+          router.push(`/graph?groupId=${groupId}&noteId=${noteId}`);
+        } else {
+          router.push(`/detail/${noteId}`);
+        }
       }, 180);
     } catch (error) {
       console.error("deep 세션 저장 실패:", error);
@@ -367,7 +371,6 @@ function DeepSessionPageContent() {
             onInputChange={setUserInput}
             onNext={() => setStep("emotion")}
             mainNote={mainNote}
-            subNotes={subNotes}
           />
         )}
 

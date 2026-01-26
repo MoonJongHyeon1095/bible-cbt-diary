@@ -7,6 +7,7 @@ import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
 import AuthModal from "./AuthModal";
+import DisclaimerBanner from "./DisclaimerBanner";
 import CompactNav from "./navigation/CompactNav";
 
 type SessionUser = {
@@ -17,6 +18,7 @@ type SessionUser = {
 export default function AppHeader() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -48,40 +50,49 @@ export default function AppHeader() {
   };
 
   return (
-    <header className={styles.header}>
-      <div className={styles.logoSlot}>
-        <CompactNav />
-      </div>
-      <div className={styles.tabsSlot}>
-        <AppTabs />
-      </div>
-      <div className={styles.actions}>
-        {user ? (
-          <div className={styles.userBox}>
-            <span className={styles.userEmail}>{user.email}</span>
+    <>
+      <header className={styles.header}>
+        <div className={styles.logoSlot}>
+          <CompactNav userEmail={user?.email ?? null} />
+        </div>
+        <div className={styles.tabsSlot}>
+          <AppTabs />
+        </div>
+        <div className={styles.actions}>
+          {user ? (
+            <div className={styles.userBox}>
+              <Button
+                type="button"
+                variant="unstyled"
+                className={styles.iconButton}
+                onClick={handleSignOut}
+                aria-label="로그아웃"
+                title="로그아웃"
+              >
+                <LogOut size={18} />
+              </Button>
+            </div>
+          ) : (
             <Button
               type="button"
               variant="unstyled"
-              className={styles.iconButton}
-              onClick={handleSignOut}
-              aria-label="로그아웃"
-              title="로그아웃"
+              className={styles.loginButton}
+              onClick={() => setIsModalOpen(true)}
             >
-              <LogOut size={18} />
+              <LogIn size={18} />
+              로그인
             </Button>
-          </div>
-        ) : (
-          <Button
-            type="button"
-            variant="unstyled"
-            className={styles.loginButton}
-            onClick={() => setIsModalOpen(true)}
-          >
-            <LogIn size={18} />
-            로그인
-          </Button>
-        )}
+          )}
+        </div>
+      </header>
+      <div className={styles.disclaimerWrap}>
+        <DisclaimerBanner
+          detailsClassName={styles.disclaimerDetails}
+          titleClassName={styles.disclaimerTitle}
+          textClassName={styles.disclaimerText}
+        />
       </div>
+
       <AuthModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -89,6 +100,6 @@ export default function AppHeader() {
           setUser(nextUser);
         }}
       />
-    </header>
+    </>
   );
 }

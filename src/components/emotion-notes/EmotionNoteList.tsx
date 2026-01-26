@@ -20,8 +20,12 @@ export default function EmotionNoteList({
 
   return (
     <div className={styles.noteList}>
-      {notes.map((note) => (
-        <EmotionNoteCard key={note.id} note={note} />
+      {notes.map((note, index) => (
+        <EmotionNoteCard
+          key={note.id}
+          note={note}
+          isTourTarget={index === 0}
+        />
       ))}
     </div>
   );

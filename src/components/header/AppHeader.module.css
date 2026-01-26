@@ -60,6 +60,36 @@
   z-index: 40;
 }
 
+.disclaimerWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 24px 20px;
+}
+
+.disclaimerDetails {
+  width: min(720px, 100%);
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  padding: 14px 16px;
+  box-shadow: var(--shadow);
+}
+
+.disclaimerTitle {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f6e6c6;
+}
+
+.disclaimerText {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
 .loginButton {
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -114,5 +144,9 @@
 
   .actions {
     justify-content: flex-end;
+  }
+
+  .disclaimerWrap {
+    padding: 20px 16px 20px;
   }
 }

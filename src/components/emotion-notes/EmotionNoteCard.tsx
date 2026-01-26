@@ -11,9 +11,13 @@ import styles from "./EmotionNotesSection.module.css";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
+  isTourTarget?: boolean;
 };
 
-export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
+export default function EmotionNoteCard({
+  note,
+  isTourTarget = false,
+}: EmotionNoteCardProps) {
   const router = useRouter();
   const longPressTimeoutRef = useRef<number | null>(null);
   const longPressTriggeredRef = useRef(false);
@@ -112,6 +116,7 @@ export default function EmotionNoteCard({ note }: EmotionNoteCardProps) {
     <Link
       href={`/detail/${note.id}`}
       className={styles.noteCard}
+      data-tour={isTourTarget ? "note-card" : undefined}
       onPointerDown={handlePointerDown}
       onPointerUp={clearLongPress}
       onPointerLeave={clearLongPress}

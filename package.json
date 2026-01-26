@@ -9,12 +9,13 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@reactour/tour": "^3.8.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.91.1",
     "d3-force": "^3.0.0",
+    "elkjs": "^0.9.3",
     "lucide-react": "^0.563.0",
     "next": "15.5.9",
-    "elkjs": "^0.9.3",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "reactflow": "^11.11.4",

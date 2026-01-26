@@ -15,7 +15,11 @@ const navItems = [
   },
 ];
 
-export default function CompactNav() {
+type CompactNavProps = {
+  userEmail: string | null;
+};
+
+export default function CompactNav({ userEmail }: CompactNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
@@ -31,8 +35,13 @@ export default function CompactNav() {
         <Menu size={20} />
       </button>
 
-      <Drawer open={open} onClose={() => setOpen(false)} side="left" width={340}>
+      <Drawer open={open} onClose={() => setOpen(false)} side="left" width={300}>
         <div className={styles.drawerHeader}>
+          {userEmail ? (
+            <span className={styles.userEmail}>{userEmail}</span>
+          ) : (
+            <span />
+          )}
           <button
             type="button"
             className={styles.closeButton}

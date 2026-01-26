@@ -21,7 +21,7 @@ export default function EmotionNoteListSection({
   headerRef,
 }: EmotionNoteListSectionProps) {
   return (
-    <div>
+    <div data-tour="notes-list">
       {title ? (
         <div ref={headerRef} className={styles.notesHeader}>
           <h3 className={styles.notesTitle}>

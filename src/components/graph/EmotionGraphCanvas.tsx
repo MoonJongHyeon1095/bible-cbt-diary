@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useEffect, useRef } from "react";
 import ReactFlow, {
   Background,
   type Edge,
@@ -22,6 +23,7 @@ type EmotionGraphCanvasProps = {
   needsNote: boolean;
   emptyState: boolean;
   isDeepSelecting: boolean;
+  selectedNodeId: string | null;
   onClearSelection: () => void;
   onSelectNode: (nodeId: string) => void;
 };
@@ -35,13 +37,30 @@ export default function EmotionGraphCanvas({
   needsNote,
   emptyState,
   isDeepSelecting,
+  selectedNodeId,
   onClearSelection,
   onSelectNode,
 }: EmotionGraphCanvasProps) {
+  const instanceRef = useRef<ReactFlowInstance | null>(null);
   const handleInit = (instance: ReactFlowInstance) => {
+    instanceRef.current = instance;
     instance.setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
   };
 
+  useEffect(() => {
+    if (!selectedNodeId) return;
+    const instance = instanceRef.current;
+    if (!instance) return;
+    const node = displayNodes.find((item) => item.id === selectedNodeId);
+    if (!node) return;
+    const rawWidth = typeof node.style?.width === "number" ? node.style.width : Number(node.style?.width);
+    const rawHeight = typeof node.style?.height === "number" ? node.style.height : Number(node.style?.height);
+    const width = Number.isFinite(rawWidth) ? rawWidth : 0;
+    const height = Number.isFinite(rawHeight) ? rawHeight : 0;
+    const centerX = node.position.x + width / 2;
+    const centerY = node.position.y + height / 2;
+    instance.setCenter(centerX, centerY, { zoom: 1, duration: 600 });
+  }, [displayNodes, selectedNodeId]);
 
   if (isLoading) {
     return (

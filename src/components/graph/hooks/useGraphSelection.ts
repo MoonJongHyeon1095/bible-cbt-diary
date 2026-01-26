@@ -1,7 +1,7 @@
 "use client";
 
 import type { EmotionNote } from "@/lib/types/types";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 export const useGraphSelection = (notes: EmotionNote[]) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
@@ -32,10 +32,13 @@ export const useGraphSelection = (notes: EmotionNote[]) => {
     [selectableNotes],
   );
 
-  const clearSelection = () => setSelectedNodeId(null);
-  const selectNode = (nodeId: string) => setSelectedNodeId(nodeId);
-  const toggleSelection = (nodeId: string) =>
+  const clearSelection = useCallback(() => setSelectedNodeId(null), []);
+  const selectNode = useCallback((nodeId: string) => {
+    setSelectedNodeId(nodeId);
+  }, []);
+  const toggleSelection = useCallback((nodeId: string) => {
     setSelectedNodeId((prev) => (prev === nodeId ? null : nodeId));
+  }, []);
 
   return {
     selectedNodeId,

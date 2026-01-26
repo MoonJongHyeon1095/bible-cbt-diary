@@ -8,6 +8,7 @@ import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
 import { formatKoreanDateTime } from "@/lib/utils/time";
+import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Brain,
@@ -16,6 +17,7 @@ import {
   List,
   Pencil,
   Plus,
+  Route,
   Trash2,
   Upload,
   X,
@@ -61,6 +63,7 @@ const formatDateTime = (value: string) =>
 export default function EmotionNoteDetailPage({
   noteId,
 }: EmotionNoteDetailPageProps) {
+  const router = useRouter();
   const {
     userEmail,
     note,
@@ -114,6 +117,7 @@ export default function EmotionNoteDetailPage({
     (note?.trigger_text ?? "") !== triggerText.trim();
   const hasDraft = title.trim().length > 0 || triggerText.trim().length > 0;
   const shouldShowSave = noteId ? hasTitleChange : hasDraft;
+  const canOpenGraph = Boolean(note?.group_id && note?.id);
   const selectedFabStyle =
     selectedSection === "thought"
       ? { backgroundColor: "#ffd300", color: "#2b2400", borderColor: "#d7b800" }
@@ -516,6 +520,17 @@ export default function EmotionNoteDetailPage({
           disabled={isSaving}
           loading={isSaving}
           loadingBehavior="replace"
+        />
+      ) : null}
+      {canOpenGraph && !selectedItem ? (
+        <FloatingActionButton
+          label="그래프 조회"
+          icon={<Route size={22} />}
+          helperText="그래프에서 보기"
+          onClick={() =>
+            router.push(`/graph?groupId=${note?.group_id}&noteId=${note?.id}`)
+          }
+          style={{ bottom: shouldShowSave ? "10vh" : "17vh" }}
         />
       ) : null}
       {selectedSection && !selectedItem ? (

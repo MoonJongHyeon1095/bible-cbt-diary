@@ -117,6 +117,7 @@ export default function EmotionGraphSection({
         needsNote={needsNote}
         emptyState={emptyState}
         isDeepSelecting={isDeepSelecting}
+        selectedNodeId={selectedNodeId}
         onClearSelection={clearSelection}
         onSelectNode={handleNodeClick}
       >

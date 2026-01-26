@@ -68,7 +68,7 @@ export function DeepCognitiveErrorSection({
     return (
       <MinimalLoadingState
         title={HEADER_TEXT}
-        message="인지오류를 분석하고 있어요."
+        message="생각을 살펴보고 있어요."
         variant="page"
       />
     );

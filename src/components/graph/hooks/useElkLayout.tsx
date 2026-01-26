@@ -172,8 +172,9 @@ export const useElkLayout = (
             const borderRgb = mixColor(BORDER_BASE, activeTheme, inverted);
             const fill = toRgba(fillRgb, 0.45);
             const border = toRgba(borderRgb, 0.75);
-            const labelText =
-              note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
+            const titleText = note.title?.trim() || "감정 노트";
+            const triggerText = note.trigger_text?.trim() || "트리거가 없습니다.";
+            const labelText = note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
             const label = (
               <div className={styles.nodeLabel}>
                 <span className={styles.nodeTitle}>{labelText}</span>
@@ -189,7 +190,7 @@ export const useElkLayout = (
                 x: child.x - offsetX + padding,
                 y: child.y - offsetY + padding + spreadY + timeOffset,
               },
-              data: { note, label, size, chips: [] },
+              data: { note, label, size, chips: [], titleText, triggerText },
               className: styles.node,
               style: {
                 width: size,

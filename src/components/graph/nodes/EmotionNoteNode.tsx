@@ -21,10 +21,13 @@ export type EmotionNoteNodeData = {
   label: ReactNode;
   size: number;
   chips: EmotionNoteChip[];
+  titleText: string;
+  triggerText: string;
 };
 
 export default function EmotionNoteNode({
   data,
+  selected,
 }: NodeProps<EmotionNoteNodeData>) {
   return (
     <div className={styles.nodeContent}>
@@ -41,6 +44,12 @@ export default function EmotionNoteNode({
         className={styles.graphHandle}
       />
       {data.label}
+      {selected ? (
+        <div className={styles.nodeTooltip} role="status" aria-live="polite">
+          <div className={styles.nodeTooltipTitle}>{data.titleText}</div>
+          <div className={styles.nodeTooltipBody}>{data.triggerText}</div>
+        </div>
+      ) : null}
     </div>
   );
 }

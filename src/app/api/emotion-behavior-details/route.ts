@@ -58,6 +58,7 @@ export async function POST(request: Request) {
     behavior_label?: string;
     behavior_description?: string;
     error_tags?: string[];
+    created_at?: string;
   };
 
   const noteId = Number(payload.note_id ?? "");
@@ -82,13 +83,26 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("emotion_behavior_details").insert({
+  const insertPayload: {
+    user_id: string;
+    note_id: number;
+    behavior_label: string;
+    behavior_description: string;
+    error_tags: string[];
+    created_at?: string;
+  } = {
     user_id: user.id,
     note_id: noteId,
     behavior_label: behaviorLabel,
     behavior_description: behaviorDescription,
     error_tags: errorTags,
-  });
+  };
+  if (payload.created_at) {
+    insertPayload.created_at = payload.created_at;
+  }
+  const { error } = await supabase
+    .from("emotion_behavior_details")
+    .insert(insertPayload);
 
   if (error) {
     return NextResponse.json(

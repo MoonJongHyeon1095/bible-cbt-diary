@@ -23,6 +23,7 @@ interface PatternAlternativesAddSectionProps {
   errorDetails: EmotionNoteErrorDetail[];
   alternativeText: string;
   loading: boolean;
+  aiLocked?: boolean;
   onChangeAlternativeText: (value: string) => void;
   onAddAlternative: () => void;
   onClose?: () => void;
@@ -34,6 +35,7 @@ export function PatternAlternativesAddSection({
   errorDetails,
   alternativeText,
   loading,
+  aiLocked,
   onChangeAlternativeText,
   onAddAlternative,
   onClose,
@@ -225,6 +227,7 @@ export function PatternAlternativesAddSection({
         }
         onAiClick={() => void handleAiAction()}
         aiDisabled={loading || aiLoading}
+        aiLocked={aiLocked}
         aiClassName={styles.aiButton}
         saveLabel={loading ? "저장 중" : "저장"}
         onSave={onAddAlternative}

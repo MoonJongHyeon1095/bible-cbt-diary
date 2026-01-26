@@ -13,3 +13,9 @@
   gap: 8px;
   flex-wrap: wrap;
 }
+
+.lockedLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}

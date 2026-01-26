@@ -1,40 +1,40 @@
 "use client";
 
 import pageStyles from "@/app/page.module.css";
+import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
-import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
 import { formatKoreanDateTime } from "@/lib/utils/time";
-import { useRouter } from "next/navigation";
 import {
   AlertCircle,
   Brain,
   Footprints,
   Lightbulb,
-  List,
   Pencil,
   Plus,
   Route,
   Trash2,
+  Undo2,
   Upload,
   X,
 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { PatternAlternativesAddSection } from "./add/PatternAlternativesAddSection";
+import { PatternBehaviorAddSection } from "./add/PatternBehaviorAddSection";
+import { PatternDetailsAddSection } from "./add/PatternDetailsAddSection";
+import { PatternEditModal } from "./add/PatternEditModal";
+import { PatternErrorAddSection } from "./add/PatternErrorAddSection";
 import AlternativeDetailSection from "./AlternativeDetailSection";
 import BehaviorDetailSection from "./BehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
 import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
 import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
 import ErrorDetailSection from "./ErrorDetailSection";
-import { PatternDetailsAddSection } from "./add/PatternDetailsAddSection";
-import { PatternErrorAddSection } from "./add/PatternErrorAddSection";
-import { PatternAlternativesAddSection } from "./add/PatternAlternativesAddSection";
-import { PatternBehaviorAddSection } from "./add/PatternBehaviorAddSection";
-import { PatternEditModal } from "./add/PatternEditModal";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
 import ThoughtDetailSection from "./ThoughtDetailSection";
 
@@ -64,8 +64,9 @@ export default function EmotionNoteDetailPage({
   noteId,
 }: EmotionNoteDetailPageProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
-    userEmail,
+    accessMode,
     note,
     isNew,
     isLoading,
@@ -118,6 +119,17 @@ export default function EmotionNoteDetailPage({
   const hasDraft = title.trim().length > 0 || triggerText.trim().length > 0;
   const shouldShowSave = noteId ? hasTitleChange : hasDraft;
   const canOpenGraph = Boolean(note?.group_id && note?.id);
+  const backTarget = useMemo(() => {
+    const from = searchParams.get("from");
+    const date = searchParams.get("date");
+    if (from === "month" && date) {
+      return `/month?date=${date}`;
+    }
+    if (from === "today") {
+      return "/today";
+    }
+    return null;
+  }, [searchParams]);
   const selectedFabStyle =
     selectedSection === "thought"
       ? { backgroundColor: "#ffd300", color: "#2b2400", borderColor: "#d7b800" }
@@ -209,6 +221,14 @@ export default function EmotionNoteDetailPage({
       // Ignore clipboard errors silently.
     }
   };
+
+  const handleGoBack = useCallback(() => {
+    if (backTarget) {
+      router.push(backTarget);
+      return;
+    }
+    router.back();
+  }, [backTarget, router]);
 
   const clearEditing = useCallback(() => {
     thoughtSection.onCancelEditing();
@@ -377,7 +397,7 @@ export default function EmotionNoteDetailPage({
     clearEditing();
   }, [clearEditing, hasEditing, selectedItem]);
 
-  if (!userEmail && !isLoading) {
+  if (accessMode === "blocked" && !isLoading) {
     return (
       <CbtToastProvider>
         <div className={pageStyles.page}>
@@ -398,373 +418,398 @@ export default function EmotionNoteDetailPage({
         <AppHeader />
         <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
           <div className={pageStyles.shell}>
-          <section className={styles.header}>
-            <div className={styles.headerActions}>
+            <section className={styles.header}>
+              <div className={styles.headerActions}>
               {noteId ? (
                 <Button
                   type="button"
-                  variant="unstyled"
-                  className={styles.iconButton}
-                  onClick={handleGoToList}
-                  aria-label="목록으로"
-                >
-                  <List size={18} />
-                  <span className={styles.srOnly}>목록으로</span>
-                </Button>
-              ) : null}
-              {noteId ? (
-                <Button
-                  type="button"
-                  variant="unstyled"
-                  className={`${styles.iconButton} ${styles.iconDanger}`}
-                  onClick={() => setConfirmDelete(true)}
-                  aria-label="삭제"
-                >
-                  <Trash2 size={18} />
-                  <span className={styles.srOnly}>삭제</span>
-                </Button>
-              ) : null}
-            </div>
-          </section>
-          {confirmDelete ? (
-            <div className={styles.confirmBar}>
-              <span>이 기록을 삭제할까요?</span>
-              <div className={styles.confirmActions}>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={async () => {
-                    const deleted = await handleDeleteNote();
-                    if (deleted) {
-                      setConfirmDelete(false);
-                    }
-                  }}
-                  loading={isDeleting}
-                  loadingText="삭제 중..."
-                  disabled={isDeleting}
-                >
-                  삭제
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setConfirmDelete(false)}
-                  disabled={isDeleting}
-                >
-                  취소
-                </Button>
+                    variant="unstyled"
+                    className={`${styles.iconButton} ${styles.iconDanger}`}
+                    onClick={() => setConfirmDelete(true)}
+                    aria-label="삭제"
+                  >
+                    <Trash2 size={18} />
+                    <span className={styles.srOnly}>삭제</span>
+                  </Button>
+                ) : null}
               </div>
-            </div>
-          ) : null}
+            </section>
+            {confirmDelete ? (
+              <div className={styles.confirmBar}>
+                <span>이 기록을 삭제할까요?</span>
+                <div className={styles.confirmActions}>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={async () => {
+                      const deleted = await handleDeleteNote();
+                      if (deleted) {
+                        setConfirmDelete(false);
+                      }
+                    }}
+                    loading={isDeleting}
+                    loadingText="삭제 중..."
+                    disabled={isDeleting}
+                  >
+                    삭제
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setConfirmDelete(false)}
+                    disabled={isDeleting}
+                  >
+                    취소
+                  </Button>
+                </div>
+              </div>
+            ) : null}
 
-          <section className={styles.noteForm}>
-            <label className={styles.field}>
-              <span className={styles.label}>제목</span>
-              <input
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="짧게 제목을 적어주세요"
-                className={styles.input}
+            <section className={styles.noteForm}>
+              <label className={styles.field}>
+                <span className={styles.label}>제목</span>
+                <input
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="짧게 제목을 적어주세요"
+                  className={styles.input}
+                />
+              </label>
+              <label className={styles.field}>
+                <span className={styles.label}>트리거 텍스트</span>
+                <textarea
+                  ref={triggerTextareaRef}
+                  value={triggerText}
+                  onChange={(event) => {
+                    setTriggerText(event.target.value);
+                    resizeTriggerTextarea();
+                  }}
+                  rows={3}
+                  placeholder="오늘 어떤 일이 있었나요?"
+                  className={`${styles.textarea} ${styles.triggerTextarea}`}
+                />
+              </label>
+              <div className={styles.noteActions}>
+                {message ? (
+                  <span className={styles.successText}>{message}</span>
+                ) : null}
+                {error ? (
+                  <span className={styles.errorText}>{error}</span>
+                ) : null}
+              </div>
+            </section>
+
+            <section className={styles.sectionView}>
+              <EmotionNoteSectionChart
+                sections={sections}
+                selectedKey={selectedSection}
+                onSelect={(key) =>
+                  setSelectedSection((prev) => {
+                    const next = prev === key ? null : key;
+                    setSelectedItem(null);
+                    return next;
+                  })
+                }
               />
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>트리거 텍스트</span>
-              <textarea
-                ref={triggerTextareaRef}
-                value={triggerText}
-                onChange={(event) => {
-                  setTriggerText(event.target.value);
-                  resizeTriggerTextarea();
-                }}
-                rows={3}
-                placeholder="오늘 어떤 일이 있었나요?"
-                className={`${styles.textarea} ${styles.triggerTextarea}`}
-              />
-            </label>
-            <div className={styles.noteActions}>
-              {message ? (
-                <span className={styles.successText}>{message}</span>
-              ) : null}
-              {error ? <span className={styles.errorText}>{error}</span> : null}
-            </div>
-          </section>
+              <EmotionNoteSectionToggleList items={toggleItems} />
+            </section>
 
-          <section className={styles.sectionView}>
-            <EmotionNoteSectionChart
-              sections={sections}
-              selectedKey={selectedSection}
-              onSelect={(key) =>
-                setSelectedSection((prev) => {
-                  const next = prev === key ? null : key;
-                  setSelectedItem(null);
-                  return next;
-                })
-              }
-            />
-            <EmotionNoteSectionToggleList items={toggleItems} />
-          </section>
-
-          {note?.created_at ? (
-            <p className={styles.footerMeta}>
-              마지막 저장: {formatDateTime(note.created_at)}
-            </p>
-          ) : null}
-        </div>
-      </main>
-      {shouldShowSave ? (
+            {note?.created_at ? (
+              <p className={styles.footerMeta}>
+                마지막 저장: {formatDateTime(note.created_at)}
+              </p>
+            ) : null}
+          </div>
+        </main>
+        {shouldShowSave ? (
+          <FloatingActionButton
+            label={isSaving ? "저장 중..." : isNew ? "기록 저장" : "수정 저장"}
+            icon={<Upload size={26} />}
+            helperText="수정사항 저장"
+            onClick={handleSaveNote}
+            disabled={isSaving}
+            loading={isSaving}
+            loadingBehavior="replace"
+          />
+        ) : null}
+      {!selectedItem ? (
         <FloatingActionButton
-          label={isSaving ? "저장 중..." : isNew ? "기록 저장" : "수정 저장"}
-          icon={<Upload size={26} />}
-          helperText="수정사항 저장"
-          onClick={handleSaveNote}
-          disabled={isSaving}
-          loading={isSaving}
-          loadingBehavior="replace"
-        />
-      ) : null}
-      {canOpenGraph && !selectedItem ? (
-        <FloatingActionButton
-          label="그래프 조회"
-          icon={<Route size={22} />}
-          helperText="그래프에서 보기"
-          onClick={() =>
-            router.push(`/graph?groupId=${note?.group_id}&noteId=${note?.id}`)
-          }
-          style={{ bottom: shouldShowSave ? "10vh" : "17vh" }}
-        />
-      ) : null}
-      {selectedSection && !selectedItem ? (
-        <FloatingActionButton
-          label="추가"
-          icon={<Plus size={26} />}
-          helperText="새 항목 추가"
-          onClick={() => setAddModalSection(selectedSection)}
+          label="뒤로"
+          icon={<Undo2 size={22} />}
+          onClick={handleGoBack}
           style={{
-            bottom: shouldShowSave ? "18vh" : "25vh",
-            ...selectedFabStyle,
+            right: "auto",
+            left: "24px",
+            top: "96px",
+            bottom: "auto",
+            backgroundColor: "rgba(255, 255, 255, 0.72)",
+            borderColor: "rgba(255, 255, 255, 0.55)",
+            color: "rgba(31, 35, 40, 0.8)",
+            width: "56px",
+            height: "56px",
+            ["--fab-helper-translate-x" as string]: "22px",
           }}
         />
       ) : null}
-      {selectedItem && !isEditingSelected ? (
-        <>
-          <FloatingActionButton
-            label="편집"
-            icon={<Pencil size={22} />}
-            helperText="선택 항목 편집"
-            onClick={() => {
-              const section = selectedItem.section;
-              if (section === "thought") {
-                const detail = thoughtSection.details.find(
-                  (item) => item.id === selectedItem.id,
-                );
-                if (detail) {
-                  thoughtSection.onStartEditing(detail);
-                }
-              } else if (section === "error") {
-                const detail = errorSection.details.find(
-                  (item) => item.id === selectedItem.id,
-                );
-                if (detail) {
-                  errorSection.onStartEditing(detail);
-                }
-              } else if (section === "alternative") {
-                const detail = alternativeSection.details.find(
-                  (item) => item.id === selectedItem.id,
-                );
-                if (detail) {
-                  alternativeSection.onStartEditing(detail);
-                }
-              } else {
-                const detail = behaviorSection.details.find(
-                  (item) => item.id === selectedItem.id,
-                );
-                if (detail) {
-                  behaviorSection.onStartEditing(detail);
-                }
-              }
-            }}
-            style={{
-              bottom: shouldShowSave ? "26vh" : "33vh",
-              backgroundColor: "#121417",
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.35)",
-            }}
-          />
-          <FloatingActionButton
-            label="삭제"
-            icon={<Trash2 size={22} />}
-            helperText="선택 항목 삭제"
-            onClick={async () => {
-              const section = selectedItem.section;
-              if (section === "thought") {
-                await thoughtSection.onDelete(selectedItem.id);
-              } else if (section === "error") {
-                await errorSection.onDelete(selectedItem.id);
-              } else if (section === "alternative") {
-                await alternativeSection.onDelete(selectedItem.id);
-              } else {
-                await behaviorSection.onDelete(selectedItem.id);
-              }
-              setSelectedItem(null);
-            }}
-            disabled={isDeletingSelected}
-            loading={isDeletingSelected}
-            loadingBehavior="replace"
-            style={{
-              bottom: shouldShowSave ? "10vh" : "17vh",
-              backgroundColor: "#e14a4a",
-              color: "#fff",
-              borderColor: "#b93333",
-            }}
-          />
-        </>
+      {!selectedItem && !selectedSection ? (
+        <FloatingActionButton
+          label="Go Deeper"
+          icon={<Route size={22} />}
+          helperText="Go Deeper"
+          onClick={() => {
+            if (!note?.id) return;
+            if (note.group_id) {
+              router.push(
+                `/graph?groupId=${note.group_id}&noteId=${note.id}`,
+              );
+              return;
+            }
+            router.push(`/session/deep?mainId=${note.id}`);
+          }}
+          style={{
+            bottom: shouldShowSave ? "18vh" : "25vh",
+            backgroundColor: "#121417",
+            color: "#fff",
+            borderColor: "rgba(255, 255, 255, 0.35)",
+          }}
+        />
       ) : null}
-      {selectedItem && isEditingSelected ? (
-        <>
+        {selectedSection && !selectedItem ? (
           <FloatingActionButton
-            label="저장"
-            icon={<Upload size={22} />}
-            helperText="수정내용 저장"
-            onClick={async () => {
-              const section = selectedItem.section;
-              if (section === "thought") {
-                await thoughtSection.onUpdate(selectedItem.id);
-              } else if (section === "error") {
-                await errorSection.onUpdate(selectedItem.id);
-              } else if (section === "alternative") {
-                await alternativeSection.onUpdate(selectedItem.id);
-              } else {
-                await behaviorSection.onUpdate(selectedItem.id);
-              }
-            }}
-            disabled={isUpdatingSelected}
-            loading={isUpdatingSelected}
-            loadingBehavior="replace"
+            label="추가"
+            icon={<Plus size={26} />}
+            helperText="새 항목 추가"
+            onClick={() => setAddModalSection(selectedSection)}
             style={{
-              bottom: shouldShowSave ? "26vh" : "33vh",
+              bottom: shouldShowSave ? "18vh" : "25vh",
               ...selectedFabStyle,
             }}
           />
-          <FloatingActionButton
-            label="취소"
-            icon={<X size={22} />}
-            helperText="편집 취소"
-            onClick={() => {
-              const section = selectedItem.section;
-              if (section === "thought") {
-                thoughtSection.onCancelEditing();
-              } else if (section === "error") {
-                errorSection.onCancelEditing();
-              } else if (section === "alternative") {
-                alternativeSection.onCancelEditing();
-              } else {
-                behaviorSection.onCancelEditing();
-              }
-            }}
-            style={{
-              bottom: shouldShowSave ? "10vh" : "17vh",
-              backgroundColor: "#121417",
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.35)",
-            }}
+        ) : null}
+        {selectedItem && !isEditingSelected ? (
+          <>
+            <FloatingActionButton
+              label="편집"
+              icon={<Pencil size={22} />}
+              helperText="선택 항목 편집"
+              onClick={() => {
+                const section = selectedItem.section;
+                if (section === "thought") {
+                  const detail = thoughtSection.details.find(
+                    (item) => item.id === selectedItem.id,
+                  );
+                  if (detail) {
+                    thoughtSection.onStartEditing(detail);
+                  }
+                } else if (section === "error") {
+                  const detail = errorSection.details.find(
+                    (item) => item.id === selectedItem.id,
+                  );
+                  if (detail) {
+                    errorSection.onStartEditing(detail);
+                  }
+                } else if (section === "alternative") {
+                  const detail = alternativeSection.details.find(
+                    (item) => item.id === selectedItem.id,
+                  );
+                  if (detail) {
+                    alternativeSection.onStartEditing(detail);
+                  }
+                } else {
+                  const detail = behaviorSection.details.find(
+                    (item) => item.id === selectedItem.id,
+                  );
+                  if (detail) {
+                    behaviorSection.onStartEditing(detail);
+                  }
+                }
+              }}
+              style={{
+                bottom: shouldShowSave ? "26vh" : "33vh",
+                backgroundColor: "#121417",
+                color: "#fff",
+                borderColor: "rgba(255, 255, 255, 0.35)",
+              }}
+            />
+            <FloatingActionButton
+              label="삭제"
+              icon={<Trash2 size={22} />}
+              helperText="선택 항목 삭제"
+              onClick={async () => {
+                const section = selectedItem.section;
+                if (section === "thought") {
+                  await thoughtSection.onDelete(selectedItem.id);
+                } else if (section === "error") {
+                  await errorSection.onDelete(selectedItem.id);
+                } else if (section === "alternative") {
+                  await alternativeSection.onDelete(selectedItem.id);
+                } else {
+                  await behaviorSection.onDelete(selectedItem.id);
+                }
+                setSelectedItem(null);
+              }}
+              disabled={isDeletingSelected}
+              loading={isDeletingSelected}
+              loadingBehavior="replace"
+              style={{
+                bottom: shouldShowSave ? "10vh" : "17vh",
+                backgroundColor: "#e14a4a",
+                color: "#fff",
+                borderColor: "#b93333",
+              }}
+            />
+          </>
+        ) : null}
+        {selectedItem && isEditingSelected ? (
+          <>
+            <FloatingActionButton
+              label="저장"
+              icon={<Upload size={22} />}
+              helperText="수정내용 저장"
+              onClick={async () => {
+                const section = selectedItem.section;
+                if (section === "thought") {
+                  await thoughtSection.onUpdate(selectedItem.id);
+                } else if (section === "error") {
+                  await errorSection.onUpdate(selectedItem.id);
+                } else if (section === "alternative") {
+                  await alternativeSection.onUpdate(selectedItem.id);
+                } else {
+                  await behaviorSection.onUpdate(selectedItem.id);
+                }
+              }}
+              disabled={isUpdatingSelected}
+              loading={isUpdatingSelected}
+              loadingBehavior="replace"
+              style={{
+                bottom: shouldShowSave ? "26vh" : "33vh",
+                ...selectedFabStyle,
+              }}
+            />
+            <FloatingActionButton
+              label="취소"
+              icon={<X size={22} />}
+              helperText="편집 취소"
+              onClick={() => {
+                const section = selectedItem.section;
+                if (section === "thought") {
+                  thoughtSection.onCancelEditing();
+                } else if (section === "error") {
+                  errorSection.onCancelEditing();
+                } else if (section === "alternative") {
+                  alternativeSection.onCancelEditing();
+                } else {
+                  behaviorSection.onCancelEditing();
+                }
+              }}
+              style={{
+                bottom: shouldShowSave ? "10vh" : "17vh",
+                backgroundColor: "#121417",
+                color: "#fff",
+                borderColor: "rgba(255, 255, 255, 0.35)",
+              }}
+            />
+          </>
+        ) : null}
+        <PatternEditModal
+          open={addModalSection === "thought"}
+          title="배후의 자동 사고 추가"
+          hideClose
+          chromeless
+          onOpenChange={(open) => {
+            if (!open) setAddModalSection(null);
+          }}
+        >
+          <PatternDetailsAddSection
+            triggerText={triggerText}
+            automaticThought={thoughtSection.detailThought}
+            emotion={thoughtSection.detailEmotion}
+            loading={isAddingThought}
+            onChangeAutomaticThought={thoughtSection.setDetailThought}
+            onSelectEmotion={thoughtSection.setDetailEmotion}
+            onAddDetail={handleAddThought}
+            onClose={() => setAddModalSection(null)}
+            aiLocked={accessMode !== "auth"}
           />
-        </>
-      ) : null}
-      <PatternEditModal
-        open={addModalSection === "thought"}
-        title="배후의 자동 사고 추가"
-        hideClose
-        chromeless
-        onOpenChange={(open) => {
-          if (!open) setAddModalSection(null);
-        }}
-      >
-        <PatternDetailsAddSection
-          triggerText={triggerText}
-          automaticThought={thoughtSection.detailThought}
-          emotion={thoughtSection.detailEmotion}
-          loading={isAddingThought}
-          onChangeAutomaticThought={thoughtSection.setDetailThought}
-          onSelectEmotion={thoughtSection.setDetailEmotion}
-          onAddDetail={handleAddThought}
-          onClose={() => setAddModalSection(null)}
+        </PatternEditModal>
+        <PatternEditModal
+          open={addModalSection === "error"}
+          title="인지오류 추가"
+          hideClose
+          chromeless
+          onOpenChange={(open) => {
+            if (!open) setAddModalSection(null);
+          }}
+        >
+          <PatternErrorAddSection
+            triggerText={triggerText}
+            details={thoughtSection.details}
+            errorLabel={errorSection.errorLabel}
+            errorDescription={errorSection.errorDescription}
+            loading={isAddingError}
+            onChangeErrorLabel={errorSection.setErrorLabel}
+            onChangeErrorDescription={errorSection.setErrorDescription}
+            onAddErrorDetail={handleAddError}
+            onClose={() => setAddModalSection(null)}
+            aiLocked={accessMode !== "auth"}
+          />
+        </PatternEditModal>
+        <PatternEditModal
+          open={addModalSection === "alternative"}
+          title="대안적 접근 추가"
+          hideClose
+          chromeless
+          onOpenChange={(open) => {
+            if (!open) setAddModalSection(null);
+          }}
+        >
+          <PatternAlternativesAddSection
+            triggerText={triggerText}
+            details={thoughtSection.details}
+            errorDetails={errorSection.details}
+            alternativeText={alternativeSection.alternativeText}
+            loading={isAddingAlternative}
+            onChangeAlternativeText={alternativeSection.setAlternativeText}
+            onAddAlternative={handleAddAlternative}
+            onClose={() => setAddModalSection(null)}
+            aiLocked={accessMode !== "auth"}
+          />
+        </PatternEditModal>
+        <PatternEditModal
+          open={addModalSection === "behavior"}
+          title="행동 반응 추가"
+          hideClose
+          chromeless
+          onOpenChange={(open) => {
+            if (!open) setAddModalSection(null);
+          }}
+        >
+          <PatternBehaviorAddSection
+            triggerText={triggerText}
+            details={thoughtSection.details}
+            errorDetails={errorSection.details}
+            alternatives={alternativeSection.details}
+            behaviorLabel={behaviorSection.behaviorLabel}
+            behaviorDescription={behaviorSection.behaviorDescription}
+            behaviorErrorTags={behaviorSection.behaviorErrorTags}
+            loading={isAddingBehavior}
+            onChangeBehaviorLabel={behaviorSection.setBehaviorLabel}
+            onChangeBehaviorDescription={behaviorSection.setBehaviorDescription}
+            onChangeBehaviorErrorTags={behaviorSection.setBehaviorErrorTags}
+            onAddBehaviorDetail={handleAddBehavior}
+            onClose={() => setAddModalSection(null)}
+            aiLocked={accessMode !== "auth"}
+          />
+        </PatternEditModal>
+        <DetailSectionItemModal
+          isOpen={Boolean(modalContent)}
+          title={modalContent?.title ?? ""}
+          body={modalContent?.body ?? ""}
+          accentColor={modalContent?.color ?? "#fff"}
+          icon={modalContent?.icon ?? null}
+          badgeText={modalContent?.badgeText ?? null}
+          onClose={() => setModalContent(null)}
         />
-      </PatternEditModal>
-      <PatternEditModal
-        open={addModalSection === "error"}
-        title="인지오류 추가"
-        hideClose
-        chromeless
-        onOpenChange={(open) => {
-          if (!open) setAddModalSection(null);
-        }}
-      >
-        <PatternErrorAddSection
-          triggerText={triggerText}
-          details={thoughtSection.details}
-          errorLabel={errorSection.errorLabel}
-          errorDescription={errorSection.errorDescription}
-          loading={isAddingError}
-          onChangeErrorLabel={errorSection.setErrorLabel}
-          onChangeErrorDescription={errorSection.setErrorDescription}
-          onAddErrorDetail={handleAddError}
-          onClose={() => setAddModalSection(null)}
-        />
-      </PatternEditModal>
-      <PatternEditModal
-        open={addModalSection === "alternative"}
-        title="대안적 접근 추가"
-        hideClose
-        chromeless
-        onOpenChange={(open) => {
-          if (!open) setAddModalSection(null);
-        }}
-      >
-        <PatternAlternativesAddSection
-          triggerText={triggerText}
-          details={thoughtSection.details}
-          errorDetails={errorSection.details}
-          alternativeText={alternativeSection.alternativeText}
-          loading={isAddingAlternative}
-          onChangeAlternativeText={alternativeSection.setAlternativeText}
-          onAddAlternative={handleAddAlternative}
-          onClose={() => setAddModalSection(null)}
-        />
-      </PatternEditModal>
-      <PatternEditModal
-        open={addModalSection === "behavior"}
-        title="행동 반응 추가"
-        hideClose
-        chromeless
-        onOpenChange={(open) => {
-          if (!open) setAddModalSection(null);
-        }}
-      >
-        <PatternBehaviorAddSection
-          triggerText={triggerText}
-          details={thoughtSection.details}
-          errorDetails={errorSection.details}
-          alternatives={alternativeSection.details}
-          behaviorLabel={behaviorSection.behaviorLabel}
-          behaviorDescription={behaviorSection.behaviorDescription}
-          behaviorErrorTags={behaviorSection.behaviorErrorTags}
-          loading={isAddingBehavior}
-          onChangeBehaviorLabel={behaviorSection.setBehaviorLabel}
-          onChangeBehaviorDescription={behaviorSection.setBehaviorDescription}
-          onChangeBehaviorErrorTags={behaviorSection.setBehaviorErrorTags}
-          onAddBehaviorDetail={handleAddBehavior}
-          onClose={() => setAddModalSection(null)}
-        />
-      </PatternEditModal>
-      <DetailSectionItemModal
-        isOpen={Boolean(modalContent)}
-        title={modalContent?.title ?? ""}
-        body={modalContent?.body ?? ""}
-        accentColor={modalContent?.color ?? "#fff"}
-        icon={modalContent?.icon ?? null}
-        badgeText={modalContent?.badgeText ?? null}
-        onClose={() => setModalContent(null)}
-      />
         {copyMessage ? (
           <div className={styles.copyToast}>{copyMessage}</div>
         ) : null}

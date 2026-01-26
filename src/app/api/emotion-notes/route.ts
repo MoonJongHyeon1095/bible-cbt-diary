@@ -181,6 +181,7 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as {
     title?: string;
     trigger_text?: string;
+    created_at?: string;
   };
 
   const title = String(payload.title ?? "").trim();
@@ -194,13 +195,24 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
+  const insertPayload: {
+    user_id: string;
+    title: string;
+    trigger_text: string;
+    created_at?: string;
+  } = {
+    user_id: user.id,
+    title,
+    trigger_text: triggerText,
+  };
+
+  if (payload.created_at) {
+    insertPayload.created_at = payload.created_at;
+  }
+
   const { data, error } = await supabase
     .from("emotion_notes")
-    .insert({
-      user_id: user.id,
-      title,
-      trigger_text: triggerText,
-    })
+    .insert(insertPayload)
     .select("id")
     .single();
 

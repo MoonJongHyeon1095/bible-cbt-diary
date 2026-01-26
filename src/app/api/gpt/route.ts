@@ -22,15 +22,17 @@ function extractTextFromResponsesPayload(payload: unknown): string | null {
 
 export async function POST(request: Request) {
   const user = await getUserFromRequest(request);
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = (await request.json().catch(() => ({}))) as {
     prompt?: string;
     systemPrompt?: string;
     model?: string;
+    deviceId?: string;
   };
+  const deviceId =
+    typeof body.deviceId === "string" ? body.deviceId.trim() : "";
+  if (!user && !deviceId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
   if (!prompt) {

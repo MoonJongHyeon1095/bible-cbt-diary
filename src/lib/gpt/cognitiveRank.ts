@@ -13,7 +13,6 @@ export type CognitiveErrorAnalysisResult = {
   }>;
 };
 
-
 export type ErrorIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
 /**
@@ -38,7 +37,10 @@ type RankLlmResponseShape = {
 export const FALLBACK_INDICES: ErrorIndex[] = [1, 5, 7];
 
 export function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
+  const cleaned = raw
+    .replace(/```(?:json)?/g, "")
+    .replace(/```/g, "")
+    .trim();
   const s = cleaned.indexOf("{");
   const e = cleaned.lastIndexOf("}");
   if (s === -1 || e === -1 || e <= s) return null;
@@ -77,7 +79,7 @@ export function defaultRank(): CognitiveErrorRankResult {
 // 1) 출력은 오직 JSON만 허용한다. (설명/주석/코드블록/번호/불릿 금지)
 // 2) ranked 배열은 정확히 10개여야 한다.
 // 3) index는 1..10만 가능하다.
-// 4) evidenceQuote를 넣을 때는 반드시 원문 그대로 복사한다. 
+// 4) evidenceQuote를 넣을 때는 반드시 원문 그대로 복사한다.
 
 // 출력 스키마:
 // {
@@ -114,7 +116,8 @@ Important rules:
 4) evidenceQuote must be copied exactly as-is from the input.
 5) Output language: All string values in the JSON (especially "reason") MUST be written in Korean. Do NOT use English.
 6) DO NOT include the evidenceQuote text inside "reason". "reason" must be a paraphrased explanation why you consider the distortion plausible.
-7) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
+7) DO NOT output indices in ascending numeric order (1,2,3,...,10). If you do, your output is invalid.
+8) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
    (e.g., “…로 보입니다.” / “…로 의심됩니다.” / “…에 해당합니다.”). Do NOT forcibly append a fixed phrase.
 
 Output schema:
@@ -141,7 +144,7 @@ Cognitive distortion index meanings:
  */
 export async function rankCognitiveErrors(
   situation: string,
-  thought: string
+  thought: string,
 ): Promise<CognitiveErrorRankResult> {
   const prompt = `
 [Situation]

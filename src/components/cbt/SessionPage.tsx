@@ -53,7 +53,7 @@ function SessionPageContent() {
   const [alternativeSeed, setAlternativeSeed] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const lastErrorsKeyRef = useRef<string>("");
-  const { requireAccessToken } = useCbtAccess({
+  const { requireAccessContext } = useCbtAccess({
     setError: (message) => {
       pushToast(message, "error");
     },
@@ -135,8 +135,8 @@ function SessionPageContent() {
 
   const handleComplete = async (thought: string) => {
     if (isSaving) return;
-    const accessToken = await requireAccessToken();
-    if (!accessToken) return;
+    const access = await requireAccessContext();
+    if (!access) return;
 
     const pairsToSave = emotionThoughtPairs.map((pair) => ({
       ...pair,
@@ -166,17 +166,14 @@ function SessionPageContent() {
 
     try {
       const { ok, payload } = await saveMinimalPatternAPI(
-        accessToken,
+        access,
         minimalPayload,
       );
       if (!ok) {
         throw new Error("save_minimal_note_failed");
       }
 
-      const historyResult = await saveSessionHistoryAPI(
-        accessToken,
-        historyItem,
-      );
+      const historyResult = await saveSessionHistoryAPI(access, historyItem);
       if (!historyResult.ok) {
         throw new Error("save_session_history_failed");
       }

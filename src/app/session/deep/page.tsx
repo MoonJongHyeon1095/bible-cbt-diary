@@ -1,39 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
 import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import DeepSessionPage from "@/components/cbt/deep/DeepSessionPage";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
 
 export default function DeepSessionRoutePage() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-
-  useEffect(() => {
-    const loadSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      setIsAuthenticated(Boolean(data.session));
-      setIsLoading(false);
-    };
-    loadSession();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setIsAuthenticated(Boolean(session));
-      },
-    );
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [supabase]);
+  const { accessMode, isLoading } = useAccessContext();
 
   if (isLoading) {
     return null;
   }
 
-  if (!isAuthenticated) {
+  if (accessMode !== "auth") {
     return (
       <RequireLoginPrompt
         title="로그인이 필요합니다"

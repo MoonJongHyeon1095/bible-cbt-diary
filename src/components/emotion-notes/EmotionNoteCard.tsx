@@ -2,7 +2,7 @@
 
 import type { EmotionNote } from "@/lib/types/types";
 import { formatKoreanDateTime } from "@/lib/utils/time";
-import { Waypoints } from "lucide-react";
+import { Lock, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent } from "react";
@@ -12,11 +12,15 @@ import styles from "./EmotionNotesSection.module.css";
 type EmotionNoteCardProps = {
   note: EmotionNote;
   isTourTarget?: boolean;
+  canGoDeeper?: boolean;
+  detailHref?: string;
 };
 
 export default function EmotionNoteCard({
   note,
   isTourTarget = false,
+  canGoDeeper = true,
+  detailHref,
 }: EmotionNoteCardProps) {
   const router = useRouter();
   const longPressTimeoutRef = useRef<number | null>(null);
@@ -98,6 +102,9 @@ export default function EmotionNoteCard({
     longPressTimeoutRef.current = window.setTimeout(() => {
       longPressTriggeredRef.current = true;
       setPressProgress(1);
+      if (!canGoDeeper) {
+        return;
+      }
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(20);
       }
@@ -112,9 +119,11 @@ export default function EmotionNoteCard({
     }
   };
 
+  const resolvedDetailHref = detailHref ?? `/detail/${note.id}`;
+
   return (
     <Link
-      href={`/detail/${note.id}`}
+      href={resolvedDetailHref}
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
       onPointerDown={handlePointerDown}
@@ -161,8 +170,17 @@ export default function EmotionNoteCard({
         }
         aria-hidden="true"
       >
-        <Waypoints size={22} className={styles.longPressIcon} />
-        <span className={styles.longPressText}>Go Deeper</span>
+        {canGoDeeper ? (
+          <>
+            <Waypoints size={22} className={styles.longPressIcon} />
+            <span className={styles.longPressText}>Go Deeper</span>
+          </>
+        ) : (
+          <>
+            <Lock size={20} className={styles.longPressIcon} />
+            <span className={styles.longPressText}>로그인이 필요합니다</span>
+          </>
+        )}
       </div>
     </Link>
   );

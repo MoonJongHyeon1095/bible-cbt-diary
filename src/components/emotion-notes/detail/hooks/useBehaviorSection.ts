@@ -11,16 +11,22 @@ import {
 
 type UseBehaviorSectionOptions = {
   noteId?: number | null;
-  getAccessToken: () => Promise<string | null>;
-  requireAccessToken: () => Promise<string | null>;
+  getAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  }>;
+  requireAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  } | null>;
   ensureNoteId: () => number | null;
   setError: (message: string) => void;
 };
 
 export default function useBehaviorSection({
   noteId,
-  getAccessToken,
-  requireAccessToken,
+  getAccessContext,
+  requireAccessContext,
   ensureNoteId,
   setError,
 }: UseBehaviorSectionOptions) {
@@ -46,20 +52,20 @@ export default function useBehaviorSection({
       return;
     }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
+    const access = await getAccessContext();
+    if (access.mode === "blocked") {
       setDetails([]);
       return;
     }
 
-    const { response, data } = await fetchBehaviorDetails(noteId, accessToken);
+    const { response, data } = await fetchBehaviorDetails(noteId, access);
 
     if (!response.ok) {
       setDetails([]);
       return;
     }
     setDetails(data.details ?? []);
-  }, [getAccessToken, noteId]);
+  }, [getAccessContext, noteId]);
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
@@ -67,8 +73,8 @@ export default function useBehaviorSection({
       return;
     }
 
-    const accessToken = await requireAccessToken();
-    if (!accessToken) {
+    const access = await requireAccessContext();
+    if (!access) {
       return;
     }
 
@@ -84,7 +90,7 @@ export default function useBehaviorSection({
       return;
     }
 
-    const response = await createBehaviorDetail(payload, accessToken);
+    const response = await createBehaviorDetail(payload, access);
 
     if (!response.ok) {
       setError("행동 반응 저장에 실패했습니다.");
@@ -101,7 +107,7 @@ export default function useBehaviorSection({
     behaviorLabel,
     ensureNoteId,
     loadDetails,
-    requireAccessToken,
+    requireAccessContext,
     setError,
   ]);
 
@@ -122,8 +128,8 @@ export default function useBehaviorSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setIsUpdating(false);
         return;
       }
@@ -141,7 +147,7 @@ export default function useBehaviorSection({
         return;
       }
 
-      const response = await updateBehaviorDetail(payload, accessToken);
+      const response = await updateBehaviorDetail(payload, access);
 
       if (!response.ok) {
         setError("행동 반응 수정에 실패했습니다.");
@@ -159,7 +165,7 @@ export default function useBehaviorSection({
       editingBehaviorErrorTags,
       editingBehaviorLabel,
       loadDetails,
-      requireAccessToken,
+      requireAccessContext,
       setError,
     ],
   );
@@ -167,13 +173,13 @@ export default function useBehaviorSection({
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setDeletingId(null);
         return;
       }
 
-      const response = await deleteBehaviorDetail(detailId, accessToken);
+      const response = await deleteBehaviorDetail(detailId, access);
 
       if (!response.ok) {
         setError("행동 반응 삭제에 실패했습니다.");
@@ -184,7 +190,7 @@ export default function useBehaviorSection({
       await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessToken, setError],
+    [loadDetails, requireAccessContext, setError],
   );
 
   return {

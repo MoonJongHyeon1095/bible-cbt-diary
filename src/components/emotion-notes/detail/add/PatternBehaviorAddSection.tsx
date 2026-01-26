@@ -39,6 +39,7 @@ interface PatternBehaviorAddSectionProps {
   behaviorDescription: string;
   behaviorErrorTags: string[];
   loading: boolean;
+  aiLocked?: boolean;
   onChangeBehaviorLabel: (value: string) => void;
   onChangeBehaviorDescription: (value: string) => void;
   onChangeBehaviorErrorTags: (value: string[]) => void;
@@ -55,6 +56,7 @@ export function PatternBehaviorAddSection({
   behaviorDescription = "",
   behaviorErrorTags = [],
   loading,
+  aiLocked,
   onChangeBehaviorLabel,
   onChangeBehaviorDescription,
   onChangeBehaviorErrorTags,
@@ -340,6 +342,7 @@ export function PatternBehaviorAddSection({
         }
         onAiClick={() => void handleAiAction()}
         aiDisabled={loading || aiLoading}
+        aiLocked={aiLocked}
         aiClassName={styles.aiButton}
         saveLabel={loading ? "저장 중" : "저장"}
         onSave={onAddBehaviorDetail}

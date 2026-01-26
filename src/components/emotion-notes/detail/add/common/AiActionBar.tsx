@@ -2,12 +2,14 @@
 
 import type { ReactNode } from "react";
 import Button from "@/components/ui/Button";
+import { Lock } from "lucide-react";
 import styles from "./AiActionBar.module.css";
 
 type AiActionBarProps = {
   aiLabel: ReactNode;
   onAiClick: () => void;
   aiDisabled?: boolean;
+  aiLocked?: boolean;
   aiClassName?: string;
   saveLabel: ReactNode;
   onSave: () => void;
@@ -22,6 +24,7 @@ export function AiActionBar({
   aiLabel,
   onAiClick,
   aiDisabled,
+  aiLocked,
   aiClassName,
   saveLabel,
   onSave,
@@ -32,6 +35,14 @@ export function AiActionBar({
   savingIcon,
 }: AiActionBarProps) {
   const resolvedSaveIcon = isSaving ? savingIcon ?? saveIcon : saveIcon;
+  const resolvedAiLabel = aiLocked ? (
+    <span className={styles.lockedLabel}>
+      <Lock size={14} aria-hidden="true" />
+      {aiLabel}
+    </span>
+  ) : (
+    aiLabel
+  );
 
   return (
     <div className={styles.bar}>
@@ -40,10 +51,10 @@ export function AiActionBar({
           size="sm"
           variant="outline"
           onClick={onAiClick}
-          disabled={aiDisabled}
+          disabled={aiDisabled || aiLocked}
           className={aiClassName}
         >
-          {aiLabel}
+          {resolvedAiLabel}
         </Button>
         <Button
           size="sm"

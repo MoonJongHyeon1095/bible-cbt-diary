@@ -3,6 +3,7 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import { getDeviceId } from "@/lib/utils/deviceId";
 import {
   readTokenSessionUsage,
   writeTokenSessionUsage,
@@ -21,17 +22,17 @@ export async function callGptText(prompt: string, opts: GptCallOptions = {}) {
   const supabase = getSupabaseBrowserClient();
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
-  if (!accessToken) throw new Error("로그인이 필요합니다.");
 
   const body: Record<string, string> = { prompt };
   if (opts.systemPrompt) body.systemPrompt = opts.systemPrompt;
   if (opts.model) body.model = opts.model;
+  if (!accessToken) body.deviceId = getDeviceId();
 
   const res = await fetch("/api/gpt", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders(accessToken),
+      ...(accessToken ? buildAuthHeaders(accessToken) : {}),
     },
     body: JSON.stringify(body),
   });

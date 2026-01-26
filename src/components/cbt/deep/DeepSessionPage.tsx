@@ -45,7 +45,7 @@ function DeepSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pushToast } = useCbtToast();
-  const { supabase, requireAccessToken } = useCbtAccess({
+  const { accessMode, accessToken, requireAccessContext } = useCbtAccess({
     setError: (message) => pushToast(message, "error"),
   });
 
@@ -153,9 +153,9 @@ function DeepSessionPageContent() {
           return;
         }
 
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData.session?.access_token ?? null;
-        if (!accessToken || requestId !== requestIdRef.current) return;
+        if (accessMode !== "auth" || !accessToken || requestId !== requestIdRef.current) {
+          return;
+        }
 
         setNotesLoading(true);
         setNotesError(null);
@@ -215,9 +215,10 @@ function DeepSessionPageContent() {
     loadKey,
     mainNote,
     notesLoading,
-    supabase,
     subIdSet,
     subIds.length,
+    accessMode,
+    accessToken,
   ]);
 
   useEffect(() => {
@@ -287,13 +288,13 @@ function DeepSessionPageContent() {
 
   const handleComplete = async (thought: string) => {
     if (isSaving || !mainNote) return;
-    const accessToken = await requireAccessToken();
-    if (!accessToken) return;
+    const access = await requireAccessContext();
+    if (!access) return;
 
     setIsSaving(true);
 
     try {
-      const result = await saveDeepSessionAPI(accessToken, {
+      const result = await saveDeepSessionAPI(access, {
         title: formatAutoTitle(new Date(), selectedEmotion),
         trigger_text: userInput,
         emotion: selectedEmotion,

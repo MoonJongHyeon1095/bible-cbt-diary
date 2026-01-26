@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useCallback } from "react";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
 
 type UseEmotionNoteAccessOptions = {
   noteId?: number | null;
@@ -12,23 +12,28 @@ export default function useEmotionNoteAccess({
   noteId,
   setError,
 }: UseEmotionNoteAccessOptions) {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const { accessMode, accessToken, isBlocked } = useAccessContext();
 
-  const getAccessToken = useCallback(async () => {
-    const { data } = await supabase.auth.getSession();
-    return data.session?.access_token ?? null;
-  }, [supabase]);
+  const getAccessContext = useCallback(
+    async () => ({
+      mode: accessMode,
+      accessToken,
+    }),
+    [accessMode, accessToken],
+  );
 
-  const requireAccessToken = useCallback(
+  const requireAccessContext = useCallback(
     async (messageText = "로그인이 필요합니다.") => {
-      const accessToken = await getAccessToken();
-      if (!accessToken) {
+      if (isBlocked) {
         setError(messageText);
         return null;
       }
-      return accessToken;
+      return {
+        mode: accessMode,
+        accessToken,
+      };
     },
-    [getAccessToken, setError],
+    [accessMode, accessToken, isBlocked, setError],
   );
 
   const ensureNoteId = useCallback(() => {
@@ -40,9 +45,10 @@ export default function useEmotionNoteAccess({
   }, [noteId, setError]);
 
   return {
-    supabase,
-    getAccessToken,
-    requireAccessToken,
+    accessMode,
+    accessToken,
+    getAccessContext,
+    requireAccessContext,
     ensureNoteId,
   };
 }

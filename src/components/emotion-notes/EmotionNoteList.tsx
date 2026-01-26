@@ -7,12 +7,16 @@ type EmotionNoteListProps = {
   notes: EmotionNote[];
   emptyTitle?: string;
   emptyHint?: string;
+  canGoDeeper?: boolean;
+  getDetailHref?: (note: EmotionNote) => string;
 };
 
 export default function EmotionNoteList({
   notes,
   emptyTitle,
   emptyHint,
+  canGoDeeper = true,
+  getDetailHref,
 }: EmotionNoteListProps) {
   if (notes.length === 0) {
     return <EmotionNoteEmptyState title={emptyTitle} hint={emptyHint} />;
@@ -25,6 +29,8 @@ export default function EmotionNoteList({
           key={note.id}
           note={note}
           isTourTarget={index === 0}
+          canGoDeeper={canGoDeeper}
+          detailHref={getDetailHref?.(note)}
         />
       ))}
     </div>

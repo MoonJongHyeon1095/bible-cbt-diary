@@ -16,7 +16,6 @@ import useThoughtSection from "./useThoughtSection";
 
 export default function useEmotionNoteDetail(noteId?: number | null) {
   const router = useRouter();
-  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [note, setNote] = useState<EmotionNote | null>(null);
   const [title, setTitle] = useState("");
   const [triggerText, setTriggerText] = useState("");
@@ -28,13 +27,18 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   const isNew = !noteId;
 
-  const { supabase, getAccessToken, requireAccessToken, ensureNoteId } =
-    useEmotionNoteAccess({ noteId, setError });
+  const {
+    accessMode,
+    accessToken,
+    getAccessContext,
+    requireAccessContext,
+    ensureNoteId,
+  } = useEmotionNoteAccess({ noteId, setError });
 
   const thoughtSectionState = useThoughtSection({
     noteId,
-    getAccessToken,
-    requireAccessToken,
+    getAccessContext,
+    requireAccessContext,
     ensureNoteId,
     setError,
   });
@@ -42,8 +46,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   const errorSectionState = useErrorSection({
     noteId,
-    getAccessToken,
-    requireAccessToken,
+    getAccessContext,
+    requireAccessContext,
     ensureNoteId,
     setError,
   });
@@ -51,8 +55,8 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   const alternativeSectionState = useAlternativeSection({
     noteId,
-    getAccessToken,
-    requireAccessToken,
+    getAccessContext,
+    requireAccessContext,
     ensureNoteId,
     setError,
   });
@@ -60,17 +64,12 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   const behaviorSectionState = useBehaviorSection({
     noteId,
-    getAccessToken,
-    requireAccessToken,
+    getAccessContext,
+    requireAccessContext,
     ensureNoteId,
     setError,
   });
   const { setDetails: setBehaviorDetails } = behaviorSectionState;
-
-  const loadUser = useCallback(async () => {
-    const { data } = await supabase.auth.getUser();
-    setUserEmail(data.user?.email ?? null);
-  }, [supabase]);
 
   const loadNote = useCallback(async () => {
     if (!noteId) {
@@ -84,12 +83,12 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
       return;
     }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
+    const access = await getAccessContext();
+    if (access.mode === "blocked") {
       return;
     }
 
-    const { response, data } = await fetchEmotionNote(noteId, accessToken);
+    const { response, data } = await fetchEmotionNote(noteId, access);
 
     if (!response.ok) {
       return;
@@ -108,7 +107,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     setAlternativeDetails(data.note.alternative_details ?? []);
     setBehaviorDetails(data.note.behavior_details ?? []);
   }, [
-    getAccessToken,
+    getAccessContext,
     noteId,
     setError,
     setAlternativeDetails,
@@ -119,18 +118,16 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
   useEffect(() => {
     setIsLoading(true);
-    loadUser()
-      .then(loadNote)
-      .finally(() => setIsLoading(false));
-  }, [loadNote, loadUser]);
+    loadNote().finally(() => setIsLoading(false));
+  }, [loadNote, accessMode, accessToken]);
 
   const handleSaveNote = async () => {
     setError("");
     setMessage("");
     setIsSaving(true);
 
-    const accessToken = await requireAccessToken();
-    if (!accessToken) {
+    const access = await requireAccessContext();
+    if (!access) {
       setIsSaving(false);
       return;
     }
@@ -148,7 +145,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
 
     const { response, data } = await saveEmotionNote(
       noteId ? { id: noteId, ...payload } : payload,
-      accessToken,
+      access,
     );
 
     if (!response.ok || !data.ok) {
@@ -183,13 +180,13 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     }
 
     setIsDeleting(true);
-    const accessToken = await requireAccessToken();
-    if (!accessToken) {
+    const access = await requireAccessContext();
+    if (!access) {
       setIsDeleting(false);
       return false;
     }
 
-    const response = await deleteEmotionNote(noteId, accessToken);
+    const response = await deleteEmotionNote(noteId, access);
 
     if (!response.ok) {
       setError("삭제에 실패했습니다.");
@@ -281,7 +278,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   return {
-    userEmail,
+    accessMode,
     note,
     isNew,
     isLoading,

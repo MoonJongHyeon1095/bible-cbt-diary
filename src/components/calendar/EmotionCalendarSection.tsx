@@ -3,7 +3,7 @@
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 import Button from "@/components/ui/Button";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/types";
 import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
 import {
@@ -45,14 +45,24 @@ const buildCalendar = (baseDate: Date): DayCell[] => {
 
 const formatDateKey = (date: Date) => formatKoreanDateKey(date);
 
-export default function EmotionCalendarSection() {
-  const [currentMonth, setCurrentMonth] = useState(() => new Date());
+type EmotionCalendarSectionProps = {
+  access: AccessContext;
+  initialSelectedDate?: Date | null;
+};
+
+export default function EmotionCalendarSection({
+  access,
+  initialSelectedDate = null,
+}: EmotionCalendarSectionProps) {
+  const initialMonth = initialSelectedDate ?? new Date();
+  const [currentMonth, setCurrentMonth] = useState(() => initialMonth);
   const [notes, setNotes] = useState<EmotionNote[]>([]);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(
+    () => initialSelectedDate,
+  );
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
@@ -73,6 +83,18 @@ export default function EmotionCalendarSection() {
   );
 
   const days = useMemo(() => buildCalendar(currentMonth), [currentMonth]);
+  const initialDateKey = useMemo(
+    () => (initialSelectedDate ? formatKoreanDateKey(initialSelectedDate) : ""),
+    [initialSelectedDate],
+  );
+
+  useEffect(() => {
+    if (!initialSelectedDate) {
+      return;
+    }
+    setSelectedDate(initialSelectedDate);
+    setCurrentMonth(initialSelectedDate);
+  }, [initialSelectedDate, initialDateKey]);
 
   const countsByDate = useMemo(() => {
     const counts = new Map<string, number>();
@@ -154,13 +176,6 @@ export default function EmotionCalendarSection() {
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (!accessToken) {
-        setNotes([]);
-        setIsLoading(false);
-        return;
-      }
       const start = new Date(
         currentMonth.getFullYear(),
         currentMonth.getMonth(),
@@ -174,7 +189,7 @@ export default function EmotionCalendarSection() {
       const { response, data } = await fetchEmotionNotesByRange(
         start,
         end,
-        accessToken,
+        access,
       );
       if (!response.ok) {
         setNotes([]);
@@ -186,9 +201,18 @@ export default function EmotionCalendarSection() {
     };
 
     load();
-  }, [currentMonth, supabase]);
+  }, [access, currentMonth]);
 
   const visibleNotes = normalizedQuery ? searchResults : selectedNotes;
+  const getDetailHref = useMemo(
+    () => (note: EmotionNote) => {
+      const dateKey = selectedDate
+        ? formatKoreanDateKey(selectedDate)
+        : formatKoreanDateKey(note.created_at);
+      return `/detail/${note.id}?from=month&date=${dateKey}`;
+    },
+    [selectedDate],
+  );
   const applySearch = () => {
     const trimmed = searchInput.trim();
     setSearchQuery(trimmed);
@@ -340,6 +364,8 @@ export default function EmotionCalendarSection() {
               : "날짜를 바꿔 다른 기록을 확인해보세요."
           }
           headerRef={listHeaderRef}
+          canGoDeeper={access.mode === "auth"}
+          getDetailHref={getDetailHref}
         />
       </div>
       {isPastDate ? (

@@ -1,7 +1,13 @@
 "use client";
 
+import type { AccessContext } from "@/lib/types/access";
 import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import {
+  deleteAllGuestSessionHistories,
+  deleteGuestSessionHistory,
+  listGuestSessionHistories,
+} from "@/lib/utils/guestStorage";
 
 type FetchSessionHistoriesOptions = {
   limit?: number;
@@ -9,9 +15,18 @@ type FetchSessionHistoriesOptions = {
 };
 
 export const fetchSessionHistories = async (
-  accessToken: string,
+  access: AccessContext,
   options: FetchSessionHistoriesOptions = {},
 ) => {
+  if (access.mode === "guest") {
+    return listGuestSessionHistories(options);
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return {
+      response: new Response(null, { status: 401 }),
+      data: { histories: [] as SessionHistory[] },
+    };
+  }
   const limit = options.limit ?? 50;
   const offset = options.offset ?? 0;
   const params = new URLSearchParams({
@@ -19,7 +34,7 @@ export const fetchSessionHistories = async (
     offset: String(offset),
   });
   const response = await fetch(`/api/session-history?${params.toString()}`, {
-    headers: buildAuthHeaders(accessToken),
+    headers: buildAuthHeaders(access.accessToken),
   });
 
   const data = response.ok
@@ -29,19 +44,34 @@ export const fetchSessionHistories = async (
   return { response, data };
 };
 
-export const deleteSessionHistory = async (accessToken: string, id: string) => {
+export const deleteSessionHistory = async (
+  access: AccessContext,
+  id: string,
+) => {
+  if (access.mode === "guest") {
+    return deleteGuestSessionHistory(id);
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return { response: new Response(null, { status: 401 }) };
+  }
   const response = await fetch(`/api/session-history?id=${id}`, {
     method: "DELETE",
-    headers: buildAuthHeaders(accessToken),
+    headers: buildAuthHeaders(access.accessToken),
   });
 
   return { response };
 };
 
-export const deleteAllSessionHistories = async (accessToken: string) => {
+export const deleteAllSessionHistories = async (access: AccessContext) => {
+  if (access.mode === "guest") {
+    return deleteAllGuestSessionHistories();
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return { response: new Response(null, { status: 401 }) };
+  }
   const response = await fetch("/api/session-history?all=true", {
     method: "DELETE",
-    headers: buildAuthHeaders(accessToken),
+    headers: buildAuthHeaders(access.accessToken),
   });
 
   return { response };

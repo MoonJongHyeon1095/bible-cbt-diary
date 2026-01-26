@@ -11,16 +11,22 @@ import {
 
 type UseThoughtSectionOptions = {
   noteId?: number | null;
-  getAccessToken: () => Promise<string | null>;
-  requireAccessToken: () => Promise<string | null>;
+  getAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  }>;
+  requireAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  } | null>;
   ensureNoteId: () => number | null;
   setError: (message: string) => void;
 };
 
 export default function useThoughtSection({
   noteId,
-  getAccessToken,
-  requireAccessToken,
+  getAccessContext,
+  requireAccessContext,
   ensureNoteId,
   setError,
 }: UseThoughtSectionOptions) {
@@ -39,20 +45,20 @@ export default function useThoughtSection({
       return;
     }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
+    const access = await getAccessContext();
+    if (access.mode === "blocked") {
       setDetails([]);
       return;
     }
 
-    const { response, data } = await fetchThoughtDetails(noteId, accessToken);
+    const { response, data } = await fetchThoughtDetails(noteId, access);
 
     if (!response.ok) {
       setDetails([]);
       return;
     }
     setDetails(data.details ?? []);
-  }, [getAccessToken, noteId]);
+  }, [getAccessContext, noteId]);
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
@@ -60,8 +66,8 @@ export default function useThoughtSection({
       return;
     }
 
-    const accessToken = await requireAccessToken();
-    if (!accessToken) {
+    const access = await requireAccessContext();
+    if (!access) {
       return;
     }
 
@@ -76,7 +82,7 @@ export default function useThoughtSection({
       return;
     }
 
-    const response = await createThoughtDetail(payload, accessToken);
+    const response = await createThoughtDetail(payload, access);
 
     if (!response.ok) {
       setError("자동 사고 저장에 실패했습니다.");
@@ -91,7 +97,7 @@ export default function useThoughtSection({
     detailThought,
     ensureNoteId,
     loadDetails,
-    requireAccessToken,
+    requireAccessContext,
     setError,
   ]);
 
@@ -110,8 +116,8 @@ export default function useThoughtSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setIsUpdating(false);
         return;
       }
@@ -128,7 +134,7 @@ export default function useThoughtSection({
         return;
       }
 
-      const response = await updateThoughtDetail(payload, accessToken);
+      const response = await updateThoughtDetail(payload, access);
 
       if (!response.ok) {
         setError("자동 사고 수정에 실패했습니다.");
@@ -145,7 +151,7 @@ export default function useThoughtSection({
       editingEmotionText,
       editingThoughtText,
       loadDetails,
-      requireAccessToken,
+      requireAccessContext,
       setError,
     ],
   );
@@ -153,13 +159,13 @@ export default function useThoughtSection({
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setDeletingId(null);
         return;
       }
 
-      const response = await deleteThoughtDetail(detailId, accessToken);
+      const response = await deleteThoughtDetail(detailId, access);
 
       if (!response.ok) {
         setError("자동 사고 삭제에 실패했습니다.");
@@ -170,7 +176,7 @@ export default function useThoughtSection({
       await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessToken, setError],
+    [loadDetails, requireAccessContext, setError],
   );
 
   return {

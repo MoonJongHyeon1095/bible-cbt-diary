@@ -1,12 +1,12 @@
 "use client";
 
 import Button from "@/components/ui/Button";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import type { AccessContext } from "@/lib/types/access";
 import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styles from "./SessionHistorySection.module.css";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
@@ -43,7 +43,11 @@ const formatScriptureReference = (
   return `${bibleVerse.book} ${chapter}${verseLabel}`.trim();
 };
 
-export default function SessionHistorySection() {
+type SessionHistorySectionProps = {
+  access: AccessContext;
+};
+
+export default function SessionHistorySection({ access }: SessionHistorySectionProps) {
   const pageSize = 20;
   const [histories, setHistories] = useState<SessionHistory[]>([]);
   const [loading, setLoading] = useState(true);
@@ -54,19 +58,12 @@ export default function SessionHistorySection() {
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const nextOffsetRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const fetchPage = useCallback(
     async (offset: number) => {
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-      if (!accessToken) {
-        return { ok: false, histories: [] as SessionHistory[] };
-      }
-
-      const { response, data } = await fetchSessionHistories(accessToken, {
+      const { response, data } = await fetchSessionHistories(access, {
         limit: pageSize,
         offset,
       });
@@ -85,7 +82,7 @@ export default function SessionHistorySection() {
       }));
       return { ok: true, histories: normalized };
     },
-    [pageSize, supabase],
+    [access, pageSize],
   );
 
   const loadHistories = useCallback(async () => {
@@ -161,12 +158,8 @@ export default function SessionHistorySection() {
   }, [hasMore, loadMore]);
 
   const handleDelete = async (id: string) => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) return;
-
     setDeletingId(id);
-    const { response } = await deleteSessionHistory(accessToken, id);
+    const { response } = await deleteSessionHistory(access, id);
     if (!response.ok) {
       setNotice("세션 기록을 삭제하지 못했습니다.");
       setDeletingId(null);
@@ -178,12 +171,8 @@ export default function SessionHistorySection() {
   };
 
   const handleDeleteAll = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) return;
-
     setDeletingAll(true);
-    const { response } = await deleteAllSessionHistories(accessToken);
+    const { response } = await deleteAllSessionHistories(access);
     if (!response.ok) {
       setNotice("세션 기록을 삭제하지 못했습니다.");
       setDeletingAll(false);

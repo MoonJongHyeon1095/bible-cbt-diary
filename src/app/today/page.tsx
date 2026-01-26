@@ -4,17 +4,13 @@ import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import EmotionNotesSection from "@/components/emotion-notes/EmotionNotesSection";
 import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
 import AppHeader from "@/components/header/AppHeader";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
+import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/types";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "../page.module.css";
-
-type SessionUser = {
-  id: string;
-  email: string | null;
-};
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";
 
@@ -35,14 +31,18 @@ const getTodayLabel = () => {
 };
 
 export default function EmotionNotesPage() {
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const { accessMode, accessToken, isLoading: isAccessLoading } =
+    useAccessContext();
   const [notes, setNotes] = useState<EmotionNote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
   const todayLabel = useMemo(() => getTodayLabel(), []);
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const access = useMemo<AccessContext>(
+    () => ({ mode: accessMode, accessToken }),
+    [accessMode, accessToken],
+  );
   const tourSteps = useMemo(() => {
     const steps = [
       {
@@ -72,48 +72,31 @@ export default function EmotionNotesPage() {
     return steps;
   }, [notes.length]);
 
-  const fetchSession = useCallback(async () => {
-    const { data } = await supabase.auth.getUser();
-    setUser(
-      data.user ? { id: data.user.id, email: data.user.email ?? null } : null,
-    );
-  }, [supabase]);
-
   const fetchNotes = useCallback(async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) {
+    if (access.mode === "blocked") {
       setNotes([]);
       return;
     }
-    const { response, data } = await fetchEmotionNotes(accessToken);
+    const { response, data } = await fetchEmotionNotes(access);
     if (!response.ok) {
       setNotes([]);
       return;
     }
     setNotes(data.notes ?? []);
-  }, [supabase]);
+  }, [access]);
 
   useEffect(() => {
     const load = async () => {
       setIsLoading(true);
-      await fetchSession();
       await fetchNotes();
       setIsLoading(false);
     };
     load();
-    const { data: authListener } = supabase.auth.onAuthStateChange(() => {
-      fetchSession().then(fetchNotes);
-    });
-
-    return () => {
-      authListener.subscription.unsubscribe();
-    };
-  }, [fetchNotes, fetchSession, supabase]);
+  }, [fetchNotes, accessMode, accessToken]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!user || isLoading) return;
+    if (access.mode === "blocked" || isLoading || isAccessLoading) return;
     if (isTourOpen) return;
     const stored = window.localStorage.getItem(TOUR_STORAGE_KEY);
     const maxStepIndex = tourSteps.length - 1;
@@ -140,21 +123,23 @@ export default function EmotionNotesPage() {
       setCurrentStep(nextStep);
       setIsTourOpen(true);
     }
-  }, [isLoading, isTourOpen, tourSteps.length, user]);
+  }, [access.mode, isLoading, isTourOpen, isAccessLoading, tourSteps.length]);
 
   return (
     <div className={styles.page}>
       <AppHeader />
       <main className={styles.main}>
         <div className={styles.shell}>
-          {user ? (
+          {isAccessLoading ? null : accessMode === "blocked" ? (
+            <RequireLoginPrompt />
+          ) : (
             <EmotionNotesSection
               notes={notes}
               todayLabel={todayLabel}
               isLoading={isLoading}
+              canGoDeeper={accessMode === "auth"}
+              getDetailHref={(note) => `/detail/${note.id}?from=today`}
             />
-          ) : (
-            <RequireLoginPrompt />
           )}
         </div>
       </main>

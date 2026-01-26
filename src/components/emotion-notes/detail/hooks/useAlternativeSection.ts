@@ -11,16 +11,22 @@ import {
 
 type UseAlternativeSectionOptions = {
   noteId?: number | null;
-  getAccessToken: () => Promise<string | null>;
-  requireAccessToken: () => Promise<string | null>;
+  getAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  }>;
+  requireAccessContext: () => Promise<{
+    mode: "auth" | "guest" | "blocked";
+    accessToken: string | null;
+  } | null>;
   ensureNoteId: () => number | null;
   setError: (message: string) => void;
 };
 
 export default function useAlternativeSection({
   noteId,
-  getAccessToken,
-  requireAccessToken,
+  getAccessContext,
+  requireAccessContext,
   ensureNoteId,
   setError,
 }: UseAlternativeSectionOptions) {
@@ -39,23 +45,20 @@ export default function useAlternativeSection({
       return;
     }
 
-    const accessToken = await getAccessToken();
-    if (!accessToken) {
+    const access = await getAccessContext();
+    if (access.mode === "blocked") {
       setDetails([]);
       return;
     }
 
-    const { response, data } = await fetchAlternativeDetails(
-      noteId,
-      accessToken,
-    );
+    const { response, data } = await fetchAlternativeDetails(noteId, access);
 
     if (!response.ok) {
       setDetails([]);
       return;
     }
     setDetails(data.details ?? []);
-  }, [getAccessToken, noteId]);
+  }, [getAccessContext, noteId]);
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
@@ -63,8 +66,8 @@ export default function useAlternativeSection({
       return;
     }
 
-    const accessToken = await requireAccessToken();
-    if (!accessToken) {
+    const access = await requireAccessContext();
+    if (!access) {
       return;
     }
 
@@ -78,7 +81,7 @@ export default function useAlternativeSection({
       return;
     }
 
-    const response = await createAlternativeDetail(payload, accessToken);
+    const response = await createAlternativeDetail(payload, access);
 
     if (!response.ok) {
       setError("대안 사고 저장에 실패했습니다.");
@@ -91,7 +94,7 @@ export default function useAlternativeSection({
     alternativeText,
     ensureNoteId,
     loadDetails,
-    requireAccessToken,
+    requireAccessContext,
     setError,
   ]);
 
@@ -108,8 +111,8 @@ export default function useAlternativeSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setIsUpdating(false);
         return;
       }
@@ -125,7 +128,7 @@ export default function useAlternativeSection({
         return;
       }
 
-      const response = await updateAlternativeDetail(payload, accessToken);
+      const response = await updateAlternativeDetail(payload, access);
 
       if (!response.ok) {
         setError("대안 사고 수정에 실패했습니다.");
@@ -141,7 +144,7 @@ export default function useAlternativeSection({
       cancelEditing,
       editingAlternativeText,
       loadDetails,
-      requireAccessToken,
+      requireAccessContext,
       setError,
     ],
   );
@@ -149,13 +152,13 @@ export default function useAlternativeSection({
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const accessToken = await requireAccessToken();
-      if (!accessToken) {
+      const access = await requireAccessContext();
+      if (!access) {
         setDeletingId(null);
         return;
       }
 
-      const response = await deleteAlternativeDetail(detailId, accessToken);
+      const response = await deleteAlternativeDetail(detailId, access);
 
       if (!response.ok) {
         setError("대안 사고 삭제에 실패했습니다.");
@@ -166,7 +169,7 @@ export default function useAlternativeSection({
       await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessToken, setError],
+    [loadDetails, requireAccessContext, setError],
   );
 
   return {

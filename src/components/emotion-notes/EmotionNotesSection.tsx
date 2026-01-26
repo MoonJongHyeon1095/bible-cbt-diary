@@ -9,12 +9,16 @@ type EmotionNotesSectionProps = {
   notes: EmotionNote[];
   todayLabel: string;
   isLoading: boolean;
+  canGoDeeper?: boolean;
+  getDetailHref?: (note: EmotionNote) => string;
 };
 
 export default function EmotionNotesSection({
   notes,
   todayLabel,
   isLoading,
+  canGoDeeper = true,
+  getDetailHref,
 }: EmotionNotesSectionProps) {
   return (
     <>
@@ -40,6 +44,8 @@ export default function EmotionNotesSection({
         }
         notes={notes}
         isLoading={isLoading}
+        canGoDeeper={canGoDeeper}
+        getDetailHref={getDetailHref}
       />
     </>
   );

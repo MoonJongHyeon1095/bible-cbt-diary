@@ -10,6 +10,8 @@ type EmotionNoteListSectionProps = {
   emptyTitle?: string;
   emptyHint?: string;
   headerRef?: Ref<HTMLDivElement>;
+  canGoDeeper?: boolean;
+  getDetailHref?: (note: EmotionNote) => string;
 };
 
 export default function EmotionNoteListSection({
@@ -19,6 +21,8 @@ export default function EmotionNoteListSection({
   emptyTitle,
   emptyHint,
   headerRef,
+  canGoDeeper = true,
+  getDetailHref,
 }: EmotionNoteListSectionProps) {
   return (
     <div data-tour="notes-list">
@@ -33,6 +37,8 @@ export default function EmotionNoteListSection({
         notes={notes}
         emptyTitle={emptyTitle}
         emptyHint={emptyHint}
+        canGoDeeper={canGoDeeper}
+        getDetailHref={getDetailHref}
       />
     </div>
   );

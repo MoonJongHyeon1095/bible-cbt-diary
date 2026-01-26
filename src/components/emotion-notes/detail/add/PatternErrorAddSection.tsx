@@ -25,6 +25,7 @@ interface PatternErrorAddSectionProps {
   errorLabel: string;
   errorDescription: string;
   loading: boolean;
+  aiLocked?: boolean;
   onChangeErrorLabel: (value: string) => void;
   onChangeErrorDescription: (value: string) => void;
   onAddErrorDetail: () => void;
@@ -37,6 +38,7 @@ export function PatternErrorAddSection({
   errorLabel,
   errorDescription,
   loading,
+  aiLocked,
   onChangeErrorLabel,
   onChangeErrorDescription,
   onAddErrorDetail,
@@ -174,6 +176,7 @@ export function PatternErrorAddSection({
           }
           onAiClick={() => void handleAiAction()}
           aiDisabled={loading || aiLoading}
+          aiLocked={aiLocked}
           aiClassName={styles.aiButton}
           saveLabel={loading ? "저장 중" : "저장"}
           onSave={onAddErrorDetail}

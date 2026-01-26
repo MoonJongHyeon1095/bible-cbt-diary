@@ -54,6 +54,7 @@ export async function POST(request: Request) {
   const payload = (await request.json()) as {
     note_id?: number;
     alternative?: string;
+    created_at?: string;
   };
 
   const noteId = Number(payload.note_id ?? "");
@@ -73,11 +74,22 @@ export async function POST(request: Request) {
   }
 
   const supabase = createSupabaseAdminClient();
-  const { error } = await supabase.from("emotion_alternative_details").insert({
+  const insertPayload: {
+    user_id: string;
+    note_id: number;
+    alternative: string;
+    created_at?: string;
+  } = {
     user_id: user.id,
     note_id: noteId,
     alternative,
-  });
+  };
+  if (payload.created_at) {
+    insertPayload.created_at = payload.created_at;
+  }
+  const { error } = await supabase
+    .from("emotion_alternative_details")
+    .insert(insertPayload);
 
   if (error) {
     return NextResponse.json(

@@ -20,6 +20,7 @@ interface PatternDetailsAddSectionProps {
   automaticThought: string;
   emotion: string;
   loading: boolean;
+  aiLocked?: boolean;
   onChangeAutomaticThought: (value: string) => void;
   onSelectEmotion: (value: string) => void;
   onAddDetail: () => void;
@@ -31,6 +32,7 @@ export function PatternDetailsAddSection({
   automaticThought,
   emotion,
   loading,
+  aiLocked,
   onChangeAutomaticThought,
   onSelectEmotion,
   onAddDetail,
@@ -144,6 +146,7 @@ export function PatternDetailsAddSection({
         }
         onAiClick={() => void handleAiAction()}
         aiDisabled={loading || aiLoading}
+        aiLocked={aiLocked}
         aiClassName={styles.aiButton}
         saveLabel={loading ? "저장 중" : "저장"}
         onSave={onAddDetail}

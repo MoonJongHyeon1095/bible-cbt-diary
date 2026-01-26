@@ -1,10 +1,15 @@
 "use client";
 
+import type { AccessContext } from "@/lib/types/access";
 import type {
   SelectedCognitiveError,
   SessionHistory,
 } from "@/lib/types/cbtTypes";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import {
+  saveGuestMinimalSession,
+  saveGuestSessionHistory,
+} from "@/lib/utils/guestStorage";
 import { formatAutoTitle } from "./formatAutoTitle";
 
 export type MinimalSavePayload = {
@@ -16,9 +21,27 @@ export type MinimalSavePayload = {
 };
 
 export async function saveMinimalPatternAPI(
-  accessToken: string,
+  access: AccessContext,
   payload: MinimalSavePayload,
 ) {
+  if (access.mode === "guest") {
+    const result = saveGuestMinimalSession({
+      title: formatAutoTitle(new Date(), payload.emotion),
+      trigger_text: payload.triggerText,
+      emotion: payload.emotion,
+      automatic_thought: payload.automaticThought,
+      alternative: payload.alternativeThought,
+      error_label: payload.cognitiveError?.title ?? "",
+      error_description: payload.cognitiveError?.detail ?? "",
+    });
+    return {
+      ok: result.response.ok,
+      payload: { noteId: result.data?.noteId },
+    } as { ok: boolean; payload: { noteId?: number | string } };
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return { ok: false, payload: {} as { noteId?: number | string } };
+  }
   const triggerText = payload.triggerText.trim();
   const automaticThought = payload.automaticThought.trim();
   const emotion = payload.emotion.trim();
@@ -30,7 +53,7 @@ export async function saveMinimalPatternAPI(
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders(accessToken),
+      ...buildAuthHeaders(access.accessToken),
     },
     body: JSON.stringify({
       title: formatAutoTitle(new Date(), emotion),
@@ -52,14 +75,21 @@ export async function saveMinimalPatternAPI(
 }
 
 export async function saveSessionHistoryAPI(
-  accessToken: string,
+  access: AccessContext,
   history: SessionHistory,
 ) {
+  if (access.mode === "guest") {
+    const result = saveGuestSessionHistory(history);
+    return { ok: result.response.ok, payload: result.data };
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return { ok: false, payload: {} };
+  }
   const res = await fetch("/api/session-history", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders(accessToken),
+      ...buildAuthHeaders(access.accessToken),
     },
     body: JSON.stringify({
       timestamp: history.timestamp,
@@ -77,7 +107,7 @@ export async function saveSessionHistoryAPI(
 }
 
 export async function saveDeepSessionAPI(
-  accessToken: string,
+  access: AccessContext,
   payload: {
     title: string;
     trigger_text: string;
@@ -90,11 +120,14 @@ export async function saveDeepSessionAPI(
     group_id: number | null;
   },
 ) {
+  if (access.mode !== "auth" || !access.accessToken) {
+    return { ok: false, payload: {} as { noteId?: number; groupId?: number } };
+  }
   const res = await fetch("/api/deep-session", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...buildAuthHeaders(accessToken),
+      ...buildAuthHeaders(access.accessToken),
     },
     body: JSON.stringify(payload),
   });

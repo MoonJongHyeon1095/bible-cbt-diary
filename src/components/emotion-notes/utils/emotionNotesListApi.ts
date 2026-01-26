@@ -1,11 +1,26 @@
 "use client";
 
+import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/types";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import { getGuestNotesForDate } from "@/lib/utils/guestStorage";
 
-export const fetchEmotionNotes = async (accessToken: string) => {
+export const fetchEmotionNotes = async (
+  access: AccessContext,
+  date: Date = new Date(),
+) => {
+  if (access.mode === "guest") {
+    return getGuestNotesForDate(date);
+  }
+  if (access.mode !== "auth" || !access.accessToken) {
+    return {
+      response: new Response(null, { status: 401 }),
+      data: { notes: [] as EmotionNote[] },
+    };
+  }
+
   const response = await fetch("/api/emotion-notes", {
-    headers: buildAuthHeaders(accessToken),
+    headers: buildAuthHeaders(access.accessToken),
   });
 
   const data = response.ok

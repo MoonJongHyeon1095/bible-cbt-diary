@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import TermsGate from "@/components/common/TermsGate";
 import "./globals.css";
 
 const notoSansKr = Noto_Sans_KR({
@@ -20,7 +21,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={notoSansKr.variable}>{children}</body>
+      <body className={notoSansKr.variable}>
+        <TermsGate />
+        {children}
+      </body>
     </html>
   );
 }

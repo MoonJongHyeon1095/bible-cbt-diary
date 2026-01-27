@@ -1,6 +1,6 @@
 "use client";
 
-import { ListChecks, Menu } from "lucide-react";
+import { FileText, ListChecks, Menu, ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Drawer } from "./Drawer";
@@ -12,6 +12,21 @@ const navItems = [
     label: "기록",
     href: "/records",
     icon: ListChecks,
+  },
+];
+
+const settingsItems = [
+  {
+    id: "terms",
+    label: "이용약관",
+    href: "/terms",
+    icon: FileText,
+  },
+  {
+    id: "privacy",
+    label: "개인정보처리방침",
+    href: "/privacy",
+    icon: ShieldCheck,
   },
 ];
 
@@ -53,26 +68,52 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
         </div>
 
         <div className={styles.drawerList}>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = pathname === item.href;
-            return (
-              <button
-                key={item.id}
-                type="button"
-                className={`${styles.drawerItem} ${
-                  active ? styles.drawerItemActive : ""
-                }`}
-                onClick={() => {
-                  setOpen(false);
-                  router.push(item.href);
-                }}
-              >
-                <Icon size={20} />
-                <span>{item.label}</span>
-              </button>
-            );
-          })}
+          <div className={styles.drawerSection}>
+            <span className={styles.drawerSectionTitle}>메뉴</span>
+            {navItems.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${styles.drawerItem} ${
+                    active ? styles.drawerItemActive : ""
+                  }`}
+                  onClick={() => {
+                    setOpen(false);
+                    router.push(item.href);
+                  }}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className={styles.drawerSection}>
+            <span className={styles.drawerSectionTitle}>설정</span>
+            {settingsItems.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${styles.drawerItem} ${
+                    active ? styles.drawerItemActive : ""
+                  }`}
+                  onClick={() => {
+                    setOpen(false);
+                    router.push(item.href);
+                  }}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </Drawer>
     </>

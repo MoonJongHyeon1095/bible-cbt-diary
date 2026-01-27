@@ -54,6 +54,19 @@
   overflow: auto;
 }
 
+.drawerSection {
+  display: grid;
+  gap: 8px;
+}
+
+.drawerSectionTitle {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(199, 207, 223, 0.7);
+  padding: 4px 10px 2px;
+}
+
 .drawerItem {
   width: 100%;
   display: flex;

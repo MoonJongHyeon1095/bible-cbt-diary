@@ -18,7 +18,6 @@ type SessionUser = {
 export default function AppHeader() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDisclaimerOpen, setIsDisclaimerOpen] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {

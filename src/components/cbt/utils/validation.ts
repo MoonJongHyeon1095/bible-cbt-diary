@@ -33,8 +33,7 @@ export function validateUserText(
       ok: false,
       code: "min-length",
       message:
-        options.minLengthMessage ??
-        `${options.minLength}자 이상 입력해주세요.`,
+        options.minLengthMessage ?? `${options.minLength}자 이상 입력해주세요.`,
     };
   }
 
@@ -122,7 +121,6 @@ function looksLikeAd(text: string) {
     "인스타",
     "아이디",
     "문의",
-    "연락",
     "상담",
     "채팅",
   ];
@@ -138,6 +136,12 @@ function looksLikeAd(text: string) {
 
   const score = promoCount + contactCount + ctaCount + (hasPhone ? 2 : 0);
   const hasPromoOrContact = promoCount > 0 || contactCount > 0 || hasPhone;
+
+  // Reduce false positives for diary-like content that mentions DM/Kakao/Instagram
+  // without any promo/price/discount cues.
+  if (promoCount === 0 && !hasPhone) {
+    return contactCount >= 2 && ctaCount >= 2;
+  }
 
   return score >= 3 && hasPromoOrContact;
 }

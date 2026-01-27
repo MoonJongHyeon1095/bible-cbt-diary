@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import EmotionNoteDetailPage from "@/components/emotion-notes/detail/EmotionNoteDetailPage";
+import { Suspense } from "react";
 
 type DetailPageProps = {
   params: Promise<{
@@ -14,5 +15,9 @@ export default async function DetailPage({ params }: DetailPageProps) {
     notFound();
   }
 
-  return <EmotionNoteDetailPage noteId={noteId} />;
+  return (
+    <Suspense fallback={<div />}>
+      <EmotionNoteDetailPage noteId={noteId} />
+    </Suspense>
+  );
 }

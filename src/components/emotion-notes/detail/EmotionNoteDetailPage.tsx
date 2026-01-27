@@ -79,7 +79,6 @@ export default function EmotionNoteDetailPage({
     triggerText,
     setTriggerText,
     handleSaveNote,
-    handleGoToList,
     handleDeleteNote,
     thoughtSection,
     errorSection,
@@ -118,7 +117,6 @@ export default function EmotionNoteDetailPage({
     (note?.trigger_text ?? "") !== triggerText.trim();
   const hasDraft = title.trim().length > 0 || triggerText.trim().length > 0;
   const shouldShowSave = noteId ? hasTitleChange : hasDraft;
-  const canOpenGraph = Boolean(note?.group_id && note?.id);
   const backTarget = useMemo(() => {
     const from = searchParams.get("from");
     const date = searchParams.get("date");

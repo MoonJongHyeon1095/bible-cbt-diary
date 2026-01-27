@@ -101,7 +101,7 @@ function DeepSessionPageContent() {
   useEffect(() => {
     setSelectedSubIds([]);
     setStep(shouldSelectSubNotes ? "select" : "incident");
-  }, [groupIdParam, mainIdParam]);
+  }, [groupIdParam, mainIdParam, shouldSelectSubNotes]);
 
   useEffect(() => {
     const handlePageHide = () => {

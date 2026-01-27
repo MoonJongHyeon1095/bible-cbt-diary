@@ -14,7 +14,7 @@ type StoredAgreement = {
   aiTransfer: boolean;
 };
 
-const EXEMPT_PATHS = ["/terms", "/privacy"];
+const EXEMPT_PATHS = ["/terms", "/privacy", "/terms-of-service"];
 
 function hasAcceptedTerms(): boolean {
   if (typeof window === "undefined") return true;

@@ -19,7 +19,7 @@ const settingsItems = [
   {
     id: "terms",
     label: "이용약관",
-    href: "/terms",
+    href: "/terms-of-service",
     icon: FileText,
   },
   {

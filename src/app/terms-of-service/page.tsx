@@ -1,19 +1,19 @@
 import AppHeader from "@/components/header/AppHeader";
-import PrivacyPolicyContent from "@/components/legal/PrivacyPolicyContent";
+import TermsOfServiceContent from "@/components/legal/TermsOfServiceContent";
 import styles from "../legal/LegalPage.module.css";
 
-export default function PrivacyPage() {
+export default function TermsOfServicePage() {
   return (
     <div className={styles.page}>
       <AppHeader />
       <main className={styles.main}>
         <div className={styles.shell}>
           <section className={styles.card}>
-            <h1 className={styles.title}>개인정보 처리방침</h1>
+            <h1 className={styles.title}>이용약관</h1>
             <p className={styles.subtitle}>
-              마인드 렌즈는 이용자의 개인정보 보호를 위해 최선을 다합니다.
+              마인드 렌즈 서비스 이용을 위한 약관입니다.
             </p>
-            <PrivacyPolicyContent />
+            <TermsOfServiceContent />
           </section>
         </div>
       </main>

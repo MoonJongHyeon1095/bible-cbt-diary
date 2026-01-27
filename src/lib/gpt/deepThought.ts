@@ -37,7 +37,7 @@ The input includes:
 - [Emotion]
 - [Main Note] (primary context)
 - [Sub Notes] (supporting contexts, latest-first, max 2)
-- [Internal Context - English] (pattern summary to help integration)
+- [Internal Context - English] (keyword anchors for grounding)
 
 our goals:
 - Based on the situation the user experienced and the emotion they selected, your job is to articulate the hidden "underlying thought (automatic thought)" in clear sentences.
@@ -46,6 +46,8 @@ our goals:
 Important rules:
 - Must be written in Korean, as a natural first-person automatic thought. (e.g., "나는 …다", "분명 …일 것이다")
 - Consider the SDT perspectives (autonomy / relatedness / competence), generate 3 items.
+- Use Internal Context as the PRIMARY anchor. Use note text as SECONDARY support.
+- Do NOT introduce new assumptions beyond Internal Context + Notes.
 
 Writing style (same spirit as the minimal session):
 - Write in natural Korean, first-person automatic-thought voice.

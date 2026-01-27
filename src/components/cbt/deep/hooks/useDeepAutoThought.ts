@@ -1,5 +1,8 @@
 import { generateDeepAutoThoughts } from "@/lib/ai";
-import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import {
+  type DeepInternalContext,
+  getFallbackDeepInternalContext,
+} from "@/lib/gpt/deepContext";
 import type { DeepAutoThoughtResult } from "@/lib/gpt/deepThought";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { EmotionNote } from "@/lib/types/types";
@@ -41,6 +44,9 @@ export function useDeepAutoThought({
   const inFlightKeyRef = useRef<string | null>(null);
   const completedKeyRef = useRef<string | null>(null);
 
+  const safeInternalContext =
+    internalContext ?? getFallbackDeepInternalContext();
+
   const requestKey = useMemo(() => {
     const ids = [mainNote?.id, ...subNotes.map((note) => note.id)].filter(
       Boolean,
@@ -49,11 +55,14 @@ export function useDeepAutoThought({
       userInput: userInput.trim(),
       emotion: emotion.trim(),
       ids,
+      internalContext: internalContext
+        ? JSON.stringify(internalContext)
+        : "pending",
     });
-  }, [emotion, mainNote?.id, subNotes, userInput]);
+  }, [emotion, internalContext, mainNote?.id, subNotes, userInput]);
 
   const loadThought = useCallback(async () => {
-    if (!userInput.trim() || !emotion || !mainNote || !internalContext) {
+    if (!userInput.trim() || !emotion || !mainNote) {
       return;
     }
     if (inFlightKeyRef.current === requestKey) return;
@@ -74,12 +83,14 @@ export function useDeepAutoThought({
     try {
       const mainContext = buildContext(mainNote);
       const subContexts = subNotes.map(buildContext);
+      // 이 로그 지우지 마 절대
+      console.log("[deep] auto-thought context", safeInternalContext);
       const sdt = await generateDeepAutoThoughts(
         userInput,
         emotion,
         mainContext,
         subContexts,
-        internalContext,
+        safeInternalContext,
       );
       setResult(sdt);
       const nextItems = [
@@ -114,12 +125,20 @@ export function useDeepAutoThought({
       deepAutoThoughtInFlight.delete(requestKey);
       setLoading(false);
     }
-  }, [emotion, internalContext, items.length, mainNote, requestKey, subNotes, userInput]);
+  }, [
+    emotion,
+    items.length,
+    mainNote,
+    requestKey,
+    safeInternalContext,
+    subNotes,
+    userInput,
+  ]);
 
   useEffect(() => {
-    if (!userInput.trim() || !emotion || !mainNote || !internalContext) return;
+    if (!userInput.trim() || !emotion || !mainNote) return;
     void loadThought();
-  }, [loadThought, requestKey, userInput, emotion, mainNote, internalContext]);
+  }, [loadThought, requestKey, userInput, emotion, mainNote]);
 
   return {
     autoThought,

@@ -6,12 +6,10 @@ import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import EmotionGraphCanvas from "./EmotionGraphCanvas";
-import EmotionGraphDeepSelectModal from "./EmotionGraphDeepSelectModal";
 import EmotionGraphDetailStack from "./EmotionGraphDetailStack";
 import styles from "./EmotionGraphSection.module.css";
 import { useElkLayout } from "./hooks/useElkLayout";
 import { useEmotionGraphData } from "./hooks/useEmotionGraphData";
-import { useGraphDeepSelection } from "./hooks/useGraphDeepSelection";
 import { useGraphDisplay } from "./hooks/useGraphDisplay";
 import { useGraphSelection } from "./hooks/useGraphSelection";
 import { getGroupThemeColor } from "./utils/graphColors";
@@ -41,19 +39,10 @@ export default function EmotionGraphSection({
   const {
     selectedNodeId,
     selectedNote,
-    sortedSelectableNotes,
     clearSelection,
     selectNode,
     toggleSelection,
   } = useGraphSelection(notes);
-  const {
-    isDeepSelecting,
-    setIsDeepSelecting,
-    selectedSubIds,
-    toggleSub,
-    closeDeepSelection,
-    canConfirmDeep,
-  } = useGraphDeepSelection(selectedNodeId);
   const { displayNodes, displayEdges } = useGraphDisplay(
     elkNodes,
     elkEdges,
@@ -61,12 +50,10 @@ export default function EmotionGraphSection({
   );
   const handleGoDeeper = () => {
     if (!selectedNote) return;
-    if (!groupId) {
-      router.push(`/session/deep?mainId=${selectedNote.id}`);
-      return;
-    }
-    closeDeepSelection();
-    setIsDeepSelecting(true);
+    const query = groupId
+      ? `/session/deep?mainId=${selectedNote.id}&groupId=${groupId}`
+      : `/session/deep?mainId=${selectedNote.id}`;
+    router.push(query);
   };
   const layoutKey = useMemo(() => {
     const nodeKey = elkNodes.map((node) => node.id).join("|");
@@ -116,7 +103,6 @@ export default function EmotionGraphSection({
         isLoading={isLoading}
         needsNote={needsNote}
         emptyState={emptyState}
-        isDeepSelecting={isDeepSelecting}
         selectedNodeId={selectedNodeId}
         onClearSelection={clearSelection}
         onSelectNode={handleNodeClick}
@@ -138,23 +124,6 @@ export default function EmotionGraphSection({
             />
           </>
         ) : null}
-        <EmotionGraphDeepSelectModal
-          isOpen={isDeepSelecting}
-          mainNote={selectedNote}
-          selectableNotes={sortedSelectableNotes}
-          selectedSubIds={selectedSubIds}
-          canConfirm={canConfirmDeep}
-          onToggleSub={toggleSub}
-          onClose={closeDeepSelection}
-          onConfirm={() => {
-            if (!canConfirmDeep) return;
-            router.push(
-              `/session/deep?mainId=${selectedNodeId}&subIds=${selectedSubIds.join(
-                ",",
-              )}&groupId=${groupId}`,
-            );
-          }}
-        />
         {selectedNote ? (
           <div className={styles.detailStackWrap}>
             <EmotionGraphDetailStack selectedNote={selectedNote} />

@@ -18,9 +18,6 @@ import {
   fetchEmotionGraph,
   fetchEmotionNoteById,
 } from "@/components/graph/utils/emotionGraphApi";
-import { createDeepInternalContext } from "@/lib/ai";
-import type { DeepInternalContext } from "@/lib/gpt/deepContext";
-import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/types";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
@@ -28,6 +25,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DeepAutoThoughtSection } from "./center/DeepAutoThoughtSection";
 import { DeepIncidentSection } from "./center/DeepIncidentSection";
+import { DeepSelectSection } from "./center/DeepSelectSection";
+import { useDeepInternalContext } from "./hooks/useDeepInternalContext";
 import { DeepCognitiveErrorSection } from "./left/DeepCognitiveErrorSection";
 import { DeepAlternativeThoughtSection } from "./right/DeepAlternativeThoughtSection";
 
@@ -39,7 +38,13 @@ const parseIds = (value: string | null) => {
     .filter((item) => Number.isFinite(item));
 };
 
-type DeepStep = "incident" | "emotion" | "thought" | "errors" | "alternative";
+type DeepStep =
+  | "select"
+  | "incident"
+  | "emotion"
+  | "thought"
+  | "errors"
+  | "alternative";
 
 function DeepSessionPageContent() {
   const router = useRouter();
@@ -63,26 +68,24 @@ function DeepSessionPageContent() {
   }, [groupIdParam]);
   const subIds = useMemo(() => parseIds(subIdsParam), [subIdsParam]);
   const subIdSet = useMemo(() => new Set(subIds), [subIds]);
+  const hasSubIdsParam = Boolean(subIdsParam);
+  const shouldSelectSubNotes = Boolean(groupId) && subIds.length === 0;
 
   const [notesLoading, setNotesLoading] = useState(true);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [mainNote, setMainNote] = useState<EmotionNote | null>(null);
   const [subNotes, setSubNotes] = useState<EmotionNote[]>([]);
+  const [groupNotes, setGroupNotes] = useState<EmotionNote[]>([]);
+  const [selectedSubIds, setSelectedSubIds] = useState<number[]>([]);
   const requestIdRef = useRef(0);
   const lastLoadKeyRef = useRef("");
   const inFlightRef = useRef(false);
-  const internalContextKeyRef = useRef("");
-
-  const [step, setStep] = useState<DeepStep>("incident");
+  const [step, setStep] = useState<DeepStep>(() =>
+    shouldSelectSubNotes ? "select" : "incident"
+  );
   const [userInput, setUserInput] = useState("");
   const [selectedEmotion, setSelectedEmotion] = useState("");
   const [autoThought, setAutoThought] = useState("");
-  const [internalContext, setInternalContext] =
-    useState<DeepInternalContext | null>(null);
-  const [internalContextError, setInternalContextError] = useState<
-    string | null
-  >(null);
-  const internalContextInFlightRef = useRef(false);
   const [selectedCognitiveErrors, setSelectedCognitiveErrors] = useState<
     SelectedCognitiveError[]
   >([]);
@@ -90,14 +93,15 @@ function DeepSessionPageContent() {
   const [isSaving, setIsSaving] = useState(false);
   const lastErrorsKeyRef = useRef<string>("");
 
-  const stepOrder: DeepStep[] = [
-    "incident",
-    "emotion",
-    "thought",
-    "errors",
-    "alternative",
-  ];
+  const stepOrder: DeepStep[] = shouldSelectSubNotes
+    ? ["select", "incident", "emotion", "thought", "errors", "alternative"]
+    : ["incident", "emotion", "thought", "errors", "alternative"];
   const currentStepIndex = stepOrder.indexOf(step);
+
+  useEffect(() => {
+    setSelectedSubIds([]);
+    setStep(shouldSelectSubNotes ? "select" : "incident");
+  }, [groupIdParam, mainIdParam]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -147,7 +151,7 @@ function DeepSessionPageContent() {
           return;
         }
 
-        if (groupId && (subIds.length < 1 || subIds.length > 2)) {
+        if (groupId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2)) {
           setNotesError("subIds는 1~2개여야 합니다.");
           setNotesLoading(false);
           return;
@@ -171,7 +175,12 @@ function DeepSessionPageContent() {
             setNotesLoading(false);
             return;
           }
-          const allNotes = data.notes ?? [];
+          const allNotes =
+            data.notes?.slice().sort((a, b) => {
+              const aTime = new Date(a.created_at).getTime();
+              const bTime = new Date(b.created_at).getTime();
+              return bTime - aTime;
+            }) ?? [];
           const main = allNotes.find((note) => note.id === mainId) ?? null;
           const subs = allNotes
             .filter((note) => subIdSet.has(note.id))
@@ -185,6 +194,7 @@ function DeepSessionPageContent() {
 
           setMainNote(main);
           setSubNotes(subs);
+          setGroupNotes(allNotes);
           setNotesLoading(false);
           return;
         }
@@ -201,6 +211,7 @@ function DeepSessionPageContent() {
         }
         setMainNote(data.note);
         setSubNotes([]);
+        setGroupNotes([]);
         setNotesLoading(false);
       } finally {
         inFlightRef.current = false;
@@ -217,47 +228,20 @@ function DeepSessionPageContent() {
     notesLoading,
     subIdSet,
     subIds.length,
+    hasSubIdsParam,
     accessMode,
     accessToken,
   ]);
 
-  useEffect(() => {
-    if (!mainNote || notesLoading || internalContextInFlightRef.current) return;
-    const key = `${mainNote.id}:${subNotes.map((note) => note.id).join(",")}`;
-    if (internalContextKeyRef.current === key && internalContext) return;
-    internalContextKeyRef.current = key;
-    const mainContext = buildDeepNoteContext(mainNote);
-    const subContexts = subNotes.map(buildDeepNoteContext);
-    let canceled = false;
-
-    internalContextInFlightRef.current = true;
-    setInternalContextError(null);
-
-    createDeepInternalContext(mainContext, subContexts)
-      .then((ctx) => {
-        if (canceled) return;
-        setInternalContext(ctx);
-      })
-      .catch((error) => {
-        if (canceled) return;
-        setInternalContextError(
-          error instanceof Error ? error.message : "내부 컨텍스트 생성 실패",
-        );
-      })
-      .finally(() => {
-        if (canceled) return;
-        internalContextInFlightRef.current = false;
-      });
-
-    return () => {
-      canceled = true;
-    };
-  }, [mainNote, notesLoading, subNotes, internalContext]);
+  const {
+    context: internalContext,
+    error: internalContextLoadError,
+  } = useDeepInternalContext(mainNote, subNotes);
 
   useEffect(() => {
-    if (!internalContextError) return;
-    pushToast(internalContextError, "error");
-  }, [internalContextError, pushToast]);
+    if (!internalContextLoadError) return;
+    pushToast(internalContextLoadError, "error");
+  }, [internalContextLoadError, pushToast]);
 
   const handleBack = () => {
     if (currentStepIndex <= 0) return;
@@ -332,6 +316,35 @@ function DeepSessionPageContent() {
     }
   };
 
+  const selectableNotes = useMemo(() => {
+    if (!groupId) return [];
+    return groupNotes.filter((note) => note.id !== mainNote?.id);
+  }, [groupNotes, groupId, mainNote]);
+
+  const toggleSelectSub = (id: number) => {
+    setSelectedSubIds((prev) => {
+      if (prev.includes(id)) {
+        return prev.filter((item) => item !== id);
+      }
+      if (prev.length >= 2) {
+        return prev;
+      }
+      return [...prev, id];
+    });
+  };
+
+  const selectedCount = selectedSubIds.length;
+  const canConfirmSelection = selectedCount >= 1;
+
+  const handleConfirmSelection = () => {
+    if (!canConfirmSelection) return;
+    const selectedNotes = groupNotes
+      .filter((note) => selectedSubIds.includes(note.id))
+      .sort((a, b) => b.id - a.id);
+    setSubNotes(selectedNotes);
+    setStep("incident");
+  };
+
   if (notesLoading) {
     return (
       <MinimalLoadingState
@@ -372,6 +385,18 @@ function DeepSessionPageContent() {
             onInputChange={setUserInput}
             onNext={() => setStep("emotion")}
             mainNote={mainNote}
+          />
+        )}
+
+        {step === "select" && mainNote && (
+          <DeepSelectSection
+            mainNote={mainNote}
+            selectableNotes={selectableNotes}
+            selectedSubIds={selectedSubIds}
+            selectedCount={selectedCount}
+            onToggleSub={toggleSelectSub}
+            onConfirm={handleConfirmSelection}
+            canConfirm={canConfirmSelection}
           />
         )}
 

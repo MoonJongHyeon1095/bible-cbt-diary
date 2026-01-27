@@ -4,27 +4,37 @@ import { cleanText, extractJsonObject } from "./cognitiveRank";
 import type { DeepNoteContext } from "./deepThought.types";
 
 export type DeepInternalContext = {
-  patternSummary: {
-    repeatedThemes: [string, string];
-    triggerPatterns: [string, string];
-    emotionShifts: [string];
-    distortionPatterns: [string, string];
-    alternativePatterns: [string];
+  salient: {
+    actors: string[];
+    events: string[];
+    needs: string[];
+    threats: string[];
+    emotions: string[];
+  };
+  cbt: {
+    topDistortions: string[];
+    coreBeliefsHypothesis: string[];
   };
   openQuestions: [string, string];
   nextStepHint: string;
 };
 
-type LlmPatternSummary = {
-  repeatedThemes?: unknown;
-  triggerPatterns?: unknown;
-  emotionShifts?: unknown;
-  distortionPatterns?: unknown;
-  alternativePatterns?: unknown;
+type LlmSalient = {
+  actors?: unknown;
+  events?: unknown;
+  needs?: unknown;
+  threats?: unknown;
+  emotions?: unknown;
+};
+
+type LlmCbt = {
+  topDistortions?: unknown;
+  coreBeliefsHypothesis?: unknown;
 };
 
 type LlmResponseShape = {
-  patternSummary?: unknown;
+  salient?: unknown;
+  cbt?: unknown;
   openQuestions?: unknown;
   nextStepHint?: unknown;
 };
@@ -38,19 +48,21 @@ You will receive:
 - [Sub Notes] (supporting contexts, latest first, max 2)
 
 Goal:
-Create a compact structured context object for downstream AI steps.
+Create a compact structured keyword context object for downstream AI steps.
 
 Hard rules:
 - Output language: ALL strings must be in English only. Do NOT output Korean.
-- Do NOT quote note text. Paraphrase only.
+- Do NOT quote note text. Use short phrases/keywords only.
 - Sub notes are latest-first and at most 2.
 
-patternSummary MUST be exactly these counts:
-- repeatedThemes: exactly 2 items
-- triggerPatterns: exactly 2 items
-- emotionShifts: exactly 1 item
-- distortionPatterns: exactly 2 items (use standard CBT distortion names if possible)
-- alternativePatterns: exactly 1 item (what helps, when it fails)
+Use only information grounded in the notes. Do NOT add new assumptions.
+
+salient:
+- actors/events/needs/threats/emotions: 2–4 short keywords each when possible.
+
+cbt:
+- topDistortions: 1–2 standard CBT distortion names when possible.
+- coreBeliefsHypothesis: 1–2 brief hypotheses.
 
 openQuestions:
 - Exactly 2 brief, non-judgmental English questions.
@@ -63,12 +75,16 @@ Strict format:
 
 Output schema (exactly):
 {
-  "patternSummary": {
-    "repeatedThemes": ["...", "..."],
-    "triggerPatterns": ["...", "..."],
-    "emotionShifts": ["..."],
-    "distortionPatterns": ["...", "..."],
-    "alternativePatterns": ["..."]
+  "salient": {
+    "actors": ["..."],
+    "events": ["..."],
+    "needs": ["..."],
+    "threats": ["..."],
+    "emotions": ["..."]
+  },
+  "cbt": {
+    "topDistortions": ["..."],
+    "coreBeliefsHypothesis": ["..."]
   },
   "openQuestions": ["...", "..."],
   "nextStepHint": "..."
@@ -107,13 +123,18 @@ function formatNote(note: DeepNoteContext) {
 }
 
 export function formatDeepInternalContext(ctx: DeepInternalContext) {
-  const ps = ctx.patternSummary;
-  return `patternSummary:
-- themes: ${ps.repeatedThemes.join(" | ")}
-- triggers: ${ps.triggerPatterns.join(" | ")}
-- shift: ${ps.emotionShifts.join(" | ")}
-- distortions: ${ps.distortionPatterns.join(" | ")}
-- alts: ${ps.alternativePatterns.join(" | ")}
+  const salient = ctx.salient;
+  const cbt = ctx.cbt;
+  return `salient:
+- actors: ${salient.actors.join(" | ")}
+- events: ${salient.events.join(" | ")}
+- needs: ${salient.needs.join(" | ")}
+- threats: ${salient.threats.join(" | ")}
+- emotions: ${salient.emotions.join(" | ")}
+
+cbt:
+- topDistortions: ${cbt.topDistortions.join(" | ")}
+- coreBeliefsHypothesis: ${cbt.coreBeliefsHypothesis.join(" | ")}
 
 openQuestions:
 - ${ctx.openQuestions[0]}
@@ -123,51 +144,53 @@ nextStepHint:
 - ${ctx.nextStepHint}`.trim();
 }
 
-function normalizePatternSummary(
-  v: unknown,
-): DeepInternalContext["patternSummary"] {
-  const obj = (
-    v && typeof v === "object" ? (v as LlmPatternSummary) : {}
-  ) as LlmPatternSummary;
+function normalizeSalient(v: unknown): DeepInternalContext["salient"] {
+  const obj =
+    v && typeof v === "object" ? (v as LlmSalient) : ({} as LlmSalient);
 
-  const repeatedThemes = normalizeStringArray(obj.repeatedThemes, 2);
-  const triggerPatterns = normalizeStringArray(obj.triggerPatterns, 2);
-  const emotionShifts = normalizeStringArray(obj.emotionShifts, 1);
-  const distortionPatterns = normalizeStringArray(obj.distortionPatterns, 2);
-  const alternativePatterns = normalizeStringArray(obj.alternativePatterns, 1);
+  const actors = normalizeStringArray(obj.actors, 4);
+  const events = normalizeStringArray(obj.events, 4);
+  const needs = normalizeStringArray(obj.needs, 4);
+  const threats = normalizeStringArray(obj.threats, 4);
+  const emotions = normalizeStringArray(obj.emotions, 4);
 
-  // fixed-count fallback
   const fb = {
-    repeatedThemes: [
-      "Interpretation quickly jumps to a negative conclusion.",
-      "Concerns about relationships, performance, or control recur.",
-    ],
-    triggerPatterns: [
-      "Ambiguous or delayed feedback from others.",
-      "Unclear standards or high expectations.",
-    ],
-    emotionShifts: ["Tension escalates into anxiety and withdrawal."],
-    distortionPatterns: ["Mind reading", "Catastrophizing"],
-    alternativePatterns: [
-      "Evidence-checking helps, but is hard to apply under pressure.",
-    ],
+    actors: ["self"],
+    events: ["unclear situation"],
+    needs: ["clarity"],
+    threats: ["rejection"],
+    emotions: ["anxiety"],
   } as const;
 
   return {
-    repeatedThemes: [
-      repeatedThemes[0] || fb.repeatedThemes[0],
-      repeatedThemes[1] || fb.repeatedThemes[1],
-    ],
-    triggerPatterns: [
-      triggerPatterns[0] || fb.triggerPatterns[0],
-      triggerPatterns[1] || fb.triggerPatterns[1],
-    ],
-    emotionShifts: [emotionShifts[0] || fb.emotionShifts[0]],
-    distortionPatterns: [
-      distortionPatterns[0] || fb.distortionPatterns[0],
-      distortionPatterns[1] || fb.distortionPatterns[1],
-    ],
-    alternativePatterns: [alternativePatterns[0] || fb.alternativePatterns[0]],
+    actors: actors.length > 0 ? actors : [...fb.actors],
+    events: events.length > 0 ? events : [...fb.events],
+    needs: needs.length > 0 ? needs : [...fb.needs],
+    threats: threats.length > 0 ? threats : [...fb.threats],
+    emotions: emotions.length > 0 ? emotions : [...fb.emotions],
+  };
+}
+
+function normalizeCbt(v: unknown): DeepInternalContext["cbt"] {
+  const obj = v && typeof v === "object" ? (v as LlmCbt) : ({} as LlmCbt);
+  const topDistortions = normalizeStringArray(obj.topDistortions, 2);
+  const coreBeliefsHypothesis = normalizeStringArray(
+    obj.coreBeliefsHypothesis,
+    2,
+  );
+
+  const fb = {
+    topDistortions: ["Mind reading"],
+    coreBeliefsHypothesis: ["I am not enough"],
+  } as const;
+
+  return {
+    topDistortions:
+      topDistortions.length > 0 ? topDistortions : [...fb.topDistortions],
+    coreBeliefsHypothesis:
+      coreBeliefsHypothesis.length > 0
+        ? coreBeliefsHypothesis
+        : [...fb.coreBeliefsHypothesis],
   };
 }
 
@@ -178,6 +201,16 @@ function normalizeOpenQuestions(v: unknown): [string, string] {
     "What is one piece of evidence for and one piece of evidence against that conclusion?",
   ];
   return [qs[0] ? cleanText(qs[0]) : fb[0], qs[1] ? cleanText(qs[1]) : fb[1]];
+}
+
+export function getFallbackDeepInternalContext(): DeepInternalContext {
+  return {
+    salient: normalizeSalient({}),
+    cbt: normalizeCbt({}),
+    openQuestions: normalizeOpenQuestions([]),
+    nextStepHint:
+      "Rank likely distortions, then generate alternatives and a small behavioral experiment.",
+  };
 }
 
 // ----------------------
@@ -208,20 +241,16 @@ ${subs2.map(formatNote).join("\n\n") || "(none)"}
 
     const parsed = JSON.parse(jsonText) as LlmResponseShape;
 
-    const patternSummary = normalizePatternSummary(parsed.patternSummary);
+    const salient = normalizeSalient(parsed.salient);
+    const cbt = normalizeCbt(parsed.cbt);
     const openQuestions = normalizeOpenQuestions(parsed.openQuestions);
     const nextStepHint =
       normalizeTextValue(parsed.nextStepHint) ||
       "Rank likely distortions, then generate alternatives and a small behavioral experiment.";
 
-    return { patternSummary, openQuestions, nextStepHint };
+    return { salient, cbt, openQuestions, nextStepHint };
   } catch (error) {
     console.error("deep internal context error:", error);
-    return {
-      patternSummary: normalizePatternSummary({}),
-      openQuestions: normalizeOpenQuestions([]),
-      nextStepHint:
-        "Rank likely distortions, then generate alternatives and a small behavioral experiment.",
-    };
+    return getFallbackDeepInternalContext();
   }
 }

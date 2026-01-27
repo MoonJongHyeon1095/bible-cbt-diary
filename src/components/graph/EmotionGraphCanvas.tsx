@@ -22,7 +22,6 @@ type EmotionGraphCanvasProps = {
   isLoading: boolean;
   needsNote: boolean;
   emptyState: boolean;
-  isDeepSelecting: boolean;
   selectedNodeId: string | null;
   onClearSelection: () => void;
   onSelectNode: (nodeId: string) => void;
@@ -36,7 +35,6 @@ export default function EmotionGraphCanvas({
   isLoading,
   needsNote,
   emptyState,
-  isDeepSelecting,
   selectedNodeId,
   onClearSelection,
   onSelectNode,
@@ -95,9 +93,6 @@ export default function EmotionGraphCanvas({
         onInit={handleInit}
         onPaneClick={onClearSelection}
         onNodeClick={(_, node) => {
-          if (isDeepSelecting) {
-            return;
-          }
           onSelectNode(node.id);
         }}
         className={styles.graph}

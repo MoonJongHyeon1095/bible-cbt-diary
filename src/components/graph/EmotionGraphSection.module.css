@@ -120,6 +120,9 @@
 
 .deepFab {
   --fab-right: calc(24px + 78px);
+  background: #121417;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
 }
 
 .detailStackHeader:focus-visible,

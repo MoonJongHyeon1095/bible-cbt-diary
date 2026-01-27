@@ -66,7 +66,8 @@ Based on the user's [Situation], [Emotion], [Negative Automatic Thought], [Ident
 and [Previous Alternatives], generate exactly ONE alternative thought for each of the three techniques below.
 
 [Internal Context structure]
-- patternSummary: repeatedThemes (2), triggerPatterns (2), emotionShifts (1), distortionPatterns (2), alternativePatterns (1)
+- salient: actors/events/needs/threats/emotions (short keywords)
+- cbt: topDistortions (1–2), coreBeliefsHypothesis (1–2)
 - openQuestions: exactly 2 questions
 - nextStepHint: one short sentence
 
@@ -89,6 +90,8 @@ and [Previous Alternatives], generate exactly ONE alternative thought for each o
 [Output rules]
 - You MUST reflect the user's situation, emotion, negative automatic thought, cognitive distortions, and internal context.
 - You MUST reference or adapt prior alternatives, but do NOT copy them verbatim.
+- Use Internal Context as the PRIMARY anchor. Use Situation/Thought as SECONDARY support.
+- Do NOT introduce new assumptions beyond Internal Context + Notes.
 - No baseless optimism or exaggerated positivity.
 - Avoid content overlap across techniques (each should feel meaningfully different).
 - Output must be JSON only.

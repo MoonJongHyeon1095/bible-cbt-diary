@@ -34,9 +34,182 @@
   display: block;
 }
 
+.selectBlock {
+  display: grid;
+  gap: 10px;
+}
+
+.selectSurface {
+  padding: 10px 2px 18px;
+  border-bottom: 1px solid rgba(70, 82, 102, 0.35);
+  display: grid;
+  gap: 10px;
+}
+
+.selectListBlock {
+  display: grid;
+  gap: 12px;
+}
+
+.selectListHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.selectCount {
+  font-size: 0.78rem;
+  color: rgba(200, 210, 230, 0.65);
+}
+
+.selectList {
+  display: grid;
+  gap: 10px;
+  max-height: min(42vh, 360px);
+  overflow: auto;
+  padding-right: 6px;
+}
+
+.selectEmpty {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+  font-size: 0.9rem;
+  color: rgba(200, 210, 230, 0.7);
+}
+
+.selectPick {
+  cursor: pointer;
+  padding: 14px 8px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  background: transparent;
+  text-align: left;
+  display: grid;
+  gap: 10px;
+  position: relative;
+  transition: border-color 0.2s ease, transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.selectPick:hover {
+  transform: translateY(-1px);
+  border-color: rgba(120, 140, 172, 0.6);
+  background: rgba(18, 22, 30, 0.35);
+}
+
+.selectPickActive {
+  border-color: rgba(140, 170, 220, 0.9);
+  background: rgba(22, 28, 38, 0.75);
+}
+
+.selectHeaderRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.selectTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #f6f8fb;
+}
+
+.selectMeta {
+  font-size: 0.72rem;
+  color: rgba(185, 201, 232, 0.65);
+  white-space: nowrap;
+}
+
+.selectText {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: rgba(220, 226, 238, 0.78);
+}
+
+.selectTagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tagEmotion {
+  border-color: rgba(126, 160, 210, 0.7);
+  color: #c8dcf8;
+}
+
+.tagError {
+  border-color: rgba(224, 123, 107, 0.7);
+  color: #f3b6ab;
+}
+
+.tagBehavior {
+  border-color: rgba(126, 201, 171, 0.7);
+  color: #c6f2dc;
+}
+
+.tagCommon {
+  border-color: rgba(180, 190, 210, 0.6);
+  color: #e8eef8;
+}
+
+.selectCommonBlock {
+  display: grid;
+  gap: 6px;
+}
+
+.selectCommonLabel {
+  font-size: 0.75rem;
+  color: rgba(200, 210, 230, 0.7);
+}
+
+.selectCommonEmpty {
+  font-size: 0.72rem;
+  color: rgba(180, 192, 210, 0.6);
+}
+
+.selectCheck {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: rgba(15, 18, 24, 0.8);
+  border: 1px solid rgba(140, 170, 220, 0.7);
+  display: grid;
+  place-items: center;
+  color: #e8f0ff;
+}
+
+.selectFloatingCount {
+  position: fixed;
+  right: 28px;
+  bottom: 112px;
+  z-index: 30;
+  background: rgba(18, 20, 24, 0.92);
+  border: 1px solid rgba(120, 130, 150, 0.35);
+  color: #f6f8fb;
+  font-size: 0.78rem;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
 @media (max-width: 700px) {
   .titleBreak {
     display: block;
     height: 0;
+  }
+
+  .selectList {
+    max-height: 46vh;
+  }
+
+  .selectFloatingCount {
+    right: 16px;
+    bottom: 98px;
   }
 }

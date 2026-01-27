@@ -22,6 +22,7 @@ type GroupNode = {
   noteCount: number;
   radius: number;
   color: string;
+  rgb: [number, number, number];
   x: number;
   y: number;
 };
@@ -35,6 +36,7 @@ const buildNodes = (groups: { id: number; note_count: number }[]) =>
       noteCount: group.note_count,
       radius,
       color: theme.rgbString,
+      rgb: theme.rgb,
       x: 0,
       y: 0,
     };
@@ -85,11 +87,11 @@ export default function EmotionGraphGroupList({
     }
     const simNodes = nodesRef.current.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
-      .force("charge", forceManyBody().strength(-20))
+      .force("charge", forceManyBody().strength(-8))
       .force("center", forceCenter(size.width / 2, size.height / 2))
       .force(
         "collide",
-        forceCollide().radius((node) => (node as GroupNode).radius),
+        forceCollide().radius((node) => (node as GroupNode).radius * 0.92),
       )
       .alpha(0.9);
 
@@ -145,12 +147,18 @@ export default function EmotionGraphGroupList({
                   backgroundColor: node.color,
                   "--tx": `${node.x - node.radius}px`,
                   "--ty": `${node.y - node.radius}px`,
+                  "--node-r": node.rgb[0],
+                  "--node-g": node.rgb[1],
+                  "--node-b": node.rgb[2],
                 } as CSSProperties
               }
               onClick={() => router.push(`/graph?groupId=${node.id}`)}
             >
-              <span className={styles.nodeCount}>{node.noteCount}</span>
-              <span className={styles.nodeLabel}>기록</span>
+              <span className={styles.nodeText}>
+                <span className={styles.nodeCount}>{node.noteCount}</span>
+                <span className={styles.nodeUnit}>개의</span>
+              </span>
+              <span className={styles.nodeLabel}>기록이 있습니다</span>
             </button>
           ))
         )}

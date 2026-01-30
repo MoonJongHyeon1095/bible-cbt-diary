@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createSupabaseAdminClient } from "../src/lib/supabase/admin";
-import { getUserFromAuthHeader } from "../src/lib/auth/session";
+import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode";
+import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode";
 import { getKstDayRange } from "../src/lib/utils/time";
 import { getQueryParam, json, methodNotAllowed, readJson, handleCors } from "./_utils";
 

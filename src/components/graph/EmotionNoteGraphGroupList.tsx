@@ -7,7 +7,7 @@ import {
   forceSimulation,
 } from "d3-force";
 import { useRouter } from "next/navigation";
-import type { CSSProperties } from "react";
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteGraphGroupList.module.css";
 import { fetchEmotionNoteGraphGroups } from "./utils/emotionNoteGraphApi";
@@ -51,6 +51,15 @@ export default function EmotionNoteGraphGroupList({
   const [nodes, setNodes] = useState<GroupNode[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [size, setSize] = useState({ width: 0, height: 0 });
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [isPanning, setIsPanning] = useState(false);
+  const panStateRef = useRef({
+    isPanning: false,
+    startX: 0,
+    startY: 0,
+    originX: 0,
+    originY: 0,
+  });
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -118,6 +127,36 @@ export default function EmotionNoteGraphGroupList({
     [nodes],
   );
 
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if ((event.target as HTMLElement).closest(`.${styles.node}`)) {
+      return;
+    }
+    panStateRef.current.isPanning = true;
+    setIsPanning(true);
+    panStateRef.current.startX = event.clientX;
+    panStateRef.current.startY = event.clientY;
+    panStateRef.current.originX = pan.x;
+    panStateRef.current.originY = pan.y;
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!panStateRef.current.isPanning) return;
+    const dx = event.clientX - panStateRef.current.startX;
+    const dy = event.clientY - panStateRef.current.startY;
+    setPan({
+      x: panStateRef.current.originX + dx,
+      y: panStateRef.current.originY + dy,
+    });
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (!panStateRef.current.isPanning) return;
+    panStateRef.current.isPanning = false;
+    setIsPanning(false);
+    event.currentTarget.releasePointerCapture(event.pointerId);
+  };
+
   return (
     <section className={styles.section}>
       <header className={styles.header}>
@@ -129,38 +168,55 @@ export default function EmotionNoteGraphGroupList({
         </div>
       </header>
 
-      <div ref={containerRef} className={styles.canvas}>
+      <div
+        ref={containerRef}
+        className={`${styles.canvas} ${isPanning ? styles.canvasPanning : ""}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+      >
         {isLoading ? (
           <div className={styles.placeholder}>그룹을 불러오는 중...</div>
         ) : nodes.length === 0 ? (
           <div className={styles.placeholder}>아직 그룹이 없습니다.</div>
         ) : (
-          nodes.map((node) => (
-            <button
-              key={node.id}
-              type="button"
-              className={styles.node}
-              style={
-                {
-                  width: node.radius * 2,
-                  height: node.radius * 2,
-                  backgroundColor: node.color,
-                  "--tx": `${node.x - node.radius}px`,
-                  "--ty": `${node.y - node.radius}px`,
-                  "--node-r": node.rgb[0],
-                  "--node-g": node.rgb[1],
-                  "--node-b": node.rgb[2],
-                } as CSSProperties
-              }
-              onClick={() => router.push(`/graph?groupId=${node.id}`)}
-            >
-              <span className={styles.nodeText}>
-                <span className={styles.nodeCount}>{node.noteCount}</span>
-                <span className={styles.nodeUnit}>개의</span>
-              </span>
-              <span className={styles.nodeLabel}>기록이 있습니다</span>
-            </button>
-          ))
+          <div
+            className={styles.canvasLayer}
+            style={
+              {
+                "--pan-x": `${pan.x}px`,
+                "--pan-y": `${pan.y}px`,
+              } as CSSProperties
+            }
+          >
+            {nodes.map((node) => (
+              <button
+                key={node.id}
+                type="button"
+                className={styles.node}
+                style={
+                  {
+                    width: node.radius * 2,
+                    height: node.radius * 2,
+                    backgroundColor: node.color,
+                    "--tx": `${node.x - node.radius}px`,
+                    "--ty": `${node.y - node.radius}px`,
+                    "--node-r": node.rgb[0],
+                    "--node-g": node.rgb[1],
+                    "--node-b": node.rgb[2],
+                  } as CSSProperties
+                }
+                onClick={() => router.push(`/graph?groupId=${node.id}`)}
+              >
+                <span className={styles.nodeText}>
+                  <span className={styles.nodeCount}>{node.noteCount}</span>
+                  <span className={styles.nodeUnit}>개의</span>
+                </span>
+                <span className={styles.nodeLabel}>기록이 있습니다</span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </section>

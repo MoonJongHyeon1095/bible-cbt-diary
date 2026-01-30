@@ -27,6 +27,12 @@
   position: relative;
   height: clamp(420px, 70vh, 760px);
   overflow: hidden;
+  touch-action: none;
+  cursor: grab;
+}
+
+.canvasPanning {
+  cursor: grabbing;
 }
 
 .placeholder {
@@ -35,6 +41,13 @@
   display: grid;
   place-items: center;
   color: var(--muted);
+}
+
+.canvasLayer {
+  position: absolute;
+  inset: 0;
+  transform: translate(var(--pan-x), var(--pan-y));
+  transition: transform 0.04s linear;
 }
 
 .node {

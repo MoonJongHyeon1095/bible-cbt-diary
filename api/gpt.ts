@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getUserFromAuthHeader } from "../src/lib/auth/session";
+import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode";
 import { json, methodNotAllowed, readJson, handleCors } from "./_utils";
 
 const allowedModels = new Set(["gpt-4.1-mini", "gpt-4o-mini", "gpt-5-nano"]);

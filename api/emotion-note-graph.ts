@@ -16,8 +16,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return json(res, 401, { notes: [], middles: [] });
   }
 
+  const action = getQueryParam(req, "action");
   const groupIdParam = getQueryParam(req, "groupId");
   const groupId = Number(groupIdParam);
+
+  const supabase = createSupabaseAdminClient();
+
+  if (action === "groups") {
+    const { data: groups, error } = await supabase
+      .from("emotion_note_groups")
+      .select("id, created_at, emotion_notes(count)")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      return json(res, 500, {
+        groups: [],
+        message: "그룹 정보를 불러오지 못했습니다.",
+      });
+    }
+
+    const mappedGroups =
+      groups?.map((group) => ({
+        id: group.id,
+        created_at: group.created_at,
+        note_count: group.emotion_notes?.[0]?.count ?? 0,
+      })) ?? [];
+
+    return json(res, 200, { groups: mappedGroups });
+  }
 
   if (!groupIdParam || Number.isNaN(groupId)) {
     return json(res, 400, {
@@ -27,7 +54,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const supabase = createSupabaseAdminClient();
   const { data: notes, error: notesError } = await supabase
     .from("emotion_notes")
     .select(

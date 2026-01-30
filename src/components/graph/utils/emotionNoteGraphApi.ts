@@ -32,9 +32,12 @@ export const fetchEmotionNoteGraph = async (
 };
 
 export const fetchEmotionNoteGraphGroups = async (accessToken: string) => {
-  const response = await fetch(buildApiUrl("/api/emotion-note-graph/group-list"), {
-    headers: buildAuthHeaders(accessToken),
-  });
+  const response = await fetch(
+    buildApiUrl("/api/emotion-note-graph?action=groups"),
+    {
+      headers: buildAuthHeaders(accessToken),
+    },
+  );
 
   const data = response.ok
     ? ((await response.json()) as { groups: EmotionNoteGraphGroupSummary[] })

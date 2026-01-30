@@ -56,10 +56,10 @@ export const syncTokenUsage = async (
 export const fetchTokenUsageStatus = async (): Promise<TokenUsageStatus> => {
   const deviceId = getDeviceId();
   const headers = await buildUsageHeaders();
-  const response = await fetch(`${API_BASE}/api/token-usage-status`, {
+  const response = await fetch(`${API_BASE}/api/token-usage`, {
     method: "POST",
     headers,
-    body: JSON.stringify({ deviceId }),
+    body: JSON.stringify({ deviceId, action: "status" }),
   });
 
   const payload = await response.json().catch(() => ({}));

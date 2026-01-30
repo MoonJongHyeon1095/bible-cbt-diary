@@ -169,6 +169,12 @@
   gap: 8px;
 }
 
+.summaryLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(226, 232, 240, 0.9);
+}
+
 .helperText {
   font-size: 0.78rem;
   color: var(--muted);
@@ -397,7 +403,7 @@
 }
 
 .fabSaveSecondary {
-  bottom: 192px;
+  bottom: 250px;
 }
 
 .modeSelectOnly {

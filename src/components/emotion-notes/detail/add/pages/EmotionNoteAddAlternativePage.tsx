@@ -345,7 +345,7 @@ export default function EmotionNoteAddAlternativePage({
 
           {mode === "ai" && (
             <div className={styles.sectionStack}>
-              {aiStep === "select-thought" && (
+              {!aiLoading && aiStep === "select-thought" && (
                 <div className={styles.stepCenter}>
                   <SelectionPanel
                     title="자동사고 선택"
@@ -395,7 +395,7 @@ export default function EmotionNoteAddAlternativePage({
                   </SelectionPanel>
                 </div>
               )}
-              {aiStep === "select-errors" && (
+              {!aiLoading && aiStep === "select-errors" && (
                 <div className={styles.stepCenter}>
                   <SelectionPanel
                     title="인지오류 선택"
@@ -447,11 +447,13 @@ export default function EmotionNoteAddAlternativePage({
               )}
 
               {aiLoading && (
-                <AiLoadingCard
-                  title="대안사고 생성 중"
-                  description="선택한 자동사고와 인지오류를 반영하고 있어요."
-                  tone="green"
-                />
+                <div className={styles.stepCenter}>
+                  <AiLoadingCard
+                    title="대안사고 생성 중"
+                    description="선택한 자동사고와 인지오류를 반영하고 있어요."
+                    tone="green"
+                  />
+                </div>
               )}
 
               {!aiLoading && aiError && (
@@ -605,34 +607,40 @@ export default function EmotionNoteAddAlternativePage({
                       </summary>
                       <div className={styles.summaryBody}>
                         {selectedThought ? (
-                          <div className={styles.revealList}>
-                            <div className={styles.revealListItem}>
-                              <span>•</span>
-                              <span>
-                                {selectedThought.emotion?.trim() || "감정 미선택"}{" "}
-                                -{" "}
-                                {selectedThought.automatic_thought?.trim() ||
-                                  "-"}
-                              </span>
-                            </div>
-                          </div>
-                        ) : null}
-                        {selectedErrors.length > 0 ? (
-                          <div className={styles.revealList}>
-                            {selectedErrors.map((errorDetail) => (
-                              <div
-                                key={errorDetail.id}
-                                className={styles.revealListItem}
-                              >
+                          <>
+                            <p className={styles.summaryLabel}>자동사고</p>
+                            <div className={styles.revealList}>
+                              <div className={styles.revealListItem}>
                                 <span>•</span>
                                 <span>
-                                  {formatErrorLabel(errorDetail.error_label)} -{" "}
-                                  {errorDetail.error_description ||
-                                    "설명이 없습니다."}
+                                  {selectedThought.emotion?.trim() || "감정 미선택"}{" "}
+                                  -{" "}
+                                  {selectedThought.automatic_thought?.trim() ||
+                                    "-"}
                                 </span>
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          </>
+                        ) : null}
+                        {selectedErrors.length > 0 ? (
+                          <>
+                            <p className={styles.summaryLabel}>인지오류</p>
+                            <div className={styles.revealList}>
+                              {selectedErrors.map((errorDetail) => (
+                                <div
+                                  key={errorDetail.id}
+                                  className={styles.revealListItem}
+                                >
+                                  <span>•</span>
+                                  <span>
+                                    {formatErrorLabel(errorDetail.error_label)} -{" "}
+                                    {errorDetail.error_description ||
+                                      "설명이 없습니다."}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         ) : null}
                       </div>
                     </details>
@@ -686,9 +694,9 @@ export default function EmotionNoteAddAlternativePage({
             className={`${styles.fab} ${styles.fabSave}`}
           />
           <FloatingActionButton
-            label="상세조회"
+            label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
-            helperText="상세조회"
+            helperText="노트로 돌아가기"
             onClick={() => router.push(`/detail/${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />

@@ -10,6 +10,11 @@ type SingleSelectorProps = {
   onSelect: (next: string) => void;
 };
 
+type BehaviorOption = (typeof COGNITIVE_BEHAVIORS)[number];
+type BehaviorSelectorProps = SingleSelectorProps & {
+  options?: ReadonlyArray<BehaviorOption>;
+};
+
 type MultiSelectorProps = {
   values: string[];
   onToggle: (next: string) => void;
@@ -82,10 +87,12 @@ export function ErrorOptionSelector({ value, onSelect }: SingleSelectorProps) {
 export function BehaviorOptionSelector({
   value,
   onSelect,
-}: SingleSelectorProps) {
+  options,
+}: BehaviorSelectorProps) {
+  const behaviorOptions = options ?? COGNITIVE_BEHAVIORS;
   return (
     <div className={styles.optionGrid}>
-      {COGNITIVE_BEHAVIORS.map((behavior, index) => {
+      {behaviorOptions.map((behavior, index) => {
         const active = value === behavior.replacement_title;
         return (
           <button

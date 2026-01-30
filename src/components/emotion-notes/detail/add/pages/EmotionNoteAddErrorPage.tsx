@@ -304,114 +304,119 @@ export default function EmotionNoteAddErrorPage({
 
           {mode === "ai" && (
             <div className={styles.sectionStack}>
-              {aiStep === "select-error" && (
-                <div className={styles.selectionRow}>
-                  <p className={styles.sectionTitle}>인지오류 선택</p>
-                  <p className={styles.sectionHint}>
-                    인지오류를 먼저 선택해야 합니다.
-                  </p>
-                  <ErrorOptionSelector
-                    value={errorLabel}
-                    onSelect={(next) => {
-                      setErrorLabel(next);
-                      setSelectedSuggestion("");
-                    }}
-                  />
-                  <SelectionReveal isVisible={Boolean(selectedErrorMeta)}>
-                    {selectedErrorMeta ? (
-                      <div className={styles.revealInner}>
-                        <p className={styles.revealTitle}>
-                          {selectedErrorMeta.title}
-                        </p>
-                        <p className={styles.revealText}>
-                          {selectedErrorMeta.description}
-                        </p>
-                      </div>
-                    ) : null}
-                  </SelectionReveal>
-                </div>
-              )}
-
-              {aiStep === "select-thought" && (
+              {aiLoading ? (
                 <div className={styles.stepCenter}>
-                  <SelectionPanel
-                    title="자동사고 선택"
-                    description="선택한 자동사고를 기준으로 인지오류 설명을 생성합니다."
-                    countText={`${thoughtSection.details.length}개`}
-                    emptyText={
-                      thoughtSection.details.length === 0
-                        ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
-                        : undefined
-                    }
+                  <AiLoadingCard
+                    title="인지오류 설명 생성 중"
+                    description="선택한 자동사고를 분석하고 있어요."
                     tone="rose"
-                  >
-                    {thoughtSection.details.map((detail) => {
-                      const isSelected = selectedThoughtId === String(detail.id);
-                      const emotionLabel =
-                        detail.emotion?.trim() || "감정 미선택";
-                      const thoughtText =
-                        detail.automatic_thought?.trim() || "-";
-                      const isExpanded = expandedThoughtIds.includes(
-                        String(detail.id),
-                      );
-                      return (
-                        <SelectionCard
-                          key={detail.id}
-                          selected={isSelected}
-                          onSelect={() =>
-                            setSelectedThoughtId(String(detail.id))
-                          }
-                          tone="rose"
-                        >
-                          <span className={styles.selectedChip}>
-                            {emotionLabel}
-                          </span>
-                          <ExpandableText
-                            text={thoughtText}
-                            expanded={isExpanded}
-                            onToggle={() =>
-                              setExpandedThoughtIds((prev) =>
-                                prev.includes(String(detail.id))
-                                  ? prev.filter((id) => id !== String(detail.id))
-                                  : [...prev, String(detail.id)],
-                              )
-                            }
-                            tone="rose"
-                          />
-                        </SelectionCard>
-                      );
-                    })}
-                  </SelectionPanel>
+                  />
                 </div>
-              )}
+              ) : (
+                <>
+                  {aiStep === "select-error" && (
+                    <div className={styles.selectionRow}>
+                      <p className={styles.sectionTitle}>인지오류 선택</p>
+                      <p className={styles.sectionHint}>
+                        인지오류를 먼저 선택해야 합니다.
+                      </p>
+                      <ErrorOptionSelector
+                        value={errorLabel}
+                        onSelect={(next) => {
+                          setErrorLabel(next);
+                          setSelectedSuggestion("");
+                        }}
+                      />
+                      <SelectionReveal isVisible={Boolean(selectedErrorMeta)}>
+                        {selectedErrorMeta ? (
+                          <div className={styles.revealInner}>
+                            <p className={styles.revealTitle}>
+                              {selectedErrorMeta.title}
+                            </p>
+                            <p className={styles.revealText}>
+                              {selectedErrorMeta.description}
+                            </p>
+                          </div>
+                        ) : null}
+                      </SelectionReveal>
+                    </div>
+                  )}
 
-              {aiLoading && (
-                <AiLoadingCard
-                  title="인지오류 설명 생성 중"
-                  description="선택한 자동사고를 분석하고 있어요."
-                  tone="rose"
-                />
-              )}
+                  {aiStep === "select-thought" && (
+                    <div className={styles.stepCenter}>
+                      <SelectionPanel
+                        title="자동사고 선택"
+                        description="선택한 자동사고를 기준으로 인지오류 설명을 생성합니다."
+                        countText={`${thoughtSection.details.length}개`}
+                        emptyText={
+                          thoughtSection.details.length === 0
+                            ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
+                            : undefined
+                        }
+                        tone="rose"
+                      >
+                        {thoughtSection.details.map((detail) => {
+                          const isSelected =
+                            selectedThoughtId === String(detail.id);
+                          const emotionLabel =
+                            detail.emotion?.trim() || "감정 미선택";
+                          const thoughtText =
+                            detail.automatic_thought?.trim() || "-";
+                          const isExpanded = expandedThoughtIds.includes(
+                            String(detail.id),
+                          );
+                          return (
+                            <SelectionCard
+                              key={detail.id}
+                              selected={isSelected}
+                              onSelect={() =>
+                                setSelectedThoughtId(String(detail.id))
+                              }
+                              tone="rose"
+                            >
+                              <span className={styles.selectedChip}>
+                                {emotionLabel}
+                              </span>
+                              <ExpandableText
+                                text={thoughtText}
+                                expanded={isExpanded}
+                                onToggle={() =>
+                                  setExpandedThoughtIds((prev) =>
+                                    prev.includes(String(detail.id))
+                                      ? prev.filter(
+                                          (id) => id !== String(detail.id),
+                                        )
+                                      : [...prev, String(detail.id)],
+                                  )
+                                }
+                                tone="rose"
+                              />
+                            </SelectionCard>
+                          );
+                        })}
+                      </SelectionPanel>
+                    </div>
+                  )}
 
-              {!aiLoading && aiError && (
-                <div className={styles.errorBox}>{aiError}</div>
-              )}
+                  {aiError && <div className={styles.errorBox}>{aiError}</div>}
 
-              {!aiLoading && aiStep === "suggestions" && aiSuggestion && (
-                <AiCandidatesPanel
-                  title="AI 인지오류 제안"
-                  description="선택한 제안을 저장하세요."
-                  tone="rose"
-                >
-                  <SelectionCard
-                    selected={Boolean(selectedSuggestion.trim())}
-                    saved={savedSuggestions.includes(aiSuggestion)}
-                    onSelect={() => setSelectedSuggestion(aiSuggestion)}
-                    tone="rose"
-                  >
-                    {aiSuggestion}
-                  </SelectionCard>
-                </AiCandidatesPanel>
+                  {aiStep === "suggestions" && aiSuggestion && (
+                    <AiCandidatesPanel
+                      title="AI 인지오류 제안"
+                      description="선택한 제안을 저장하세요."
+                      tone="rose"
+                    >
+                      <SelectionCard
+                        selected={Boolean(selectedSuggestion.trim())}
+                        saved={savedSuggestions.includes(aiSuggestion)}
+                        onSelect={() => setSelectedSuggestion(aiSuggestion)}
+                        tone="rose"
+                      >
+                        {aiSuggestion}
+                      </SelectionCard>
+                    </AiCandidatesPanel>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -501,9 +506,9 @@ export default function EmotionNoteAddErrorPage({
             className={`${styles.fab} ${styles.fabSave}`}
           />
           <FloatingActionButton
-            label="상세조회"
+            label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
-            helperText="상세조회"
+            helperText="노트로 돌아가기"
             onClick={() => router.push(`/detail/${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />

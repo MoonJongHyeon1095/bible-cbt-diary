@@ -259,96 +259,99 @@ export default function EmotionNoteAddThoughtPage({
 
         {mode === "ai" && (
           <div className={styles.sectionStack}>
-            <div className={styles.selectionRow}>
-              <p className={styles.sectionTitle}>감정 선택</p>
-              <p className={styles.sectionHint}>
-                감정을 먼저 선택해야 AI 제안을 받을 수 있어요.
-              </p>
-              <EmotionOptionSelector
-                value={selectedEmotion}
-                onSelect={(next) => {
-                  setSelectedEmotion(next);
-                  setSelectedCandidate("");
-                  setAiCandidates([]);
-                  setAiError(null);
-                  setSavedCandidates([]);
-                  setAiStep("select-emotion");
-                }}
-              />
-            </div>
+            {aiLoading ? (
+              <div className={styles.stepCenter}>
+                <AiLoadingCard
+                  title="자동사고 생성 중"
+                  description="선택한 감정을 바탕으로 후보를 만들고 있어요."
+                  tone="amber"
+                />
+              </div>
+            ) : (
+              <>
+                {aiStep === "select-emotion" && (
+                  <div className={styles.selectionRow}>
+                  <p className={styles.sectionTitle}>감정 선택</p>
+                  <p className={styles.sectionHint}>
+                    감정을 먼저 선택해야 AI 제안을 받을 수 있어요.
+                  </p>
+                  <EmotionOptionSelector
+                    value={selectedEmotion}
+                    onSelect={(next) => {
+                      setSelectedEmotion(next);
+                      setSelectedCandidate("");
+                      setAiCandidates([]);
+                      setAiError(null);
+                      setSavedCandidates([]);
+                      setAiStep("select-emotion");
+                    }}
+                  />
+                </div>
+                )}
 
-            {aiStep === "suggestions" && selectedEmotion.trim() && (
-              <span className={styles.selectedChip}>
-                선택된 감정: {selectedEmotion}
-              </span>
-            )}
-            <SelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
-              {selectedEmotionMeta ? (
-                <div className={styles.revealInner}>
-                  <p className={styles.revealTitle}>
-                    {selectedEmotionMeta.description}
-                  </p>
-                  <p className={styles.revealText}>
-                    {selectedEmotionMeta.physical}
-                  </p>
-                  <div className={styles.revealList}>
-                    {selectedEmotionMeta.positive.map((item, index) => (
-                      <div
-                        key={`${selectedEmotionMeta.id}-positive-${index}`}
-                        className={styles.revealListItem}
-                      >
-                        <span>•</span>
-                        <span>{item}</span>
+                {aiStep === "select-emotion" && (
+                  <SelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
+                    {selectedEmotionMeta ? (
+                      <div className={styles.revealInner}>
+                        <p className={styles.revealTitle}>
+                          {selectedEmotionMeta.description}
+                        </p>
+                        <p className={styles.revealText}>
+                          {selectedEmotionMeta.physical}
+                        </p>
+                        <div className={styles.revealList}>
+                          {selectedEmotionMeta.positive.map((item, index) => (
+                            <div
+                              key={`${selectedEmotionMeta.id}-positive-${index}`}
+                              className={styles.revealListItem}
+                            >
+                              <span>•</span>
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </SelectionReveal>
+                    ) : null}
+                  </SelectionReveal>
+                )}
 
-            {aiLoading && (
-              <AiLoadingCard
-                title="자동사고 생성 중"
-                description="선택한 감정을 바탕으로 후보를 만들고 있어요."
-                tone="amber"
-              />
-            )}
+                {aiError && <div className={styles.errorBox}>{aiError}</div>}
 
-            {!aiLoading && aiError && (
-              <div className={styles.errorBox}>{aiError}</div>
-            )}
-
-            {!aiLoading && aiStep === "suggestions" && (
-              <AiCandidatesPanel
-                title="AI 자동사고 후보"
-                description="원하는 제안을 선택한 뒤 저장하세요."
-                countText={`${aiCandidates.length}개 추천`}
-                tone="amber"
-              >
-                <div className={styles.candidateList}>
-                  {aiCandidates.map((candidate, index) => {
-                    const isSelected =
-                      selectedCandidate.trim() === candidate.belief.trim();
-                    const saved = savedCandidates.includes(candidate.belief);
-                    return (
-                      <SelectionCard
-                        key={`${candidate.belief}-${index}`}
-                        selected={isSelected}
-                        saved={saved}
-                        onSelect={() => setSelectedCandidate(candidate.belief)}
-                        tone="amber"
-                      >
-                        <p className={styles.sectionTitle}>
-                          {candidate.belief}
-                        </p>
-                        <p className={styles.sectionHint}>
-                          {candidate.emotionReason}
-                        </p>
-                      </SelectionCard>
-                    );
-                  })}
-                </div>
-              </AiCandidatesPanel>
+                {aiStep === "suggestions" && (
+                  <AiCandidatesPanel
+                    title="AI 자동사고 후보"
+                    description="원하는 제안을 선택한 뒤 저장하세요."
+                    countText={`${aiCandidates.length}개 추천`}
+                    tone="amber"
+                  >
+                    <div className={styles.candidateList}>
+                      {aiCandidates.map((candidate, index) => {
+                        const isSelected =
+                          selectedCandidate.trim() === candidate.belief.trim();
+                        const saved = savedCandidates.includes(candidate.belief);
+                        return (
+                          <SelectionCard
+                            key={`${candidate.belief}-${index}`}
+                            selected={isSelected}
+                            saved={saved}
+                            onSelect={() =>
+                              setSelectedCandidate(candidate.belief)
+                            }
+                            tone="amber"
+                          >
+                            <p className={styles.sectionTitle}>
+                              {candidate.belief}
+                            </p>
+                            <p className={styles.sectionHint}>
+                              {candidate.emotionReason}
+                            </p>
+                          </SelectionCard>
+                        );
+                      })}
+                    </div>
+                  </AiCandidatesPanel>
+                )}
+              </>
             )}
           </div>
         )}
@@ -449,9 +452,9 @@ export default function EmotionNoteAddThoughtPage({
             className={`${styles.fab} ${styles.fabSave}`}
           />
           <FloatingActionButton
-            label="상세조회"
+            label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
-            helperText="상세조회"
+            helperText="노트로 돌아가기"
             onClick={() => router.push(`/detail/${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />

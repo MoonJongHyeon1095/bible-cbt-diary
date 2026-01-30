@@ -35,7 +35,7 @@ type BehaviorAiStep =
   | "select-errors"
   | "select-alternative"
   | "suggestions";
-type BehaviorDirectStep = "select-behavior" | "select-tags" | "input";
+type BehaviorDirectStep = "select-tags" | "select-behavior" | "input";
 
 type EmotionNoteAddBehaviorPageProps = {
   noteId: number;
@@ -62,7 +62,7 @@ export default function EmotionNoteAddBehaviorPage({
   const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
   const [aiStep, setAiStep] = useState<BehaviorAiStep>("select-thought");
   const [directStep, setDirectStep] = useState<BehaviorDirectStep>(
-    "select-behavior",
+    "select-tags",
   );
   const [selectedThoughtId, setSelectedThoughtId] = useState("");
   const [selectedErrorIds, setSelectedErrorIds] = useState<string[]>([]);
@@ -164,17 +164,33 @@ export default function EmotionNoteAddBehaviorPage({
       ) ?? null,
     [directBehaviorLabel],
   );
-  const selectedDirectTags = useMemo(
+  const selectedDirectTagMetas = useMemo(
     () =>
       directBehaviorTags.map((tag) => {
         const meta = COGNITIVE_ERRORS.find((item) => item.title === tag);
         return {
+          id: meta?.id ?? null,
           title: tag,
           description: meta?.description ?? "설명이 없습니다.",
         };
       }),
     [directBehaviorTags],
   );
+  const directBehaviorOptions = useMemo(() => {
+    if (selectedDirectTagMetas.length === 0) {
+      return COGNITIVE_BEHAVIORS;
+    }
+    const byId = new Map<string, (typeof COGNITIVE_BEHAVIORS)[number]>();
+    selectedDirectTagMetas.forEach((meta) => {
+      if (!meta.id) return;
+      getRecommendedBehaviors(meta.id).forEach((behavior) => {
+        if (!byId.has(behavior.id)) {
+          byId.set(behavior.id, behavior);
+        }
+      });
+    });
+    return Array.from(byId.values());
+  }, [selectedDirectTagMetas]);
 
   const handleClose = () => {
     if (mode === "ai") {
@@ -193,11 +209,11 @@ export default function EmotionNoteAddBehaviorPage({
     }
     if (mode === "direct") {
       if (directStep === "input") {
-        setDirectStep("select-tags");
+        setDirectStep("select-behavior");
         return;
       }
-      if (directStep === "select-tags") {
-        setDirectStep("select-behavior");
+      if (directStep === "select-behavior") {
+        setDirectStep("select-tags");
         return;
       }
     }
@@ -215,7 +231,7 @@ export default function EmotionNoteAddBehaviorPage({
 
   const resetFlow = () => {
     setAiStep("select-thought");
-    setDirectStep("select-behavior");
+    setDirectStep("select-tags");
     setSelectedThoughtId("");
     setSelectedErrorIds([]);
     setSelectedAlternativeId("");
@@ -381,7 +397,7 @@ export default function EmotionNoteAddBehaviorPage({
       return;
     }
     if (!directBehaviorLabel.trim() || directBehaviorTags.length === 0) {
-      pushToast("행동 반응과 인지오류 태그를 선택해주세요.", "error");
+      pushToast("행동 반응과 인지오류를 선택해주세요.", "error");
       return;
     }
     setIsSaving(true);
@@ -405,7 +421,7 @@ export default function EmotionNoteAddBehaviorPage({
   const showAiNext = mode === "ai" && aiStep !== "suggestions";
   const showDirectNext =
     mode === "direct" &&
-    (directStep === "select-behavior" || directStep === "select-tags");
+    (directStep === "select-tags" || directStep === "select-behavior");
   const showAiSave = mode === "ai" && aiStep === "suggestions";
   const showDirectSave = mode === "direct" && directStep === "input";
   const saveLabel = isSelectedSaved ? "저장됨" : "저장";
@@ -420,8 +436,8 @@ export default function EmotionNoteAddBehaviorPage({
     (aiStep === "select-errors" && selectedErrorIds.length === 0) ||
     (aiStep === "select-alternative" && !selectedAlternativeId);
   const nextDisabledDirect =
-    (directStep === "select-behavior" && !directBehaviorLabel.trim()) ||
-    (directStep === "select-tags" && directBehaviorTags.length === 0);
+    (directStep === "select-tags" && directBehaviorTags.length === 0) ||
+    (directStep === "select-behavior" && !directBehaviorLabel.trim());
 
   const handleAiNext = () => {
     if (aiStep === "select-thought") {
@@ -438,13 +454,13 @@ export default function EmotionNoteAddBehaviorPage({
   };
 
   const handleDirectNext = () => {
-    if (directStep === "select-behavior") {
-      if (!directBehaviorLabel.trim()) return;
-      setDirectStep("select-tags");
-      return;
-    }
     if (directStep === "select-tags") {
       if (directBehaviorTags.length === 0) return;
+      setDirectStep("select-behavior");
+      return;
+    }
+    if (directStep === "select-behavior") {
+      if (!directBehaviorLabel.trim()) return;
       setDirectStep("input");
     }
   };
@@ -470,7 +486,7 @@ export default function EmotionNoteAddBehaviorPage({
 
           {mode === "ai" && (
             <div className={styles.sectionStack}>
-              {aiStep === "select-thought" && (
+              {!aiLoading && aiStep === "select-thought" && (
                 <div className={styles.stepCenter}>
                   <SelectionPanel
                     title="자동사고 선택"
@@ -517,7 +533,7 @@ export default function EmotionNoteAddBehaviorPage({
                   </SelectionPanel>
                 </div>
               )}
-              {aiStep === "select-errors" && (
+              {!aiLoading && aiStep === "select-errors" && (
                 <div className={styles.stepCenter}>
                   <SelectionPanel
                     title="인지오류 선택"
@@ -565,7 +581,7 @@ export default function EmotionNoteAddBehaviorPage({
                 </div>
               )}
 
-              {aiStep === "select-alternative" && (
+              {!aiLoading && aiStep === "select-alternative" && (
                 <div className={styles.stepCenter}>
                   <SelectionPanel
                     title="대안적 접근 선택"
@@ -611,11 +627,13 @@ export default function EmotionNoteAddBehaviorPage({
               )}
 
               {aiLoading && (
-                <AiLoadingCard
-                  title="행동 반응 생성 중"
-                  description="선택한 내용을 기반으로 행동 제안을 만들고 있어요."
-                  tone="blue"
-                />
+                <div className={styles.stepCenter}>
+                  <AiLoadingCard
+                    title="행동 반응 생성 중"
+                    description="선택한 내용을 기반으로 행동 제안을 만들고 있어요."
+                    tone="blue"
+                  />
+                </div>
               )}
 
               {!aiLoading && aiError && (
@@ -668,66 +686,79 @@ export default function EmotionNoteAddBehaviorPage({
 
           {mode === "direct" && (
             <div className={styles.sectionStack}>
-              {directStep === "select-behavior" && (
-                <div className={styles.selectionRow}>
-                  <p className={styles.sectionTitle}>행동 반응 선택</p>
-                  <BehaviorOptionSelector
-                    value={directBehaviorLabel}
-                    onSelect={setDirectBehaviorLabel}
-                  />
-                  <SelectionReveal isVisible={Boolean(selectedDirectBehavior)}>
-                    {selectedDirectBehavior ? (
-                      <div className={styles.revealInner}>
-                        <p className={styles.revealTitle}>
-                          {selectedDirectBehavior.replacement_title}
-                        </p>
-                        {selectedDirectBehavior.description ? (
-                          <p className={styles.revealText}>
-                            {selectedDirectBehavior.description}
-                          </p>
-                        ) : null}
-                        {selectedDirectBehavior.usage_description ? (
-                          <p className={styles.revealText}>
-                            {selectedDirectBehavior.usage_description}
-                          </p>
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </SelectionReveal>
+              {directStep === "select-tags" && (
+                <div className={styles.stepCenter}>
+                  <div className={styles.selectionRow}>
+                    <p className={styles.sectionTitle}>
+                      인지오류 선택 (최대 2개)
+                    </p>
+                    <ErrorTagSelector
+                      values={directBehaviorTags}
+                      maxSelected={2}
+                      onToggle={(tag) => {
+                        setDirectBehaviorTags((prev) =>
+                          prev.includes(tag)
+                            ? prev.filter((item) => item !== tag)
+                            : [...prev, tag],
+                        );
+                      }}
+                    />
+                    <SelectionReveal
+                      isVisible={selectedDirectTagMetas.length > 0}
+                    >
+                      {selectedDirectTagMetas.length > 0 ? (
+                        <div className={styles.revealInner}>
+                          <div className={styles.revealList}>
+                            {selectedDirectTagMetas.map((tag) => (
+                              <div
+                                key={tag.title}
+                                className={styles.revealListItem}
+                              >
+                                <span>•</span>
+                                <span>
+                                  {tag.title} - {tag.description}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null}
+                    </SelectionReveal>
+                  </div>
                 </div>
               )}
 
-              {directStep === "select-tags" && (
-                <div className={styles.selectionRow}>
-                  <p className={styles.sectionTitle}>
-                    인지오류 태그 선택 (복수 가능)
-                  </p>
-                  <ErrorTagSelector
-                    values={directBehaviorTags}
-                    onToggle={(tag) => {
-                      setDirectBehaviorTags((prev) =>
-                        prev.includes(tag)
-                          ? prev.filter((item) => item !== tag)
-                          : [...prev, tag],
-                      );
-                    }}
-                  />
-                  <SelectionReveal isVisible={selectedDirectTags.length > 0}>
-                    {selectedDirectTags.length > 0 ? (
-                      <div className={styles.revealInner}>
-                        <div className={styles.revealList}>
-                          {selectedDirectTags.map((tag) => (
-                            <div key={tag.title} className={styles.revealListItem}>
-                              <span>•</span>
-                              <span>
-                                {tag.title} - {tag.description}
-                              </span>
-                            </div>
-                          ))}
+              {directStep === "select-behavior" && (
+                <div className={styles.stepCenter}>
+                  <div className={styles.selectionRow}>
+                    <p className={styles.sectionTitle}>행동 반응 선택</p>
+                    <BehaviorOptionSelector
+                      value={directBehaviorLabel}
+                      onSelect={setDirectBehaviorLabel}
+                      options={directBehaviorOptions}
+                    />
+                    <SelectionReveal
+                      isVisible={Boolean(selectedDirectBehavior)}
+                    >
+                      {selectedDirectBehavior ? (
+                        <div className={styles.revealInner}>
+                          <p className={styles.revealTitle}>
+                            {selectedDirectBehavior.replacement_title}
+                          </p>
+                          {selectedDirectBehavior.description ? (
+                            <p className={styles.revealText}>
+                              {selectedDirectBehavior.description}
+                            </p>
+                          ) : null}
+                          {selectedDirectBehavior.usage_description ? (
+                            <p className={styles.revealText}>
+                              {selectedDirectBehavior.usage_description}
+                            </p>
+                          ) : null}
                         </div>
-                      </div>
-                    ) : null}
-                  </SelectionReveal>
+                      ) : null}
+                    </SelectionReveal>
+                  </div>
                 </div>
               )}
 
@@ -741,19 +772,31 @@ export default function EmotionNoteAddBehaviorPage({
                       </summary>
                       <div className={styles.summaryBody}>
                         {directBehaviorLabel.trim() ? (
-                          <span className={styles.selectedChip}>
-                            {directBehaviorLabel}
-                          </span>
-                        ) : null}
-                        {selectedDirectTags.length > 0 ? (
-                          <div className={styles.revealList}>
-                            {selectedDirectTags.map((tag) => (
-                              <div key={tag.title} className={styles.revealListItem}>
+                          <>
+                            <p className={styles.summaryLabel}>행동 반응</p>
+                            <div className={styles.revealList}>
+                              <div className={styles.revealListItem}>
                                 <span>•</span>
-                                <span>{tag.title}</span>
+                                <span>{directBehaviorLabel}</span>
                               </div>
-                            ))}
-                          </div>
+                            </div>
+                          </>
+                        ) : null}
+                        {selectedDirectTagMetas.length > 0 ? (
+                          <>
+                            <p className={styles.summaryLabel}>인지오류</p>
+                            <div className={styles.revealList}>
+                              {selectedDirectTagMetas.map((tag) => (
+                                <div
+                                  key={tag.title}
+                                  className={styles.revealListItem}
+                                >
+                                  <span>•</span>
+                                  <span>{tag.title}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </>
                         ) : null}
                       </div>
                     </details>
@@ -809,9 +852,9 @@ export default function EmotionNoteAddBehaviorPage({
             className={`${styles.fab} ${styles.fabSave}`}
           />
           <FloatingActionButton
-            label="상세조회"
+            label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
-            helperText="상세조회"
+            helperText="노트로 돌아가기"
             onClick={() => router.push(`/detail/${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />

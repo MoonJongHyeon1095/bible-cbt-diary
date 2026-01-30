@@ -1,0 +1,52 @@
+"use client";
+
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import Link from "next/link";
+import EmotionNoteListSection from "./EmotionNoteListSection";
+import styles from "./EmotionNoteSection.module.css";
+
+type EmotionNoteTodaySectionProps = {
+  notes: EmotionNote[];
+  todayLabel: string;
+  isLoading: boolean;
+  canGoDeeper?: boolean;
+  getDetailHref?: (note: EmotionNote) => string;
+};
+
+export default function EmotionNoteTodaySection({
+  notes,
+  todayLabel,
+  isLoading,
+  canGoDeeper = true,
+  getDetailHref,
+}: EmotionNoteTodaySectionProps) {
+  return (
+    <>
+      <div className={styles.todayCard}>
+        <p className={styles.todayLabel}>{todayLabel}</p>
+        <h2 className={styles.todayTitle}>오늘의 감정 기록</h2>
+        <Link
+          href="/session"
+          className={styles.plusButton}
+          data-tour="new-note"
+        >
+          <span className={styles.plusIcon} aria-hidden>
+            +
+          </span>
+          <span className={styles.plusText}>새 기록 추가</span>
+        </Link>
+        <p className={styles.todayHint}>오늘 무슨 일이 있었나요?</p>
+      </div>
+
+      <EmotionNoteListSection
+        title={
+          notes.length > 0 ? `오늘 ${notes.length}개의 기록이 있습니다` : ""
+        }
+        notes={notes}
+        isLoading={isLoading}
+        canGoDeeper={canGoDeeper}
+        getDetailHref={getDetailHref}
+      />
+    </>
+  );
+}

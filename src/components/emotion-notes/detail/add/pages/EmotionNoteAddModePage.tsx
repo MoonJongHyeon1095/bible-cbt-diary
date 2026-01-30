@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
-import AddModeSelector, { AddMode } from "./AddModeSelector";
+import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import styles from "./EmotionNoteAddPage.module.css";
@@ -38,7 +38,7 @@ export default function EmotionNoteAddModePage({
           ? "대안적 접근 추가"
           : "행동 반응 추가";
   const handleSelectMode = (mode: AddMode) => {
-    router.push(`/detail/${noteId}/add/${section}/${mode}`);
+    router.push(`/detail/add/${section}/${mode}?id=${noteId}`);
   };
 
   return (
@@ -46,10 +46,10 @@ export default function EmotionNoteAddModePage({
       title={title}
       tone={_tone}
       icon={icon}
-      onClose={() => router.push(`/detail/${noteId}`)}
+      onClose={() => router.push(`/detail?id=${noteId}`)}
     >
       <div className={styles.modeSelectOnly}>
-        <AddModeSelector
+        <EmotionNoteAddModeSelector
           value={null}
           onSelect={handleSelectMode}
           aiLocked={aiLocked}

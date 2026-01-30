@@ -5,8 +5,9 @@ import type {
   EmotionNoteDetail,
   EmotionNoteErrorDetail,
   EmotionNoteWithDetails,
-} from "@/lib/types/types";
+} from "@/lib/types/emotionNoteTypes";
 import type { SessionHistory } from "@/lib/types/cbtTypes";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { getDeviceId } from "@/lib/utils/deviceId";
 import { getKstDayRange, getKstMonthRange } from "@/lib/utils/time";
@@ -633,7 +634,7 @@ export const uploadGuestData = async (accessToken: string) => {
 
   try {
     for (const note of store.notes) {
-      const noteRes = await fetch("/api/emotion-notes", {
+      const noteRes = await fetch(buildApiUrl("/api/emotion-notes"), {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -654,7 +655,7 @@ export const uploadGuestData = async (accessToken: string) => {
       }
 
       for (const detail of note.thought_details ?? []) {
-        const response = await fetch("/api/emotion-note-details", {
+        const response = await fetch(buildApiUrl("/api/emotion-note-details"), {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -670,7 +671,7 @@ export const uploadGuestData = async (accessToken: string) => {
       }
 
       for (const detail of note.error_details ?? []) {
-        const response = await fetch("/api/emotion-error-details", {
+        const response = await fetch(buildApiUrl("/api/emotion-error-details"), {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -686,7 +687,9 @@ export const uploadGuestData = async (accessToken: string) => {
       }
 
       for (const detail of note.alternative_details ?? []) {
-        const response = await fetch("/api/emotion-alternative-details", {
+        const response = await fetch(
+          buildApiUrl("/api/emotion-alternative-details"),
+          {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -701,7 +704,7 @@ export const uploadGuestData = async (accessToken: string) => {
       }
 
       for (const detail of note.behavior_details ?? []) {
-        const response = await fetch("/api/emotion-behavior-details", {
+        const response = await fetch(buildApiUrl("/api/emotion-behavior-details"), {
           method: "POST",
           headers,
           body: JSON.stringify({
@@ -719,7 +722,7 @@ export const uploadGuestData = async (accessToken: string) => {
     }
 
     for (const history of store.histories) {
-      const response = await fetch("/api/session-history", {
+      const response = await fetch(buildApiUrl("/api/session-history"), {
         method: "POST",
         headers,
         body: JSON.stringify({

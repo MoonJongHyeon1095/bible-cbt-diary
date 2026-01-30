@@ -22,11 +22,11 @@ import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
-import AddModeSelector, { AddMode } from "./AddModeSelector";
+import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { ErrorOptionSelector } from "./OptionSelectors";
-import SelectionReveal from "./SelectionReveal";
+import { ErrorOptionSelector } from "./EmotionNoteAddOptionSelectors";
+import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 
 type ErrorAiStep = "select-error" | "select-thought" | "suggestions";
 type ErrorDirectStep = "select-error" | "input";
@@ -115,10 +115,10 @@ export default function EmotionNoteAddErrorPage({
       return;
     }
     if (forcedMode) {
-      router.push(`/detail/${noteId}/add/error`);
+      router.push(`/detail/add/error?id=${noteId}`);
       return;
     }
-    router.push(`/detail/${noteId}`);
+    router.push(`/detail?id=${noteId}`);
   };
 
   const resetFlow = () => {
@@ -247,7 +247,7 @@ export default function EmotionNoteAddErrorPage({
     setIsSaving(false);
     if (ok) {
       pushToast("인지오류를 저장했어요.", "success");
-      router.push(`/detail/${noteId}`);
+      router.push(`/detail?id=${noteId}`);
     }
   };
 
@@ -294,7 +294,7 @@ export default function EmotionNoteAddErrorPage({
         {!forcedMode ? (
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
-            <AddModeSelector
+            <EmotionNoteAddModeSelector
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
@@ -327,7 +327,7 @@ export default function EmotionNoteAddErrorPage({
                           setSelectedSuggestion("");
                         }}
                       />
-                      <SelectionReveal isVisible={Boolean(selectedErrorMeta)}>
+                      <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedErrorMeta)}>
                         {selectedErrorMeta ? (
                           <div className={styles.revealInner}>
                             <p className={styles.revealTitle}>
@@ -338,7 +338,7 @@ export default function EmotionNoteAddErrorPage({
                             </p>
                           </div>
                         ) : null}
-                      </SelectionReveal>
+                      </EmotionNoteAddSelectionReveal>
                     </div>
                   )}
 
@@ -433,7 +433,7 @@ export default function EmotionNoteAddErrorPage({
                     value={errorLabel}
                     onSelect={setErrorLabel}
                   />
-                  <SelectionReveal isVisible={Boolean(selectedErrorMeta)}>
+                  <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedErrorMeta)}>
                     {selectedErrorMeta ? (
                       <div className={styles.revealInner}>
                         <p className={styles.revealTitle}>
@@ -444,7 +444,7 @@ export default function EmotionNoteAddErrorPage({
                         </p>
                       </div>
                     ) : null}
-                  </SelectionReveal>
+                  </EmotionNoteAddSelectionReveal>
                 </div>
               )}
 
@@ -509,7 +509,7 @@ export default function EmotionNoteAddErrorPage({
             label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
             helperText="노트로 돌아가기"
-            onClick={() => router.push(`/detail/${noteId}`)}
+            onClick={() => router.push(`/detail?id=${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />
         </>

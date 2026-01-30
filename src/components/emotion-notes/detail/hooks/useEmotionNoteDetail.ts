@@ -1,6 +1,6 @@
 "use client";
 
-import type { EmotionNote } from "@/lib/types/types";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -8,11 +8,11 @@ import {
   fetchEmotionNote,
   saveEmotionNote,
 } from "../utils/emotionNoteApi";
-import useAlternativeSection from "./useAlternativeSection";
-import useBehaviorSection from "./useBehaviorSection";
+import useEmotionNoteAlternativeSection from "./useEmotionNoteAlternativeSection";
+import useEmotionNoteBehaviorSection from "./useEmotionNoteBehaviorSection";
 import useEmotionNoteAccess from "./useEmotionNoteAccess";
-import useErrorSection from "./useErrorSection";
-import useThoughtSection from "./useThoughtSection";
+import useEmotionNoteErrorSection from "./useEmotionNoteErrorSection";
+import useEmotionNoteThoughtSection from "./useEmotionNoteThoughtSection";
 
 export default function useEmotionNoteDetail(noteId?: number | null) {
   const router = useRouter();
@@ -35,7 +35,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
   } = useEmotionNoteAccess({ noteId, setError });
 
-  const thoughtSectionState = useThoughtSection({
+  const thoughtSectionState = useEmotionNoteThoughtSection({
     noteId,
     getAccessContext,
     requireAccessContext,
@@ -44,7 +44,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   });
   const { setDetails: setThoughtDetails } = thoughtSectionState;
 
-  const errorSectionState = useErrorSection({
+  const errorSectionState = useEmotionNoteErrorSection({
     noteId,
     getAccessContext,
     requireAccessContext,
@@ -53,7 +53,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   });
   const { setDetails: setErrorDetails } = errorSectionState;
 
-  const alternativeSectionState = useAlternativeSection({
+  const alternativeSectionState = useEmotionNoteAlternativeSection({
     noteId,
     getAccessContext,
     requireAccessContext,
@@ -62,7 +62,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   });
   const { setDetails: setAlternativeDetails } = alternativeSectionState;
 
-  const behaviorSectionState = useBehaviorSection({
+  const behaviorSectionState = useEmotionNoteBehaviorSection({
     noteId,
     getAccessContext,
     requireAccessContext,
@@ -162,7 +162,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     }
 
     if (data.noteId) {
-      router.push(`/detail/${data.noteId}`);
+      router.push(`/detail?id=${data.noteId}`);
       return;
     }
 

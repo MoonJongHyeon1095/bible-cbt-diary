@@ -20,11 +20,11 @@ import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { SelectionCard } from "../common/SelectionCard";
-import AddModeSelector, { AddMode } from "./AddModeSelector";
+import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { EmotionOptionSelector } from "./OptionSelectors";
-import SelectionReveal from "./SelectionReveal";
+import { EmotionOptionSelector } from "./EmotionNoteAddOptionSelectors";
+import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 
 type ThoughtAddStep = "select-emotion" | "suggestions";
 type ThoughtDirectStep = "select-emotion" | "input";
@@ -106,10 +106,10 @@ export default function EmotionNoteAddThoughtPage({
       return;
     }
     if (forcedMode) {
-      router.push(`/detail/${noteId}/add/thought`);
+      router.push(`/detail/add/thought?id=${noteId}`);
       return;
     }
-    router.push(`/detail/${noteId}`);
+    router.push(`/detail?id=${noteId}`);
   };
 
   const resetFlow = () => {
@@ -223,7 +223,7 @@ export default function EmotionNoteAddThoughtPage({
     setIsSaving(false);
     if (ok) {
       pushToast("자동사고를 저장했어요.", "success");
-      router.push(`/detail/${noteId}`);
+      router.push(`/detail?id=${noteId}`);
     }
   };
 
@@ -249,7 +249,7 @@ export default function EmotionNoteAddThoughtPage({
         {!forcedMode ? (
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
-            <AddModeSelector
+            <EmotionNoteAddModeSelector
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
@@ -290,7 +290,7 @@ export default function EmotionNoteAddThoughtPage({
                 )}
 
                 {aiStep === "select-emotion" && (
-                  <SelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
+                  <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
                     {selectedEmotionMeta ? (
                       <div className={styles.revealInner}>
                         <p className={styles.revealTitle}>
@@ -312,7 +312,7 @@ export default function EmotionNoteAddThoughtPage({
                         </div>
                       </div>
                     ) : null}
-                  </SelectionReveal>
+                  </EmotionNoteAddSelectionReveal>
                 )}
 
                 {aiError && <div className={styles.errorBox}>{aiError}</div>}
@@ -368,7 +368,7 @@ export default function EmotionNoteAddThoughtPage({
                   value={selectedEmotion}
                   onSelect={setSelectedEmotion}
                 />
-                <SelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
+                <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
                   {selectedEmotionMeta ? (
                     <div className={styles.revealInner}>
                       <p className={styles.revealTitle}>
@@ -390,7 +390,7 @@ export default function EmotionNoteAddThoughtPage({
                       </div>
                     </div>
                   ) : null}
-                </SelectionReveal>
+                </EmotionNoteAddSelectionReveal>
               </div>
             )}
 
@@ -455,7 +455,7 @@ export default function EmotionNoteAddThoughtPage({
             label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
             helperText="노트로 돌아가기"
-            onClick={() => router.push(`/detail/${noteId}`)}
+            onClick={() => router.push(`/detail?id=${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />
         </>

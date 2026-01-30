@@ -1,5 +1,28 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Naming Conventions
+
+### Role Suffix Examples
+
+- Page: screen entry point (e.g., `PrayerNotesPage`)
+- View/Section/Panel: large block (e.g., `PrayerNoteResponsesSection`)
+- List: collection renderer (e.g., `PrayerNoteList`)
+- Item/Card: single entity (e.g., `PrayerNoteCard`)
+- Form: input/edit (e.g., `PrayerNoteForm`)
+- Empty/State: state display (e.g., `PrayerNoteEmptyState`)
+- Modal/Sheet: overlay (e.g., `PrayerNoteEditModal`)
+
+### Reusable Component Naming
+
+- Domain-agnostic: `NoteList`, `TagSelectorSection` (generic prefix)
+- Domain-specific: `PrayerNoteTagSelectorSection` (domain prefix)
+
+### Hook Naming
+
+- Use correct singular/plural: `usePrayerNotes`, `usePrayerNoteResponses`
+- State-only hook: `usePrayerNoteForm`
+- Data/IO hook: `usePrayerNotesApi` or `usePrayerNotes`
+
 ## Getting Started
 
 First, run the development server:

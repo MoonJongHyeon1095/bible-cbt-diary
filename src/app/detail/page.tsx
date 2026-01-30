@@ -1,10 +1,10 @@
-import EmotionNoteDetailPage from "@/components/emotion-notes/detail/EmotionNoteDetailPage";
+import EmotionNoteDetailRouteClient from "@/components/emotion-notes/detail/EmotionNoteDetailRouteClient";
 import { Suspense } from "react";
 
-export default function DetailCreatePage() {
+export default function EmotionNoteDetailRoutePage() {
   return (
     <Suspense fallback={<div />}>
-      <EmotionNoteDetailPage />
+      <EmotionNoteDetailRouteClient />
     </Suspense>
   );
 }

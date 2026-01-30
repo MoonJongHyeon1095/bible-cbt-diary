@@ -1,10 +1,10 @@
+import EmotionNoteCalendarPage from "@/components/calendar/EmotionNoteCalendarPage";
 import { Suspense } from "react";
-import MonthClientPage from "./MonthClientPage";
 
-export default function EmotionCalendarPage() {
+export default function EmotionNoteCalendarRoutePage() {
   return (
     <Suspense fallback={<div />}>
-      <MonthClientPage />
+      <EmotionNoteCalendarPage />
     </Suspense>
   );
 }

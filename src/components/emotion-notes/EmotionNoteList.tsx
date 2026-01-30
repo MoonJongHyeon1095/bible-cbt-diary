@@ -1,7 +1,7 @@
-import type { EmotionNote } from "@/lib/types/types";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import EmotionNoteCard from "./EmotionNoteCard";
 import EmotionNoteEmptyState from "./EmotionNoteEmptyState";
-import styles from "./EmotionNotesSection.module.css";
+import styles from "./EmotionNoteSection.module.css";
 
 type EmotionNoteListProps = {
   notes: EmotionNote[];

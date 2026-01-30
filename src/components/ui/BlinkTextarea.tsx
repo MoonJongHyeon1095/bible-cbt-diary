@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
-import { useAutoResizeTextarea } from "@/components/cbt/hooks/useAutoResizeTextarea";
+import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
 import styles from "./BlinkTextarea.module.css";
 
 type BlinkTextareaProps = {
@@ -23,7 +23,7 @@ export default function BlinkTextarea({
   textareaClassName,
 }: BlinkTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-  useAutoResizeTextarea(textareaRef, [value]);
+  useCbtAutoResizeTextarea(textareaRef, [value]);
 
   return (
     <div

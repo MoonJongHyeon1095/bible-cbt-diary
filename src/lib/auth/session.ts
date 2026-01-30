@@ -1,15 +1,26 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseAdminClient } from "../supabase/admin";
 
-const getAccessToken = (request: Request) => {
-  const authorization = request.headers.get("authorization") ?? "";
-  if (!authorization.startsWith("Bearer ")) {
-    return null;
+const normalizeAuthHeader = (
+  authorization?: string | string[] | null,
+) => {
+  if (Array.isArray(authorization)) {
+    return authorization[0] ?? "";
   }
-  return authorization.slice(7);
+  return authorization ?? "";
 };
 
-export const getUserFromRequest = async (request: Request) => {
-  const accessToken = getAccessToken(request);
+const getAccessToken = (authorization?: string | string[] | null) => {
+  const normalized = normalizeAuthHeader(authorization);
+  if (!normalized.startsWith("Bearer ")) {
+    return null;
+  }
+  return normalized.slice(7);
+};
+
+export const getUserFromAuthHeader = async (
+  authorization?: string | string[] | null,
+) => {
+  const accessToken = getAccessToken(authorization);
   if (!accessToken) {
     return null;
   }
@@ -23,3 +34,6 @@ export const getUserFromRequest = async (request: Request) => {
 
   return data.user;
 };
+
+export const getUserFromRequest = async (request: Request) =>
+  getUserFromAuthHeader(request.headers.get("authorization"));

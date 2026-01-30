@@ -7,7 +7,8 @@ import type {
   EmotionNoteDetail,
   EmotionNoteErrorDetail,
   EmotionNoteWithDetails,
-} from "@/lib/types/types";
+} from "@/lib/types/emotionNoteTypes";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import {
   addGuestAlternativeDetail,
@@ -44,7 +45,7 @@ export const fetchEmotionNote = async (
       data: { note: null as EmotionNoteWithDetails | null },
     };
   }
-  const response = await fetch(`/api/emotion-notes?id=${noteId}`, {
+  const response = await fetch(buildApiUrl(`/api/emotion-notes?id=${noteId}`), {
     headers: buildAuthHeaders(access.accessToken),
   });
 
@@ -67,9 +68,12 @@ export const fetchThoughtDetails = async (
       data: { details: [] as EmotionNoteDetail[] },
     };
   }
-  const response = await fetch(`/api/emotion-note-details?note_id=${noteId}`, {
-    headers: buildAuthHeaders(access.accessToken),
-  });
+  const response = await fetch(
+    buildApiUrl(`/api/emotion-note-details?note_id=${noteId}`),
+    {
+      headers: buildAuthHeaders(access.accessToken),
+    },
+  );
 
   const data = response.ok
     ? ((await response.json()) as { details: EmotionNoteDetail[] })
@@ -90,9 +94,12 @@ export const fetchErrorDetails = async (
       data: { details: [] as EmotionNoteErrorDetail[] },
     };
   }
-  const response = await fetch(`/api/emotion-error-details?note_id=${noteId}`, {
-    headers: buildAuthHeaders(access.accessToken),
-  });
+  const response = await fetch(
+    buildApiUrl(`/api/emotion-error-details?note_id=${noteId}`),
+    {
+      headers: buildAuthHeaders(access.accessToken),
+    },
+  );
 
   const data = response.ok
     ? ((await response.json()) as { details: EmotionNoteErrorDetail[] })
@@ -114,7 +121,7 @@ export const fetchAlternativeDetails = async (
     };
   }
   const response = await fetch(
-    `/api/emotion-alternative-details?note_id=${noteId}`,
+    buildApiUrl(`/api/emotion-alternative-details?note_id=${noteId}`),
     {
       headers: buildAuthHeaders(access.accessToken),
     },
@@ -142,7 +149,7 @@ export const fetchBehaviorDetails = async (
     };
   }
   const response = await fetch(
-    `/api/emotion-behavior-details?note_id=${noteId}`,
+    buildApiUrl(`/api/emotion-behavior-details?note_id=${noteId}`),
     {
       headers: buildAuthHeaders(access.accessToken),
     },
@@ -176,7 +183,7 @@ export const saveEmotionNote = async (
     ? payload
     : { title: payload.title, trigger_text: payload.trigger_text };
 
-  const response = await fetch("/api/emotion-notes", {
+  const response = await fetch(buildApiUrl("/api/emotion-notes"), {
     method: payload.id ? "PATCH" : "POST",
     headers: {
       "Content-Type": "application/json",
@@ -204,7 +211,7 @@ export const deleteEmotionNote = async (
   if (access.mode !== "auth" || !access.accessToken) {
     return new Response(null, { status: 401 });
   }
-  return fetch("/api/emotion-notes", {
+  return fetch(buildApiUrl("/api/emotion-notes"), {
     method: "DELETE",
     headers: {
       "Content-Type": "application/json",
@@ -222,7 +229,7 @@ export const createThoughtDetail = async (
     ? addGuestThoughtDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-note-details", {
+      : fetch(buildApiUrl("/api/emotion-note-details"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -239,7 +246,7 @@ export const updateThoughtDetail = async (
     ? updateGuestThoughtDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-note-details", {
+      : fetch(buildApiUrl("/api/emotion-note-details"), {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -256,7 +263,7 @@ export const deleteThoughtDetail = async (
     ? deleteGuestThoughtDetail(detailId).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-note-details", {
+      : fetch(buildApiUrl("/api/emotion-note-details"), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -273,7 +280,7 @@ export const createErrorDetail = async (
     ? addGuestErrorDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-error-details", {
+      : fetch(buildApiUrl("/api/emotion-error-details"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -290,7 +297,7 @@ export const updateErrorDetail = async (
     ? updateGuestErrorDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-error-details", {
+      : fetch(buildApiUrl("/api/emotion-error-details"), {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -307,7 +314,7 @@ export const deleteErrorDetail = async (
     ? deleteGuestErrorDetail(detailId).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-error-details", {
+      : fetch(buildApiUrl("/api/emotion-error-details"), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -324,7 +331,7 @@ export const createAlternativeDetail = async (
     ? addGuestAlternativeDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-alternative-details", {
+      : fetch(buildApiUrl("/api/emotion-alternative-details"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -341,7 +348,7 @@ export const updateAlternativeDetail = async (
     ? updateGuestAlternativeDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-alternative-details", {
+      : fetch(buildApiUrl("/api/emotion-alternative-details"), {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -358,7 +365,7 @@ export const deleteAlternativeDetail = async (
     ? deleteGuestAlternativeDetail(detailId).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-alternative-details", {
+      : fetch(buildApiUrl("/api/emotion-alternative-details"), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -380,7 +387,7 @@ export const createBehaviorDetail = async (
     ? addGuestBehaviorDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-behavior-details", {
+      : fetch(buildApiUrl("/api/emotion-behavior-details"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -402,7 +409,7 @@ export const updateBehaviorDetail = async (
     ? updateGuestBehaviorDetail(payload).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-behavior-details", {
+      : fetch(buildApiUrl("/api/emotion-behavior-details"), {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -419,7 +426,7 @@ export const deleteBehaviorDetail = async (
     ? deleteGuestBehaviorDetail(detailId).response
     : access.mode !== "auth" || !access.accessToken
       ? new Response(null, { status: 401 })
-      : fetch("/api/emotion-behavior-details", {
+      : fetch(buildApiUrl("/api/emotion-behavior-details"), {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",

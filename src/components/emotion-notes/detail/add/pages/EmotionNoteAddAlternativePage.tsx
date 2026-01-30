@@ -21,7 +21,7 @@ import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
-import AddModeSelector, { AddMode } from "./AddModeSelector";
+import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import styles from "./EmotionNoteAddPage.module.css";
 
@@ -130,10 +130,10 @@ export default function EmotionNoteAddAlternativePage({
       return;
     }
     if (forcedMode) {
-      router.push(`/detail/${noteId}/add/alternative`);
+      router.push(`/detail/add/alternative?id=${noteId}`);
       return;
     }
-    router.push(`/detail/${noteId}`);
+    router.push(`/detail?id=${noteId}`);
   };
 
   const resetFlow = () => {
@@ -271,7 +271,7 @@ export default function EmotionNoteAddAlternativePage({
     setIsSaving(false);
     if (ok) {
       pushToast("대안사고를 저장했어요.", "success");
-      router.push(`/detail/${noteId}`);
+      router.push(`/detail?id=${noteId}`);
     }
   };
 
@@ -335,7 +335,7 @@ export default function EmotionNoteAddAlternativePage({
         {!forcedMode ? (
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
-            <AddModeSelector
+            <EmotionNoteAddModeSelector
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
@@ -697,7 +697,7 @@ export default function EmotionNoteAddAlternativePage({
             label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
             helperText="노트로 돌아가기"
-            onClick={() => router.push(`/detail/${noteId}`)}
+            onClick={() => router.push(`/detail?id=${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />
         </>

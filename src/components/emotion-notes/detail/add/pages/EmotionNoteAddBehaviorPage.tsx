@@ -24,10 +24,10 @@ import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
-import AddModeSelector, { AddMode } from "./AddModeSelector";
+import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { BehaviorOptionSelector, ErrorTagSelector } from "./OptionSelectors";
-import SelectionReveal from "./SelectionReveal";
+import { BehaviorOptionSelector, ErrorTagSelector } from "./EmotionNoteAddOptionSelectors";
+import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 import styles from "./EmotionNoteAddPage.module.css";
 
 type BehaviorAiStep =
@@ -223,10 +223,10 @@ export default function EmotionNoteAddBehaviorPage({
       return;
     }
     if (forcedMode) {
-      router.push(`/detail/${noteId}/add/behavior`);
+      router.push(`/detail/add/behavior?id=${noteId}`);
       return;
     }
-    router.push(`/detail/${noteId}`);
+    router.push(`/detail?id=${noteId}`);
   };
 
   const resetFlow = () => {
@@ -409,7 +409,7 @@ export default function EmotionNoteAddBehaviorPage({
     setIsSaving(false);
     if (ok) {
       pushToast("행동 반응을 저장했어요.", "success");
-      router.push(`/detail/${noteId}`);
+      router.push(`/detail?id=${noteId}`);
     }
   };
 
@@ -476,7 +476,7 @@ export default function EmotionNoteAddBehaviorPage({
         {!forcedMode ? (
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
-            <AddModeSelector
+            <EmotionNoteAddModeSelector
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
@@ -703,7 +703,7 @@ export default function EmotionNoteAddBehaviorPage({
                         );
                       }}
                     />
-                    <SelectionReveal
+                    <EmotionNoteAddSelectionReveal
                       isVisible={selectedDirectTagMetas.length > 0}
                     >
                       {selectedDirectTagMetas.length > 0 ? (
@@ -723,7 +723,7 @@ export default function EmotionNoteAddBehaviorPage({
                           </div>
                         </div>
                       ) : null}
-                    </SelectionReveal>
+                    </EmotionNoteAddSelectionReveal>
                   </div>
                 </div>
               )}
@@ -737,7 +737,7 @@ export default function EmotionNoteAddBehaviorPage({
                       onSelect={setDirectBehaviorLabel}
                       options={directBehaviorOptions}
                     />
-                    <SelectionReveal
+                    <EmotionNoteAddSelectionReveal
                       isVisible={Boolean(selectedDirectBehavior)}
                     >
                       {selectedDirectBehavior ? (
@@ -757,7 +757,7 @@ export default function EmotionNoteAddBehaviorPage({
                           ) : null}
                         </div>
                       ) : null}
-                    </SelectionReveal>
+                    </EmotionNoteAddSelectionReveal>
                   </div>
                 </div>
               )}
@@ -855,7 +855,7 @@ export default function EmotionNoteAddBehaviorPage({
             label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
             helperText="노트로 돌아가기"
-            onClick={() => router.push(`/detail/${noteId}`)}
+            onClick={() => router.push(`/detail?id=${noteId}`)}
             className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
           />
         </>

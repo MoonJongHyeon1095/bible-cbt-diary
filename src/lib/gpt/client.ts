@@ -2,6 +2,7 @@
 "use client";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { getDeviceId } from "@/lib/utils/deviceId";
 import {
@@ -28,7 +29,7 @@ export async function callGptText(prompt: string, opts: GptCallOptions = {}) {
   if (opts.model) body.model = opts.model;
   if (!accessToken) body.deviceId = getDeviceId();
 
-  const res = await fetch("/api/gpt", {
+  const res = await fetch(buildApiUrl("/api/gpt"), {
     method: "POST",
     headers: {
       "Content-Type": "application/json",

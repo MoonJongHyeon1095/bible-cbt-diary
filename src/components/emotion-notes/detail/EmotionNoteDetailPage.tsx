@@ -2,7 +2,7 @@
 
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import DetailSectionItemModal from "@/components/emotion-notes/detail/common/DetailSectionItemModal";
+import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -20,15 +20,15 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import AlternativeDetailSection from "./AlternativeDetailSection";
-import BehaviorDetailSection from "./BehaviorDetailSection";
+import { useCallback, useEffect, useRef, useState } from "react";
+import EmotionNoteAlternativeDetailSection from "./EmotionNoteAlternativeDetailSection";
+import EmotionNoteBehaviorDetailSection from "./EmotionNoteBehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
-import EmotionNoteSectionChart from "./EmotionNoteSectionChart";
-import EmotionNoteSectionToggleList from "./EmotionNoteSectionToggleList";
-import ErrorDetailSection from "./ErrorDetailSection";
+import EmotionNoteDetailSectionChart from "./EmotionNoteDetailSectionChart";
+import EmotionNoteDetailSectionToggleList from "./EmotionNoteDetailSectionToggleList";
+import EmotionNoteErrorDetailSection from "./EmotionNoteErrorDetailSection";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
-import ThoughtDetailSection from "./ThoughtDetailSection";
+import EmotionNoteThoughtDetailSection from "./EmotionNoteThoughtDetailSection";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
@@ -222,7 +222,7 @@ export default function EmotionNoteDetailPage({
         setSelectedItem(null);
       },
       content: (
-        <ThoughtDetailSection
+        <EmotionNoteThoughtDetailSection
           {...thoughtSection}
           formatDateTime={formatDateTime}
           onSelectDetail={(detailId) => handleSelectDetail("thought", detailId)}
@@ -245,7 +245,7 @@ export default function EmotionNoteDetailPage({
         setSelectedItem(null);
       },
       content: (
-        <ErrorDetailSection
+        <EmotionNoteErrorDetailSection
           {...errorSection}
           formatDateTime={formatDateTime}
           onSelectDetail={(detailId) => handleSelectDetail("error", detailId)}
@@ -270,7 +270,7 @@ export default function EmotionNoteDetailPage({
         setSelectedItem(null);
       },
       content: (
-        <AlternativeDetailSection
+        <EmotionNoteAlternativeDetailSection
           {...alternativeSection}
           formatDateTime={formatDateTime}
           onSelectDetail={(detailId) =>
@@ -295,7 +295,7 @@ export default function EmotionNoteDetailPage({
         setSelectedItem(null);
       },
       content: (
-        <BehaviorDetailSection
+        <EmotionNoteBehaviorDetailSection
           {...behaviorSection}
           formatDateTime={formatDateTime}
           onSelectDetail={(detailId) =>
@@ -433,7 +433,7 @@ export default function EmotionNoteDetailPage({
           </section>
 
           <section className={styles.sectionView}>
-            <EmotionNoteSectionChart
+            <EmotionNoteDetailSectionChart
               sections={sections}
               selectedKey={selectedSection}
               onSelect={(key) =>
@@ -444,7 +444,7 @@ export default function EmotionNoteDetailPage({
                 })
               }
             />
-            <EmotionNoteSectionToggleList items={toggleItems} />
+            <EmotionNoteDetailSectionToggleList items={toggleItems} />
           </section>
 
           {note?.created_at ? (
@@ -493,7 +493,7 @@ export default function EmotionNoteDetailPage({
           helperText="새 항목 추가"
           onClick={() => {
             if (!note?.id) return;
-            router.push(`/detail/${note.id}/add/${selectedSection}`);
+            router.push(`/detail/add/${selectedSection}?id=${note.id}`);
           }}
           style={{
             bottom: shouldShowSave ? "18vh" : "25vh",
@@ -626,7 +626,7 @@ export default function EmotionNoteDetailPage({
           />
         </>
       ) : null}
-      <DetailSectionItemModal
+      <EmotionNoteDetailSectionItemModal
         isOpen={Boolean(modalContent)}
         title={modalContent?.title ?? ""}
         body={modalContent?.body ?? ""}

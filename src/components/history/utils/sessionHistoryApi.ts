@@ -2,6 +2,7 @@
 
 import type { AccessContext } from "@/lib/types/access";
 import type { SessionHistory } from "@/lib/types/cbtTypes";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import {
   deleteAllGuestSessionHistories,
@@ -33,9 +34,12 @@ export const fetchSessionHistories = async (
     limit: String(limit),
     offset: String(offset),
   });
-  const response = await fetch(`/api/session-history?${params.toString()}`, {
-    headers: buildAuthHeaders(access.accessToken),
-  });
+  const response = await fetch(
+    buildApiUrl(`/api/session-history?${params.toString()}`),
+    {
+      headers: buildAuthHeaders(access.accessToken),
+    },
+  );
 
   const data = response.ok
     ? ((await response.json()) as { histories: SessionHistory[] })
@@ -54,7 +58,7 @@ export const deleteSessionHistory = async (
   if (access.mode !== "auth" || !access.accessToken) {
     return { response: new Response(null, { status: 401 }) };
   }
-  const response = await fetch(`/api/session-history?id=${id}`, {
+  const response = await fetch(buildApiUrl(`/api/session-history?id=${id}`), {
     method: "DELETE",
     headers: buildAuthHeaders(access.accessToken),
   });
@@ -69,7 +73,7 @@ export const deleteAllSessionHistories = async (access: AccessContext) => {
   if (access.mode !== "auth" || !access.accessToken) {
     return { response: new Response(null, { status: 401 }) };
   }
-  const response = await fetch("/api/session-history?all=true", {
+  const response = await fetch(buildApiUrl("/api/session-history?all=true"), {
     method: "DELETE",
     headers: buildAuthHeaders(access.accessToken),
   });

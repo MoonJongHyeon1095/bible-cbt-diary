@@ -1,4 +1,4 @@
-import styles from "./EmotionNotesSection.module.css";
+import styles from "./EmotionNoteSection.module.css";
 
 type EmotionNoteEmptyStateProps = {
   title?: string;

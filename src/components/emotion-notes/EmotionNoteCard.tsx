@@ -1,13 +1,13 @@
 "use client";
 
-import type { EmotionNote } from "@/lib/types/types";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { Lock, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import styles from "./EmotionNotesSection.module.css";
+import styles from "./EmotionNoteSection.module.css";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -119,7 +119,7 @@ export default function EmotionNoteCard({
     }
   };
 
-  const resolvedDetailHref = detailHref ?? `/detail/${note.id}`;
+  const resolvedDetailHref = detailHref ?? `/detail?id=${note.id}`;
 
   return (
     <Link

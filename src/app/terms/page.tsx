@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  CbtToastProvider,
-  useCbtToast,
-} from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import Button from "@/components/ui/Button";
 import { TERMS_STORAGE_KEY, TERMS_VERSION } from "@/lib/constants/legal";
 import ConsentFormContent from "@/components/legal/ConsentFormContent";
@@ -26,11 +23,7 @@ type StoredAgreement = {
 };
 
 export default function TermsPage() {
-  return (
-    <CbtToastProvider>
-      <TermsPageContent />
-    </CbtToastProvider>
-  );
+  return <TermsPageContent />;
 }
 
 function TermsPageContent() {

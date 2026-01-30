@@ -4,21 +4,22 @@
   align-items: flex-start;
   gap: 12px;
   border-radius: 12px;
-  border: 1px solid var(--card-border, #e2e8f0);
+  border: 1px solid var(--card-border, rgba(70, 82, 102, 0.6));
   padding: 8px 12px;
-  background: #fff;
+  background: rgba(15, 23, 42, 0.65);
+  color: #f8fafc;
   text-align: left;
   transition: border-color 150ms ease, background-color 150ms ease, box-shadow 150ms ease;
 }
 
 .card:hover {
-  border-color: var(--card-border-hover, #cbd5f5);
-  background: var(--card-bg-hover, #f8fafc);
+  border-color: var(--card-border-hover, rgba(148, 163, 184, 0.6));
+  background: var(--card-bg-hover, rgba(30, 41, 59, 0.65));
 }
 
 .selected {
-  border-color: var(--card-border-selected, #93c5fd);
-  background: var(--card-bg-selected, rgba(239, 246, 255, 0.8));
+  border-color: var(--card-border-selected, rgba(59, 130, 246, 0.6));
+  background: var(--card-bg-selected, rgba(30, 58, 138, 0.35));
 }
 
 .indicator {
@@ -31,12 +32,12 @@
   border-radius: 999px;
   font-size: 11px;
   font-weight: 600;
-  background: var(--indicator-bg, #e2e8f0);
-  color: var(--indicator-text, #1e293b);
+  background: var(--indicator-bg, rgba(71, 85, 105, 0.6));
+  color: var(--indicator-text, #e2e8f0);
 }
 
 .indicatorSelected {
-  background: var(--indicator-selected-bg, #2563eb);
+  background: var(--indicator-selected-bg, #3b82f6);
   color: #fff;
 }
 
@@ -48,65 +49,74 @@
   margin-top: 2px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--status-color, #94a3b8);
+  color: var(--status-color, rgba(148, 163, 184, 0.8));
 }
 
 .card:hover .status {
-  color: var(--status-hover, #1d4ed8);
+  color: var(--status-hover, rgba(191, 219, 254, 0.9));
 }
 
 .statusSelected {
-  color: var(--status-selected, #1d4ed8);
+  color: var(--status-selected, #93c5fd);
+}
+
+.statusSaved {
+  color: #86efac;
+}
+
+.saved {
+  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(20, 83, 45, 0.3);
 }
 
 .toneBlue {
-  --card-border: #dbeafe;
-  --card-border-hover: #93c5fd;
-  --card-border-selected: #60a5fa;
-  --card-bg-hover: rgba(239, 246, 255, 0.7);
-  --card-bg-selected: rgba(239, 246, 255, 0.8);
-  --indicator-bg: #dbeafe;
-  --indicator-text: #1e40af;
+  --card-border: rgba(59, 130, 246, 0.35);
+  --card-border-hover: rgba(59, 130, 246, 0.55);
+  --card-border-selected: rgba(59, 130, 246, 0.7);
+  --card-bg-hover: rgba(30, 58, 138, 0.3);
+  --card-bg-selected: rgba(30, 58, 138, 0.35);
+  --indicator-bg: rgba(59, 130, 246, 0.2);
+  --indicator-text: #bfdbfe;
   --indicator-selected-bg: #3b82f6;
-  --status-hover: #1d4ed8;
-  --status-selected: #1d4ed8;
+  --status-hover: #93c5fd;
+  --status-selected: #93c5fd;
 }
 
 .toneGreen {
-  --card-border: #dcfce7;
-  --card-border-hover: #86efac;
-  --card-border-selected: #4ade80;
-  --card-bg-hover: rgba(240, 253, 244, 0.7);
-  --card-bg-selected: rgba(240, 253, 244, 0.8);
-  --indicator-bg: #dcfce7;
-  --indicator-text: #166534;
+  --card-border: rgba(34, 197, 94, 0.35);
+  --card-border-hover: rgba(34, 197, 94, 0.55);
+  --card-border-selected: rgba(34, 197, 94, 0.7);
+  --card-bg-hover: rgba(20, 83, 45, 0.3);
+  --card-bg-selected: rgba(20, 83, 45, 0.35);
+  --indicator-bg: rgba(34, 197, 94, 0.2);
+  --indicator-text: #bbf7d0;
   --indicator-selected-bg: #22c55e;
-  --status-hover: #15803d;
-  --status-selected: #15803d;
+  --status-hover: #86efac;
+  --status-selected: #86efac;
 }
 
 .toneAmber {
-  --card-border: #fef3c7;
-  --card-border-hover: #fcd34d;
-  --card-border-selected: #fbbf24;
-  --card-bg-hover: rgba(255, 251, 235, 0.7);
-  --card-bg-selected: rgba(255, 251, 235, 0.8);
-  --indicator-bg: #fef3c7;
-  --indicator-text: #92400e;
+  --card-border: rgba(245, 158, 11, 0.35);
+  --card-border-hover: rgba(245, 158, 11, 0.55);
+  --card-border-selected: rgba(245, 158, 11, 0.7);
+  --card-bg-hover: rgba(120, 53, 15, 0.3);
+  --card-bg-selected: rgba(120, 53, 15, 0.35);
+  --indicator-bg: rgba(245, 158, 11, 0.2);
+  --indicator-text: #fde68a;
   --indicator-selected-bg: #f59e0b;
-  --status-hover: #b45309;
-  --status-selected: #b45309;
+  --status-hover: #fcd34d;
+  --status-selected: #fcd34d;
 }
 
 .toneRose {
-  --card-border: #ffe4e6;
-  --card-border-hover: #fda4af;
-  --card-border-selected: #fb7185;
-  --card-bg-hover: rgba(255, 241, 242, 0.7);
-  --card-bg-selected: rgba(255, 241, 242, 0.8);
-  --indicator-bg: #ffe4e6;
-  --indicator-text: #be123c;
+  --card-border: rgba(244, 63, 94, 0.35);
+  --card-border-hover: rgba(244, 63, 94, 0.55);
+  --card-border-selected: rgba(244, 63, 94, 0.7);
+  --card-bg-hover: rgba(136, 19, 55, 0.3);
+  --card-bg-selected: rgba(136, 19, 55, 0.35);
+  --indicator-bg: rgba(244, 63, 94, 0.2);
+  --indicator-text: #fecdd3;
   --indicator-selected-bg: #f43f5e;
-  --status-hover: #be123c;
-  --status-selected: #be123c;
+  --status-hover: #fda4af;
+  --status-selected: #fda4af;
 }

@@ -101,6 +101,51 @@ export default function useErrorSection({
     setError,
   ]);
 
+  const handleAddWithValues = useCallback(
+    async (label: string, description: string) => {
+      const ensuredNoteId = ensureNoteId();
+      if (!ensuredNoteId) {
+        return false;
+      }
+
+      const access = await requireAccessContext();
+      if (!access) {
+        return false;
+      }
+
+      const payload = {
+        note_id: ensuredNoteId,
+        error_label: label.trim(),
+        error_description: description.trim(),
+      };
+
+      if (!payload.error_label || !payload.error_description) {
+        setError("인지 오류와 설명을 입력해주세요.");
+        return false;
+      }
+
+      const response = await createErrorDetail(payload, access);
+
+      if (!response.ok) {
+        setError("인지 오류 저장에 실패했습니다.");
+        return false;
+      }
+
+      setErrorLabel("");
+      setErrorDescription("");
+      await loadDetails();
+      return true;
+    },
+    [
+      ensureNoteId,
+      loadDetails,
+      requireAccessContext,
+      setError,
+      setErrorDescription,
+      setErrorLabel,
+    ],
+  );
+
   const startEditing = useCallback((detail: EmotionNoteErrorDetail) => {
     setEditingErrorId(detail.id);
     setEditingErrorLabel(detail.error_label);
@@ -195,6 +240,7 @@ export default function useErrorSection({
     deletingId,
     loadDetails,
     handleAdd,
+    handleAddWithValues,
     startEditing,
     cancelEditing,
     handleUpdate,

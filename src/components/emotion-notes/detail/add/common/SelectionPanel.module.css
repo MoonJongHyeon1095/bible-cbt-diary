@@ -1,9 +1,9 @@
 .panel {
-  border-radius: 14px;
-  border: 1px solid var(--panel-border, #e2e8f0);
-  background: rgba(255, 255, 255, 0.95);
-  padding: 16px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  padding: 0;
+  box-shadow: none;
 }
 
 .header {
@@ -11,25 +11,26 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
 .title {
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--panel-title, #0f172a);
+  color: var(--panel-title, #f8fafc);
 }
 
 .description {
   margin-top: 4px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: rgba(203, 213, 225, 0.7);
 }
 
 .badge {
   border-radius: 999px;
-  border: 1px solid var(--panel-badge-border, #e2e8f0);
-  background: var(--panel-badge-bg, #f8fafc);
-  color: var(--panel-badge-text, #334155);
+  border: 1px solid var(--panel-badge-border, rgba(148, 163, 184, 0.3));
+  background: var(--panel-badge-bg, rgba(15, 23, 42, 0.8));
+  color: var(--panel-badge-text, rgba(226, 232, 240, 0.9));
   padding: 4px 8px;
   font-size: 11px;
   font-weight: 600;
@@ -38,44 +39,44 @@
 .empty {
   margin-top: 12px;
   font-size: 0.75rem;
-  color: #64748b;
+  color: rgba(203, 213, 225, 0.75);
 }
 
 .list {
-  margin-top: 12px;
+  margin-top: 8px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
 .toneBlue {
-  --panel-border: #bfdbfe;
-  --panel-title: #1e3a8a;
-  --panel-badge-border: #bfdbfe;
-  --panel-badge-bg: #eff6ff;
-  --panel-badge-text: #1e40af;
+  --panel-border: rgba(59, 130, 246, 0.4);
+  --panel-title: #e0f2fe;
+  --panel-badge-border: rgba(59, 130, 246, 0.4);
+  --panel-badge-bg: rgba(30, 58, 138, 0.35);
+  --panel-badge-text: #bfdbfe;
 }
 
 .toneGreen {
-  --panel-border: #bbf7d0;
-  --panel-title: #14532d;
-  --panel-badge-border: #bbf7d0;
-  --panel-badge-bg: #f0fdf4;
-  --panel-badge-text: #166534;
+  --panel-border: rgba(34, 197, 94, 0.4);
+  --panel-title: #dcfce7;
+  --panel-badge-border: rgba(34, 197, 94, 0.4);
+  --panel-badge-bg: rgba(20, 83, 45, 0.35);
+  --panel-badge-text: #bbf7d0;
 }
 
 .toneAmber {
-  --panel-border: #fde68a;
-  --panel-title: #78350f;
-  --panel-badge-border: #fde68a;
-  --panel-badge-bg: #fffbeb;
-  --panel-badge-text: #92400e;
+  --panel-border: rgba(245, 158, 11, 0.4);
+  --panel-title: #fef3c7;
+  --panel-badge-border: rgba(245, 158, 11, 0.4);
+  --panel-badge-bg: rgba(120, 53, 15, 0.35);
+  --panel-badge-text: #fde68a;
 }
 
 .toneRose {
-  --panel-border: #fecdd3;
-  --panel-title: #881337;
-  --panel-badge-border: #fecdd3;
-  --panel-badge-bg: #fff1f2;
-  --panel-badge-text: #9f1239;
+  --panel-border: rgba(244, 63, 94, 0.45);
+  --panel-title: #ffe4e6;
+  --panel-badge-border: rgba(244, 63, 94, 0.45);
+  --panel-badge-bg: rgba(136, 19, 55, 0.35);
+  --panel-badge-text: #fecdd3;
 }

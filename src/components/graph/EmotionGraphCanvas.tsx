@@ -13,6 +13,7 @@ import styles from "./EmotionGraphSection.module.css";
 import EmotionNoteNode from "./nodes/EmotionNoteNode";
 
 const NODE_TYPES = { emotion: EmotionNoteNode };
+const EDGE_TYPES = {};
 
 type EmotionGraphCanvasProps = {
   children?: ReactNode;
@@ -51,8 +52,14 @@ export default function EmotionGraphCanvas({
     if (!instance) return;
     const node = displayNodes.find((item) => item.id === selectedNodeId);
     if (!node) return;
-    const rawWidth = typeof node.style?.width === "number" ? node.style.width : Number(node.style?.width);
-    const rawHeight = typeof node.style?.height === "number" ? node.style.height : Number(node.style?.height);
+    const rawWidth =
+      typeof node.style?.width === "number"
+        ? node.style.width
+        : Number(node.style?.width);
+    const rawHeight =
+      typeof node.style?.height === "number"
+        ? node.style.height
+        : Number(node.style?.height);
     const width = Number.isFinite(rawWidth) ? rawWidth : 0;
     const height = Number.isFinite(rawHeight) ? rawHeight : 0;
     const centerX = node.position.x + width / 2;
@@ -101,6 +108,7 @@ export default function EmotionGraphCanvas({
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         proOptions={{ hideAttribution: true }}
         nodeTypes={NODE_TYPES}
+        edgeTypes={EDGE_TYPES}
       >
         <Background gap={24} size={1} color="rgba(154,160,166,0.25)" />
       </ReactFlow>

@@ -116,6 +116,7 @@ export default function EmotionNoteSectionChart({
             height="100%"
             minWidth={260}
             minHeight={260}
+            aspect={1}
           >
             <PieChart>
               <Pie

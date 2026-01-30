@@ -19,6 +19,7 @@ interface SelectionCardProps {
   children: ReactNode;
   tone?: Tone;
   contentClassName?: string;
+  saved?: boolean;
 }
 
 export function SelectionCard({
@@ -27,6 +28,7 @@ export function SelectionCard({
   children,
   tone = "blue",
   contentClassName,
+  saved = false,
 }: SelectionCardProps) {
   const toneClass = toneStyles[tone];
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -47,6 +49,7 @@ export function SelectionCard({
         styles.card,
         toneClass,
         selected ? styles.selected : "",
+        saved ? styles.saved : "",
       ].join(" ")}
     >
       <span
@@ -64,9 +67,10 @@ export function SelectionCard({
         className={[
           styles.status,
           selected ? styles.statusSelected : "",
+          saved ? styles.statusSaved : "",
         ].join(" ")}
       >
-        {selected ? "선택됨" : "선택"}
+        {saved ? "저장됨" : selected ? "선택됨" : "선택"}
       </span>
     </div>
   );

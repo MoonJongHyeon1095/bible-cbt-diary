@@ -1,9 +1,9 @@
 .card {
-  border-radius: 18px;
-  border: 1px solid var(--card-border, #e2e8f0);
-  background: #fff;
+  border-radius: 20px;
+  border: 1px solid var(--card-border, rgba(70, 82, 102, 0.6));
+  background: rgba(18, 22, 30, 0.8);
   padding: 20px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.28);
 }
 
 .row {
@@ -14,12 +14,12 @@
 
 .title {
   font-weight: 600;
-  color: #0f172a;
+  color: #f8fafc;
 }
 
 .description {
   font-size: 0.875rem;
-  color: #64748b;
+  color: rgba(203, 213, 225, 0.85);
 }
 
 .pulse {
@@ -31,7 +31,7 @@
 .pulseLine {
   height: 12px;
   border-radius: 999px;
-  background: var(--pulse-bg, #e2e8f0);
+  background: var(--pulse-bg, rgba(62, 72, 88, 0.6));
 }
 
 .pulseLineWide {
@@ -47,27 +47,27 @@
 }
 
 .toneBlue {
-  --card-border: #bfdbfe;
-  --pulse-bg: #dbeafe;
-  --icon-color: #3b82f6;
+  --card-border: rgba(59, 130, 246, 0.4);
+  --pulse-bg: rgba(59, 130, 246, 0.18);
+  --icon-color: #60a5fa;
 }
 
 .toneGreen {
-  --card-border: #bbf7d0;
-  --pulse-bg: #dcfce7;
-  --icon-color: #22c55e;
+  --card-border: rgba(34, 197, 94, 0.4);
+  --pulse-bg: rgba(34, 197, 94, 0.2);
+  --icon-color: #4ade80;
 }
 
 .toneAmber {
-  --card-border: #fde68a;
-  --pulse-bg: #fef3c7;
-  --icon-color: #f59e0b;
+  --card-border: rgba(245, 158, 11, 0.4);
+  --pulse-bg: rgba(245, 158, 11, 0.2);
+  --icon-color: #fbbf24;
 }
 
 .toneRose {
-  --card-border: #fecdd3;
-  --pulse-bg: #ffe4e6;
-  --icon-color: #f43f5e;
+  --card-border: rgba(244, 63, 94, 0.45);
+  --pulse-bg: rgba(244, 63, 94, 0.2);
+  --icon-color: #fb7185;
 }
 
 .icon {

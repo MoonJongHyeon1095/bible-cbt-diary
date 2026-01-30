@@ -101,6 +101,51 @@ export default function useThoughtSection({
     setError,
   ]);
 
+  const handleAddWithValues = useCallback(
+    async (automaticThought: string, emotion: string) => {
+      const ensuredNoteId = ensureNoteId();
+      if (!ensuredNoteId) {
+        return false;
+      }
+
+      const access = await requireAccessContext();
+      if (!access) {
+        return false;
+      }
+
+      const payload = {
+        note_id: ensuredNoteId,
+        automatic_thought: automaticThought.trim(),
+        emotion: emotion.trim(),
+      };
+
+      if (!payload.automatic_thought || !payload.emotion) {
+        setError("자동 사고와 감정을 입력해주세요.");
+        return false;
+      }
+
+      const response = await createThoughtDetail(payload, access);
+
+      if (!response.ok) {
+        setError("자동 사고 저장에 실패했습니다.");
+        return false;
+      }
+
+      setDetailThought("");
+      setDetailEmotion("");
+      await loadDetails();
+      return true;
+    },
+    [
+      ensureNoteId,
+      loadDetails,
+      requireAccessContext,
+      setError,
+      setDetailEmotion,
+      setDetailThought,
+    ],
+  );
+
   const startEditing = useCallback((detail: EmotionNoteDetail) => {
     setEditingThoughtId(detail.id);
     setEditingThoughtText(detail.automatic_thought);
@@ -195,6 +240,7 @@ export default function useThoughtSection({
     deletingId,
     loadDetails,
     handleAdd,
+    handleAddWithValues,
     startEditing,
     cancelEditing,
     handleUpdate,

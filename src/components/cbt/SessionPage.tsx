@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  CbtToastProvider,
-  useCbtToast,
-} from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
 import {
   saveMinimalPatternAPI,
@@ -263,9 +260,5 @@ function SessionPageContent() {
 }
 
 export default function SessionPage() {
-  return (
-    <CbtToastProvider>
-      <SessionPageContent />
-    </CbtToastProvider>
-  );
+  return <SessionPageContent />;
 }

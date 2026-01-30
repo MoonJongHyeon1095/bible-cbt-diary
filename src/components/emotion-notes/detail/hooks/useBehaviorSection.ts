@@ -111,6 +111,46 @@ export default function useBehaviorSection({
     setError,
   ]);
 
+  const handleAddWithValues = useCallback(
+    async (label: string, description: string, errorTags: string[]) => {
+      const ensuredNoteId = ensureNoteId();
+      if (!ensuredNoteId) {
+        return false;
+      }
+
+      const access = await requireAccessContext();
+      if (!access) {
+        return false;
+      }
+
+      const payload = {
+        note_id: ensuredNoteId,
+        behavior_label: label.trim(),
+        behavior_description: description.trim(),
+        error_tags: errorTags,
+      };
+
+      if (!payload.behavior_label || !payload.behavior_description) {
+        setError("행동 반응과 설명을 입력해주세요.");
+        return false;
+      }
+
+      const response = await createBehaviorDetail(payload, access);
+
+      if (!response.ok) {
+        setError("행동 반응 저장에 실패했습니다.");
+        return false;
+      }
+
+      setBehaviorLabel("");
+      setBehaviorDescription("");
+      setBehaviorErrorTags([]);
+      await loadDetails();
+      return true;
+    },
+    [ensureNoteId, loadDetails, requireAccessContext, setError],
+  );
+
   const startEditing = useCallback((detail: EmotionNoteBehaviorDetail) => {
     setEditingBehaviorId(detail.id);
     setEditingBehaviorLabel(detail.behavior_label);
@@ -213,6 +253,7 @@ export default function useBehaviorSection({
     deletingId,
     loadDetails,
     handleAdd,
+    handleAddWithValues,
     startEditing,
     cancelEditing,
     handleUpdate,

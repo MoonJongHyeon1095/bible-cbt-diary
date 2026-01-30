@@ -98,6 +98,42 @@ export default function useAlternativeSection({
     setError,
   ]);
 
+  const handleAddWithValues = useCallback(
+    async (alternative: string) => {
+      const ensuredNoteId = ensureNoteId();
+      if (!ensuredNoteId) {
+        return false;
+      }
+
+      const access = await requireAccessContext();
+      if (!access) {
+        return false;
+      }
+
+      const payload = {
+        note_id: ensuredNoteId,
+        alternative: alternative.trim(),
+      };
+
+      if (!payload.alternative) {
+        setError("대안 사고를 입력해주세요.");
+        return false;
+      }
+
+      const response = await createAlternativeDetail(payload, access);
+
+      if (!response.ok) {
+        setError("대안 사고 저장에 실패했습니다.");
+        return false;
+      }
+
+      setAlternativeText("");
+      await loadDetails();
+      return true;
+    },
+    [ensureNoteId, loadDetails, requireAccessContext, setError],
+  );
+
   const startEditing = useCallback((detail: EmotionNoteAlternativeDetail) => {
     setEditingAlternativeId(detail.id);
     setEditingAlternativeText(detail.alternative);
@@ -184,6 +220,7 @@ export default function useAlternativeSection({
     deletingId,
     loadDetails,
     handleAdd,
+    handleAddWithValues,
     startEditing,
     cancelEditing,
     handleUpdate,

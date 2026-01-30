@@ -116,7 +116,7 @@ Important rules:
 4) evidenceQuote must be copied exactly as-is from the input.
 5) Output language: All string values in the JSON (especially "reason") MUST be written in Korean. Do NOT use English.
 6) DO NOT include the evidenceQuote text inside "reason". "reason" must be a paraphrased explanation why you consider the distortion plausible.
-7) DO NOT output indices in ascending numeric order (1,2,3,...,10). If you do, your output is invalid.
+7) DO NOT output indices in ascending numeric order (1,2,3,...,10). Sort them based on your evaluation in order from most likely to least likely.
 8) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
    (e.g., “…로 보입니다.” / “…로 의심됩니다.” / “…에 해당합니다.”). Do NOT forcibly append a fixed phrase.
 

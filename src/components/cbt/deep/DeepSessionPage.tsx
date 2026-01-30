@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  CbtToastProvider,
-  useCbtToast,
-} from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
 import { MinimalEmotionSection } from "@/components/cbt/minimal/center/MinimalEmotionSection";
 import { MinimalFloatingBackButton } from "@/components/cbt/minimal/common/MinimalFloatingBackButton";
@@ -449,9 +446,5 @@ function DeepSessionPageContent() {
 }
 
 export default function DeepSessionPage() {
-  return (
-    <CbtToastProvider>
-      <DeepSessionPageContent />
-    </CbtToastProvider>
-  );
+  return <DeepSessionPageContent />;
 }

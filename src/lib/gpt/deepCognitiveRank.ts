@@ -1,13 +1,13 @@
 // src/lib/gpt/deepCognitiveRank.ts
+import { callGptText } from "./client";
 import {
   cleanText,
   defaultRank,
   extractJsonObject,
   isValidIndex,
-  type ErrorIndex,
   type CognitiveErrorRankResult,
+  type ErrorIndex,
 } from "./cognitiveRank";
-import { callGptText } from "./client";
 
 type RankLlmResponseShape = {
   ranked?: Array<{
@@ -33,7 +33,8 @@ Important rules:
 4) evidenceQuote must be copied exactly as-is from the input.
 5) Output language: All string values in the JSON (especially "reason") MUST be written in Korean. Do NOT use English.
 6) DO NOT include the evidenceQuote text inside "reason". "reason" must be a paraphrased explanation why you consider the distortion plausible.
-7) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
+7) DO NOT output indices in ascending numeric order (1,2,3,...,10). Sort them based on your evaluation in order from most likely to least likely.
+8) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
    (e.g., “…로 보입니다.” / “…로 의심됩니다.” / “…에 해당합니다.”).
 
 Output schema:
@@ -91,8 +92,7 @@ ${thought}
       seen.add(idx);
 
       const reason =
-        cleanText(item?.reason) ||
-        "가능성을 평가했지만 근거가 제한적입니다.";
+        cleanText(item?.reason) || "가능성을 평가했지만 근거가 제한적입니다.";
       const evidenceQuote = cleanText(item?.evidenceQuote);
 
       ranked.push({

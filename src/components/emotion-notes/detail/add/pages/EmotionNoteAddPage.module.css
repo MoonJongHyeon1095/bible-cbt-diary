@@ -1,0 +1,447 @@
+.sectionStack {
+  display: grid;
+  gap: 12px;
+}
+
+.sectionTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.sectionHint {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.modeSelectGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 14px;
+}
+
+.modeSelectButton {
+  border-radius: 999px;
+  border: 1px solid rgba(90, 102, 126, 0.5);
+  padding: 22px 26px;
+  text-align: center;
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  background: #0f172a;
+  color: #f8fafc;
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.modeSelectButton[data-mode="ai"] {
+  background: linear-gradient(
+    120deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(14, 116, 144, 0.55)
+  );
+  border-color: rgba(14, 116, 144, 0.6);
+}
+
+.modeSelectButton[data-mode="direct"] {
+  background: linear-gradient(
+    120deg,
+    rgba(15, 23, 42, 0.95),
+    rgba(99, 102, 241, 0.45)
+  );
+  border-color: rgba(99, 102, 241, 0.6);
+}
+
+.modeSelectButton:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 30px rgba(9, 11, 16, 0.3);
+}
+
+.modeSelectSelected {
+  border-color: rgba(248, 250, 252, 0.85);
+  box-shadow: 0 18px 36px rgba(9, 11, 16, 0.35);
+}
+
+.modeSelectDisabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.modeSelectIcon {
+  width: 36px;
+  height: 36px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(248, 250, 252, 0.16);
+}
+
+.modeSelectTitle {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+.modeSelectDesc {
+  font-size: 0.82rem;
+  color: rgba(226, 232, 240, 0.8);
+  line-height: 1.4;
+}
+
+.modeSelectMeta {
+  font-size: 0.75rem;
+  color: rgba(248, 113, 113, 0.95);
+}
+
+.selectionStack {
+  display: grid;
+  gap: 16px;
+}
+
+.selectionRow {
+  display: grid;
+  gap: 8px;
+}
+
+.stepCenter {
+  min-height: 60vh;
+  display: grid;
+  align-content: center;
+  gap: 12px;
+}
+
+.inlineNote {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.candidateNote {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.selectedChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 999px;
+  padding: 4px 12px;
+  background: rgba(30, 41, 59, 0.8);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.inputStack {
+  display: grid;
+  gap: 12px;
+  margin-top: 100px;
+}
+
+.inputMeta {
+  display: grid;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.summaryBox {
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(15, 23, 42, 0.55);
+  padding: 10px 12px;
+}
+
+.summaryToggle {
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #e2e8f0;
+  list-style: none;
+}
+
+.summaryToggle::-webkit-details-marker {
+  display: none;
+}
+
+.summaryBody {
+  margin-top: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.helperText {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.errorBox {
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: rgba(239, 68, 68, 0.18);
+  color: #fecaca;
+  font-size: 0.8rem;
+}
+
+.candidateList {
+  display: grid;
+  gap: 10px;
+}
+
+.optionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  width: 100%;
+  justify-content: center;
+}
+
+.optionTile {
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  padding: 12px 22px;
+  min-height: 48px;
+  min-width: 140px;
+  text-align: center;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.75);
+  color: #e2e8f0;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
+}
+
+.optionTile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.12);
+}
+
+.optionTileSelected {
+  border-color: rgba(248, 250, 252, 0.7);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.35);
+}
+
+.optionTileEmotion[data-emotion="sadness"] {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.optionTileEmotion[data-emotion="anger"] {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.optionTileEmotion[data-emotion="fear"] {
+  background: rgba(168, 85, 247, 0.22);
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.optionTileEmotion[data-emotion="disgust"] {
+  background: rgba(34, 197, 94, 0.22);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+.optionTileEmotion[data-emotion="shame"] {
+  background: rgba(244, 63, 94, 0.2);
+  border-color: rgba(244, 63, 94, 0.5);
+}
+
+.optionTileEmotion[data-emotion="guilt"] {
+  background: rgba(236, 72, 153, 0.2);
+  border-color: rgba(236, 72, 153, 0.5);
+}
+
+.optionTileEmotion[data-emotion="loneliness"] {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.optionTileEmotion[data-emotion="despair"] {
+  background: rgba(148, 163, 184, 0.2);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.optionTileEmotion[data-emotion="frustration"] {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.optionTileEmotion[data-emotion="anxiety"] {
+  background: rgba(249, 115, 22, 0.22);
+  border-color: rgba(249, 115, 22, 0.5);
+}
+
+.optionTileEmotion[data-emotion="irritation"] {
+  background: rgba(234, 179, 8, 0.22);
+  border-color: rgba(234, 179, 8, 0.5);
+}
+
+.optionToneRose {
+  background: rgba(244, 63, 94, 0.22);
+  border-color: rgba(244, 63, 94, 0.5);
+}
+
+.optionToneBlue {
+  background: rgba(59, 130, 246, 0.22);
+  border-color: rgba(59, 130, 246, 0.5);
+}
+
+.optionToneIndigo {
+  background: rgba(99, 102, 241, 0.22);
+  border-color: rgba(99, 102, 241, 0.5);
+}
+
+.optionToneEmerald {
+  background: rgba(16, 185, 129, 0.22);
+  border-color: rgba(16, 185, 129, 0.5);
+}
+
+.optionToneAmber {
+  background: rgba(245, 158, 11, 0.22);
+  border-color: rgba(245, 158, 11, 0.5);
+}
+
+.optionToneCyan {
+  background: rgba(34, 211, 238, 0.22);
+  border-color: rgba(34, 211, 238, 0.5);
+}
+
+.optionToneViolet {
+  background: rgba(139, 92, 246, 0.22);
+  border-color: rgba(139, 92, 246, 0.5);
+}
+
+.optionToneSlate {
+  background: rgba(148, 163, 184, 0.22);
+  border-color: rgba(148, 163, 184, 0.5);
+}
+
+.optionTitle {
+  font-size: 0.98rem;
+  font-weight: 700;
+}
+
+.optionTile:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+.optionMeta {
+  font-size: 0.8rem;
+  color: rgba(71, 85, 105, 0.9);
+  line-height: 1.4;
+}
+
+.reveal {
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.revealInner {
+  border-radius: 0;
+  border: none;
+  background: transparent;
+  padding: 6px 0 0;
+  display: grid;
+  gap: 12px;
+  box-shadow: none;
+}
+
+.revealTitle {
+  font-weight: 600;
+  font-size: 1.05rem;
+  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  color: #f8fafc;
+}
+
+.revealText {
+  font-size: 0.95rem;
+  color: rgba(226, 232, 240, 0.85);
+  line-height: 1.5;
+}
+
+.revealList {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+}
+
+.revealListItem {
+  display: flex;
+  gap: 6px;
+  color: rgba(226, 232, 240, 0.88);
+}
+
+.revealListItem span:first-child {
+  color: rgba(186, 230, 253, 0.85);
+}
+
+.fab {
+  position: fixed;
+  right: 24px;
+  bottom: 120px;
+}
+
+.fabSecondary {
+  position: fixed;
+  right: 24px;
+  bottom: 192px;
+}
+
+.fabSave {
+  bottom: 120px;
+}
+
+.fabSaveSecondary {
+  bottom: 192px;
+}
+
+.modeSelectOnly {
+  display: grid;
+  gap: 16px;
+  min-height: 60vh;
+  align-content: center;
+}
+
+.modePageShell {
+  border-radius: 28px;
+  border: 1px solid rgba(90, 102, 126, 0.35);
+  background: rgba(11, 15, 23, 0.94);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+  box-shadow: 0 24px 60px rgba(5, 8, 12, 0.35);
+}
+
+.modePageHeader {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.modePageIcon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+  background: rgba(148, 163, 184, 0.2);
+  color: #f8fafc;
+}
+
+.modePageTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.modePageSubtitle {
+  font-size: 0.85rem;
+  color: rgba(226, 232, 240, 0.8);
+  margin: 4px 0 0;
+}

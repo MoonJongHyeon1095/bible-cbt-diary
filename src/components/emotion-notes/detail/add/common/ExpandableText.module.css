@@ -1,6 +1,6 @@
 .text {
   font-size: 0.875rem;
-  color: #334155;
+  color: #e2e8f0;
   line-height: 1.6;
 }
 
@@ -25,19 +25,19 @@
 }
 
 .toneBlue {
-  color: #1d4ed8;
+  color: #93c5fd;
 }
 
 .toneGreen {
-  color: #15803d;
+  color: #86efac;
 }
 
 .toneAmber {
-  color: #b45309;
+  color: #fcd34d;
 }
 
 .toneRose {
-  color: #be123c;
+  color: #fda4af;
 }
 
 .toggle:hover {

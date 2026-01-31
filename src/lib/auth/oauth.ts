@@ -7,5 +7,5 @@ export const getOAuthRedirectTo = () => {
 
   return Capacitor.isNativePlatform()
     ? "com.alliance617.emotionaldiary://auth-callback"
-    : window.location.origin;
+    : `${window.location.origin}/auth/callback`;
 };

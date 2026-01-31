@@ -1,6 +1,8 @@
 
 // src/lib/gpt/alternative.ts
 import { callGptText } from "./client";
+import { cleanText } from "./utils/text";
+import { parseAlternativesResponse } from "./utils/llm/alternatives";
 
 /** =========================
  * Types
@@ -19,18 +21,6 @@ export type AlternativeThought = {
   techniqueDescription: string;
 };
 
-type LlmResponseShape = {
-  result?: {
-    alternatives?: Array<{
-      technique?: string;
-      thought?: string;
-    }>;
-  };
-  alternatives?: Array<{
-    technique?: string;
-    thought?: string;
-  }>;
-};
 
 /** =========================
  * Technique Metadata
@@ -175,18 +165,6 @@ Language constraint:
  * Utils
  * ========================= */
 
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
-
 function normalizeTechnique(v: unknown): TechniqueType | null {
   const t = cleanText(v);
   if (t === "REALITY_CHECK") return "REALITY_CHECK";
@@ -248,11 +226,8 @@ ${cognitiveErrorText}
       noteProposal: options?.noteProposal,
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const arr = parsed?.result?.alternatives ?? parsed?.alternatives ?? [];
+    const arr = parseAlternativesResponse(raw);
+    if (!arr) throw new Error("No JSON object in LLM output");
 
     const byTechnique: Partial<Record<TechniqueType, string>> = {};
     const usedThoughts = new Set<string>();

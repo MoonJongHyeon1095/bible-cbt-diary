@@ -1,7 +1,8 @@
 // src/lib/gpt/behaviorSuggestions.ts
 import type { CognitiveBehaviorId } from "../constants/behaviors";
 import { callGptText } from "./client";
-import { cleanText, extractJsonObject } from "./cognitiveRank";
+import { cleanText } from "./utils/text";
+import { parseBehaviorSuggestionsResponse } from "./utils/llm/behaviorSuggestions";
 
 type BehaviorMeta = {
   id: CognitiveBehaviorId;
@@ -16,12 +17,6 @@ export type BehaviorSuggestionItem = {
   suggestion: string;
 };
 
-type LlmResponseShape = {
-  suggestions?: Array<{
-    behaviorId?: CognitiveBehaviorId;
-    suggestion?: string;
-  }>;
-};
 
 // const SYSTEM_PROMPT = `
 // 너는 한국어로 답하는 인지치료 상담가다.
@@ -204,11 +199,8 @@ ${behaviorsText}
       noteProposal: options?.noteProposal,
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output (behavior)");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const arr = Array.isArray(parsed?.suggestions) ? parsed.suggestions : [];
+    const arr = parseBehaviorSuggestionsResponse<CognitiveBehaviorId>(raw);
+    if (!arr) throw new Error("No JSON object in LLM output (behavior)");
 
     const byId = new Map<CognitiveBehaviorId, string>();
     for (const item of arr) {

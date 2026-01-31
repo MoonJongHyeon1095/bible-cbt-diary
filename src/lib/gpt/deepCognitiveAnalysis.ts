@@ -2,14 +2,15 @@
 import { callGptText } from "./client";
 import {
   type ErrorIndex,
-  cleanText,
-  extractJsonObject,
   isValidIndex,
 } from "./cognitiveRank";
 import {
   type DeepInternalContext,
   formatDeepInternalContext,
 } from "./deepContext";
+import { cleanText } from "./utils/text";
+import { parseCognitiveErrorsResponse } from "./utils/llm/cognitiveErrors";
+import { formatCognitiveErrorsReferenceForCandidates } from "./utils/cognitiveErrorsPrompt";
 
 export type DeepCognitiveErrorDetailResult = {
   errors: Array<{
@@ -18,16 +19,11 @@ export type DeepCognitiveErrorDetailResult = {
   }>;
 };
 
-type DetailLlmResponseShape = {
-  errors?: Array<{
-    index?: ErrorIndex;
-    analysis?: string;
-  }>;
-};
 
 const DETAIL_SYSTEM_PROMPT = `
 You are an expert who analyzes "cognitive distortions" in detail from a Cognitive Behavioral Therapy (CBT) perspective.
 The input includes [Situation], [Automatic Thought], [Internal Context], and a list of candidate cognitive distortion indices (candidates).
+You will also receive a [Cognitive Distortion Reference - Candidates Only] section that lists the names and descriptions for those indices.
 
 [Internal Context structure]
 - salient: actors/events/needs/threats/emotions (short keywords)
@@ -102,6 +98,8 @@ export async function analyzeDeepCognitiveErrorDetails(
     isValidIndex(x),
   ) as ErrorIndex[];
 
+  const candidatesReference = formatCognitiveErrorsReferenceForCandidates(uniq);
+
   const prompt = `
 [Situation]
 ${situation}
@@ -111,6 +109,9 @@ ${thought}
 
 [Internal Context - Structured]
 ${formatDeepInternalContext(internal)}
+
+[Cognitive Distortion Reference - Candidates Only]
+${candidatesReference || "(none)"}
 
 [candidates]
 ${uniq.join(", ")}
@@ -122,11 +123,8 @@ ${uniq.join(", ")}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output (detail)");
-
-    const parsed = JSON.parse(jsonText) as DetailLlmResponseShape;
-    const arr = Array.isArray(parsed?.errors) ? parsed.errors : [];
+    const arr = parseCognitiveErrorsResponse(raw);
+    if (!arr) throw new Error("No JSON object in LLM output (detail)");
 
     const seen = new Set<number>();
     const errors: DeepCognitiveErrorDetailResult["errors"] = [];

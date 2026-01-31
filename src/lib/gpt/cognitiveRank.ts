@@ -1,5 +1,8 @@
 // src/lib/gpt/cognitiveRank.ts
 import { callGptText } from "./client";
+import { cleanText } from "./utils/text";
+import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
+import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
 
 /**
  * ✅ 기존 단일 분석 결과(호환용)
@@ -26,30 +29,7 @@ export type CognitiveErrorRankResult = {
   }>;
 };
 
-type RankLlmResponseShape = {
-  ranked?: Array<{
-    index?: ErrorIndex;
-    reason?: string;
-    evidenceQuote?: string;
-  }>;
-};
-
 export const FALLBACK_INDICES: ErrorIndex[] = [1, 5, 7];
-
-export function extractJsonObject(raw: string): string | null {
-  const cleaned = raw
-    .replace(/```(?:json)?/g, "")
-    .replace(/```/g, "")
-    .trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-export function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
 
 export function isValidIndex(n: unknown): n is ErrorIndex {
   return Number.isInteger(n) && typeof n === "number" && n >= 1 && n <= 10;
@@ -100,10 +80,13 @@ export function defaultRank(): CognitiveErrorRankResult {
 // 9. 이름 붙이기
 // 10. 개인화
 // `.trim();
+const COGNITIVE_ERRORS_REFERENCE = formatCognitiveErrorsReference();
+
 const RANK_SYSTEM_PROMPT = `
 You are an expert who ranks the likelihood of "cognitive distortions" from a Cognitive Behavioral Therapy (CBT) perspective.
 
 The input is provided as [Situation] and [Automatic Thought].
+You will also receive a Cognitive Distortion Reference (index, name, description).
 Your goals:
 - Sort all 10 cognitive distortions below in order from most likely to least likely. (Include all indices 1–10, no duplicates.)
 - "evidenceQuote": MUST be copied verbatim from [Automatic Thought]. (No paraphrasing or summarizing.)
@@ -127,17 +110,8 @@ Output schema:
   ]
 }
 
-Cognitive distortion index meanings:
-1. All-or-nothing thinking (black-and-white thinking)
-2. Overgeneralization
-3. Mental filter
-4. Disqualifying or discounting the positive
-5. Jumping to conclusions
-6. Magnification and minimization
-7. Emotional reasoning
-8. Should statements
-9. Labeling
-10. Personalization
+Cognitive distortion reference (index, name, description):
+${COGNITIVE_ERRORS_REFERENCE}
 `.trim();
 /**
  * ✅ 2.a 랭킹
@@ -160,11 +134,8 @@ ${thought}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output (rank)");
-
-    const parsed = JSON.parse(jsonText) as RankLlmResponseShape;
-    const arr = Array.isArray(parsed?.ranked) ? parsed.ranked : [];
+    const arr = parseCognitiveRankResponse(raw);
+    if (!arr) throw new Error("No JSON object in LLM output (rank)");
 
     const seen = new Set<number>();
     const ranked: CognitiveErrorRankResult["ranked"] = [];

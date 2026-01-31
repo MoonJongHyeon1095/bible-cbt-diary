@@ -1,8 +1,10 @@
 // src/lib/gpt/deepThought.ts
 import { callGptText } from "./client";
-import { cleanText, extractJsonObject } from "./cognitiveRank";
 import { DeepInternalContext, formatDeepInternalContext } from "./deepContext";
 import type { DeepNoteContext, SDTKey } from "./deepThought.types";
+import { normalizeStringArray } from "./utils/array";
+import { normalizeTextValue } from "./utils/text";
+import { parseSdtResponse } from "./utils/llm/sdtThoughts";
 
 export type DeepAutoThoughtResult = {
   sdt: Record<
@@ -17,10 +19,6 @@ export type DeepAutoThoughtResult = {
 type LlmThoughtItem = {
   belief?: unknown;
   emotion_reason?: unknown;
-};
-
-type LlmResponseShape = {
-  sdt?: Partial<Record<SDTKey, unknown>>;
 };
 
 /**
@@ -94,15 +92,6 @@ Output schema (exactly):
 // ----------------------
 // helpers
 // ----------------------
-function normalizeTextValue(v: unknown): string {
-  return typeof v === "string" ? cleanText(v) : "";
-}
-
-function normalizeStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return [];
-  return v.map(cleanText).filter(Boolean);
-}
-
 function toThreeSentencesArray(v: unknown): [string, string, string] | null {
   const arr = normalizeStringArray(v);
   if (arr.length >= 3) return [arr[0], arr[1], arr[2]];
@@ -216,11 +205,10 @@ ${formatDeepInternalContext(internal)}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
+    const parsed = parseSdtResponse(raw);
+    if (!parsed) throw new Error("No JSON object in LLM output");
 
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const sdt = (parsed.sdt ?? {}) as Partial<Record<SDTKey, unknown>>;
+    const sdt = (parsed ?? {}) as Partial<Record<SDTKey, unknown>>;
 
     // schema expects arrays with 1 object each
     const relItem =

@@ -1,7 +1,8 @@
 // src/lib/gpt/deepInternalContext.ts
 import { callGptText } from "./client";
-import { cleanText, extractJsonObject } from "./cognitiveRank";
 import type { DeepNoteContext } from "./deepThought.types";
+import { cleanText } from "./utils/text";
+import { parseDeepContextResponse } from "./utils/llm/deepContext";
 
 export type DeepInternalContext = {
   salient: {
@@ -30,13 +31,6 @@ type LlmSalient = {
 type LlmCbt = {
   topDistortions?: unknown;
   coreBeliefsHypothesis?: unknown;
-};
-
-type LlmResponseShape = {
-  salient?: unknown;
-  cbt?: unknown;
-  openQuestions?: unknown;
-  nextStepHint?: unknown;
 };
 
 const SYSTEM_PROMPT = `
@@ -236,10 +230,8 @@ ${subs2.map(formatNote).join("\n\n") || "(none)"}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
+    const parsed = parseDeepContextResponse(raw);
+    if (!parsed) throw new Error("No JSON object in LLM output");
 
     const salient = normalizeSalient(parsed.salient);
     const cbt = normalizeCbt(parsed.cbt);

@@ -103,6 +103,84 @@ export const COGNITIVE_ERRORS = [
   description: string;
 }>;
 
+export const COGNITIVE_ERRORS_EN = [
+  {
+    index: 1,
+    id: COGNITIVE_ERROR_ID.ALL_OR_NOTHING,
+    title: "All-or-nothing thinking",
+    description:
+      "Black-and-white, extreme thinking. With no middle ground, everything is either complete success or complete failure.",
+  },
+  {
+    index: 2,
+    id: COGNITIVE_ERROR_ID.OVERGENERALIZATION,
+    title: "Overgeneralization",
+    description:
+      "Applying one experience to everything. A single negative event is generalized with words like \"always\" or \"never\".",
+  },
+  {
+    index: 3,
+    id: COGNITIVE_ERROR_ID.MENTAL_FILTER,
+    title: "Mental filter",
+    description:
+      "Seeing only the negative and ignoring the positive. Filtering out good things and focusing only on the bad.",
+  },
+  {
+    index: 4,
+    id: COGNITIVE_ERROR_ID.DISCOUNTING_POSITIVE,
+    title: "Disqualifying the positive",
+    description:
+      "Discounting positive experiences as \"no big deal\" or \"just luck\".",
+  },
+  {
+    index: 5,
+    id: COGNITIVE_ERROR_ID.JUMPING_TO_CONCLUSIONS,
+    title: "Jumping to conclusions",
+    description:
+      "Interpreting negatively without evidence. Assuming a bad outcome with little or no proof.",
+  },
+  {
+    index: 6,
+    id: COGNITIVE_ERROR_ID.MAGNIFICATION_MINIMIZATION,
+    title: "Magnification and minimization",
+    description:
+      "Exaggerating problems or downplaying strengths. Seeing mistakes as big and successes as small.",
+  },
+  {
+    index: 7,
+    id: COGNITIVE_ERROR_ID.EMOTIONAL_REASONING,
+    title: "Emotional reasoning",
+    description:
+      "Believing feelings are facts. Thinking \"because I feel this, it must be true\".",
+  },
+  {
+    index: 8,
+    id: COGNITIVE_ERROR_ID.SHOULD_STATEMENTS,
+    title: "Should statements",
+    description:
+      "Rigid rules about how things should be. Applying strict standards like \"must\", \"should\", or \"always\".",
+  },
+  {
+    index: 9,
+    id: COGNITIVE_ERROR_ID.LABELING,
+    title: "Labeling",
+    description:
+      "Attaching negative labels to yourself or others, like \"I'm a failure\" or \"That person is selfish\".",
+  },
+  {
+    index: 10,
+    id: COGNITIVE_ERROR_ID.PERSONALIZATION,
+    title: "Personalization",
+    description:
+      "Blaming yourself for everything, even for things outside your control.",
+  },
+] as const satisfies ReadonlyArray<{
+  index: CognitiveErrorIndex;
+  id: CognitiveErrorId;
+  title: string;
+  description: string;
+}>;
+
 export const COGNITIVE_ERRORS_BY_INDEX = Object.fromEntries(
   COGNITIVE_ERRORS.map((error) => [error.index, error])
 ) as Record<CognitiveErrorIndex, (typeof COGNITIVE_ERRORS)[number]>;

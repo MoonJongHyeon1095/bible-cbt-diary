@@ -1,17 +1,11 @@
 // src/lib/gpt/burns.ts
 import { callGptText } from "./client";
+import {
+  parseBurnsEmpathyResponse,
+  type BurnsEmpathyFields,
+} from "./utils/llm/burns";
 
-export interface BurnsEmpathyResult {
-  thoughtEmpathy: string;
-  emotionEmpathy: string;
-  iStatement: string;
-  soothing: string;
-  observedSelf: string;
-}
-
-type LlmResponseShape = {
-  result?: Partial<BurnsEmpathyResult>;
-} & Partial<BurnsEmpathyResult>; // ✅ 루트로 오는 케이스도 허용
+export type BurnsEmpathyResult = BurnsEmpathyFields;
 
 // const SYSTEM_PROMPT = `
 // 너는 한국어로 답하는 공감 전문 심리 상담가다.
@@ -107,18 +101,6 @@ const FALLBACK = (emotion: string, thought: string): BurnsEmpathyResult => ({
   observedSelf: `그럼에도 불구하고 스스로를 돌보려는 마음이 느껴져요.`,
 });
 
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
-
 export async function generateBurnsEmpathy(
   situation: string,
   emotion: string,
@@ -144,20 +126,15 @@ ${thought}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-
-    // ✅ result로 오든, 루트로 오든 모두 수용
-    const r = (parsed.result ?? parsed) as Partial<BurnsEmpathyResult>;
+    const parsed = parseBurnsEmpathyResponse(raw);
+    if (!parsed) throw new Error("No JSON object in LLM output");
 
     const result: BurnsEmpathyResult = {
-      thoughtEmpathy: cleanText(r.thoughtEmpathy),
-      emotionEmpathy: cleanText(r.emotionEmpathy),
-      iStatement: cleanText(r.iStatement),
-      soothing: cleanText(r.soothing),
-      observedSelf: cleanText(r.observedSelf),
+      thoughtEmpathy: parsed.thoughtEmpathy ?? "",
+      emotionEmpathy: parsed.emotionEmpathy ?? "",
+      iStatement: parsed.iStatement ?? "",
+      soothing: parsed.soothing ?? "",
+      observedSelf: parsed.observedSelf ?? "",
     };
 
     const fb = FALLBACK(emotion, thought);

@@ -2,19 +2,9 @@
 
 // src/lib/gpt/bible.ts
 import { callGptText } from "./client";
+import { parseBibleResponse, type BibleResultFields } from "./utils/llm/bible";
 
-export type BibleResult = {
-  book: string;
-  chapter: number | null;
-  startVerse: number | null;
-  endVerse: number | null;
-  verse: string;
-  prayer: string;
-};
-
-type LlmResponseShape = {
-  result?: Partial<BibleResult>;
-} & Partial<BibleResult>; // ✅ 루트로 오는 케이스도 허용
+export type BibleResult = BibleResultFields;
 
 const SYSTEM_PROMPT = `
 너는 한국어로 답하는 성경에 정통한 기독교 목회 상담가다.
@@ -70,29 +60,6 @@ const FALLBACK = (emotion: string): BibleResult => ({
   prayer: `주님, 제 마음이 ${emotion}으로 무거울 때 주님께 나아가 쉬게 하소서. 오늘도 주님의 평안으로 제 마음을 붙들어 주소서. 아멘.`,
 });
 
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
-
-function parseChapter(v: unknown): number | null {
-  if (typeof v === "number" && Number.isFinite(v)) {
-    return Math.trunc(v);
-  }
-  if (typeof v === "string") {
-    const parsed = Number.parseInt(v.trim(), 10);
-    return Number.isFinite(parsed) ? parsed : null;
-  }
-  return null;
-}
-
 export async function generateBibleVerse(
   situation: string,
   emotion: string
@@ -110,31 +77,11 @@ ${emotion}
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
-      model: "gpt-4.1-mini",
+      model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-
-    // ✅ result로 오든, 루트로 오든 수용
-    const r = (parsed.result ?? parsed) as Partial<BibleResult>;
-
-    const result: BibleResult = {
-      verse: cleanText(r.verse),
-      book: cleanText(r.book),
-      chapter: parseChapter(r.chapter),
-      startVerse:
-        parseChapter((r as { startVerse?: unknown }).startVerse) ??
-        parseChapter((r as { start_verse?: unknown }).start_verse) ??
-        null,
-      endVerse:
-        parseChapter((r as { endVerse?: unknown }).endVerse) ??
-        parseChapter((r as { end_verse?: unknown }).end_verse) ??
-        null,
-      prayer: cleanText(r.prayer),
-    };
+    const result = parseBibleResponse(raw);
+    if (!result) throw new Error("No JSON object in LLM output");
 
     const fb = FALLBACK(emotion);
     return {

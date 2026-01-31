@@ -1,5 +1,8 @@
 // src/lib/gpt/thoughts.ts
 import { callGptText } from "./client";
+import { normalizeStringArray } from "./utils/array";
+import { normalizeTextValue } from "./utils/text";
+import { parseSdtResponse } from "./utils/llm/sdtThoughts";
 
 type SDTKey = "relatedness" | "competence" | "autonomy";
 type SDTLabel = "관계성" | "유능감" | "자율성";
@@ -11,10 +14,6 @@ export type ExtendedThoughtsResult = {
 type LlmThoughtItem = {
   belief?: unknown;
   emotion_reason?: unknown;
-};
-
-type LlmResponseShape = {
-  sdt?: Partial<Record<SDTKey, unknown>>;
 };
 
 const DEFAULT_SDT: Record<SDTKey, { category: SDTLabel; thoughts: string[] }> = {
@@ -129,28 +128,6 @@ Output schema (exactly):
 
 `.trim();
 
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
-
-function normalizeTextValue(v: unknown): string {
-  if (typeof v === "string") return cleanText(v);
-  return "";
-}
-
-function normalizeStringArray(v: unknown): string[] {
-  if (!Array.isArray(v)) return [];
-  return v.map(cleanText).filter(Boolean);
-}
-
 function normalizeThoughtItems(
   v: unknown
 ): Array<{ belief: string[]; emotion_reason: string }> {
@@ -195,11 +172,10 @@ ${emotion}
       model: "gpt-4o-mini",
       noteProposal: options?.noteProposal,
     });
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
+    const parsed = parseSdtResponse(raw);
+    if (!parsed) throw new Error("No JSON object in LLM output");
 
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const sdt = (parsed.sdt ?? {}) as Partial<Record<SDTKey, unknown>>;
+    const sdt = (parsed ?? {}) as Partial<Record<SDTKey, unknown>>;
 
     const rel = normalizeThoughtItems(sdt.relatedness)
       .map(toThoughtParts)

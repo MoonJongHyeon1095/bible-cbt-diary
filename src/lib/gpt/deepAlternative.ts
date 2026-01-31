@@ -5,6 +5,8 @@ import {
   type DeepInternalContext,
   formatDeepInternalContext,
 } from "./deepContext";
+import { cleanText } from "./utils/text";
+import { parseAlternativesResponse } from "./utils/llm/alternatives";
 
 const TECHNIQUES: Array<{
   technique: TechniqueType;
@@ -46,18 +48,6 @@ const DEFAULT_THOUGHTS: Record<TechniqueType, string> = {
     "이렇게 힘들다고 느끼는 자신을 나약하다고 판단할 필요는 없어요. 누구라도 이 정도 상황에서는 흔들릴 수 있어요. 지금의 모습도 충분히 존중받아야 할 나의 한 부분이에요.",
 };
 
-type LlmResponseShape = {
-  result?: {
-    alternatives?: Array<{
-      technique?: string;
-      thought?: string;
-    }>;
-  };
-  alternatives?: Array<{
-    technique?: string;
-    thought?: string;
-  }>;
-};
 
 const SYSTEM_PROMPT = `
 You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
@@ -112,18 +102,6 @@ Output schema (exactly):
 Language constraint:
 - All string values in the JSON (especially "thought") MUST be written in Korean.
 `.trim();
-
-function extractJsonObject(raw: string): string | null {
-  const cleaned = raw.replace(/```(?:json)?/g, "").replace(/```/g, "").trim();
-  const s = cleaned.indexOf("{");
-  const e = cleaned.lastIndexOf("}");
-  if (s === -1 || e === -1 || e <= s) return null;
-  return cleaned.slice(s, e + 1);
-}
-
-function cleanText(v: unknown): string {
-  return typeof v === "string" ? v.replace(/\s+/g, " ").trim() : "";
-}
 
 function normalizeTechnique(v: unknown): TechniqueType | null {
   const t = cleanText(v);
@@ -186,11 +164,8 @@ ${previousAltText || "(none)"}
       model: "gpt-4o-mini",
     });
 
-    const jsonText = extractJsonObject(raw);
-    if (!jsonText) throw new Error("No JSON object in LLM output");
-
-    const parsed = JSON.parse(jsonText) as LlmResponseShape;
-    const arr = parsed?.result?.alternatives ?? parsed?.alternatives ?? [];
+    const arr = parseAlternativesResponse(raw);
+    if (!arr) throw new Error("No JSON object in LLM output");
 
     const byTechnique: Partial<Record<TechniqueType, string>> = {};
     const usedThoughts = new Set<string>();

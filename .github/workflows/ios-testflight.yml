@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - dev/ios
+      - ios/dev
 
 env:
   APP_SCHEME: App
@@ -34,7 +34,7 @@ jobs:
         run: npm run build
         working-directory: bible-cbt-diary
         env:
-          NEXT_TELEMETRY_DISABLED: '1'
+          NEXT_TELEMETRY_DISABLED: "1"
 
       - name: Sync Capacitor iOS
         run: npx cap sync ios
@@ -118,7 +118,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: '3.2'
+          ruby-version: "3.2"
 
       - name: Install fastlane
         run: gem install fastlane

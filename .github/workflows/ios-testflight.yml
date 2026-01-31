@@ -66,6 +66,11 @@ jobs:
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
 
           printf '%s' "$IOS_DIST_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/ios_distribution.p12"
+          echo "P12 size: $(stat -f%z "$RUNNER_TEMP/ios_distribution.p12") bytes"
+          if ! openssl pkcs12 -info -in "$RUNNER_TEMP/ios_distribution.p12" -passin pass:"$IOS_DIST_P12_PASSWORD" >/dev/null 2>&1; then
+            echo "P12 verification failed with the provided password." >&2
+            exit 1
+          fi
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -75,6 +80,7 @@ jobs:
 
           PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
           printf '%s' "$IOS_PROVISION_BASE64" | base64 --decode > "$PROFILE_PATH"
+          echo "Profile size: $(stat -f%z "$PROFILE_PATH") bytes"
           PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin)
           PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print Name' /dev/stdin)
           echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"

@@ -1,5 +1,5 @@
 .header {
-  padding: 24px;
+  padding: calc(24px + env(safe-area-inset-top)) 24px 24px;
   display: grid;
   grid-template-columns: minmax(180px, 1fr) auto minmax(220px, 1fr);
   gap: 16px;
@@ -55,7 +55,7 @@
   display: flex;
   justify-content: flex-end;
   position: fixed;
-  top: 16px;
+  top: calc(16px + env(safe-area-inset-top));
   right: 16px;
   z-index: 40;
 }
@@ -137,7 +137,7 @@
   .logoSlot {
     display: block;
     position: fixed;
-    top: 16px;
+    top: calc(16px + env(safe-area-inset-top));
     left: 16px;
     z-index: 40;
   }

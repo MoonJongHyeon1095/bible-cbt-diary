@@ -5,7 +5,7 @@ export default function LegalPrivacyPolicyContent() {
     <>
       <h3 className={styles.articleTitle}>1. 총칙</h3>
       <p>
-        마인드 렌즈(이하 “회사”)은 「개인정보 보호법」 등 관련 법령을 준수하며
+        이드(ED) 감정일기: AI제안 · AI분석(이하 “회사”)은 「개인정보 보호법」 등 관련 법령을 준수하며
         이용자의 개인정보 보호를 위해 본 방침을 수립합니다.
       </p>
 

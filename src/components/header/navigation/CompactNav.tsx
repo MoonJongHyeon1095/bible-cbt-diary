@@ -1,6 +1,12 @@
 "use client";
 
-import { FileText, ListChecks, Menu, ShieldCheck } from "lucide-react";
+import {
+  FileText,
+  ListChecks,
+  Menu,
+  ShieldCheck,
+  UserMinus,
+} from "lucide-react";
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Drawer } from "./Drawer";
@@ -27,6 +33,12 @@ const settingsItems = [
     label: "개인정보처리방침",
     href: "/privacy",
     icon: ShieldCheck,
+  },
+  {
+    id: "account-deletion",
+    label: "계정 삭제 요청",
+    href: "/account-deletion",
+    icon: UserMinus,
   },
 ];
 

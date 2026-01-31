@@ -11,7 +11,7 @@ export default function LegalPrivacyPolicyPage() {
           <section className={styles.card}>
             <h1 className={styles.title}>개인정보 처리방침</h1>
             <p className={styles.subtitle}>
-              마인드 렌즈는 이용자의 개인정보 보호를 위해 최선을 다합니다.
+              이드(ED) 감정일기: AI제안 · AI분석는 이용자의 개인정보 보호를 위해 최선을 다합니다.
             </p>
             <LegalPrivacyPolicyContent />
           </section>

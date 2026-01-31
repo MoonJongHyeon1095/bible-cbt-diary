@@ -1,19 +1,19 @@
 import AppHeader from "@/components/header/AppHeader";
-import LegalTermsOfServiceContent from "@/components/legal/LegalTermsOfServiceContent";
+import LegalAccountDeletionContent from "@/components/legal/LegalAccountDeletionContent";
 import styles from "@/app/legal/LegalPage.module.css";
 
-export default function LegalTermsOfServicePage() {
+export default function LegalAccountDeletionPage() {
   return (
     <div className={styles.page}>
       <AppHeader />
       <main className={styles.main}>
         <div className={styles.shell}>
           <section className={styles.card}>
-            <h1 className={styles.title}>이용약관</h1>
+            <h1 className={styles.title}>계정 삭제 요청</h1>
             <p className={styles.subtitle}>
-              이드(ED) 감정일기: AI제안 · AI분석 서비스 이용을 위한 약관입니다.
+              계정 및 관련 데이터 삭제 방법을 안내합니다.
             </p>
-            <LegalTermsOfServiceContent />
+            <LegalAccountDeletionContent />
           </section>
         </div>
       </main>

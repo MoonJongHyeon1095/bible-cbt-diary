@@ -5,7 +5,7 @@ export default function LegalTermsOfServiceContent() {
     <>
       <h3 className={styles.articleTitle}>제1조(목적)</h3>
       <p>
-        본 약관은 마인드 렌즈(이하 “회사”)가 제공하는 감정 기록 및 자기 성찰을
+        본 약관은 이드(ED) 감정일기: AI제안 · AI분석(이하 “회사”)가 제공하는 감정 기록 및 자기 성찰을
         지원하는 서비스(웹 및 모바일 앱 포함, 이하 “서비스”)의 이용과 관련하여
         회사와 이용자 간의 권리·의무 및 책임사항을 규정함을 목적으로 합니다.
       </p>

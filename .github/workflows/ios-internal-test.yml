@@ -21,6 +21,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: List Xcode versions
+        run: ls /Applications | grep Xcode
+
+      - name: Select Xcode (prefer 26, fallback 16.4)
+        run: |
+          if ls /Applications/Xcode_26*.app >/dev/null 2>&1; then
+            XCODE_APP=$(ls -d /Applications/Xcode_26*.app | head -n1)
+          else
+            XCODE_APP="/Applications/Xcode_16.4.app"
+          fi
+          echo "Using Xcode: $XCODE_APP"
+          sudo xcode-select -s "$XCODE_APP"
+
+      - name: Xcode version
+        run: xcodebuild -version
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:

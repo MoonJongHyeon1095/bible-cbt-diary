@@ -1,4 +1,4 @@
-name: iOS TestFlight
+name: iOS Internal Test
 
 on:
   workflow_dispatch:

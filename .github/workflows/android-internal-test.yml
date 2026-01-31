@@ -47,7 +47,7 @@ jobs:
 
       - name: Decode keystore
         run: |
-          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > android/upload-key.jks
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > android/app/upload-key.jks
           cat > android/key.properties <<EOF
           storeFile=upload-key.jks
           storePassword=${ANDROID_KEYSTORE_PASSWORD}

@@ -38,7 +38,13 @@ jobs:
               echo "Using Xcode 26 with iOS 26 platform."
               exit 0
             fi
-            echo "Xcode 26 found, but iOS 26 platform is missing. Falling back."
+            echo "Xcode 26 found, but iOS 26 platform is missing. Attempting install."
+            sudo xcodebuild -downloadPlatform iOS
+            if xcodebuild -showsdks | grep -q "iphoneos26"; then
+              echo "iOS 26 platform installed."
+              exit 0
+            fi
+            echo "iOS 26 platform still missing after install. Falling back."
           fi
 
           XCODE_APP="/Applications/Xcode_16.4.app"

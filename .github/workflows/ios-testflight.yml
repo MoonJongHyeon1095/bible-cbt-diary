@@ -95,8 +95,13 @@ jobs:
           PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
           printf '%s' "$IOS_PROVISION_BASE64" | base64 --decode > "$PROFILE_PATH"
           echo "Profile size: $(stat -f%z "$PROFILE_PATH") bytes"
-          PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin)
-          PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print Name' /dev/stdin)
+          security cms -D -i "$PROFILE_PATH" > "$RUNNER_TEMP/profile.plist"
+          if ! plutil -lint "$RUNNER_TEMP/profile.plist"; then
+            echo "Provisioning profile plist is invalid." >&2
+            exit 1
+          fi
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print UUID' "$RUNNER_TEMP/profile.plist")
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print Name' "$RUNNER_TEMP/profile.plist")
           echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
           echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"

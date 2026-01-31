@@ -28,17 +28,14 @@ jobs:
 
       - name: Install deps
         run: npm ci
-        working-directory: bible-cbt-diary
 
       - name: Build web
         run: npm run build
-        working-directory: bible-cbt-diary
         env:
           NEXT_TELEMETRY_DISABLED: "1"
 
       - name: Sync Capacitor iOS
         run: npx cap sync ios
-        working-directory: bible-cbt-diary
 
       - name: Setup signing keychain and profile
         env:
@@ -83,7 +80,6 @@ jobs:
             CODE_SIGN_IDENTITY="Apple Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME" \
             clean archive
-        working-directory: bible-cbt-diary
 
       - name: Export IPA
         env:
@@ -113,7 +109,6 @@ jobs:
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -exportPath "$RUNNER_TEMP/export"
-        working-directory: bible-cbt-diary
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -154,4 +149,3 @@ jobs:
             --ipa "$IPA_PATH" \
             --api_key_path "$RUNNER_TEMP/api_key.json" \
             --skip_waiting_for_build_processing true
-        working-directory: bible-cbt-diary

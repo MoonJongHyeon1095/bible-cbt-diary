@@ -24,7 +24,7 @@ jobs:
         with:
           node-version: 24
           cache: npm
-          cache-dependency-path: bible-cbt-diary/package-lock.json
+          cache-dependency-path: package-lock.json
 
       - name: Install deps
         run: npm ci

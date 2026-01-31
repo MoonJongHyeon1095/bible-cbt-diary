@@ -24,13 +24,24 @@ jobs:
       - name: List Xcode versions
         run: ls /Applications | grep Xcode
 
-      - name: Select Xcode (prefer 26, fallback 16.4)
+      - name: Select Xcode (prefer 26 with iOS 26 platform, fallback 16.4)
         run: |
+          XCODE_26_APP=""
           if ls /Applications/Xcode_26*.app >/dev/null 2>&1; then
-            XCODE_APP=$(ls -d /Applications/Xcode_26*.app | head -n1)
-          else
-            XCODE_APP="/Applications/Xcode_16.4.app"
+            XCODE_26_APP=$(ls -d /Applications/Xcode_26*.app | head -n1)
           fi
+
+          if [ -n "$XCODE_26_APP" ]; then
+            echo "Candidate Xcode: $XCODE_26_APP"
+            sudo xcode-select -s "$XCODE_26_APP"
+            if xcodebuild -showsdks | grep -q "iphoneos26"; then
+              echo "Using Xcode 26 with iOS 26 platform."
+              exit 0
+            fi
+            echo "Xcode 26 found, but iOS 26 platform is missing. Falling back."
+          fi
+
+          XCODE_APP="/Applications/Xcode_16.4.app"
           echo "Using Xcode: $XCODE_APP"
           sudo xcode-select -s "$XCODE_APP"
 

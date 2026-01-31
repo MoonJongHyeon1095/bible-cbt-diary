@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode";
-import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode";
-import { getQueryParam, json, methodNotAllowed, readJson, handleCors } from "./_utils";
+import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode.js";
+import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode.js";
+import { getQueryParam, json, methodNotAllowed, readJson, handleCors } from "./_utils.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;

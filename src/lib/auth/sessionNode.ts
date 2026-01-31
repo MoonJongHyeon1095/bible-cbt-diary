@@ -1,4 +1,4 @@
-import { createSupabaseAdminClient } from "../supabase/adminNode";
+import { createSupabaseAdminClient } from "../supabase/adminNode.js";
 
 const normalizeAuthHeader = (
   authorization?: string | string[] | null,

@@ -1,8 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode";
-import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode";
-import { getKstDayRange } from "../src/lib/utils/time";
-import { getQueryParam, json, methodNotAllowed, readJson, handleCors } from "./_utils";
+import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode.js";
+import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode.js";
+import { getKstDayRange } from "../src/lib/utils/time.js";
+import { getQueryParam, json, methodNotAllowed, readJson, handleCors } from "./_utils.js";
 
 const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date());

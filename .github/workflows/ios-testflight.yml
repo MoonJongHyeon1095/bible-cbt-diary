@@ -39,6 +39,21 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
 
+      - name: Validate required secrets
+        run: |
+          if [ -z "$BUNDLE_ID" ]; then
+            echo "BUNDLE_ID is empty. Set secrets.BUNDLE_ID." >&2
+            exit 1
+          fi
+          if [ -z "$IOS_DIST_P12_BASE64" ] || [ -z "$IOS_DIST_P12_PASSWORD" ] || [ -z "$IOS_PROVISION_BASE64" ]; then
+            echo "iOS signing secrets are missing." >&2
+            exit 1
+          fi
+        env:
+          IOS_DIST_P12_BASE64: ${{ secrets.IOS_DIST_P12_BASE64 }}
+          IOS_DIST_P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+          IOS_PROVISION_BASE64: ${{ secrets.IOS_PROVISION_BASE64 }}
+
       - name: Setup signing keychain and profile
         env:
           IOS_DIST_P12_BASE64: ${{ secrets.IOS_DIST_P12_BASE64 }}
@@ -77,6 +92,7 @@ jobs:
             -configuration Release \
             -destination 'generic/platform=iOS' \
             -archivePath "$RUNNER_TEMP/App.xcarchive" \
+            OTHER_CODE_SIGN_FLAGS="--keychain $KEYCHAIN_PATH" \
             CODE_SIGN_STYLE=Manual \
             DEVELOPMENT_TEAM="$APPLE_TEAM_ID" \
             CODE_SIGN_IDENTITY="Apple Distribution" \
@@ -128,10 +144,14 @@ jobs:
         run: |
           python - <<'PY'
           import json, os
+          key = os.environ["ASC_PRIVATE_KEY"]
+          # Normalize escaped newlines if the secret was stored as a single line.
+          if "\\n" in key and "\n" not in key:
+              key = key.replace("\\n", "\n")
           data = {
               "key_id": os.environ["ASC_KEY_ID"],
               "issuer_id": os.environ["ASC_ISSUER_ID"],
-              "key": os.environ["ASC_PRIVATE_KEY"],
+              "key": key,
               "in_house": False,
           }
           path = os.path.join(os.environ["RUNNER_TEMP"], "api_key.json")

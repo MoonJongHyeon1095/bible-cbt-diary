@@ -9,8 +9,7 @@ on:
 env:
   APP_ID: com.alliance617.emotionaldiary
   AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
-  VERSION_CODE: ${{ github.run_number }}
-  VERSION_NAME: 0.0.${{ github.run_number }}
+  BASE_VERSION_CODE: 1000
 
 jobs:
   build-upload:
@@ -34,6 +33,12 @@ jobs:
 
       - name: Install deps
         run: npm ci
+
+      - name: Set Android version
+        run: |
+          NEXT_CODE=$((BASE_VERSION_CODE + GITHUB_RUN_NUMBER))
+          echo "VERSION_CODE=$NEXT_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=0.0.$NEXT_CODE" >> "$GITHUB_ENV"
 
       - name: Build web
         run: npm run build

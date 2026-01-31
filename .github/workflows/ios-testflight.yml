@@ -67,6 +67,13 @@ jobs:
 
           printf '%s' "$IOS_DIST_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/ios_distribution.p12"
           echo "P12 size: $(stat -f%z "$RUNNER_TEMP/ios_distribution.p12") bytes"
+          echo "P12 sha256: $(shasum -a 256 "$RUNNER_TEMP/ios_distribution.p12" | awk '{print $1}')"
+          PASS_LEN=$(printf '%s' "$IOS_DIST_P12_PASSWORD" | wc -c | tr -d ' ')
+          PASS_TRIM_LEN=$(printf '%s' "$IOS_DIST_P12_PASSWORD" | tr -d '[:space:]' | wc -c | tr -d ' ')
+          echo "IOS_DIST_P12_PASSWORD length: $PASS_LEN"
+          if [ "$PASS_LEN" != "$PASS_TRIM_LEN" ]; then
+            echo "IOS_DIST_P12_PASSWORD contains whitespace characters." >&2
+          fi
           if ! openssl pkcs12 -info -in "$RUNNER_TEMP/ios_distribution.p12" -passin pass:"$IOS_DIST_P12_PASSWORD" >/dev/null 2>&1; then
             echo "P12 verification failed with the provided password." >&2
             exit 1

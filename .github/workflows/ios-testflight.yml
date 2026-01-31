@@ -50,7 +50,7 @@ jobs:
           echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
           echo "KEYCHAIN_PASSWORD=$KEYCHAIN_PASSWORD" >> "$GITHUB_ENV"
 
-          echo "$IOS_DIST_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/ios_distribution.p12"
+          printf '%s' "$IOS_DIST_P12_BASE64" | base64 --decode > "$RUNNER_TEMP/ios_distribution.p12"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -59,7 +59,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
           PROFILE_PATH="$RUNNER_TEMP/profile.mobileprovision"
-          echo "$IOS_PROVISION_BASE64" | base64 --decode > "$PROFILE_PATH"
+          printf '%s' "$IOS_PROVISION_BASE64" | base64 --decode > "$PROFILE_PATH"
           PROFILE_UUID=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print UUID' /dev/stdin)
           PROFILE_NAME=$(security cms -D -i "$PROFILE_PATH" | /usr/libexec/PlistBuddy -c 'Print Name' /dev/stdin)
           echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"

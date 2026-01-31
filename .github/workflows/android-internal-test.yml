@@ -83,4 +83,4 @@ jobs:
           packageName: ${{ env.APP_ID }}
           releaseFiles: ${{ env.AAB_PATH }}
           track: internal
-          status: completed
+          status: draft

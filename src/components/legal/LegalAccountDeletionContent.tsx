@@ -5,7 +5,7 @@ export default function LegalAccountDeletionContent() {
     <>
       <h3 className={styles.articleTitle}>계정 삭제 요청 안내</h3>
       <p>
-        이드(ED) 감정일기: AI제안 · AI분석(이하 “앱”)의 계정 및 관련 데이터
+        에디(EDi)와의 감정일기: AI제안 · AI분석(이하 “앱”)의 계정 및 관련 데이터
         삭제를 원하실 경우 아래 절차로 요청하실 수 있습니다.
       </p>
 
@@ -35,7 +35,7 @@ export default function LegalAccountDeletionContent() {
 
       <h3 className={styles.articleTitle}>개발자 정보</h3>
       <ul className={styles.list}>
-        <li>개발자/운영: 이드(ED) 감정일기: AI제안 · AI분석</li>
+        <li>개발자/운영: 에디(EDi)와의 감정일기: AI제안 · AI분석</li>
         <li>연락처: zin354@gmail.com</li>
       </ul>
     </>

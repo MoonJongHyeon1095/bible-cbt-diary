@@ -11,6 +11,19 @@ const getDateRange = (dateParam?: string | null) => {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
 
+  const requestId = req.headers["x-request-id"];
+  const getAdminClient = () => {
+    try {
+      return createSupabaseAdminClient();
+    } catch (error) {
+      console.error("[emotion-notes] admin client init failed", {
+        requestId,
+        error,
+      });
+      return null;
+    }
+  };
+
   const user = await getUserFromAuthHeader(req.headers.authorization);
 
   if (!user) {
@@ -29,7 +42,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return json(res, 400, { note: null, message: "id가 올바르지 않습니다." });
       }
 
-      const supabase = createSupabaseAdminClient();
+      const supabase = getAdminClient();
+      if (!supabase) {
+        return json(res, 500, {
+          note: null,
+          message: "Supabase admin client init failed",
+        });
+      }
       const { data, error } = await supabase
         .from("emotion_notes")
         .select(
@@ -73,6 +92,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .maybeSingle();
 
       if (error) {
+        console.error("[emotion-notes] detail query failed", {
+          requestId,
+          userId: user.id,
+          noteId,
+          error,
+        });
         return json(res, 500, {
           note: null,
           message: "노트를 불러오지 못했습니다.",
@@ -106,7 +131,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           }
         : getDateRange(getQueryParam(req, "date"));
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = getAdminClient();
+    if (!supabase) {
+      return json(res, 500, {
+        notes: [],
+        message: "Supabase admin client init failed",
+      });
+    }
     const { data, error } = await supabase
       .from("emotion_notes")
       .select(
@@ -127,6 +158,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .order("created_at", { ascending: false });
 
     if (error) {
+      console.error("[emotion-notes] list query failed", {
+        requestId,
+        userId: user.id,
+        startIso,
+        endIso,
+        error,
+      });
       return json(res, 500, {
         notes: [],
         message: "노트를 불러오지 못했습니다.",
@@ -189,7 +227,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = getAdminClient();
+    if (!supabase) {
+      return json(res, 500, { ok: false, message: "Supabase admin client init failed" });
+    }
     const insertPayload: {
       user_id: string;
       title: string;
@@ -212,6 +253,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (error) {
+      console.error("[emotion-notes] insert failed", {
+        requestId,
+        userId: user.id,
+        error,
+      });
       return json(res, 500, { ok: false, message: "기록 저장에 실패했습니다." });
     }
 
@@ -249,7 +295,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       updatePayload.trigger_text = String(payload.trigger_text).trim();
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = getAdminClient();
+    if (!supabase) {
+      return json(res, 500, { ok: false, message: "Supabase admin client init failed" });
+    }
     const { error } = await supabase
       .from("emotion_notes")
       .update(updatePayload)
@@ -257,6 +306,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("[emotion-notes] update failed", {
+        requestId,
+        userId: user.id,
+        noteId,
+        error,
+      });
       return json(res, 500, { ok: false, message: "기록 수정에 실패했습니다." });
     }
 
@@ -270,7 +325,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return json(res, 400, { ok: false, message: "id가 필요합니다." });
     }
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = getAdminClient();
+    if (!supabase) {
+      return json(res, 500, { ok: false, message: "Supabase admin client init failed" });
+    }
     const { error } = await supabase
       .from("emotion_notes")
       .delete()
@@ -278,6 +336,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .eq("user_id", user.id);
 
     if (error) {
+      console.error("[emotion-notes] delete failed", {
+        requestId,
+        userId: user.id,
+        noteId,
+        error,
+      });
       return json(res, 500, { ok: false, message: "기록 삭제에 실패했습니다." });
     }
 

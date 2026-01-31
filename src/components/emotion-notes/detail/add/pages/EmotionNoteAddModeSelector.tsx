@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, PencilLine } from "lucide-react";
+import { Lock, Sparkles, PencilLine } from "lucide-react";
 import styles from "./EmotionNoteAddPage.module.css";
 
 export type AddMode = "ai" | "direct";
@@ -39,8 +39,9 @@ export default function EmotionNoteAddModeSelector({
           필요한 것들을 고른 뒤 제안을 받아보세요.
         </span>
         {aiLocked ? (
-          <span className={styles.modeSelectMeta}>
-            로그인 후 사용할 수 있어요.
+          <span className={styles.modeSelectLockOverlay}>
+            <Lock size={16} aria-hidden="true" />
+            로그인이 필요합니다
           </span>
         ) : null}
       </button>

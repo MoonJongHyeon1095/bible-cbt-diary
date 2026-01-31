@@ -2,6 +2,7 @@
 
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { Lock, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -28,8 +29,10 @@ export default function EmotionNoteCard({
   const longPressStartRef = useRef<number | null>(null);
   const longPressRafRef = useRef<number | null>(null);
   const longPressOverlayDelayRef = useRef<number | null>(null);
+  const longPressOverlayHoldRef = useRef<number | null>(null);
   const [isPressing, setIsPressing] = useState(false);
   const [pressProgress, setPressProgress] = useState(0);
+  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
 
   const longPressDuration = 800;
   const longPressOverlayDelay = 120;
@@ -52,23 +55,36 @@ export default function EmotionNoteCard({
       if (longPressOverlayDelayRef.current !== null) {
         window.clearTimeout(longPressOverlayDelayRef.current);
       }
+      if (longPressOverlayHoldRef.current !== null) {
+        window.clearTimeout(longPressOverlayHoldRef.current);
+      }
       if (longPressRafRef.current !== null) {
         window.cancelAnimationFrame(longPressRafRef.current);
       }
     };
   }, []);
 
-  const clearLongPressProgress = () => {
+  const clearLongPressProgress = (hold = true) => {
     if (longPressRafRef.current !== null) {
       window.cancelAnimationFrame(longPressRafRef.current);
       longPressRafRef.current = null;
     }
     longPressStartRef.current = null;
-    setPressProgress(0);
-    setIsPressing(false);
+    if (longPressOverlayHoldRef.current !== null) {
+      window.clearTimeout(longPressOverlayHoldRef.current);
+    }
+    if (!hold) {
+      setPressProgress(0);
+      setIsPressing(false);
+      return;
+    }
+    longPressOverlayHoldRef.current = window.setTimeout(() => {
+      setPressProgress(0);
+      setIsPressing(false);
+    }, 220);
   };
 
-  const clearLongPress = () => {
+  const clearLongPress = (hold = true) => {
     if (longPressTimeoutRef.current !== null) {
       window.clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
@@ -77,11 +93,11 @@ export default function EmotionNoteCard({
       window.clearTimeout(longPressOverlayDelayRef.current);
       longPressOverlayDelayRef.current = null;
     }
-    clearLongPressProgress();
+    clearLongPressProgress(hold);
   };
 
   const handlePointerDown = () => {
-    clearLongPress();
+    clearLongPress(false);
     longPressTriggeredRef.current = false;
     longPressOverlayDelayRef.current = window.setTimeout(() => {
       setIsPressing(true);
@@ -108,7 +124,14 @@ export default function EmotionNoteCard({
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {
         navigator.vibrate(20);
       }
-      router.push(graphHref);
+      const go = async () => {
+        const allowed = await checkUsage();
+        if (!allowed) {
+          return;
+        }
+        router.push(graphHref);
+      };
+      void go();
     }, longPressDuration);
   };
 
@@ -127,9 +150,9 @@ export default function EmotionNoteCard({
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
       onPointerDown={handlePointerDown}
-      onPointerUp={clearLongPress}
-      onPointerLeave={clearLongPress}
-      onPointerCancel={clearLongPress}
+      onPointerUp={() => clearLongPress()}
+      onPointerLeave={() => clearLongPress()}
+      onPointerCancel={() => clearLongPress()}
       onClick={handleClick}
     >
       <div className={styles.noteHeader}>

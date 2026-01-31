@@ -1,3 +1,13 @@
+.root {
+  --app-bottom-tab-offset: 0px;
+}
+
+@media (max-width: 900px) {
+  .root {
+    --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
 .shell {
   display: grid;
   gap: 12px;

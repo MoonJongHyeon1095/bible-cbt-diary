@@ -28,8 +28,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const action = body?.action;
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const userId = user?.id ?? null;
+  const requestId = req.headers["x-request-id"];
+  let supabase;
 
   if ((!deviceId || typeof deviceId !== "string") && !userId) {
+    console.error("[token-usage] missing identity", {
+      action,
+      requestId,
+      hasDeviceId: Boolean(deviceId),
+      hasUserId: Boolean(userId),
+    });
     return json(res, 400, { error: "deviceId or userId is required" });
   }
 
@@ -39,7 +47,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const month = now.getUTCMonth() + 1;
     const day = now.getUTCDate();
 
-    const supabase = createSupabaseAdminClient();
+    try {
+      supabase = createSupabaseAdminClient();
+    } catch (error) {
+      console.error("[token-usage] admin client init failed", {
+        action,
+        requestId,
+        error,
+      });
+      return json(res, 500, {
+        error: "Supabase admin client init failed",
+        details: error,
+      });
+    }
     let query = supabase
       .from("token_usages")
       .select(
@@ -57,6 +77,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const { data, error } = await query.maybeSingle();
 
     if (error) {
+      console.error("[token-usage] status query failed", {
+        action,
+        requestId,
+        userId,
+        hasDeviceId: Boolean(deviceId),
+        year,
+        month,
+        error,
+      });
       return json(res, 500, { error: "Failed to read usage", details: error });
     }
 
@@ -98,6 +127,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       noteProposalCount,
     ].some((value) => !Number.isFinite(value) || value < 0)
   ) {
+    console.error("[token-usage] invalid usage values", {
+      action,
+      requestId,
+      userId,
+      hasDeviceId: Boolean(deviceId),
+      usage,
+    });
     return json(res, 400, { error: "invalid usage values" });
   }
 
@@ -118,7 +154,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const month = now.getUTCMonth() + 1;
   const day = now.getUTCDate();
 
-  const supabase = createSupabaseAdminClient();
+  try {
+    supabase = createSupabaseAdminClient();
+  } catch (error) {
+    console.error("[token-usage] admin client init failed", {
+      action,
+      requestId,
+      error,
+    });
+    return json(res, 500, {
+      error: "Supabase admin client init failed",
+      details: error,
+    });
+  }
   const { error } = await supabase.rpc("increment_token_usages", {
     p_user_id: userId,
     p_device_id: resolvedDeviceId,
@@ -134,6 +182,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   });
 
   if (error) {
+    console.error("[token-usage] rpc failed", {
+      action,
+      requestId,
+      userId,
+      hasDeviceId: Boolean(deviceId),
+      year,
+      month,
+      day,
+      error,
+    });
     return json(res, 500, { error: "Failed to update usage", details: error });
   }
 

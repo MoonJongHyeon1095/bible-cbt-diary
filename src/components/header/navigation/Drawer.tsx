@@ -107,6 +107,8 @@ export function Drawer({
     flexDirection: "column",
     willChange: "transform",
     borderRight: "1px solid rgba(255,255,255,0.08)",
+    paddingTop: "env(safe-area-inset-top)",
+    paddingBottom: "env(safe-area-inset-bottom)",
   };
 
   const translateHidden =

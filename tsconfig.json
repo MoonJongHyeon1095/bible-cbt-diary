@@ -30,8 +30,8 @@
   },
   "ts-node": {
     "compilerOptions": {
-      "module": "CommonJS",
-      "moduleResolution": "Node"
+      "module": "NodeNext",
+      "moduleResolution": "NodeNext"
     }
   },
   "include": [

@@ -2,6 +2,9 @@
 
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import type { MouseEvent } from "react";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNoteSection.module.css";
 
@@ -20,6 +23,27 @@ export default function EmotionNoteTodaySection({
   canGoDeeper = true,
   getDetailHref,
 }: EmotionNoteTodaySectionProps) {
+  const router = useRouter();
+  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+
+  const handleStartSession = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey ||
+      event.button !== 0
+    ) {
+      return;
+    }
+    event.preventDefault();
+    const allowed = await checkUsage();
+    if (!allowed) {
+      return;
+    }
+    router.push("/session");
+  };
+
   return (
     <>
       <div className={styles.todayCard}>
@@ -29,6 +53,7 @@ export default function EmotionNoteTodaySection({
           href="/session"
           className={styles.plusButton}
           data-tour="new-note"
+          onClick={handleStartSession}
         >
           <span className={styles.plusIcon} aria-hidden>
             +

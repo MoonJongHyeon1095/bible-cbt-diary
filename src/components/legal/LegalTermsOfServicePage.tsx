@@ -1,6 +1,6 @@
+import styles from "@/app/legal/LegalPage.module.css";
 import AppHeader from "@/components/header/AppHeader";
 import LegalTermsOfServiceContent from "@/components/legal/LegalTermsOfServiceContent";
-import styles from "@/app/legal/LegalPage.module.css";
 
 export default function LegalTermsOfServicePage() {
   return (
@@ -11,7 +11,8 @@ export default function LegalTermsOfServicePage() {
           <section className={styles.card}>
             <h1 className={styles.title}>이용약관</h1>
             <p className={styles.subtitle}>
-              이드(ED) 감정일기: AI제안 · AI분석 서비스 이용을 위한 약관입니다.
+              에디(EDi)와의 감정일기: AI제안 · AI분석 서비스 이용을 위한
+              약관입니다.
             </p>
             <LegalTermsOfServiceContent />
           </section>

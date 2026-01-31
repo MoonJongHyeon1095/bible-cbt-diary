@@ -3,6 +3,7 @@
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 import Button from "@/components/ui/Button";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
@@ -65,6 +66,7 @@ export default function EmotionNoteCalendarSection({
   const [isLoading, setIsLoading] = useState(true);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
 
   const monthLabel = useMemo(
     () =>
@@ -373,7 +375,11 @@ export default function EmotionNoteCalendarSection({
           label="이 날의 기록 추가"
           icon={<Plus size={24} />}
           helperText="이 날의 기록 추가"
-          onClick={() => {
+          onClick={async () => {
+            const allowed = await checkUsage();
+            if (!allowed) {
+              return;
+            }
             if (!selectedDate) {
               router.push("/session");
               return;

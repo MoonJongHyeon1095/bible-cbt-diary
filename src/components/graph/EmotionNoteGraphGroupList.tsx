@@ -161,7 +161,7 @@ export default function EmotionNoteGraphGroupList({
     <section className={styles.section}>
       <header className={styles.header}>
         <div>
-          <p className={styles.label}>감정 그래프</p>
+          <p className={styles.label}>감정 노트 그래프</p>
           <h2 className={styles.title}>
             {nodes.length}개의 그룹, {totalCount}개의 기록
           </h2>

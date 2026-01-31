@@ -34,7 +34,7 @@ export default function EmotionNoteAddPageLayout({
           : styles.toneBlue;
 
   return (
-    <div className={pageStyles.page}>
+    <div className={`${pageStyles.page} ${styles.root}`}>
       <AppHeader />
       <main className={pageStyles.main}>
         <div className={pageStyles.shell}>
@@ -58,7 +58,7 @@ export default function EmotionNoteAddPageLayout({
         style={{
           right: "auto",
           left: "24px",
-          bottom: "120px",
+          bottom: "calc(120px + var(--app-bottom-tab-offset))",
           backgroundColor: "rgba(255, 255, 255, 0.72)",
           borderColor: "rgba(255, 255, 255, 0.55)",
           color: "rgba(31, 35, 40, 0.8)",

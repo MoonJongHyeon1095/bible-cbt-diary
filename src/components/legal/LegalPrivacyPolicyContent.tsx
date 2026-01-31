@@ -5,8 +5,9 @@ export default function LegalPrivacyPolicyContent() {
     <>
       <h3 className={styles.articleTitle}>1. 총칙</h3>
       <p>
-        이드(ED) 감정일기: AI제안 · AI분석(이하 “회사”)은 「개인정보 보호법」 등 관련 법령을 준수하며
-        이용자의 개인정보 보호를 위해 본 방침을 수립합니다.
+        에디(EDi)와의 감정일기: AI제안 · AI분석(이하 “회사”)은 「개인정보
+        보호법」 등 관련 법령을 준수하며 이용자의 개인정보 보호를 위해 본 방침을
+        수립합니다.
       </p>
 
       <h3 className={styles.articleTitle}>2. 개인정보 처리 목적</h3>
@@ -32,9 +33,7 @@ export default function LegalPrivacyPolicyContent() {
       <p className={styles.muted}>3.3 비회원</p>
       <ul className={styles.list}>
         <li>계정 정보 미수집</li>
-        <li>
-          AI 기능 사용 시 입력 텍스트가 AI 처리 제공업체로 전송될 수 있음
-        </li>
+        <li>AI 기능 사용 시 입력 텍스트가 AI 처리 제공업체로 전송될 수 있음</li>
         <li>
           서비스 안정화 및 보안 목적의 최소한의 서버 접속 로그가 생성될 수 있음
         </li>

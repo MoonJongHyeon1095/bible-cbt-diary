@@ -2,15 +2,16 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import Button from "@/components/ui/Button";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import EmotionNoteGraphCanvas from "./EmotionNoteGraphCanvas";
 import EmotionNoteGraphDetailStack from "./EmotionNoteGraphDetailStack";
 import styles from "./EmotionNoteGraphSection.module.css";
-import { useEmotionNoteGraphLayout } from "./hooks/useEmotionNoteGraphLayout";
 import { useEmotionNoteGraphData } from "./hooks/useEmotionNoteGraphData";
 import { useEmotionNoteGraphDisplay } from "./hooks/useEmotionNoteGraphDisplay";
+import { useEmotionNoteGraphLayout } from "./hooks/useEmotionNoteGraphLayout";
 import { useEmotionNoteGraphSelection } from "./hooks/useEmotionNoteGraphSelection";
 import { getGroupThemeColor } from "./utils/graphColors";
 
@@ -26,6 +27,7 @@ export default function EmotionNoteGraphSection({
   groupId,
 }: EmotionNoteGraphSectionProps) {
   const router = useRouter();
+  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const { notes, middles, isLoading } = useEmotionNoteGraphData({
     accessToken,
     groupId,
@@ -35,7 +37,11 @@ export default function EmotionNoteGraphSection({
     () => (groupId ? getGroupThemeColor(groupId).rgb : undefined),
     [groupId],
   );
-  const { elkNodes, elkEdges } = useEmotionNoteGraphLayout(notes, middles, themeColor);
+  const { elkNodes, elkEdges } = useEmotionNoteGraphLayout(
+    notes,
+    middles,
+    themeColor,
+  );
   const {
     selectedNodeId,
     selectedNote,
@@ -48,8 +54,12 @@ export default function EmotionNoteGraphSection({
     elkEdges,
     selectedNodeId,
   );
-  const handleGoDeeper = () => {
+  const handleGoDeeper = async () => {
     if (!selectedNote) return;
+    const allowed = await checkUsage();
+    if (!allowed) {
+      return;
+    }
     const query = groupId
       ? `/session/deep?mainId=${selectedNote.id}&groupId=${groupId}`
       : `/session/deep?mainId=${selectedNote.id}`;
@@ -81,10 +91,8 @@ export default function EmotionNoteGraphSection({
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
-          <p className={styles.label}>감정 그래프</p>
-          <h2 className={styles.title}>
-            {noteCount}개의 감정 기록이 있습니다
-          </h2>
+          <p className={styles.label}>감정 노트 그래프</p>
+          <h2 className={styles.title}>{noteCount}개의 감정 기록이 있습니다</h2>
         </div>
         <Button
           type="button"
@@ -92,7 +100,7 @@ export default function EmotionNoteGraphSection({
           onClick={() => router.push("/graph")}
         >
           <LayoutDashboard size={18} />
-          목록보기
+          노트 그룹 목록보기
         </Button>
       </div>
 

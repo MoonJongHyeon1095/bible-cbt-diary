@@ -1,10 +1,12 @@
 "use client";
 
 import pageStyles from "@/app/page.module.css";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
 import Button from "@/components/ui/Button";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import {
   AlertCircle,
@@ -77,14 +79,14 @@ export default function EmotionNoteDetailPage({
     behaviorSection,
   } = useEmotionNoteDetail(noteId);
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const { pushToast } = useCbtToast();
+  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(
     null,
   );
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
   const [modalContent, setModalContent] = useState<ModalContent>(null);
-  const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const createModalHandler =
     (color: string, icon: ReactNode) =>
     (title: string, body: string, badgeText?: string | null) => {
@@ -181,13 +183,7 @@ export default function EmotionNoteDetailPage({
   const handleCopyText = async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      setCopyMessage("클립보드에 복사되었습니다.");
-      if (copyTimerRef.current) {
-        clearTimeout(copyTimerRef.current);
-      }
-      copyTimerRef.current = setTimeout(() => {
-        setCopyMessage(null);
-      }, 1600);
+      pushToast("클립보드에 복사되었습니다.", "success");
     } catch {
       // Ignore clipboard errors silently.
     }
@@ -470,8 +466,12 @@ export default function EmotionNoteDetailPage({
           label="Go Deeper"
           icon={<Route size={22} />}
           helperText="Go Deeper"
-          onClick={() => {
+          onClick={async () => {
             if (!note?.id) return;
+            const allowed = await checkUsage();
+            if (!allowed) {
+              return;
+            }
             if (note.group_id) {
               router.push(`/graph?groupId=${note.group_id}&noteId=${note.id}`);
               return;
@@ -635,9 +635,6 @@ export default function EmotionNoteDetailPage({
         badgeText={modalContent?.badgeText ?? null}
         onClose={() => setModalContent(null)}
       />
-      {copyMessage ? (
-        <div className={styles.copyToast}>{copyMessage}</div>
-      ) : null}
     </div>
   );
 }

@@ -34,7 +34,7 @@ export const useEmotionNoteGraphDisplay = (
           boxShadow: isSelected
             ? "0 0 0 6px rgba(143, 167, 200, 0.25), 0 16px 32px rgba(0, 0, 0, 0.28)"
             : "none",
-          opacity: isSelected ? 1 : 0.6,
+          opacity: 1,
           zIndex: isSelected ? 3 : 2,
         },
       };

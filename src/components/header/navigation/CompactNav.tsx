@@ -5,12 +5,13 @@ import {
   ListChecks,
   Menu,
   ShieldCheck,
+  SignalHigh,
   UserMinus,
 } from "lucide-react";
-import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Drawer } from "./Drawer";
+import { useState } from "react";
 import styles from "./CompactNav.module.css";
+import { Drawer } from "./Drawer";
 
 const navItems = [
   {
@@ -36,9 +37,18 @@ const settingsItems = [
   },
   {
     id: "account-deletion",
-    label: "계정 삭제 요청",
+    label: "삭제 안내",
     href: "/account-deletion",
     icon: UserMinus,
+  },
+];
+
+const usageItems = [
+  {
+    id: "usage",
+    label: "사용량 조회",
+    href: "/usage",
+    icon: SignalHigh,
   },
 ];
 
@@ -62,7 +72,12 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
         <Menu size={20} />
       </button>
 
-      <Drawer open={open} onClose={() => setOpen(false)} side="left" width={300}>
+      <Drawer
+        open={open}
+        onClose={() => setOpen(false)}
+        side="left"
+        width={300}
+      >
         <div className={styles.drawerHeader}>
           {userEmail ? (
             <span className={styles.userEmail}>{userEmail}</span>
@@ -81,7 +96,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
 
         <div className={styles.drawerList}>
           <div className={styles.drawerSection}>
-            <span className={styles.drawerSectionTitle}>메뉴</span>
+            <span className={styles.drawerSectionTitle}>HISTORY</span>
             {navItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;
@@ -104,7 +119,30 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
             })}
           </div>
           <div className={styles.drawerSection}>
-            <span className={styles.drawerSectionTitle}>설정</span>
+            <span className={styles.drawerSectionTitle}>USAGE</span>
+            {usageItems.map((item) => {
+              const Icon = item.icon;
+              const active = pathname === item.href;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  className={`${styles.drawerItem} ${
+                    active ? styles.drawerItemActive : ""
+                  }`}
+                  onClick={() => {
+                    setOpen(false);
+                    router.push(item.href);
+                  }}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </button>
+              );
+            })}
+          </div>
+          <div className={styles.drawerSection}>
+            <span className={styles.drawerSectionTitle}>POLICY</span>
             {settingsItems.map((item) => {
               const Icon = item.icon;
               const active = pathname === item.href;

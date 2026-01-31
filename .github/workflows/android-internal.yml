@@ -1,0 +1,81 @@
+name: Android Internal Test
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - android/dev
+
+env:
+  APP_ID: com.alliance617.emotionaldiary
+  AAB_PATH: android/app/build/outputs/bundle/release/app-release.aab
+  VERSION_CODE: ${{ github.run_number }}
+  VERSION_NAME: 0.0.${{ github.run_number }}
+
+jobs:
+  build-upload:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Build web
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+
+      - name: Decode keystore
+        run: |
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > android/upload-key.jks
+          cat > android/key.properties <<EOF
+          storeFile=upload-key.jks
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=${ANDROID_KEY_ALIAS}
+          keyPassword=${ANDROID_KEY_PASSWORD}
+          EOF
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+
+      - name: Build AAB
+        run: |
+          cd android
+          ./gradlew bundleRelease
+
+      - name: Decode Play service account
+        run: |
+          echo "${PLAY_JSON_KEY_BASE64}" | base64 --decode > "$RUNNER_TEMP/play.json"
+        env:
+          PLAY_JSON_KEY_BASE64: ${{ secrets.PLAY_JSON_KEY_BASE64 }}
+
+      - name: Upload to Play Internal
+        uses: r0adkll/upload-google-play@v1
+        with:
+          serviceAccountJson: ${{ runner.temp }}/play.json
+          packageName: ${{ env.APP_ID }}
+          releaseFiles: ${{ env.AAB_PATH }}
+          track: internal
+          status: completed

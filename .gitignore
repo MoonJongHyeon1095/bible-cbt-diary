@@ -30,6 +30,8 @@
 *.mobileprovision*
 provistion*
 *.b64
+*.jks
+google-play-uploader.json
 
 # debug
 npm-debug.log*

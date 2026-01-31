@@ -82,6 +82,29 @@ jobs:
           mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
           cp "$PROFILE_PATH" "$HOME/Library/MobileDevice/Provisioning Profiles/$PROFILE_UUID.mobileprovision"
 
+      - name: Validate signing artifacts
+        env:
+          IOS_DIST_P12_PASSWORD: ${{ secrets.IOS_DIST_P12_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          echo "P12 size: $(stat -f%z "$RUNNER_TEMP/ios_distribution.p12") bytes"
+          echo "Profile size: $(stat -f%z "$RUNNER_TEMP/profile.mobileprovision") bytes"
+
+          if ! openssl pkcs12 -info -in "$RUNNER_TEMP/ios_distribution.p12" -passin pass:"$IOS_DIST_P12_PASSWORD" >/dev/null 2>&1; then
+            echo "P12 verification failed with the provided password." >&2
+            exit 1
+          fi
+
+          PROFILE_APP_ID=$(security cms -D -i "$RUNNER_TEMP/profile.mobileprovision" | /usr/libexec/PlistBuddy -c 'Print Entitlements:application-identifier' /dev/stdin)
+          echo "Profile application-identifier: $PROFILE_APP_ID"
+
+          if [ -n "$BUNDLE_ID" ]; then
+            if [ "$PROFILE_APP_ID" != "$APPLE_TEAM_ID.$BUNDLE_ID" ] && [ "$PROFILE_APP_ID" != "*.$BUNDLE_ID" ] && [ "$PROFILE_APP_ID" != "$BUNDLE_ID" ]; then
+              echo "Profile application-identifier does not match BUNDLE_ID." >&2
+              exit 1
+            fi
+          fi
+
       - name: Archive (xcodebuild)
         env:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}

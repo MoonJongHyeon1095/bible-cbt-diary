@@ -11,6 +11,8 @@ env:
   XCODE_PROJECT: ios/App/App.xcodeproj
   EXPORT_METHOD: app-store
   BUNDLE_ID: ${{ secrets.BUNDLE_ID }}
+  INFO_PLIST: ios/App/App/Info.plist
+  MARKETING_VERSION_PREFIX: "0.0"
 
 jobs:
   build-upload:
@@ -38,6 +40,15 @@ jobs:
 
       - name: Sync Capacitor iOS
         run: npx cap sync ios
+
+      - name: Bump iOS version/build
+        run: |
+          BUILD_NUMBER="${GITHUB_RUN_NUMBER}"
+          MARKETING_VERSION="${MARKETING_VERSION_PREFIX}.${GITHUB_RUN_NUMBER}"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$INFO_PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST"
+          /usr/libexec/PlistBuddy -c "Print :CFBundleVersion" "$INFO_PLIST"
 
       - name: Validate required secrets
         run: |

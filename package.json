@@ -9,6 +9,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
     "@reactour/tour": "^3.8.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.91.1",
@@ -22,10 +25,11 @@
     "recharts": "^3.7.0"
   },
   "devDependencies": {
-    "@vercel/node": "^5.5.16",
+    "@capacitor/cli": "^8.0.2",
     "@types/node": "^24",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vercel/node": "^5.5.16",
     "eslint": "^9",
     "eslint-config-next": "15.5.9",
     "typescript": "^5"

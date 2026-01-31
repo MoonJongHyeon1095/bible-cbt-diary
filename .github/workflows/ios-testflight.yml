@@ -74,6 +74,11 @@ jobs:
           if [ "$PASS_LEN" != "$PASS_TRIM_LEN" ]; then
             echo "IOS_DIST_P12_PASSWORD contains whitespace characters." >&2
           fi
+          PASS_HASH=$(printf '%s' "$IOS_DIST_P12_PASSWORD" | shasum -a 256 | awk '{print $1}')
+          if [ "$PASS_HASH" != "dca7c8957f95b4732c27ef259bd51d443ded03835e6ffcc130865d294275b9ed" ]; then
+            echo "IOS_DIST_P12_PASSWORD does not match expected 'alliance617'." >&2
+            exit 1
+          fi
           if ! openssl pkcs12 -info -in "$RUNNER_TEMP/ios_distribution.p12" -passin pass:"$IOS_DIST_P12_PASSWORD" >/dev/null 2>&1; then
             echo "P12 verification failed with the provided password." >&2
             exit 1

@@ -61,11 +61,18 @@
   display: flex;
   gap: 12px;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+}
+
+.actionButton {
+  flex: 1 1 0;
+  min-width: 0;
+  padding-left: 12px;
+  padding-right: 12px;
+  font-size: 0.85rem;
 }
 
 .declineButton {
-  min-width: 160px;
 }
 
 .declineButton:disabled {

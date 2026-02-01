@@ -19,7 +19,9 @@ export function CbtMinimalStepHeaderSection({
   return (
     <div className={`${styles.header} ${center ? styles.center : ""}`}>
       {title && (
-        <h1 className={`${styles.title} ${titleClassName ?? ""}`}>{title}</h1>
+        <h1 className={`${styles.title} ${titleClassName ?? ""}`}>
+          {title}
+        </h1>
       )}
       {description &&
         (typeof description === "string" ? (

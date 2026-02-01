@@ -8,7 +8,7 @@ export default function LogoSection() {
         <span className={styles.brandIcon} aria-hidden>
           <NotebookPen size={18} />
         </span>
-        <h1 className={styles.brandTitle}>Emotion Notes</h1>
+        <h1 className={styles.brandTitle}>에디(EDi)와의 감정일기</h1>
       </div>
     </div>
   );

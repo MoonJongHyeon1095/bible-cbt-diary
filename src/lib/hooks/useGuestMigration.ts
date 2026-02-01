@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import {
   clearGuestData,
   hasGuestData,
@@ -16,6 +18,8 @@ type GuestMigrationState = {
 
 export const useGuestMigration = () => {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const router = useRouter();
+  const { pushToast } = useCbtToast();
   const [state, setState] = useState<GuestMigrationState>({
     isPromptOpen: false,
     isUploading: false,
@@ -36,7 +40,7 @@ export const useGuestMigration = () => {
       isPromptOpen: true,
       error: null,
     }));
-  }, []);
+  }, [pushToast, router]);
 
   useEffect(() => {
     const resolveSession = async () => {
@@ -84,6 +88,8 @@ export const useGuestMigration = () => {
       clearGuestData();
       setState((prev) => ({ ...prev, isPromptOpen: false, isUploading: false }));
       uploadingRef.current = false;
+      pushToast("기기 기록을 회원 기록으로 이전했습니다.", "success");
+      router.refresh();
       return;
     }
 
@@ -91,9 +97,12 @@ export const useGuestMigration = () => {
     setState((prev) => ({
       ...prev,
       isUploading: false,
-      error: "이전에 실패했습니다. 잠시 후 다시 시도해주세요.",
+      isPromptOpen: false,
+      error: null,
     }));
-  }, []);
+    promptedRef.current = false;
+    pushToast("이전에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+  }, [pushToast, router]);
 
   return {
     isPromptOpen: state.isPromptOpen,

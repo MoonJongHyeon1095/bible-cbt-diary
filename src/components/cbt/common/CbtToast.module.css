@@ -4,10 +4,17 @@
   left: 50%;
   transform: translateX(-50%);
   z-index: 40;
-  width: min(420px, calc(100% - 32px));
+  width: min(
+    420px,
+    calc(
+      100% - 32px - env(safe-area-inset-left) - env(safe-area-inset-right)
+    )
+  );
   display: flex;
   justify-content: center;
   pointer-events: none;
+  padding-left: calc(16px + env(safe-area-inset-left));
+  padding-right: calc(16px + env(safe-area-inset-right));
 }
 
 .toast {

@@ -6,7 +6,7 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import Button from "@/components/ui/Button";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import deepStyles from "../DeepStyles.module.css";
 
 interface CbtDeepIncidentSectionProps {
@@ -31,6 +31,7 @@ export function CbtDeepIncidentSection({
     </>
   );
 
+  const headerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useCbtAutoResizeTextarea(textareaRef, [userInput]);
 
@@ -85,10 +86,19 @@ export function CbtDeepIncidentSection({
     </div>
   );
 
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node || typeof window === "undefined") return;
+    const rect = node.getBoundingClientRect();
+    const target = window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
+    const top = Math.max(0, target);
+    window.scrollTo({ top, behavior: "auto" });
+  }, []);
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <div className={styles.headerInset}>
+        <div className={styles.headerInset} ref={headerRef}>
           <CbtMinimalStepHeaderSection title={title} description={description} />
         </div>
 

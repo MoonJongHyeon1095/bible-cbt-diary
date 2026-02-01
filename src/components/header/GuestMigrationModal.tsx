@@ -33,12 +33,12 @@ export default function GuestMigrationModal({
       >
         <div className={styles.header}>
           <h2 className={styles.title}>
-            기기에 저장된 사용 기록을
+            기기에 저장된 사용 기록이 있습니다.
             <span className={styles.mobileBreak} aria-hidden="true" />
-            회원 계정으로 옮길 수 있습니다.
+            회원 계정으로 이전하시겠습니까?
           </h2>
           <p className={styles.body}>
-            로그인 전의 감정 노트 기록 등이 회원 기록으로 통합됩니다.
+            로그인 전 작성한 감정노트 기록 등이 회원 기록으로 통합됩니다.
           </p>
         </div>
         {error ? <p className={styles.error}>{error}</p> : null}
@@ -48,9 +48,9 @@ export default function GuestMigrationModal({
             variant="outline"
             onClick={onDecline}
             disabled={isUploading}
-            className={styles.declineButton}
+            className={`${styles.actionButton} ${styles.declineButton}`}
           >
-            이전하지 않습니다
+            아니오
           </Button>
           <Button
             type="button"
@@ -58,6 +58,7 @@ export default function GuestMigrationModal({
             onClick={onConfirm}
             loading={isUploading}
             loadingText="이전 중..."
+            className={styles.actionButton}
           >
             이전합니다
           </Button>

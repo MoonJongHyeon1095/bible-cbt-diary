@@ -5,6 +5,7 @@ import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextBu
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 import styles from "../MinimalStyles.module.css";
+import { useEffect, useRef } from "react";
 
 interface CbtMinimalIncidentSectionProps {
   userInput: string;
@@ -22,6 +23,7 @@ export function CbtMinimalIncidentSection({
   const { pushToast } = useCbtToast();
   const description =
     "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
+  const headerRef = useRef<HTMLDivElement | null>(null);
 
   const handleShowExample = () => {
     if (!ALL_EXAMPLES.length) return;
@@ -42,10 +44,19 @@ export function CbtMinimalIncidentSection({
     onNext();
   };
 
+  useEffect(() => {
+    const node = headerRef.current;
+    if (!node || typeof window === "undefined") return;
+    const rect = node.getBoundingClientRect();
+    const target = window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
+    const top = Math.max(0, target);
+    window.scrollTo({ top, behavior: "auto" });
+  }, []);
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <div className={styles.headerInset}>
+        <div className={styles.headerInset} ref={headerRef}>
           <CbtMinimalStepHeaderSection title={title} description={description} />
         </div>
 

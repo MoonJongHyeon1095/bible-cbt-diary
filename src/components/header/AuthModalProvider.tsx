@@ -4,6 +4,8 @@ import { createContext, useCallback, useContext, useState } from "react";
 import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import AuthModal from "@/components/header/AuthModal";
+import GuestMigrationModal from "@/components/header/GuestMigrationModal";
+import { useGuestMigration } from "@/lib/hooks/useGuestMigration";
 
 type AuthModalContextValue = {
   openAuthModal: () => void;
@@ -15,6 +17,13 @@ const AuthModalContext = createContext<AuthModalContextValue | null>(null);
 export function AuthModalProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
+  const {
+    isPromptOpen,
+    isUploading,
+    error,
+    confirmMigration,
+    declineMigration,
+  } = useGuestMigration();
 
   const openAuthModal = useCallback(() => {
     setIsOpen(true);
@@ -32,6 +41,13 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
   return (
     <AuthModalContext.Provider value={{ openAuthModal, closeAuthModal }}>
       {children}
+      <GuestMigrationModal
+        isOpen={isPromptOpen}
+        isUploading={isUploading}
+        error={error}
+        onConfirm={confirmMigration}
+        onDecline={declineMigration}
+      />
       <AuthModal
         isOpen={isOpen}
         onClose={closeAuthModal}

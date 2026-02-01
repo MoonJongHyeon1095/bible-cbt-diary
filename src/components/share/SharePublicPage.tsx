@@ -16,13 +16,6 @@ const SECTION_LABELS: Record<ShareSection, string> = {
   behavior: "행동 반응",
 };
 
-const SECTION_BADGES: Record<ShareSection, string> = {
-  thought: styles.badgeThought,
-  error: styles.badgeError,
-  alternative: styles.badgeAlternative,
-  behavior: styles.badgeBehavior,
-};
-
 const SECTION_ICONS: Record<ShareSection, React.ReactNode> = {
   thought: <Brain size={18} />,
   error: <AlertCircle size={18} />,

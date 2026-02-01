@@ -7,7 +7,7 @@ import Button from "@/components/ui/Button";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { BookSearch, Copy } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import styles from "./SharePage.module.css";
 
 export default function ShareLinkPage() {
@@ -17,19 +17,10 @@ export default function ShareLinkPage() {
   const shareId = searchParams.get("sid");
   const noteId = searchParams.get("noteId");
 
-  const [origin, setOrigin] = useState("");
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      setOrigin(window.location.origin);
-    }
-  }, []);
-
   const shareUrl = useMemo(() => {
     if (!shareId) return "";
-    const base = origin || "";
-    return `${base}/share?sid=${shareId}`;
-  }, [origin, shareId]);
+    return buildApiUrl(`/share?sid=${shareId}`);
+  }, [shareId]);
 
   const handleCopy = async () => {
     if (!shareUrl) return;

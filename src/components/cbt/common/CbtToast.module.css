@@ -62,6 +62,6 @@
 
 @media (max-width: 720px) {
   .toastArea {
-    bottom: calc(48px + env(safe-area-inset-bottom));
+    bottom: calc(64px + env(safe-area-inset-bottom));
   }
 }

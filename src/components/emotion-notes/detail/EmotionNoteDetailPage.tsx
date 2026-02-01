@@ -17,6 +17,7 @@ import {
   Pencil,
   Plus,
   Route,
+  Share2,
   Trash2,
   Upload,
   X,
@@ -461,36 +462,59 @@ export default function EmotionNoteDetailPage({
           disabled={isSaving}
           loading={isSaving}
           loadingBehavior="replace"
+          style={{
+            bottom: "18vh",
+          }}
         />
       ) : null}
-      {!selectedItem && !selectedSection ? (
-        <FloatingActionButton
-          label="Go Deeper"
-          icon={<Route size={22} />}
-          helperText="Go Deeper"
-          onClick={async () => {
-            if (!note?.id) return;
-            if (accessMode !== "auth") {
-              openAuthModal();
-              return;
-            }
-            const allowed = await checkUsage();
-            if (!allowed) {
-              return;
-            }
-            if (note.group_id) {
-              router.push(`/graph?groupId=${note.group_id}&noteId=${note.id}`);
-              return;
-            }
-            router.push(`/session/deep?mainId=${note.id}`);
-          }}
-          style={{
-            bottom: shouldShowSave ? "18vh" : "25vh",
-            backgroundColor: "#121417",
-            color: "#fff",
-            borderColor: "rgba(255, 255, 255, 0.35)",
-          }}
-        />
+      {!selectedItem && !selectedSection && !shouldShowSave ? (
+        <>
+          <FloatingActionButton
+            label="공유하기"
+            icon={<Share2 size={22} />}
+            helperText="공유하기"
+            onClick={() => {
+              if (!note?.id) {
+                pushToast("먼저 기록을 저장해주세요.", "info");
+                return;
+              }
+              router.push(`/share/create?id=${note.id}`);
+            }}
+            style={{
+              bottom: shouldShowSave ? "32vh" : "40vh",
+              backgroundColor: "#fff",
+              color: "#121417",
+              borderColor: "rgba(18, 20, 23, 0.35)",
+            }}
+          />
+          <FloatingActionButton
+            label="Go Deeper"
+            icon={<Route size={22} />}
+            helperText="Go Deeper"
+            onClick={async () => {
+              if (!note?.id) return;
+              if (accessMode !== "auth") {
+                openAuthModal();
+                return;
+              }
+              const allowed = await checkUsage();
+              if (!allowed) {
+                return;
+              }
+              if (note.group_id) {
+                router.push(`/graph?groupId=${note.group_id}&noteId=${note.id}`);
+                return;
+              }
+              router.push(`/session/deep?mainId=${note.id}`);
+            }}
+            style={{
+              bottom: shouldShowSave ? "18vh" : "25vh",
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
+            }}
+          />
+        </>
       ) : null}
       {selectedSection && !selectedItem ? (
         <FloatingActionButton
@@ -547,6 +571,9 @@ export default function EmotionNoteDetailPage({
             }}
             style={{
               bottom: shouldShowSave ? "26vh" : "33vh",
+              ["--fab-bottom-mobile" as string]: shouldShowSave
+                ? "30vh"
+                : "38vh",
               backgroundColor: "#121417",
               color: "#fff",
               borderColor: "rgba(255, 255, 255, 0.35)",
@@ -574,6 +601,9 @@ export default function EmotionNoteDetailPage({
             loadingBehavior="replace"
             style={{
               bottom: shouldShowSave ? "10vh" : "17vh",
+              ["--fab-bottom-mobile" as string]: shouldShowSave
+                ? "16vh"
+                : "23vh",
               backgroundColor: "#e14a4a",
               color: "#fff",
               borderColor: "#b93333",

@@ -1,0 +1,545 @@
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.noteCard,
+.sectionCard,
+.shareCard {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+
+.noteTitle {
+  font-size: 1.2rem;
+  margin: 0 0 8px;
+}
+
+.noteText {
+  margin: 0;
+  color: var(--muted);
+  white-space: pre-line;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sectionTitle {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.sectionMeta {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.selectAll {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.itemList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.itemCard {
+  display: flex;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
+.itemBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.itemTitle {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.itemText {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.itemMeta {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.checkbox {
+  margin-top: 2px;
+  width: 18px;
+  height: 18px;
+}
+
+.emptyState {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.shareLinkBox {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid rgba(18, 20, 23, 0.12);
+  background: linear-gradient(180deg, rgba(18, 20, 23, 0.04), rgba(18, 20, 23, 0.02));
+  box-shadow: 0 16px 30px rgba(17, 20, 24, 0.08);
+  font-size: 0.9rem;
+  align-items: center;
+  text-align: center;
+  width: min(820px, 100%);
+}
+
+.shareLinkBoxCentered {
+  min-height: 160px;
+  justify-content: center;
+}
+
+.shareLinkHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: center;
+}
+
+.shareLinkRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.linkMain {
+  align-items: center;
+}
+
+.linkShell {
+  min-height: calc(100vh - 96px);
+  justify-content: center;
+}
+
+.shareLinkNote {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-align: center;
+}
+
+.shareLinkValue {
+  font-weight: 600;
+  font-family: "SFMono-Regular", "Menlo", "Consolas", "Liberation Mono", monospace;
+  font-size: 0.86rem;
+  background: #121417;
+  color: #fff;
+  border: 1px solid rgba(18, 20, 23, 0.28);
+  padding: 8px 12px;
+  border-radius: 10px;
+  max-width: min(520px, 100%);
+  white-space: nowrap;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.shareLinkWarn {
+  margin: 0;
+  color: #e0554a;
+  font-size: 0.8rem;
+  text-align: center;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pageScrollPad {
+  padding-bottom: 140px;
+}
+
+.checkbox {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 6px;
+  border: 1px solid rgba(140, 148, 170, 0.7);
+  background: rgba(18, 20, 23, 0.06);
+  display: inline-grid;
+  place-content: center;
+  margin-top: 2px;
+  cursor: pointer;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.checkbox::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  transform: scale(0);
+  transition: transform 120ms ease;
+  border-radius: 3px;
+  background: linear-gradient(135deg, #ffd466, #ffb800);
+  box-shadow: 0 0 0 2px rgba(255, 190, 72, 0.25);
+}
+
+.checkbox:checked {
+  border-color: rgba(140, 148, 170, 0.9);
+}
+
+.checkbox:checked::after {
+  transform: scale(1);
+}
+
+.badgePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  align-self: flex-start;
+  width: fit-content;
+  max-width: 100%;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tagChip {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  background: rgba(18, 20, 23, 0.08);
+  border: 1px solid rgba(18, 20, 23, 0.18);
+  color: #1f2328;
+}
+
+.sectionBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  border: 1px solid transparent;
+}
+
+.badgeThought {
+  background: #b78900;
+  border-color: #a07700;
+}
+
+.badgeError {
+  background: #c21f87;
+  border-color: #a51b74;
+}
+
+.badgeAlternative {
+  background: #1f9b3b;
+  border-color: #188030;
+}
+
+.badgeBehavior {
+  background: #0287a3;
+  border-color: #016f86;
+}
+
+.fabLeft {
+  right: auto;
+  left: 24px;
+}
+
+.fabRight {
+  right: 24px;
+}
+
+.publicPage {
+  background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 55%),
+    linear-gradient(180deg, #0f1115, #151a22 65%, #0f1115 100%);
+  font-family: "Noto Serif KR", "Apple SD Gothic Neo", "Nanum Myeongjo", "Noto Sans KR", serif;
+  color: #f4f6fb;
+}
+
+.publicShell {
+  gap: 6px;
+}
+
+.publicPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(233, 238, 247, 0.82);
+  width: fit-content;
+}
+
+.publicTitle {
+  margin: 0;
+  font-size: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.publicSubtitle {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.95rem;
+}
+
+.publicNoteCard {
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 20, 26, 0.72);
+  padding: 16px;
+  box-shadow: 0 14px 26px rgba(4, 6, 10, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.publicNoteHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.publicBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9eef7;
+}
+
+.publicNoteTitle {
+  margin: 0 0 10px;
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+.publicNoteBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.publicNoteLabel {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.08);
+  color: #e9eef7;
+}
+
+.publicNoteText {
+  margin: 0;
+  color: rgba(233, 238, 247, 0.72);
+  font-size: 0.95rem;
+  white-space: pre-line;
+}
+
+.publicGrid {
+  display: grid;
+  gap: 18px;
+}
+
+.publicSectionCard {
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(18, 20, 26, 0.72);
+  padding: 20px;
+  box-shadow: 0 10px 22px rgba(4, 6, 10, 0.38);
+}
+
+.publicSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.publicSectionTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.publicSectionHeader .sectionMeta {
+  margin-top: 6px;
+  display: block;
+}
+
+.publicSectionIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f4f6fb;
+}
+
+.publicItemList {
+  gap: 26px;
+}
+
+.publicItem {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.publicSectionCard .itemText,
+.publicSectionCard .itemMeta {
+  color: rgba(233, 238, 247, 0.75);
+}
+
+.publicSectionCard .tagChip {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #e9eef7;
+}
+
+.publicSectionCard_thought {
+  background: linear-gradient(180deg, rgba(255, 211, 0, 0.08), rgba(18, 20, 26, 0.72));
+  border-color: rgba(255, 211, 0, 0.18);
+}
+
+.publicSectionCard_error {
+  background: linear-gradient(180deg, rgba(255, 79, 216, 0.08), rgba(18, 20, 26, 0.72));
+  border-color: rgba(255, 79, 216, 0.18);
+}
+
+.publicSectionCard_alternative {
+  background: linear-gradient(180deg, rgba(54, 217, 74, 0.08), rgba(18, 20, 26, 0.72));
+  border-color: rgba(54, 217, 74, 0.18);
+}
+
+.publicSectionCard_behavior {
+  background: linear-gradient(180deg, rgba(38, 224, 255, 0.08), rgba(18, 20, 26, 0.72));
+  border-color: rgba(38, 224, 255, 0.18);
+}
+
+@media (max-width: 720px) {
+  .publicHero {
+    padding: 20px;
+  }
+
+  .publicTitle {
+    font-size: 1.6rem;
+  }
+
+  .publicNoteCard,
+  .publicSectionCard {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 720px) {
+  .shareLinkBox {
+    width: 100%;
+    padding: 16px;
+  }
+  .shareLinkRow {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .shareLinkValue {
+    max-width: 100%;
+  }
+  .noteCard,
+  .sectionCard,
+  .shareCard {
+    padding: 16px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  .fabLeft {
+    left: 16px;
+  }
+
+  .fabRight {
+    right: 16px;
+  }
+}

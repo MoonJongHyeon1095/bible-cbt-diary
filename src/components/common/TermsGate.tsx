@@ -19,6 +19,7 @@ const EXEMPT_PATHS = [
   "/privacy",
   "/terms-of-service",
   "/account-deletion",
+  "/share",
 ];
 
 function hasAcceptedTerms(): boolean {

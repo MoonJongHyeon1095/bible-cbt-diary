@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -33,6 +34,7 @@ export default function EmotionNoteCard({
   const [isPressing, setIsPressing] = useState(false);
   const [pressProgress, setPressProgress] = useState(0);
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { openAuthModal } = useAuthModal();
 
   const longPressDuration = 800;
   const longPressOverlayDelay = 120;
@@ -119,6 +121,7 @@ export default function EmotionNoteCard({
       longPressTriggeredRef.current = true;
       setPressProgress(1);
       if (!canGoDeeper) {
+        openAuthModal();
         return;
       }
       if (typeof navigator !== "undefined" && "vibrate" in navigator) {

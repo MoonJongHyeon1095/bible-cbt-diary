@@ -1,15 +1,18 @@
 "use client";
 
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import Button from "@/components/ui/Button";
-import { TERMS_STORAGE_KEY, TERMS_VERSION } from "@/lib/constants/legal";
 import LegalConsentFormContent from "@/components/legal/LegalConsentFormContent";
+import styles from "@/components/legal/LegalPage.module.css";
 import LegalPrivacyPolicyContent from "@/components/legal/LegalPrivacyPolicyContent";
 import LegalTermsOfServiceContent from "@/components/legal/LegalTermsOfServiceContent";
+import Button from "@/components/ui/Button";
+import {
+  TERMS_COOKIE_KEY,
+  TERMS_STORAGE_KEY,
+  TERMS_VERSION,
+} from "@/lib/constants/legal";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import styles from "@/app/legal/LegalPage.module.css";
 
 type StoredAgreement = {
   version: number;
@@ -24,7 +27,6 @@ type StoredAgreement = {
 
 export default function LegalTermsConsentPage() {
   const router = useRouter();
-  const { pushToast } = useCbtToast();
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [agreePrivacy, setAgreePrivacy] = useState(false);
   const [agreeConsent, setAgreeConsent] = useState(false);
@@ -32,23 +34,9 @@ export default function LegalTermsConsentPage() {
   const [agreeAi, setAgreeAi] = useState(false);
   const [agreeMarketing, setAgreeMarketing] = useState(false);
   const [openSection, setOpenSection] = useState<string | null>(null);
-  const [openedSections, setOpenedSections] = useState<{
-    terms: boolean;
-    privacy: boolean;
-    consent: boolean;
-  }>({
-    terms: false,
-    privacy: false,
-    consent: false,
-  });
 
   const handleToggleSection = (key: "terms" | "privacy" | "consent") => {
     setOpenSection((prev) => (prev === key ? null : key));
-    setOpenedSections((prev) => ({ ...prev, [key]: true }));
-  };
-  const openSectionAndMark = (key: "terms" | "privacy" | "consent") => {
-    setOpenSection(key);
-    setOpenedSections((prev) => ({ ...prev, [key]: true }));
   };
 
   useEffect(() => {
@@ -69,20 +57,18 @@ export default function LegalTermsConsentPage() {
     }
   }, []);
 
-  const canSubmit = useMemo(
+  const allAgreed = useMemo(
     () => agreeTerms && agreePrivacy && agreeConsent && agreeAge && agreeAi,
     [agreeTerms, agreePrivacy, agreeConsent, agreeAge, agreeAi],
   );
-
-  const handleBlockedClick = (key: "terms" | "privacy" | "consent") => {
-    if (openedSections[key]) return;
-    const label =
-      key === "terms"
-        ? "이용약관"
-        : key === "privacy"
-          ? "개인정보 처리방침"
-          : "개인정보 수집·이용 동의서";
-    pushToast(`${label}을(를) 먼저 확인해주세요.`, "error");
+  const canSubmit = allAgreed;
+  const handleAgreeAll = (checked: boolean) => {
+    setAgreeTerms(checked);
+    setAgreePrivacy(checked);
+    setAgreeConsent(checked);
+    setAgreeAge(checked);
+    setAgreeAi(checked);
+    setAgreeMarketing(checked);
   };
 
   const handleSubmit = () => {
@@ -98,6 +84,8 @@ export default function LegalTermsConsentPage() {
       marketing: agreeMarketing,
     };
     window.localStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(payload));
+    const secure = window.location.protocol === "https:" ? "; secure" : "";
+    document.cookie = `${TERMS_COOKIE_KEY}=v${TERMS_VERSION}; path=/; max-age=31536000; samesite=lax${secure}`;
     router.replace("/today");
   };
 
@@ -163,6 +151,22 @@ export default function LegalTermsConsentPage() {
           </section>
           <div className={styles.agreeList}>
             <div className={styles.agreeRow}>
+              <label className={`${styles.agreeItem} ${styles.agreeAllItem}`}>
+                <input
+                  type="checkbox"
+                  className={styles.checkboxInput}
+                  checked={allAgreed}
+                  onChange={(event) => handleAgreeAll(event.target.checked)}
+                />
+                <span className={styles.agreeAllText}>
+                  전체 동의
+                  <span className={styles.agreeAllSub}>
+                    아래 필수 항목에 모두 동의합니다.
+                  </span>
+                </span>
+              </label>
+            </div>
+            <div className={styles.agreeRow}>
               <label className={styles.agreeItem}>
                 <input
                   type="checkbox"
@@ -177,19 +181,11 @@ export default function LegalTermsConsentPage() {
               </label>
             </div>
             <div className={styles.agreeRow}>
-              <label
-                className={styles.agreeItem}
-                onClick={(event) => {
-                  if (openedSections.terms) return;
-                  event.preventDefault();
-                  handleBlockedClick("terms");
-                }}
-              >
+              <label className={styles.agreeItem}>
                 <input
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={agreeTerms}
-                  disabled={!openedSections.terms}
                   onChange={(event) => setAgreeTerms(event.target.checked)}
                 />
                 <span>
@@ -200,26 +196,18 @@ export default function LegalTermsConsentPage() {
               <button
                 type="button"
                 className={styles.viewButton}
-                onClick={() => openSectionAndMark("terms")}
+                onClick={() => setOpenSection("terms")}
                 aria-label="이용약관 보기"
               >
                 <ChevronRight size={14} />
               </button>
             </div>
             <div className={styles.agreeRow}>
-              <label
-                className={styles.agreeItem}
-                onClick={(event) => {
-                  if (openedSections.privacy) return;
-                  event.preventDefault();
-                  handleBlockedClick("privacy");
-                }}
-              >
+              <label className={styles.agreeItem}>
                 <input
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={agreePrivacy}
-                  disabled={!openedSections.privacy}
                   onChange={(event) => setAgreePrivacy(event.target.checked)}
                 />
                 <span>
@@ -230,26 +218,18 @@ export default function LegalTermsConsentPage() {
               <button
                 type="button"
                 className={styles.viewButton}
-                onClick={() => openSectionAndMark("privacy")}
+                onClick={() => setOpenSection("privacy")}
                 aria-label="개인정보 처리방침 보기"
               >
                 <ChevronRight size={14} />
               </button>
             </div>
             <div className={styles.agreeRow}>
-              <label
-                className={styles.agreeItem}
-                onClick={(event) => {
-                  if (openedSections.consent) return;
-                  event.preventDefault();
-                  handleBlockedClick("consent");
-                }}
-              >
+              <label className={styles.agreeItem}>
                 <input
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={agreeConsent}
-                  disabled={!openedSections.consent}
                   onChange={(event) => setAgreeConsent(event.target.checked)}
                 />
                 <span>
@@ -260,26 +240,18 @@ export default function LegalTermsConsentPage() {
               <button
                 type="button"
                 className={styles.viewButton}
-                onClick={() => openSectionAndMark("consent")}
+                onClick={() => setOpenSection("consent")}
                 aria-label="개인정보 수집·이용 동의서 보기"
               >
                 <ChevronRight size={14} />
               </button>
             </div>
             <div className={styles.agreeRow}>
-              <label
-                className={styles.agreeItem}
-                onClick={(event) => {
-                  if (openedSections.consent) return;
-                  event.preventDefault();
-                  handleBlockedClick("consent");
-                }}
-              >
+              <label className={styles.agreeItem}>
                 <input
                   type="checkbox"
                   className={styles.checkboxInput}
                   checked={agreeAi}
-                  disabled={!openedSections.consent}
                   onChange={(event) => setAgreeAi(event.target.checked)}
                 />
                 <span className={styles.agreeTextWrap}>
@@ -290,37 +262,7 @@ export default function LegalTermsConsentPage() {
               <button
                 type="button"
                 className={styles.viewButton}
-                onClick={() => openSectionAndMark("consent")}
-                aria-label="개인정보 수집·이용 동의서 보기"
-              >
-                <ChevronRight size={14} />
-              </button>
-            </div>
-            <div className={styles.agreeRow}>
-              <label
-                className={styles.agreeItem}
-                onClick={(event) => {
-                  if (openedSections.consent) return;
-                  event.preventDefault();
-                  handleBlockedClick("consent");
-                }}
-              >
-                <input
-                  type="checkbox"
-                  className={styles.checkboxInput}
-                  checked={agreeMarketing}
-                  disabled={!openedSections.consent}
-                  onChange={(event) => setAgreeMarketing(event.target.checked)}
-                />
-                <span>
-                  <span className={styles.agreeBadgeOptional}>선택</span>
-                  마케팅 정보 수신에 동의합니다.
-                </span>
-              </label>
-              <button
-                type="button"
-                className={styles.viewButton}
-                onClick={() => openSectionAndMark("consent")}
+                onClick={() => setOpenSection("consent")}
                 aria-label="개인정보 수집·이용 동의서 보기"
               >
                 <ChevronRight size={14} />

@@ -18,6 +18,7 @@ import { validateUserText } from "@/components/cbt/utils/validation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
@@ -48,6 +49,7 @@ export default function EmotionNoteAddBehaviorPage({
 }: EmotionNoteAddBehaviorPageProps) {
   const router = useRouter();
   const { pushToast } = useCbtToast();
+  const { openAuthModal } = useAuthModal();
   const {
     accessMode,
     triggerText,
@@ -288,7 +290,7 @@ export default function EmotionNoteAddBehaviorPage({
 
   const ensureAiReady = async () => {
     if (aiLocked) {
-      pushToast("로그인 후 AI 제안을 사용할 수 있어요.", "error");
+      openAuthModal();
       return false;
     }
     const allowed = await checkAiUsageLimit(pushToast);
@@ -480,6 +482,7 @@ export default function EmotionNoteAddBehaviorPage({
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
+              onLockedClick={() => openAuthModal()}
             />
           </div>
         ) : null}

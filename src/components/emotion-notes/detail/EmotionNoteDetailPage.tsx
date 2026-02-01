@@ -5,6 +5,7 @@ import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 import Button from "@/components/ui/Button";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -80,6 +81,7 @@ export default function EmotionNoteDetailPage({
   } = useEmotionNoteDetail(noteId);
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { pushToast } = useCbtToast();
+  const { openAuthModal } = useAuthModal();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(
     null,
@@ -468,6 +470,10 @@ export default function EmotionNoteDetailPage({
           helperText="Go Deeper"
           onClick={async () => {
             if (!note?.id) return;
+            if (accessMode !== "auth") {
+              openAuthModal();
+              return;
+            }
             const allowed = await checkUsage();
             if (!allowed) {
               return;

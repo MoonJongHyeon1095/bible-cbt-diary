@@ -81,6 +81,9 @@ export default function UsagePage() {
               {limits.isMember ? "회원 기준" : "게스트 기준"}
             </span>
             <h1 className={styles.title}>AI 사용량</h1>
+            <p className={styles.subtitle}>
+              로그인 사용자는 더 넉넉한 사용량이 제공됩니다.
+            </p>
           </header>
 
           {error ? <div className={styles.error}>{error}</div> : null}
@@ -93,7 +96,6 @@ export default function UsagePage() {
                 <section className={styles.card}>
                   <div className={styles.cardHeader}>
                     <h2 className={styles.cardTitle}>오늘 사용량</h2>
-                    <span className={styles.cardMeta}>KST 09:00 초기화</span>
                   </div>
                   <div className={styles.gaugeTrack}>
                     <div
@@ -110,16 +112,13 @@ export default function UsagePage() {
                     <div className={styles.usageLimit}>/ 100%</div>
                   </div>
                   <p className={styles.hint}>
-                    오늘 사용량은 한도 대비 비율로 표시됩니다.
+                    일일 사용량은 매일 KST 09:00 초기화 됩니다.
                   </p>
                 </section>
 
                 <section className={styles.card}>
                   <div className={styles.cardHeader}>
                     <h2 className={styles.cardTitle}>이번 달 사용량</h2>
-                    <span className={styles.cardMeta}>
-                      매월 1일 KST 09:00 초기화
-                    </span>
                   </div>
                   <div className={styles.gaugeTrack}>
                     <div
@@ -136,7 +135,7 @@ export default function UsagePage() {
                     <div className={styles.usageLimit}>/ 100%</div>
                   </div>
                   <p className={styles.hint}>
-                    월간 한도 대비 사용 비율을 보여줍니다.
+                    월간 사용량은 매월 1일 KST 09:00 초기화 됩니다.
                   </p>
                 </section>
               </div>

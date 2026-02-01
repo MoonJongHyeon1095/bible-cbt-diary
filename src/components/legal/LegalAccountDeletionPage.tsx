@@ -1,6 +1,6 @@
 import AppHeader from "@/components/header/AppHeader";
 import LegalAccountDeletionContent from "@/components/legal/LegalAccountDeletionContent";
-import styles from "@/app/legal/LegalPage.module.css";
+import styles from "@/components/legal/LegalPage.module.css";
 
 export default function LegalAccountDeletionPage() {
   return (

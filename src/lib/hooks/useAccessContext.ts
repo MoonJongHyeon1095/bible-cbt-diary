@@ -24,6 +24,7 @@ export const useAccessContext = () => {
     isLoading: true,
   });
   const isUploadingRef = useRef(false);
+  const uploadControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     const resolveSession = async () => {
@@ -49,6 +50,10 @@ export const useAccessContext = () => {
     resolveSession();
     const { data: authListener } = supabase.auth.onAuthStateChange(
       (_event, session) => {
+        if (!session?.access_token && uploadControllerRef.current) {
+          uploadControllerRef.current.abort();
+          uploadControllerRef.current = null;
+        }
         if (session?.access_token) {
           setState({
             mode: "auth",
@@ -74,6 +79,10 @@ export const useAccessContext = () => {
 
   useEffect(() => {
     if (state.mode !== "auth" || !state.accessToken) {
+      if (uploadControllerRef.current) {
+        uploadControllerRef.current.abort();
+        uploadControllerRef.current = null;
+      }
       return;
     }
     if (isUploadingRef.current) {
@@ -83,7 +92,9 @@ export const useAccessContext = () => {
       return;
     }
     isUploadingRef.current = true;
-    uploadGuestData(state.accessToken)
+    const controller = new AbortController();
+    uploadControllerRef.current = controller;
+    uploadGuestData(state.accessToken, { signal: controller.signal })
       .then((result) => {
         if (result.ok) {
           clearGuestData();
@@ -91,6 +102,9 @@ export const useAccessContext = () => {
       })
       .finally(() => {
         isUploadingRef.current = false;
+        if (uploadControllerRef.current === controller) {
+          uploadControllerRef.current = null;
+        }
       });
   }, [state.accessToken, state.mode]);
 

@@ -1,4 +1,4 @@
-import styles from "@/app/legal/LegalPage.module.css";
+import styles from "@/components/legal/LegalPage.module.css";
 import AppHeader from "@/components/header/AppHeader";
 import LegalTermsOfServiceContent from "@/components/legal/LegalTermsOfServiceContent";
 

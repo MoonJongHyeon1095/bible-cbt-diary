@@ -1,15 +1,15 @@
 "use client";
 
-import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import EmotionNoteTodaySection from "@/components/emotion-notes/EmotionNoteTodaySection";
 import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
 import AppHeader from "@/components/header/AppHeader";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
+import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "@/app/page.module.css";
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";
@@ -94,6 +94,9 @@ export default function EmotionNoteTodayPage() {
     };
     load();
   }, [fetchNotes, accessMode, accessToken]);
+  useStorageBlockedRedirect({
+    enabled: !isAccessLoading && accessMode === "blocked",
+  });
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -131,9 +134,7 @@ export default function EmotionNoteTodayPage() {
       <AppHeader />
       <main className={styles.main}>
         <div className={styles.shell}>
-          {isAccessLoading ? null : accessMode === "blocked" ? (
-            <RequireLoginPrompt />
-          ) : (
+          {isAccessLoading || accessMode === "blocked" ? null : (
             <EmotionNoteTodaySection
               notes={notes}
               todayLabel={todayLabel}

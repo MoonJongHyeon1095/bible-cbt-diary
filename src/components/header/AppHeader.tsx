@@ -2,11 +2,11 @@
 
 import AppTabs from "@/components/tab/AppTabs";
 import Button from "@/components/ui/Button";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
-import AuthModal from "./AuthModal";
 import DisclaimerBanner from "./DisclaimerBanner";
 import CompactNav from "./navigation/CompactNav";
 
@@ -17,7 +17,7 @@ type SessionUser = {
 
 export default function AppHeader() {
   const [user, setUser] = useState<SessionUser | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { openAuthModal } = useAuthModal();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export default function AppHeader() {
               type="button"
               variant="unstyled"
               className={styles.loginButton}
-              onClick={() => setIsModalOpen(true)}
+              onClick={() => openAuthModal()}
             >
               <LogIn size={18} />
               로그인
@@ -92,13 +92,6 @@ export default function AppHeader() {
         />
       </div>
 
-      <AuthModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSignedIn={(nextUser) => {
-          setUser(nextUser);
-        }}
-      />
     </>
   );
 }

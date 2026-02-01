@@ -74,6 +74,33 @@
   white-space: nowrap;
 }
 
+.agreeAllItem {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 200, 80, 0.45);
+  background: linear-gradient(
+    135deg,
+    rgba(255, 210, 120, 0.18),
+    rgba(255, 180, 40, 0.08)
+  );
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.agreeAllText {
+  display: grid;
+  gap: 4px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.agreeAllSub {
+  font-size: 0.7rem;
+  color: var(--muted);
+  font-weight: 500;
+}
+
 .viewButton {
   border: 1px solid rgba(140, 148, 170, 0.6);
   background: transparent;

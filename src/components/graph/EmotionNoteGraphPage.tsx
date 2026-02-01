@@ -1,7 +1,6 @@
 "use client";
 
 import AppHeader from "@/components/header/AppHeader";
-import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import EmotionNoteGraphGroupList from "@/components/graph/EmotionNoteGraphGroupList";
 import EmotionNoteGraphSection from "@/components/graph/EmotionNoteGraphSection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
@@ -76,7 +75,9 @@ function EmotionNoteGraphPageContent() {
               <EmotionNoteGraphGroupList accessToken={accessToken} />
             )
           ) : (
-            <RequireLoginPrompt />
+            <div className={styles.emptyAuth}>
+              로그인 후 그래프를 확인할 수 있어요.
+            </div>
           )}
         </div>
       </main>

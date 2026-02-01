@@ -621,12 +621,16 @@ export const clearGuestData = () => {
   window.localStorage.removeItem(key);
 };
 
-export const uploadGuestData = async (accessToken: string) => {
+export const uploadGuestData = async (
+  accessToken: string,
+  options?: { signal?: AbortSignal },
+) => {
   const store = readStore();
   if (!store.notes.length && !store.histories.length) {
     return { ok: true };
   }
 
+  const signal = options?.signal;
   const headers = {
     "Content-Type": "application/json",
     ...buildAuthHeaders(accessToken),
@@ -642,6 +646,7 @@ export const uploadGuestData = async (accessToken: string) => {
           trigger_text: note.trigger_text,
           created_at: note.created_at,
         }),
+        signal,
       });
       if (!noteRes.ok) {
         return { ok: false };
@@ -664,6 +669,7 @@ export const uploadGuestData = async (accessToken: string) => {
             emotion: detail.emotion,
             created_at: detail.created_at,
           }),
+          signal,
         });
         if (!response.ok) {
           return { ok: false };
@@ -680,6 +686,7 @@ export const uploadGuestData = async (accessToken: string) => {
             error_description: detail.error_description,
             created_at: detail.created_at,
           }),
+          signal,
         });
         if (!response.ok) {
           return { ok: false };
@@ -697,6 +704,7 @@ export const uploadGuestData = async (accessToken: string) => {
             alternative: detail.alternative,
             created_at: detail.created_at,
           }),
+          signal,
         });
         if (!response.ok) {
           return { ok: false };
@@ -714,6 +722,7 @@ export const uploadGuestData = async (accessToken: string) => {
             error_tags: detail.error_tags ?? null,
             created_at: detail.created_at,
           }),
+          signal,
         });
         if (!response.ok) {
           return { ok: false };
@@ -734,6 +743,7 @@ export const uploadGuestData = async (accessToken: string) => {
           selected_behavior: history.selectedBehavior ?? null,
           bible_verse: history.bibleVerse ?? null,
         }),
+        signal,
       });
       if (!response.ok) {
         return { ok: false };

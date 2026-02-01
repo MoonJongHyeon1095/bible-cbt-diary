@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
 import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import styles from "./EmotionNoteAddPage.module.css";
 
@@ -19,6 +20,7 @@ export default function EmotionNoteAddModePage({
   tone: _tone,
 }: EmotionNoteAddModePageProps) {
   const router = useRouter();
+  const { openAuthModal } = useAuthModal();
   const { accessMode } = useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
   const icon =
@@ -49,11 +51,12 @@ export default function EmotionNoteAddModePage({
       onClose={() => router.push(`/detail?id=${noteId}`)}
     >
       <div className={styles.modeSelectOnly}>
-        <EmotionNoteAddModeSelector
-          value={null}
-          onSelect={handleSelectMode}
-          aiLocked={aiLocked}
-        />
+          <EmotionNoteAddModeSelector
+            value={null}
+            onSelect={handleSelectMode}
+            aiLocked={aiLocked}
+          onLockedClick={() => openAuthModal()}
+          />
       </div>
     </EmotionNoteAddPageLayout>
   );

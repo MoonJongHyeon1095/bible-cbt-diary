@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
+import { AuthModalProvider } from "@/components/header/AuthModalProvider";
 import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -67,5 +68,9 @@ export default function Providers({ children }: ProvidersProps) {
     };
   }, []);
 
-  return <CbtToastProvider>{children}</CbtToastProvider>;
+  return (
+    <CbtToastProvider>
+      <AuthModalProvider>{children}</AuthModalProvider>
+    </CbtToastProvider>
+  );
 }

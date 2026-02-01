@@ -1,9 +1,9 @@
 "use client";
 
 import EmotionNoteCalendarSection from "@/components/calendar/EmotionNoteCalendarSection";
-import RequireLoginPrompt from "@/components/common/RequireLoginPrompt";
 import AppHeader from "@/components/header/AppHeader";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
+import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import styles from "@/app/page.module.css";
@@ -23,15 +23,16 @@ export default function EmotionNoteCalendarPage() {
     () => ({ mode: accessMode, accessToken }),
     [accessMode, accessToken],
   );
+  useStorageBlockedRedirect({
+    enabled: !isLoading && accessMode === "blocked",
+  });
 
   return (
     <div className={styles.page}>
       <AppHeader />
       <main className={styles.main}>
         <div className={styles.shell}>
-          {isLoading ? null : accessMode === "blocked" ? (
-            <RequireLoginPrompt />
-          ) : (
+          {isLoading || accessMode === "blocked" ? null : (
             <EmotionNoteCalendarSection
               access={access}
               initialSelectedDate={initialSelectedDate}

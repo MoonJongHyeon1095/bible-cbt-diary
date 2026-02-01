@@ -9,19 +9,26 @@ type EmotionNoteAddModeSelectorProps = {
   value: AddMode | null;
   onSelect: (mode: AddMode) => void;
   aiLocked?: boolean;
+  onLockedClick?: () => void;
 };
 
 export default function EmotionNoteAddModeSelector({
   value,
   onSelect,
   aiLocked,
+  onLockedClick,
 }: EmotionNoteAddModeSelectorProps) {
   return (
     <div className={styles.modeSelectGrid}>
       <button
         type="button"
-        onClick={() => onSelect("ai")}
-        disabled={aiLocked}
+        onClick={() => {
+          if (aiLocked) {
+            onLockedClick?.();
+            return;
+          }
+          onSelect("ai");
+        }}
         className={[
           styles.modeSelectButton,
           value === "ai" ? styles.modeSelectSelected : "",
@@ -30,6 +37,7 @@ export default function EmotionNoteAddModeSelector({
           .filter(Boolean)
           .join(" ")}
         data-mode="ai"
+        aria-disabled={aiLocked ? "true" : undefined}
       >
         <span className={styles.modeSelectIcon}>
           <Sparkles size={18} />

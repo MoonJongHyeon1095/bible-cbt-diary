@@ -25,6 +25,7 @@ import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import { EmotionOptionSelector } from "./EmotionNoteAddOptionSelectors";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 
 type ThoughtAddStep = "select-emotion" | "suggestions";
 type ThoughtDirectStep = "select-emotion" | "input";
@@ -45,6 +46,7 @@ export default function EmotionNoteAddThoughtPage({
 }: EmotionNoteAddThoughtPageProps) {
   const router = useRouter();
   const { pushToast } = useCbtToast();
+  const { openAuthModal } = useAuthModal();
   const { accessMode, triggerText, error, thoughtSection } =
     useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
@@ -137,7 +139,7 @@ export default function EmotionNoteAddThoughtPage({
 
   const ensureAiReady = async () => {
     if (aiLocked) {
-      pushToast("로그인 후 AI 제안을 사용할 수 있어요.", "error");
+      openAuthModal();
       return false;
     }
     const allowed = await checkAiUsageLimit(pushToast);
@@ -253,6 +255,7 @@ export default function EmotionNoteAddThoughtPage({
               value={mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
+              onLockedClick={() => openAuthModal()}
             />
           </div>
         ) : null}

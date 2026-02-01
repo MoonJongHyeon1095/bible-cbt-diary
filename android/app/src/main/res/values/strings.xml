@@ -1,7 +1,7 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version='1.0' encoding='utf-8' ?>
 <resources>
-    <string name="app_name">bible-cbt-diary</string>
-    <string name="title_activity_main">bible-cbt-diary</string>
+    <string name="app_name">EDi와의 감정일기</string>
+    <string name="title_activity_main">EDi와의 감정일기</string>
     <string name="package_name">com.alliance617.emotionaldiary</string>
     <string name="custom_url_scheme">com.alliance617.emotionaldiary</string>
 </resources>

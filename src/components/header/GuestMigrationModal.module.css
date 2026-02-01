@@ -1,0 +1,76 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(18, 17, 15, 0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 30;
+}
+
+.modal {
+  width: min(520px, 100%);
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: var(--shadow);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #e9ecf1;
+}
+
+.mobileBreak {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .mobileBreak {
+    display: block;
+  }
+}
+
+.body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.error {
+  margin: 0;
+  color: #ff9a9a;
+  font-size: 0.85rem;
+}
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.declineButton {
+  min-width: 160px;
+}
+
+.declineButton:disabled {
+  opacity: 0.85;
+  background: rgba(17, 20, 26, 0.45);
+  border-color: rgba(120, 135, 160, 0.6);
+  color: var(--text);
+}

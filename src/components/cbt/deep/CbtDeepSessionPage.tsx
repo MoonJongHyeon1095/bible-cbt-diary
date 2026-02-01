@@ -301,13 +301,14 @@ function CbtDeepSessionPageContent() {
       if (!noteId) {
         throw new Error("note_id_missing");
       }
+      const resolvedGroupId = result.payload?.groupId ?? groupId;
 
       pushToast("세션 기록이 저장되었습니다.", "success");
       window.setTimeout(() => {
         void flushTokenSessionUsage({ sessionCount: 1 });
         clearCbtSessionStorage();
-        if (groupId) {
-          router.push(`/graph?groupId=${groupId}&noteId=${noteId}`);
+        if (resolvedGroupId) {
+          router.push(`/graph?groupId=${resolvedGroupId}&noteId=${noteId}`);
         } else {
           router.push(`/detail?id=${noteId}`);
         }

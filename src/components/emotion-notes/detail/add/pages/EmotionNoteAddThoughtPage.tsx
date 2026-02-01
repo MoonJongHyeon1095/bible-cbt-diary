@@ -3,6 +3,7 @@
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { generateExtendedAutomaticThoughts } from "@/lib/ai";
 import { EMOTIONS } from "@/lib/constants/emotions";
@@ -20,12 +21,13 @@ import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { SelectionCard } from "../common/SelectionCard";
-import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
+import EmotionNoteAddModeSelector, {
+  AddMode,
+} from "./EmotionNoteAddModeSelector";
+import { EmotionOptionSelector } from "./EmotionNoteAddOptionSelectors";
 import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { EmotionOptionSelector } from "./EmotionNoteAddOptionSelectors";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
-import { useAuthModal } from "@/components/header/AuthModalProvider";
 
 type ThoughtAddStep = "select-emotion" | "suggestions";
 type ThoughtDirectStep = "select-emotion" | "input";
@@ -274,26 +276,28 @@ export default function EmotionNoteAddThoughtPage({
               <>
                 {aiStep === "select-emotion" && (
                   <div className={styles.selectionRow}>
-                  <p className={styles.sectionTitle}>감정 선택</p>
-                  <p className={styles.sectionHint}>
-                    감정을 먼저 선택해야 AI 제안을 받을 수 있어요.
-                  </p>
-                  <EmotionOptionSelector
-                    value={selectedEmotion}
-                    onSelect={(next) => {
-                      setSelectedEmotion(next);
-                      setSelectedCandidate("");
-                      setAiCandidates([]);
-                      setAiError(null);
-                      setSavedCandidates([]);
-                      setAiStep("select-emotion");
-                    }}
-                  />
-                </div>
+                    <p className={styles.sectionTitle}>감정 선택</p>
+                    <p className={styles.sectionHint}>
+                      감정을 먼저 선택해야 AI 제안을 받을 수 있어요.
+                    </p>
+                    <EmotionOptionSelector
+                      value={selectedEmotion}
+                      onSelect={(next) => {
+                        setSelectedEmotion(next);
+                        setSelectedCandidate("");
+                        setAiCandidates([]);
+                        setAiError(null);
+                        setSavedCandidates([]);
+                        setAiStep("select-emotion");
+                      }}
+                    />
+                  </div>
                 )}
 
                 {aiStep === "select-emotion" && (
-                  <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
+                  <EmotionNoteAddSelectionReveal
+                    isVisible={Boolean(selectedEmotionMeta)}
+                  >
                     {selectedEmotionMeta ? (
                       <div className={styles.revealInner}>
                         <p className={styles.revealTitle}>
@@ -331,7 +335,9 @@ export default function EmotionNoteAddThoughtPage({
                       {aiCandidates.map((candidate, index) => {
                         const isSelected =
                           selectedCandidate.trim() === candidate.belief.trim();
-                        const saved = savedCandidates.includes(candidate.belief);
+                        const saved = savedCandidates.includes(
+                          candidate.belief,
+                        );
                         return (
                           <SelectionCard
                             key={`${candidate.belief}-${index}`}
@@ -371,7 +377,9 @@ export default function EmotionNoteAddThoughtPage({
                   value={selectedEmotion}
                   onSelect={setSelectedEmotion}
                 />
-                <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedEmotionMeta)}>
+                <EmotionNoteAddSelectionReveal
+                  isVisible={Boolean(selectedEmotionMeta)}
+                >
                   {selectedEmotionMeta ? (
                     <div className={styles.revealInner}>
                       <p className={styles.revealTitle}>
@@ -413,7 +421,7 @@ export default function EmotionNoteAddThoughtPage({
                     placeholder="어떤 생각이 숨어있을까요?"
                   />
                   <p className={styles.helperText}>
-                    입력한 내용은 바로 자동사고로 저장됩니다.
+                    입력한 내용은 바로 이 노트에 저장됩니다.
                   </p>
                 </div>
               </>

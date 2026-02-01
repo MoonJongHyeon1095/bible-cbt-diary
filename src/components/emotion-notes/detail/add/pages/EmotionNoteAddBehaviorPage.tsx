@@ -1,6 +1,15 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { validateUserText } from "@/components/cbt/utils/validation";
+import FloatingActionButton from "@/components/common/FloatingActionButton";
+import { useAuthModal } from "@/components/header/AuthModalProvider";
+import BlinkTextarea from "@/components/ui/BlinkTextarea";
+import { generateBehaviorSuggestions } from "@/lib/ai";
+import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
+import { getRecommendedBehaviors } from "@/lib/constants/errorBehaviorMap";
+import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
+import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -9,27 +18,24 @@ import {
   Footprints,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { generateBehaviorSuggestions } from "@/lib/ai";
-import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
-import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
-import { getRecommendedBehaviors } from "@/lib/constants/errorBehaviorMap";
-import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
-import { validateUserText } from "@/components/cbt/utils/validation";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import FloatingActionButton from "@/components/common/FloatingActionButton";
-import BlinkTextarea from "@/components/ui/BlinkTextarea";
-import { useAuthModal } from "@/components/header/AuthModalProvider";
+import { useEffect, useMemo, useRef, useState } from "react";
+import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
-import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
-import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
-import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { BehaviorOptionSelector, ErrorTagSelector } from "./EmotionNoteAddOptionSelectors";
-import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
+import EmotionNoteAddModeSelector, {
+  AddMode,
+} from "./EmotionNoteAddModeSelector";
+import {
+  BehaviorOptionSelector,
+  ErrorTagSelector,
+} from "./EmotionNoteAddOptionSelectors";
 import styles from "./EmotionNoteAddPage.module.css";
+import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
+import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
+import EmotionNoteAddSummaryItem from "./EmotionNoteAddSummaryItem";
 
 type BehaviorAiStep =
   | "select-thought"
@@ -63,9 +69,8 @@ export default function EmotionNoteAddBehaviorPage({
 
   const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
   const [aiStep, setAiStep] = useState<BehaviorAiStep>("select-thought");
-  const [directStep, setDirectStep] = useState<BehaviorDirectStep>(
-    "select-tags",
-  );
+  const [directStep, setDirectStep] =
+    useState<BehaviorDirectStep>("select-tags");
   const [selectedThoughtId, setSelectedThoughtId] = useState("");
   const [selectedErrorIds, setSelectedErrorIds] = useState<string[]>([]);
   const [selectedAlternativeId, setSelectedAlternativeId] = useState("");
@@ -166,6 +171,14 @@ export default function EmotionNoteAddBehaviorPage({
       ) ?? null,
     [directBehaviorLabel],
   );
+  const selectedDirectBehaviorDescription = useMemo(() => {
+    if (!selectedDirectBehavior) return "설명이 없습니다.";
+    return (
+      selectedDirectBehavior.description?.trim() ||
+      selectedDirectBehavior.usage_description?.trim() ||
+      "설명이 없습니다."
+    );
+  }, [selectedDirectBehavior]);
   const selectedDirectTagMetas = useMemo(
     () =>
       directBehaviorTags.map((tag) => {
@@ -265,13 +278,13 @@ export default function EmotionNoteAddBehaviorPage({
   }, [forcedMode]);
 
   const toggleError = (id: string) => {
+    if (!selectedErrorIds.includes(id) && selectedErrorIds.length >= 2) {
+      pushToast("인지오류는 최대 2개까지 선택할 수 있어요.", "error");
+      return;
+    }
     setSelectedErrorIds((prev) => {
       if (prev.includes(id)) {
         return prev.filter((item) => item !== id);
-      }
-      if (prev.length >= 2) {
-        pushToast("인지오류는 최대 2개까지 선택할 수 있어요.", "error");
-        return prev;
       }
       return [...prev, id];
     });
@@ -487,359 +500,358 @@ export default function EmotionNoteAddBehaviorPage({
           </div>
         ) : null}
 
-          {mode === "ai" && (
-            <div className={styles.sectionStack}>
-              {!aiLoading && aiStep === "select-thought" && (
-                <div className={styles.stepCenter}>
-                  <SelectionPanel
-                    title="자동사고 선택"
-                    description="행동 반응 제안을 만들 기준 자동사고를 골라주세요."
-                    countText={`${thoughtSection.details.length}개`}
-                    emptyText={
-                      thoughtSection.details.length === 0
-                        ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
-                        : undefined
-                    }
-                  >
-                    {thoughtSection.details.map((detail) => {
-                      const isSelected = selectedThoughtId === String(detail.id);
-                      const emotionLabel =
-                        detail.emotion?.trim() || "감정 미선택";
-                      const thoughtText =
-                        detail.automatic_thought?.trim() || "-";
-                      const isExpanded = expandedThoughtIds.includes(
-                        String(detail.id),
-                      );
-                      return (
-                        <SelectionCard
-                          key={detail.id}
-                          selected={isSelected}
-                          onSelect={() => handleSelectThought(String(detail.id))}
-                        >
-                          <span className={styles.selectedChip}>
-                            {emotionLabel}
-                          </span>
-                          <ExpandableText
-                            text={thoughtText}
-                            expanded={isExpanded}
-                            onToggle={() =>
-                              setExpandedThoughtIds((prev) =>
-                                prev.includes(String(detail.id))
-                                  ? prev.filter((id) => id !== String(detail.id))
-                                  : [...prev, String(detail.id)],
-                              )
-                            }
-                          />
-                        </SelectionCard>
-                      );
-                    })}
-                  </SelectionPanel>
-                </div>
-              )}
-              {!aiLoading && aiStep === "select-errors" && (
-                <div className={styles.stepCenter}>
-                  <SelectionPanel
-                    title="인지오류 선택"
-                    description="1~2개를 선택하고 다음으로 이동해주세요."
-                    countText={`${errorSection.details.length}개`}
-                    emptyText={
-                      errorSection.details.length === 0
-                        ? "아직 인지오류가 없습니다. 먼저 인지오류를 추가해주세요."
-                        : undefined
-                    }
-                  >
-                    {errorSection.details.map((errorDetail) => {
-                      const isSelected = selectedErrorIds.includes(
-                        String(errorDetail.id),
-                      );
-                      const description =
-                        errorDetail.error_description || "설명이 없습니다.";
-                      const isExpanded = expandedErrorIds.includes(
-                        String(errorDetail.id),
-                      );
-                      return (
-                        <SelectionCard
-                          key={errorDetail.id}
-                          selected={isSelected}
-                          onSelect={() => handleToggleError(String(errorDetail.id))}
-                        >
-                          <p className={styles.sectionTitle}>
-                            {errorDetail.error_label}
-                          </p>
-                          <ExpandableText
-                            text={description}
-                            expanded={isExpanded}
-                            onToggle={() =>
-                              setExpandedErrorIds((prev) =>
-                                prev.includes(String(errorDetail.id))
-                                  ? prev.filter((id) => id !== String(errorDetail.id))
-                                  : [...prev, String(errorDetail.id)],
-                              )
-                            }
-                          />
-                        </SelectionCard>
-                      );
-                    })}
-                  </SelectionPanel>
-                </div>
-              )}
-
-              {!aiLoading && aiStep === "select-alternative" && (
-                <div className={styles.stepCenter}>
-                  <SelectionPanel
-                    title="대안적 접근 선택"
-                    description="1개를 선택한 뒤 다음을 눌러주세요."
-                    countText={`${alternativeSection.details.length}개`}
-                    emptyText={
-                      alternativeSection.details.length === 0
-                        ? "아직 대안적 접근이 없습니다. 먼저 추가해주세요."
-                        : undefined
-                    }
-                  >
-                    {alternativeSection.details.map((alternative) => {
-                      const isSelected =
-                        selectedAlternativeId === String(alternative.id);
-                      const text = alternative.alternative?.trim() || "-";
-                      const isExpanded = expandedAlternativeIds.includes(
-                        String(alternative.id),
-                      );
-                      return (
-                        <SelectionCard
-                          key={alternative.id}
-                          selected={isSelected}
-                          onSelect={() =>
-                            setSelectedAlternativeId(String(alternative.id))
-                          }
-                        >
-                          <ExpandableText
-                            text={text}
-                            expanded={isExpanded}
-                            onToggle={() =>
-                              setExpandedAlternativeIds((prev) =>
-                                prev.includes(String(alternative.id))
-                                  ? prev.filter((id) => id !== String(alternative.id))
-                                  : [...prev, String(alternative.id)],
-                              )
-                            }
-                          />
-                        </SelectionCard>
-                      );
-                    })}
-                  </SelectionPanel>
-                </div>
-              )}
-
-              {aiLoading && (
-                <div className={styles.stepCenter}>
-                  <AiLoadingCard
-                    title="행동 반응 생성 중"
-                    description="선택한 내용을 기반으로 행동 제안을 만들고 있어요."
-                    tone="blue"
-                  />
-                </div>
-              )}
-
-              {!aiLoading && aiError && (
-                <div className={styles.errorBox}>{aiError}</div>
-              )}
-
-              {!aiLoading && aiStep === "suggestions" && (
-                <AiCandidatesPanel
-                  title="AI 행동 반응 후보"
-                  description="원하는 행동을 선택한 뒤 저장하세요."
-                  countText={`${behaviorCandidates.length}개 추천`}
-                  tone="blue"
+        {mode === "ai" && (
+          <div className={styles.sectionStack}>
+            {!aiLoading && aiStep === "select-thought" && (
+              <div className={styles.stepCenter}>
+                <SelectionPanel
+                  title="자동사고 선택"
+                  description="행동 반응 제안을 만들 기준 자동사고를 골라주세요."
+                  countText={`${thoughtSection.details.length}개`}
+                  emptyText={
+                    thoughtSection.details.length === 0
+                      ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
+                      : undefined
+                  }
                 >
-                  <div className={styles.candidateList}>
-                    {behaviorCandidates.map((candidate, index) => {
-                      const suggestion =
-                        suggestionsById[candidate.behavior.id] ?? "";
-                      const isSelected =
-                        selectedBehaviorId === candidate.behavior.id;
-                      const saved = savedBehaviorIds.includes(
-                        candidate.behavior.id,
-                      );
-                      return (
-                        <SelectionCard
-                          key={`${candidate.behavior.id}-${index}`}
-                          selected={isSelected}
-                          saved={saved}
-                          onSelect={() =>
-                            applySuggestion(candidate.behavior.id)
+                  {thoughtSection.details.map((detail) => {
+                    const isSelected = selectedThoughtId === String(detail.id);
+                    const emotionLabel =
+                      detail.emotion?.trim() || "감정 미선택";
+                    const thoughtText = detail.automatic_thought?.trim() || "-";
+                    const isExpanded = expandedThoughtIds.includes(
+                      String(detail.id),
+                    );
+                    return (
+                      <SelectionCard
+                        key={detail.id}
+                        selected={isSelected}
+                        onSelect={() => handleSelectThought(String(detail.id))}
+                      >
+                        <span className={styles.selectedChip}>
+                          {emotionLabel}
+                        </span>
+                        <ExpandableText
+                          text={thoughtText}
+                          expanded={isExpanded}
+                          onToggle={() =>
+                            setExpandedThoughtIds((prev) =>
+                              prev.includes(String(detail.id))
+                                ? prev.filter((id) => id !== String(detail.id))
+                                : [...prev, String(detail.id)],
+                            )
                           }
-                          tone="blue"
-                        >
-                          <p className={styles.sectionTitle}>
-                            {candidate.behavior.replacement_title}
-                          </p>
-                          {suggestion ? (
-                            <p className={styles.sectionHint}>{suggestion}</p>
-                          ) : null}
-                          <div className={styles.inlineNote}>
-                            {candidate.tags.map((tag) => `#${tag}`).join(" ")}
-                          </div>
-                        </SelectionCard>
-                      );
-                    })}
-                  </div>
-                </AiCandidatesPanel>
-              )}
-            </div>
-          )}
+                        />
+                      </SelectionCard>
+                    );
+                  })}
+                </SelectionPanel>
+              </div>
+            )}
+            {!aiLoading && aiStep === "select-errors" && (
+              <div className={styles.stepCenter}>
+                <SelectionPanel
+                  title="인지오류 선택"
+                  description="1~2개를 선택하고 다음으로 이동해주세요."
+                  countText={`${errorSection.details.length}개`}
+                  emptyText={
+                    errorSection.details.length === 0
+                      ? "아직 인지오류가 없습니다. 먼저 인지오류를 추가해주세요."
+                      : undefined
+                  }
+                >
+                  {errorSection.details.map((errorDetail) => {
+                    const isSelected = selectedErrorIds.includes(
+                      String(errorDetail.id),
+                    );
+                    const description =
+                      errorDetail.error_description || "설명이 없습니다.";
+                    const isExpanded = expandedErrorIds.includes(
+                      String(errorDetail.id),
+                    );
+                    return (
+                      <SelectionCard
+                        key={errorDetail.id}
+                        selected={isSelected}
+                        onSelect={() =>
+                          handleToggleError(String(errorDetail.id))
+                        }
+                      >
+                        <p className={styles.sectionTitle}>
+                          {errorDetail.error_label}
+                        </p>
+                        <ExpandableText
+                          text={description}
+                          expanded={isExpanded}
+                          onToggle={() =>
+                            setExpandedErrorIds((prev) =>
+                              prev.includes(String(errorDetail.id))
+                                ? prev.filter(
+                                    (id) => id !== String(errorDetail.id),
+                                  )
+                                : [...prev, String(errorDetail.id)],
+                            )
+                          }
+                        />
+                      </SelectionCard>
+                    );
+                  })}
+                </SelectionPanel>
+              </div>
+            )}
 
-          {mode === "direct" && (
-            <div className={styles.sectionStack}>
-              {directStep === "select-tags" && (
-                <div className={styles.stepCenter}>
-                  <div className={styles.selectionRow}>
-                    <p className={styles.sectionTitle}>
-                      인지오류 선택 (최대 2개)
-                    </p>
-                    <ErrorTagSelector
-                      values={directBehaviorTags}
-                      maxSelected={2}
-                      onToggle={(tag) => {
-                        setDirectBehaviorTags((prev) =>
-                          prev.includes(tag)
-                            ? prev.filter((item) => item !== tag)
-                            : [...prev, tag],
-                        );
-                      }}
-                    />
-                    <EmotionNoteAddSelectionReveal
-                      isVisible={selectedDirectTagMetas.length > 0}
-                    >
-                      {selectedDirectTagMetas.length > 0 ? (
-                        <div className={styles.revealInner}>
-                          <div className={styles.revealList}>
-                            {selectedDirectTagMetas.map((tag) => (
-                              <div
-                                key={tag.title}
-                                className={styles.revealListItem}
-                              >
-                                <span>•</span>
-                                <span>
-                                  {tag.title} - {tag.description}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-                    </EmotionNoteAddSelectionReveal>
-                  </div>
-                </div>
-              )}
+            {!aiLoading && aiStep === "select-alternative" && (
+              <div className={styles.stepCenter}>
+                <SelectionPanel
+                  title="대안적 접근 선택"
+                  description="1개를 선택한 뒤 다음을 눌러주세요."
+                  countText={`${alternativeSection.details.length}개`}
+                  emptyText={
+                    alternativeSection.details.length === 0
+                      ? "아직 대안적 접근이 없습니다. 먼저 추가해주세요."
+                      : undefined
+                  }
+                >
+                  {alternativeSection.details.map((alternative) => {
+                    const isSelected =
+                      selectedAlternativeId === String(alternative.id);
+                    const text = alternative.alternative?.trim() || "-";
+                    const isExpanded = expandedAlternativeIds.includes(
+                      String(alternative.id),
+                    );
+                    return (
+                      <SelectionCard
+                        key={alternative.id}
+                        selected={isSelected}
+                        onSelect={() =>
+                          setSelectedAlternativeId(String(alternative.id))
+                        }
+                      >
+                        <ExpandableText
+                          text={text}
+                          expanded={isExpanded}
+                          onToggle={() =>
+                            setExpandedAlternativeIds((prev) =>
+                              prev.includes(String(alternative.id))
+                                ? prev.filter(
+                                    (id) => id !== String(alternative.id),
+                                  )
+                                : [...prev, String(alternative.id)],
+                            )
+                          }
+                        />
+                      </SelectionCard>
+                    );
+                  })}
+                </SelectionPanel>
+              </div>
+            )}
 
-              {directStep === "select-behavior" && (
-                <div className={styles.stepCenter}>
-                  <div className={styles.selectionRow}>
-                    <p className={styles.sectionTitle}>행동 반응 선택</p>
-                    <BehaviorOptionSelector
-                      value={directBehaviorLabel}
-                      onSelect={setDirectBehaviorLabel}
-                      options={directBehaviorOptions}
-                    />
-                    <EmotionNoteAddSelectionReveal
-                      isVisible={Boolean(selectedDirectBehavior)}
-                    >
-                      {selectedDirectBehavior ? (
-                        <div className={styles.revealInner}>
-                          <p className={styles.revealTitle}>
-                            {selectedDirectBehavior.replacement_title}
-                          </p>
-                          {selectedDirectBehavior.description ? (
-                            <p className={styles.revealText}>
-                              {selectedDirectBehavior.description}
-                            </p>
-                          ) : null}
-                          {selectedDirectBehavior.usage_description ? (
-                            <p className={styles.revealText}>
-                              {selectedDirectBehavior.usage_description}
-                            </p>
-                          ) : null}
-                        </div>
-                      ) : null}
-                    </EmotionNoteAddSelectionReveal>
-                  </div>
-                </div>
-              )}
+            {aiLoading && (
+              <div className={styles.stepCenter}>
+                <AiLoadingCard
+                  title="행동 반응 생성 중"
+                  description="선택한 내용을 기반으로 행동 제안을 만들고 있어요."
+                  tone="blue"
+                />
+              </div>
+            )}
 
-              {directStep === "input" && (
-                <>
-                  {(directBehaviorLabel.trim() ||
-                    directBehaviorTags.length > 0) && (
-                    <details className={styles.summaryBox}>
-                      <summary className={styles.summaryToggle}>
-                        선택한 내용 보기
-                      </summary>
-                      <div className={styles.summaryBody}>
-                        {directBehaviorLabel.trim() ? (
-                          <>
-                            <p className={styles.summaryLabel}>행동 반응</p>
-                            <div className={styles.revealList}>
-                              <div className={styles.revealListItem}>
-                                <span>•</span>
-                                <span>{directBehaviorLabel}</span>
-                              </div>
-                            </div>
-                          </>
+            {!aiLoading && aiError && (
+              <div className={styles.errorBox}>{aiError}</div>
+            )}
+
+            {!aiLoading && aiStep === "suggestions" && (
+              <AiCandidatesPanel
+                title="AI 행동 반응 후보"
+                description="원하는 행동을 선택한 뒤 저장하세요."
+                countText={`${behaviorCandidates.length}개 추천`}
+                tone="blue"
+              >
+                <div className={styles.candidateList}>
+                  {behaviorCandidates.map((candidate, index) => {
+                    const suggestion =
+                      suggestionsById[candidate.behavior.id] ?? "";
+                    const isSelected =
+                      selectedBehaviorId === candidate.behavior.id;
+                    const saved = savedBehaviorIds.includes(
+                      candidate.behavior.id,
+                    );
+                    return (
+                      <SelectionCard
+                        key={`${candidate.behavior.id}-${index}`}
+                        selected={isSelected}
+                        saved={saved}
+                        onSelect={() => applySuggestion(candidate.behavior.id)}
+                        tone="blue"
+                      >
+                        <p className={styles.sectionTitle}>
+                          {candidate.behavior.replacement_title}
+                        </p>
+                        {suggestion ? (
+                          <p className={styles.sectionHint}>{suggestion}</p>
                         ) : null}
-                        {selectedDirectTagMetas.length > 0 ? (
-                          <>
-                            <p className={styles.summaryLabel}>인지오류</p>
-                            <div className={styles.revealList}>
-                              {selectedDirectTagMetas.map((tag) => (
-                                <div
-                                  key={tag.title}
-                                  className={styles.revealListItem}
-                                >
-                                  <span>•</span>
-                                  <span>{tag.title}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </>
+                        <div className={styles.inlineNote}>
+                          {candidate.tags.map((tag) => `#${tag}`).join(" ")}
+                        </div>
+                      </SelectionCard>
+                    );
+                  })}
+                </div>
+              </AiCandidatesPanel>
+            )}
+          </div>
+        )}
+
+        {mode === "direct" && (
+          <div className={styles.sectionStack}>
+            {directStep === "select-tags" && (
+              <div className={styles.stepCenter}>
+                <div className={styles.selectionRow}>
+                  <p className={styles.sectionTitle}>
+                    인지오류 선택 (최대 2개)
+                  </p>
+                  <ErrorTagSelector
+                    values={directBehaviorTags}
+                    maxSelected={2}
+                    onToggle={(tag) => {
+                      setDirectBehaviorTags((prev) =>
+                        prev.includes(tag)
+                          ? prev.filter((item) => item !== tag)
+                          : [...prev, tag],
+                      );
+                    }}
+                  />
+                  <EmotionNoteAddSelectionReveal
+                    isVisible={selectedDirectTagMetas.length > 0}
+                  >
+                    {selectedDirectTagMetas.length > 0 ? (
+                      <div className={styles.revealInner}>
+                        <div className={styles.summaryGrid}>
+                          {selectedDirectTagMetas.map((tag) => (
+                            <EmotionNoteAddSummaryItem
+                              key={tag.title}
+                              label={tag.title}
+                              body={tag.description}
+                              tone="soft"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </EmotionNoteAddSelectionReveal>
+                </div>
+              </div>
+            )}
+
+            {directStep === "select-behavior" && (
+              <div className={styles.stepCenter}>
+                <div className={styles.selectionRow}>
+                  <p className={styles.sectionTitle}>행동 반응 선택</p>
+                  <BehaviorOptionSelector
+                    value={directBehaviorLabel}
+                    onSelect={setDirectBehaviorLabel}
+                    options={directBehaviorOptions}
+                  />
+                  <EmotionNoteAddSelectionReveal
+                    isVisible={Boolean(selectedDirectBehavior)}
+                  >
+                    {selectedDirectBehavior ? (
+                      <div className={styles.revealInner}>
+                        <p className={styles.revealTitle}>
+                          {selectedDirectBehavior.replacement_title}
+                        </p>
+                        {selectedDirectBehavior.description ? (
+                          <p className={styles.revealText}>
+                            {selectedDirectBehavior.description}
+                          </p>
+                        ) : null}
+                        {selectedDirectBehavior.usage_description ? (
+                          <p className={styles.revealText}>
+                            {selectedDirectBehavior.usage_description}
+                          </p>
                         ) : null}
                       </div>
-                    </details>
-                  )}
-                  <div className={styles.inputStack}>
-                    <BlinkTextarea
-                      value={directDescription}
-                      onChange={setDirectDescription}
-                      placeholder="행동 반응 설명을 적어주세요."
-                    />
-                    <p className={styles.helperText}>
-                      입력한 내용은 바로 행동 반응으로 저장됩니다.
-                    </p>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+                    ) : null}
+                  </EmotionNoteAddSelectionReveal>
+                </div>
+              </div>
+            )}
+
+            {directStep === "input" && (
+              <>
+                {(directBehaviorLabel.trim() ||
+                  directBehaviorTags.length > 0) && (
+                  <details className={styles.summaryBox}>
+                    <summary className={styles.summaryToggle}>
+                      선택한 내용 보기
+                    </summary>
+                    <div className={styles.summaryBody}>
+                      {directBehaviorLabel.trim() ? (
+                        <>
+                          <p className={styles.summaryLabel}>행동 반응</p>
+                          <div className={styles.summaryGrid}>
+                            <EmotionNoteAddSummaryItem
+                              label={directBehaviorLabel}
+                              body={selectedDirectBehaviorDescription}
+                            />
+                          </div>
+                        </>
+                      ) : null}
+                      {selectedDirectTagMetas.length > 0 ? (
+                        <>
+                          <p className={styles.summaryLabel}>인지오류</p>
+                          <div className={styles.summaryGrid}>
+                            {selectedDirectTagMetas.map((tag) => (
+                              <EmotionNoteAddSummaryItem
+                                key={tag.title}
+                                label={tag.title}
+                                body={tag.description}
+                                tone="soft"
+                              />
+                            ))}
+                          </div>
+                        </>
+                      ) : null}
+                    </div>
+                  </details>
+                )}
+                <div className={styles.inputStack}>
+                  <BlinkTextarea
+                    value={directDescription}
+                    onChange={setDirectDescription}
+                    placeholder="행동 반응 설명을 적어주세요."
+                  />
+                  <p className={styles.helperText}>
+                    입력한 내용은 바로 이 노트에 저장됩니다.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </>
 
       {showAiNext && (
         <FloatingActionButton
-            label="다음"
-            icon={<ArrowRight size={22} />}
-            helperText="다음"
-            onClick={handleAiNext}
-            disabled={nextDisabledAi || aiLoading}
-            loading={aiLoading}
-            className={styles.fab}
-          />
+          label="다음"
+          icon={<ArrowRight size={22} />}
+          helperText="다음"
+          onClick={handleAiNext}
+          disabled={nextDisabledAi || aiLoading}
+          loading={aiLoading}
+          className={styles.fab}
+        />
       )}
       {showDirectNext && (
         <FloatingActionButton
-            label="다음"
-            icon={<ArrowRight size={22} />}
-            helperText="다음"
-            onClick={handleDirectNext}
-            disabled={nextDisabledDirect}
-            className={styles.fab}
-          />
+          label="다음"
+          icon={<ArrowRight size={22} />}
+          helperText="다음"
+          onClick={handleDirectNext}
+          disabled={nextDisabledDirect}
+          className={styles.fab}
+        />
       )}
       {showAiSave && (
         <>

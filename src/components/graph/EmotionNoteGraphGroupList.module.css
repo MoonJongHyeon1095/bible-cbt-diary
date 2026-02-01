@@ -74,6 +74,24 @@
   text-align: center;
 }
 
+.nodeGroup {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #0b0d12;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(210, 230, 255, 0.7));
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.22),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(4px);
+}
+
 .node:hover {
   transform: translate(var(--tx), var(--ty)) scale(1.02);
 }

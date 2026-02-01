@@ -209,6 +209,7 @@ export default function EmotionNoteGraphGroupList({
                 }
                 onClick={() => router.push(`/graph?groupId=${node.id}`)}
               >
+                <span className={styles.nodeGroup}>그룹 {node.id}</span>
                 <span className={styles.nodeText}>
                   <span className={styles.nodeCount}>{node.noteCount}</span>
                   <span className={styles.nodeUnit}>개의</span>

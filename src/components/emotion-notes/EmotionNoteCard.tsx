@@ -45,8 +45,9 @@ export default function EmotionNoteCard({
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
   const behaviorTags = note.behavior_labels ?? [];
-  const graphHref = note.group_id
-    ? `/graph?groupId=${note.group_id}&noteId=${note.id}`
+  const groupId = note.group_id ?? null;
+  const graphHref = groupId
+    ? `/graph?groupId=${groupId}&noteId=${note.id}`
     : `/session/deep?mainId=${note.id}`;
 
   useEffect(() => {
@@ -160,7 +161,15 @@ export default function EmotionNoteCard({
     >
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
-        <span className={styles.noteTime}>{timeLabel}</span>
+        <div className={styles.noteMeta}>
+          {groupId && (
+            <span className={styles.groupBadge}>
+              <Waypoints size={12} className={styles.groupBadgeIcon} />
+              그룹 {groupId}
+            </span>
+          )}
+          <span className={styles.noteTime}>{timeLabel}</span>
+        </div>
       </div>
       {(emotionTags.length > 0 ||
         errorTags.length > 0 ||

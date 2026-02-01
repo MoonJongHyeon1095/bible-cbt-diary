@@ -24,13 +24,10 @@ export function AuthModalProvider({ children }: { children: ReactNode }) {
     setIsOpen(false);
   }, []);
 
-  const handleSignedIn = useCallback(
-    (_user: { id: string; email: string | null }) => {
-      setIsOpen(false);
-      router.replace("/");
-    },
-    [router],
-  );
+  const handleSignedIn = useCallback(() => {
+    setIsOpen(false);
+    router.replace("/");
+  }, [router]);
 
   return (
     <AuthModalContext.Provider value={{ openAuthModal, closeAuthModal }}>

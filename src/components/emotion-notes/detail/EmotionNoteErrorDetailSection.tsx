@@ -5,8 +5,8 @@ import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/comm
 import type { EmotionNoteErrorDetail } from "@/lib/types/emotionNoteTypes";
 import { AlertCircle } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
-import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
+import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 
 type EmotionNoteErrorDetailSectionProps = {
   details: EmotionNoteErrorDetail[];
@@ -29,7 +29,9 @@ type EmotionNoteErrorDetailSectionProps = {
   ) => void;
 };
 
-export default function EmotionNoteErrorDetailSection(props: EmotionNoteErrorDetailSectionProps) {
+export default function EmotionNoteErrorDetailSection(
+  props: EmotionNoteErrorDetailSectionProps,
+) {
   const {
     details,
     editingErrorId,
@@ -72,7 +74,7 @@ export default function EmotionNoteErrorDetailSection(props: EmotionNoteErrorDet
       className={`${styles.sectionError} ${styles.sectionPastelError}`}
       icon={<AlertCircle size={18} />}
       title="인지 오류"
-      hint="왜곡된 생각을 정리하세요"
+      hint="왜곡된 생각의 탐색"
     >
       {null}
       <div className={styles.detailList}>

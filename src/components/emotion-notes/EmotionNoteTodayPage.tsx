@@ -9,7 +9,7 @@ import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "@/app/page.module.css";
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";

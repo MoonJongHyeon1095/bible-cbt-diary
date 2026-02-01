@@ -3,8 +3,8 @@
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
+import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { analyzeCognitiveErrorDetails } from "@/lib/ai";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
@@ -23,11 +23,14 @@ import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
-import EmotionNoteAddModeSelector, { AddMode } from "./EmotionNoteAddModeSelector";
+import EmotionNoteAddModeSelector, {
+  AddMode,
+} from "./EmotionNoteAddModeSelector";
+import { ErrorOptionSelector } from "./EmotionNoteAddOptionSelectors";
 import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
-import { ErrorOptionSelector } from "./EmotionNoteAddOptionSelectors";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
+import EmotionNoteAddSummaryItem from "./EmotionNoteAddSummaryItem";
 
 type ErrorAiStep = "select-error" | "select-thought" | "suggestions";
 type ErrorDirectStep = "select-error" | "input";
@@ -44,13 +47,8 @@ export default function EmotionNoteAddErrorPage({
   const router = useRouter();
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
-  const {
-    accessMode,
-    triggerText,
-    error,
-    thoughtSection,
-    errorSection,
-  } = useEmotionNoteDetail(noteId);
+  const { accessMode, triggerText, error, thoughtSection, errorSection } =
+    useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
 
   const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
@@ -305,187 +303,208 @@ export default function EmotionNoteAddErrorPage({
           </div>
         ) : null}
 
-          {mode === "ai" && (
-            <div className={styles.sectionStack}>
-              {aiLoading ? (
-                <div className={styles.stepCenter}>
-                  <AiLoadingCard
-                    title="인지오류 설명 생성 중"
-                    description="선택한 자동사고를 분석하고 있어요."
-                    tone="rose"
-                  />
-                </div>
-              ) : (
-                <>
-                  {aiStep === "select-error" && (
-                    <div className={styles.selectionRow}>
-                      <p className={styles.sectionTitle}>인지오류 선택</p>
-                      <p className={styles.sectionHint}>
-                        인지오류를 먼저 선택해야 합니다.
-                      </p>
-                      <ErrorOptionSelector
-                        value={errorLabel}
-                        onSelect={(next) => {
-                          setErrorLabel(next);
-                          setSelectedSuggestion("");
-                        }}
-                      />
-                      <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedErrorMeta)}>
-                        {selectedErrorMeta ? (
-                          <div className={styles.revealInner}>
-                            <p className={styles.revealTitle}>
-                              {selectedErrorMeta.title}
-                            </p>
-                            <p className={styles.revealText}>
-                              {selectedErrorMeta.description}
-                            </p>
-                          </div>
-                        ) : null}
-                      </EmotionNoteAddSelectionReveal>
-                    </div>
-                  )}
+        {mode === "ai" && (
+          <div className={styles.sectionStack}>
+            {aiLoading ? (
+              <div className={styles.stepCenter}>
+                <AiLoadingCard
+                  title="인지오류 설명 생성 중"
+                  description="선택한 자동사고를 분석하고 있어요."
+                  tone="rose"
+                />
+              </div>
+            ) : (
+              <>
+                {aiStep === "select-error" && (
+                  <div className={styles.selectionRow}>
+                    <p className={styles.sectionTitle}>인지오류 선택</p>
+                    <p className={styles.sectionHint}>
+                      인지오류를 먼저 선택해야 합니다.
+                    </p>
+                    <ErrorOptionSelector
+                      value={errorLabel}
+                      onSelect={(next) => {
+                        setErrorLabel(next);
+                        setSelectedSuggestion("");
+                      }}
+                    />
+                    <EmotionNoteAddSelectionReveal
+                      isVisible={Boolean(selectedErrorMeta)}
+                    >
+                      {selectedErrorMeta ? (
+                        <div className={styles.revealInner}>
+                          <p className={styles.revealTitle}>
+                            {selectedErrorMeta.title}
+                          </p>
+                          <p className={styles.revealText}>
+                            {selectedErrorMeta.description}
+                          </p>
+                        </div>
+                      ) : null}
+                    </EmotionNoteAddSelectionReveal>
+                  </div>
+                )}
 
-                  {aiStep === "select-thought" && (
-                    <div className={styles.stepCenter}>
-                      <SelectionPanel
-                        title="자동사고 선택"
-                        description="선택한 자동사고를 기준으로 인지오류 설명을 생성합니다."
-                        countText={`${thoughtSection.details.length}개`}
-                        emptyText={
-                          thoughtSection.details.length === 0
-                            ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
-                            : undefined
-                        }
-                        tone="rose"
-                      >
-                        {thoughtSection.details.map((detail) => {
-                          const isSelected =
-                            selectedThoughtId === String(detail.id);
-                          const emotionLabel =
-                            detail.emotion?.trim() || "감정 미선택";
-                          const thoughtText =
-                            detail.automatic_thought?.trim() || "-";
-                          const isExpanded = expandedThoughtIds.includes(
-                            String(detail.id),
-                          );
-                          return (
-                            <SelectionCard
-                              key={detail.id}
-                              selected={isSelected}
-                              onSelect={() =>
-                                setSelectedThoughtId(String(detail.id))
-                              }
-                              tone="rose"
-                            >
-                              <span className={styles.selectedChip}>
-                                {emotionLabel}
-                              </span>
-                              <ExpandableText
-                                text={thoughtText}
-                                expanded={isExpanded}
-                                onToggle={() =>
-                                  setExpandedThoughtIds((prev) =>
-                                    prev.includes(String(detail.id))
-                                      ? prev.filter(
-                                          (id) => id !== String(detail.id),
-                                        )
-                                      : [...prev, String(detail.id)],
-                                  )
-                                }
-                                tone="rose"
-                              />
-                            </SelectionCard>
-                          );
-                        })}
-                      </SelectionPanel>
-                    </div>
-                  )}
-
-                  {aiError && <div className={styles.errorBox}>{aiError}</div>}
-
-                  {aiStep === "suggestions" && aiSuggestion && (
-                    <AiCandidatesPanel
-                      title="AI 인지오류 제안"
-                      description="선택한 제안을 저장하세요."
+                {aiStep === "select-thought" && (
+                  <div className={styles.stepCenter}>
+                    <SelectionPanel
+                      title="자동사고 선택"
+                      description="선택한 자동사고를 기준으로 인지오류 설명을 생성합니다."
+                      countText={`${thoughtSection.details.length}개`}
+                      emptyText={
+                        thoughtSection.details.length === 0
+                          ? "아직 자동사고가 없습니다. 먼저 자동사고를 추가해주세요."
+                          : undefined
+                      }
                       tone="rose"
                     >
-                      <SelectionCard
-                        selected={Boolean(selectedSuggestion.trim())}
-                        saved={savedSuggestions.includes(aiSuggestion)}
-                        onSelect={() => setSelectedSuggestion(aiSuggestion)}
-                        tone="rose"
-                      >
-                        {aiSuggestion}
-                      </SelectionCard>
-                    </AiCandidatesPanel>
-                  )}
-                </>
-              )}
-            </div>
-          )}
-
-          {mode === "direct" && (
-            <div className={styles.sectionStack}>
-              {directStep === "select-error" && (
-                <div className={styles.selectionRow}>
-                  <p className={styles.sectionTitle}>인지오류 선택</p>
-                  <p className={styles.sectionHint}>
-                    선택한 인지오류는 설명과 함께 저장됩니다.
-                  </p>
-                  <ErrorOptionSelector
-                    value={errorLabel}
-                    onSelect={setErrorLabel}
-                  />
-                  <EmotionNoteAddSelectionReveal isVisible={Boolean(selectedErrorMeta)}>
-                    {selectedErrorMeta ? (
-                      <div className={styles.revealInner}>
-                        <p className={styles.revealTitle}>
-                          {selectedErrorMeta.title}
-                        </p>
-                        <p className={styles.revealText}>
-                          {selectedErrorMeta.description}
-                        </p>
-                      </div>
-                    ) : null}
-                  </EmotionNoteAddSelectionReveal>
-                </div>
-              )}
-
-              {directStep === "input" && (
-                <>
-                  {errorLabel.trim() && (
-                    <div className={styles.inputMeta}>
-                      <span className={styles.selectedChip}>
-                        선택된 인지오류: {errorLabel}
-                      </span>
-                    </div>
-                  )}
-                  <div className={styles.inputStack}>
-                    <BlinkTextarea
-                      value={directDescription}
-                      onChange={setDirectDescription}
-                      placeholder="인지오류 설명을 적어주세요."
-                    />
-                    <p className={styles.helperText}>
-                      입력한 내용은 바로 인지오류로 저장됩니다.
-                    </p>
+                      {thoughtSection.details.map((detail) => {
+                        const isSelected =
+                          selectedThoughtId === String(detail.id);
+                        const emotionLabel =
+                          detail.emotion?.trim() || "감정 미선택";
+                        const thoughtText =
+                          detail.automatic_thought?.trim() || "-";
+                        const isExpanded = expandedThoughtIds.includes(
+                          String(detail.id),
+                        );
+                        return (
+                          <SelectionCard
+                            key={detail.id}
+                            selected={isSelected}
+                            onSelect={() =>
+                              setSelectedThoughtId(String(detail.id))
+                            }
+                            tone="rose"
+                          >
+                            <span className={styles.selectedChip}>
+                              {emotionLabel}
+                            </span>
+                            <ExpandableText
+                              text={thoughtText}
+                              expanded={isExpanded}
+                              onToggle={() =>
+                                setExpandedThoughtIds((prev) =>
+                                  prev.includes(String(detail.id))
+                                    ? prev.filter(
+                                        (id) => id !== String(detail.id),
+                                      )
+                                    : [...prev, String(detail.id)],
+                                )
+                              }
+                              tone="rose"
+                            />
+                          </SelectionCard>
+                        );
+                      })}
+                    </SelectionPanel>
                   </div>
-                </>
-              )}
-            </div>
-          )}
+                )}
+
+                {aiError && <div className={styles.errorBox}>{aiError}</div>}
+
+                {aiStep === "suggestions" && aiSuggestion && (
+                  <AiCandidatesPanel
+                    title="AI 인지오류 제안"
+                    description="선택한 제안을 저장하세요."
+                    tone="rose"
+                  >
+                    <SelectionCard
+                      selected={Boolean(selectedSuggestion.trim())}
+                      saved={savedSuggestions.includes(aiSuggestion)}
+                      onSelect={() => setSelectedSuggestion(aiSuggestion)}
+                      tone="rose"
+                    >
+                      {aiSuggestion}
+                    </SelectionCard>
+                  </AiCandidatesPanel>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
+        {mode === "direct" && (
+          <div className={styles.sectionStack}>
+            {directStep === "select-error" && (
+              <div className={styles.selectionRow}>
+                <p className={styles.sectionTitle}>인지오류 선택</p>
+                <p className={styles.sectionHint}>
+                  선택한 인지오류는 설명과 함께 저장됩니다.
+                </p>
+                <ErrorOptionSelector
+                  value={errorLabel}
+                  onSelect={setErrorLabel}
+                />
+                <EmotionNoteAddSelectionReveal
+                  isVisible={Boolean(selectedErrorMeta)}
+                >
+                  {selectedErrorMeta ? (
+                    <div className={styles.revealInner}>
+                      <p className={styles.revealTitle}>
+                        {selectedErrorMeta.title}
+                      </p>
+                      <p className={styles.revealText}>
+                        {selectedErrorMeta.description}
+                      </p>
+                    </div>
+                  ) : null}
+                </EmotionNoteAddSelectionReveal>
+              </div>
+            )}
+
+            {directStep === "input" && (
+              <>
+                {errorLabel.trim() && (
+                  <details className={styles.summaryBox}>
+                    <summary className={styles.summaryToggle}>
+                      <span className={styles.summaryToggleContent}>
+                        <span className={styles.summaryToggleLabel}>
+                          선택한 인지오류 보기
+                        </span>
+                        <span className={styles.selectedChip}>
+                          {errorLabel}
+                        </span>
+                      </span>
+                    </summary>
+                    <div className={styles.summaryBody}>
+                      <div className={styles.summaryGrid}>
+                        <EmotionNoteAddSummaryItem
+                          label={errorLabel}
+                          body={
+                            selectedErrorMeta?.description || "설명이 없습니다."
+                          }
+                        />
+                      </div>
+                    </div>
+                  </details>
+                )}
+                <div className={styles.inputStack}>
+                  <BlinkTextarea
+                    value={directDescription}
+                    onChange={setDirectDescription}
+                    placeholder="인지오류 설명을 적어주세요."
+                  />
+                  <p className={styles.helperText}>
+                    입력한 내용은 바로 이 노트에 저장됩니다.
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        )}
       </>
 
       {showAiNext && (
         <FloatingActionButton
-            label="다음"
-            icon={<ArrowRight size={22} />}
-            helperText="다음"
-            onClick={handleAiNext}
-            disabled={nextDisabledAi || aiLoading}
-            loading={aiLoading}
-            className={styles.fab}
-          />
+          label="다음"
+          icon={<ArrowRight size={22} />}
+          helperText="다음"
+          onClick={handleAiNext}
+          disabled={nextDisabledAi || aiLoading}
+          loading={aiLoading}
+          className={styles.fab}
+        />
       )}
       {showDirectNext && (
         <FloatingActionButton

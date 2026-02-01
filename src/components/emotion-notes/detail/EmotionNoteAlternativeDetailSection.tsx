@@ -4,8 +4,8 @@ import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/comm
 import type { EmotionNoteAlternativeDetail } from "@/lib/types/emotionNoteTypes";
 import { Lightbulb } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
-import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
+import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 
 type EmotionNoteAlternativeDetailSectionProps = {
   details: EmotionNoteAlternativeDetail[];
@@ -71,7 +71,7 @@ export default function EmotionNoteAlternativeDetailSection(
       className={`${styles.sectionAlt} ${styles.sectionPastelAlt}`}
       icon={<Lightbulb size={18} />}
       title="대안 사고"
-      hint="새로운 시각을 적어보세요"
+      hint="새로운 시각의 기록"
     >
       {null}
       <div className={styles.detailList}>

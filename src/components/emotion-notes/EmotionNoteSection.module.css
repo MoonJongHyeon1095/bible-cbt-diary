@@ -114,9 +114,15 @@
 
 .noteHeader {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+.noteMeta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .noteTitle {
@@ -130,6 +136,28 @@
 .noteTime {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.groupBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #dbe8ff;
+  background: linear-gradient(135deg, rgba(78, 104, 176, 0.55), rgba(34, 42, 66, 0.9));
+  border: 1px solid rgba(140, 176, 240, 0.45);
+  box-shadow:
+    0 6px 14px rgba(10, 14, 22, 0.35),
+    0 0 0 1px rgba(120, 160, 230, 0.12) inset;
+  white-space: nowrap;
+}
+
+.groupBadgeIcon {
+  flex: 0 0 auto;
 }
 
 .noteTrigger {

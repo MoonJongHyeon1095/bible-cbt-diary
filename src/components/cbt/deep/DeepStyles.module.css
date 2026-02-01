@@ -188,14 +188,19 @@
 .selectFloatingCount {
   position: fixed;
   right: 28px;
-  bottom: 112px;
+  bottom: 196px;
   z-index: 30;
-  background: rgba(18, 20, 24, 0.92);
-  border: 1px solid rgba(120, 130, 150, 0.35);
-  color: #f6f8fb;
+  background:
+    linear-gradient(135deg, rgba(64, 86, 145, 0.95), rgba(26, 34, 52, 0.96));
+  border: 1px solid rgba(150, 178, 240, 0.45);
+  color: #f8faff;
   font-size: 0.78rem;
   padding: 6px 12px;
   border-radius: 999px;
+  box-shadow:
+    0 10px 24px rgba(8, 10, 14, 0.55),
+    0 0 0 1px rgba(120, 150, 220, 0.12) inset;
+  backdrop-filter: blur(6px);
 }
 
 @media (max-width: 700px) {
@@ -210,6 +215,6 @@
 
   .selectFloatingCount {
     right: 16px;
-    bottom: 98px;
+    bottom: 176px;
   }
 }

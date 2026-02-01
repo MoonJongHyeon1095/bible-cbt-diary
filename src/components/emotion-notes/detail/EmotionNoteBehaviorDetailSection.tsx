@@ -5,8 +5,8 @@ import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/comm
 import type { EmotionNoteBehaviorDetail } from "@/lib/types/emotionNoteTypes";
 import { Footprints } from "lucide-react";
 import { useLayoutEffect, useRef } from "react";
-import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
+import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 
 type EmotionNoteBehaviorDetailSectionProps = {
   details: EmotionNoteBehaviorDetail[];
@@ -74,7 +74,7 @@ export default function EmotionNoteBehaviorDetailSection(
       className={`${styles.sectionBehavior} ${styles.sectionPastelBehavior}`}
       icon={<Footprints size={18} />}
       title="행동 반응"
-      hint="실제 행동을 기록하세요"
+      hint="실제 행동의 기록"
     >
       {null}
       <div className={styles.detailList}>
@@ -98,7 +98,9 @@ export default function EmotionNoteBehaviorDetailSection(
                 <div className={styles.detailEdit}>
                   {editingBehaviorLabel ? (
                     <div className={styles.detailEditBadge}>
-                      <EmotionNoteDetailSectionBadge text={editingBehaviorLabel} />
+                      <EmotionNoteDetailSectionBadge
+                        text={editingBehaviorLabel}
+                      />
                     </div>
                   ) : null}
                   <textarea
@@ -131,7 +133,10 @@ export default function EmotionNoteBehaviorDetailSection(
                   {detail.error_tags && detail.error_tags.length > 0 ? (
                     <div className={styles.detailTagList}>
                       {detail.error_tags.map((tag) => (
-                        <span key={`${detail.id}-${tag}`} className={styles.detailErrorTag}>
+                        <span
+                          key={`${detail.id}-${tag}`}
+                          className={styles.detailErrorTag}
+                        >
                           #{tag}
                         </span>
                       ))}

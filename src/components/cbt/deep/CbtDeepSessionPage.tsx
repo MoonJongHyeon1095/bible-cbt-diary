@@ -241,6 +241,12 @@ function CbtDeepSessionPageContent() {
   }, [internalContextLoadError, pushToast]);
 
   const handleBack = () => {
+    if (step === "select") {
+      if (groupId && mainNote) {
+        router.push(`/graph?groupId=${groupId}&noteId=${mainNote.id}`);
+      }
+      return;
+    }
     if (currentStepIndex <= 0) return;
     setStep(stepOrder[currentStepIndex - 1]);
   };
@@ -367,7 +373,7 @@ function CbtDeepSessionPageContent() {
       <div className={styles.bgWaves} />
       <div className={styles.content}>
         <CbtMinimalSavingModal open={isSaving} />
-        {currentStepIndex > 0 && (
+        {(currentStepIndex > 0 || step === "select") && (
           <div className={`${styles.floatingNav} ${styles.left}`}>
             <CbtMinimalFloatingBackButton onClick={handleBack} />
           </div>

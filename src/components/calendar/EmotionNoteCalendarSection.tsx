@@ -226,6 +226,21 @@ export default function EmotionNoteCalendarSection({
   const selectedKey = selectedDate ? formatDateKey(selectedDate) : null;
   const isPastDate =
     selectedKey !== null && selectedKey < todayKey && !normalizedQuery;
+  const getHeatClass = (count: number) => {
+    if (count >= 5) {
+      return styles.cellHeat4;
+    }
+    if (count >= 3) {
+      return styles.cellHeat3;
+    }
+    if (count >= 2) {
+      return styles.cellHeat2;
+    }
+    if (count >= 1) {
+      return styles.cellHeat1;
+    }
+    return "";
+  };
 
   return (
     <section className={styles.section}>
@@ -296,6 +311,7 @@ export default function EmotionNoteCalendarSection({
               variant="unstyled"
               className={[
                 styles.cell,
+                getHeatClass(count),
                 day.inMonth ? styles.cellInMonth : styles.cellOut,
                 isToday ? styles.cellToday : "",
                 isSelected && !normalizedQuery ? styles.cellSelected : "",
@@ -312,10 +328,8 @@ export default function EmotionNoteCalendarSection({
             >
               <span className={styles.dayNumber}>{day.date.getDate()}</span>
               {count > 0 ? (
-                <span className={styles.countBadge}>{count}</span>
-              ) : (
-                <span className={styles.emptyDot} />
-              )}
+                <span className={styles.countNumber}>{count}</span>
+              ) : null}
             </Button>
           );
         })}

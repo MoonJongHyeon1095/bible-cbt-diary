@@ -161,7 +161,6 @@
   align-items: flex-start;
   gap: 6px;
   cursor: pointer;
-  overflow: hidden;
 }
 
 .cellInMonth {
@@ -177,6 +176,26 @@
   border-color: var(--accent);
 }
 
+.cellHeat1 {
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 16%, var(--border));
+}
+
+.cellHeat2 {
+  background: color-mix(in srgb, var(--accent) 16%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border));
+}
+
+.cellHeat3 {
+  background: color-mix(in srgb, var(--accent) 22%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border));
+}
+
+.cellHeat4 {
+  background: color-mix(in srgb, var(--accent) 36%, var(--surface));
+  border-color: color-mix(in srgb, var(--accent) 44%, var(--border));
+}
+
 .cellSelected {
   background: rgba(255, 255, 255, 0.12);
   border-color: #fff;
@@ -188,24 +207,18 @@
   font-weight: 600;
 }
 
-.countBadge {
+.countNumber {
+  margin-top: auto;
   align-self: flex-end;
-  font-size: 0.7rem;
-  background: var(--accent);
-  color: #0c1118;
-  border-radius: 999px;
-  padding: 2px 8px;
-  max-width: 100%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text);
+  opacity: 0.9;
 }
 
-.emptyDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--border);
+.cellOut .countNumber {
+  color: var(--muted);
+  opacity: 0.7;
 }
 
 @media (max-width: 900px) {
@@ -220,8 +233,7 @@
     gap: 4px;
   }
 
-  .countBadge {
-    font-size: 0.65rem;
-    padding: 1px 6px;
+  .countNumber {
+    font-size: 0.7rem;
   }
 }

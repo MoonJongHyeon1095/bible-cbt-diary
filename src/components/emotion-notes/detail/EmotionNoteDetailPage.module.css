@@ -119,6 +119,31 @@
   color: #e0554a;
 }
 
+.root {
+  --app-bottom-tab-offset: 0px;
+}
+
+@media (max-width: 900px) {
+  .root {
+    --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
+.fab {
+  --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabSecondary {
+  --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabTertiary {
+  --fab-bottom: calc(288px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(288px + var(--app-bottom-tab-offset, 0px));
+}
+
 .srOnly {
   position: absolute;
   width: 1px;

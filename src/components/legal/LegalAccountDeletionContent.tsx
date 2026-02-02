@@ -11,7 +11,7 @@ export default function LegalAccountDeletionContent() {
 
       <h3 className={styles.articleTitle}>요청 방법</h3>
       <ul className={styles.list}>
-        <li>이메일: zin354@gmail.com</li>
+        <li>이메일: edihelpline@gmail.com</li>
         <li>제목: 계정 삭제 요청</li>
         <li>본문: 로그인에 사용한 이메일 주소를 포함해 주세요.</li>
       </ul>
@@ -36,7 +36,7 @@ export default function LegalAccountDeletionContent() {
       <h3 className={styles.articleTitle}>개발자 정보</h3>
       <ul className={styles.list}>
         <li>개발자/운영: 에디(EDi)와의 감정일기: AI제안 · AI분석</li>
-        <li>연락처: zin354@gmail.com</li>
+        <li>연락처: edihelpline@gmail.com</li>
       </ul>
     </>
   );

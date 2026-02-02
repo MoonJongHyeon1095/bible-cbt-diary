@@ -31,10 +31,7 @@
   background: #0f172a;
   color: #f8fafc;
   overflow: hidden;
-  transition:
-    transform 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .modeSelectButton[data-mode="ai"] {
@@ -285,10 +282,7 @@
   justify-content: center;
   background: rgba(15, 23, 42, 0.75);
   color: #e2e8f0;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
   box-shadow: 0 10px 22px rgba(0, 0, 0, 0.28);
 }
 
@@ -461,7 +455,7 @@
 .fab {
   position: fixed;
   right: 24px;
-  bottom: calc(120px + var(--app-bottom-tab-offset));
+  bottom: calc(70px + var(--app-bottom-tab-offset));
 }
 
 .fabSecondary {

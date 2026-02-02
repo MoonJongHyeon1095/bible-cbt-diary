@@ -128,6 +128,11 @@ export default function EmotionNoteDetailPage({
                 borderColor: "#14bcd9",
               }
             : undefined;
+  const saveFabClass = selectedItem
+    ? styles.fabTertiary
+    : selectedSection
+      ? styles.fabSecondary
+      : styles.fab;
 
   const isEditingSelected =
     (selectedItem?.section === "thought" &&
@@ -348,7 +353,7 @@ export default function EmotionNoteDetailPage({
   }
 
   return (
-    <div className={pageStyles.page}>
+    <div className={`${pageStyles.page} ${styles.root}`}>
       <AppHeader />
       <main className={pageStyles.main} onClick={() => setSelectedItem(null)}>
         <div className={pageStyles.shell}>
@@ -462,9 +467,7 @@ export default function EmotionNoteDetailPage({
           disabled={isSaving}
           loading={isSaving}
           loadingBehavior="replace"
-          style={{
-            bottom: "18vh",
-          }}
+          className={saveFabClass}
         />
       ) : null}
       {!selectedItem && !selectedSection && !shouldShowSave ? (
@@ -480,8 +483,8 @@ export default function EmotionNoteDetailPage({
               }
               router.push(`/share/create?id=${note.id}`);
             }}
+            className={styles.fabSecondary}
             style={{
-              bottom: shouldShowSave ? "32vh" : "40vh",
               backgroundColor: "#fff",
               color: "#121417",
               borderColor: "rgba(18, 20, 23, 0.35)",
@@ -507,8 +510,8 @@ export default function EmotionNoteDetailPage({
               }
               router.push(`/session/deep?mainId=${note.id}`);
             }}
+            className={styles.fab}
             style={{
-              bottom: shouldShowSave ? "18vh" : "25vh",
               backgroundColor: "#121417",
               color: "#fff",
               borderColor: "rgba(255, 255, 255, 0.35)",
@@ -525,10 +528,8 @@ export default function EmotionNoteDetailPage({
             if (!note?.id) return;
             router.push(`/detail/add/${selectedSection}?id=${note.id}`);
           }}
-          style={{
-            bottom: shouldShowSave ? "18vh" : "25vh",
-            ...selectedFabStyle,
-          }}
+          className={styles.fab}
+          style={selectedFabStyle}
         />
       ) : null}
       {selectedItem && !isEditingSelected ? (
@@ -569,11 +570,8 @@ export default function EmotionNoteDetailPage({
                 }
               }
             }}
+            className={styles.fabSecondary}
             style={{
-              bottom: shouldShowSave ? "26vh" : "33vh",
-              ["--fab-bottom-mobile" as string]: shouldShowSave
-                ? "30vh"
-                : "38vh",
               backgroundColor: "#121417",
               color: "#fff",
               borderColor: "rgba(255, 255, 255, 0.35)",
@@ -599,11 +597,8 @@ export default function EmotionNoteDetailPage({
             disabled={isDeletingSelected}
             loading={isDeletingSelected}
             loadingBehavior="replace"
+            className={styles.fab}
             style={{
-              bottom: shouldShowSave ? "10vh" : "17vh",
-              ["--fab-bottom-mobile" as string]: shouldShowSave
-                ? "16vh"
-                : "23vh",
               backgroundColor: "#e14a4a",
               color: "#fff",
               borderColor: "#b93333",
@@ -632,10 +627,8 @@ export default function EmotionNoteDetailPage({
             disabled={isUpdatingSelected}
             loading={isUpdatingSelected}
             loadingBehavior="replace"
-            style={{
-              bottom: shouldShowSave ? "26vh" : "33vh",
-              ...selectedFabStyle,
-            }}
+            className={styles.fabSecondary}
+            style={selectedFabStyle}
           />
           <FloatingActionButton
             label="취소"
@@ -653,8 +646,8 @@ export default function EmotionNoteDetailPage({
                 behaviorSection.onCancelEditing();
               }
             }}
+            className={styles.fab}
             style={{
-              bottom: shouldShowSave ? "10vh" : "17vh",
               backgroundColor: "#121417",
               color: "#fff",
               borderColor: "rgba(255, 255, 255, 0.35)",

@@ -93,8 +93,8 @@ export default function LegalPrivacyPolicyContent() {
       <h3 className={styles.articleTitle}>10. 개인정보 보호책임자</h3>
       <ul className={styles.list}>
         <li>담당: 개인정보 보호 담당</li>
-        <li>이메일: zin354@gmail.com</li>
-        <li>문의: zin354@gmail.com</li>
+        <li>이메일: edihelpline@gmail.com</li>
+        <li>문의: edihelpline@gmail.com</li>
       </ul>
     </>
   );

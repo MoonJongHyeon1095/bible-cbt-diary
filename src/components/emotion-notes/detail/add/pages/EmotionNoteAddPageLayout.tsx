@@ -1,11 +1,11 @@
 "use client";
 
-import type { ReactNode } from "react";
-import type { LucideIcon } from "lucide-react";
-import { Undo2 } from "lucide-react";
 import pageStyles from "@/app/page.module.css";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import AppHeader from "@/components/header/AppHeader";
+import type { LucideIcon } from "lucide-react";
+import { Undo2 } from "lucide-react";
+import type { ReactNode } from "react";
 import styles from "./EmotionNoteAddPageLayout.module.css";
 
 type EmotionNoteAddPageLayoutProps = {
@@ -28,10 +28,10 @@ export default function EmotionNoteAddPageLayout({
     tone === "amber"
       ? styles.toneAmber
       : tone === "rose"
-        ? styles.toneRose
-        : tone === "green"
-          ? styles.toneGreen
-          : styles.toneBlue;
+      ? styles.toneRose
+      : tone === "green"
+      ? styles.toneGreen
+      : styles.toneBlue;
 
   return (
     <div className={`${pageStyles.page} ${styles.root}`}>
@@ -58,7 +58,7 @@ export default function EmotionNoteAddPageLayout({
         style={{
           right: "auto",
           left: "24px",
-          bottom: "calc(120px + var(--app-bottom-tab-offset))",
+          bottom: "calc(70px + var(--app-bottom-tab-offset))",
           backgroundColor: "rgba(255, 255, 255, 0.72)",
           borderColor: "rgba(255, 255, 255, 0.55)",
           color: "rgba(31, 35, 40, 0.8)",

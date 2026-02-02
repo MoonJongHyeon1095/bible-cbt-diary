@@ -694,14 +694,14 @@ export default function EmotionNoteAddAlternativePage({
             onClick={() => void handleSaveAi()}
             disabled={!selectedCandidate.trim() || isSaving || isSelectedSaved}
             loading={isSaving}
-            className={`${styles.fab} ${styles.fabSave}`}
+            className={styles.fab}
           />
           <FloatingActionButton
             label="노트로 돌아가기"
             icon={<BookSearch size={20} />}
             helperText="노트로 돌아가기"
             onClick={() => router.push(`/detail?id=${noteId}`)}
-            className={`${styles.fabSecondary} ${styles.fabSaveSecondary}`}
+            className={styles.fabSecondary}
           />
         </>
       )}
@@ -713,7 +713,7 @@ export default function EmotionNoteAddAlternativePage({
           onClick={() => void handleSaveDirect()}
           disabled={isSaving}
           loading={isSaving}
-          className={`${styles.fab} ${styles.fabSave}`}
+          className={styles.fab}
         />
       )}
     </EmotionNoteAddPageLayout>

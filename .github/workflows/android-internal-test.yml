@@ -36,9 +36,9 @@ jobs:
 
       - name: Set Android version
         run: |
-          NEXT_CODE=$((BASE_VERSION_CODE + GITHUB_RUN_NUMBER))
+          NEXT_CODE=$((BASE_VERSION_CODE + GITHUB_RUN_NUMBER*100 + GITHUB_RUN_ATTEMPT))
           echo "VERSION_CODE=$NEXT_CODE" >> "$GITHUB_ENV"
-          echo "VERSION_NAME=0.0.$NEXT_CODE" >> "$GITHUB_ENV"
+          echo "VERSION_NAME=0.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_ENV"
 
       - name: Build web
         run: npm run build

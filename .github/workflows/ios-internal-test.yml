@@ -57,7 +57,7 @@ jobs:
       - name: Bump iOS version/build
         run: |
           BUILD_NUMBER=$((GITHUB_RUN_NUMBER*100 + GITHUB_RUN_ATTEMPT))
-          MARKETING_VERSION="${MARKETING_VERSION_PREFIX}.${GITHUB_RUN_NUMBER}.${GITHUB_RUN_ATTEMPT}"
+          MARKETING_VERSION="${MARKETING_VERSION_PREFIX}.${GITHUB_RUN_NUMBER}"
           /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" "$INFO_PLIST"
           /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $MARKETING_VERSION" "$INFO_PLIST"
           /usr/libexec/PlistBuddy -c "Print :CFBundleShortVersionString" "$INFO_PLIST"

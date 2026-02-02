@@ -8,7 +8,7 @@
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 16px 24px 48px;
+  padding: 16px 24px 132px;
 }
 
 .shell {
@@ -40,6 +40,6 @@
 
 @media (max-width: 900px) {
   .main {
-    padding-bottom: 96px;
+    padding-bottom: calc(180px + env(safe-area-inset-bottom));
   }
 }

@@ -1,4 +1,3 @@
-import { Info } from "lucide-react";
 import { useState } from "react";
 import styles from "./DisclaimerBanner.module.css";
 
@@ -15,42 +14,44 @@ export const SUPPORT_TEXT_LINES = [
   "생성된 내용은 전문가의 검토를 거치지 않았으며 오류가 있을 수 있습니다.",
 ];
 
+const DISMISS_KEY = "disclaimer-banner-dismissed";
+
 export default function DisclaimerBanner({
   detailsClassName,
   titleClassName,
   textClassName,
 }: DisclaimerBannerProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return window.sessionStorage.getItem(DISMISS_KEY) === "true";
+  });
+
+  const handleDismiss = () => {
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(DISMISS_KEY, "true");
+    }
+    setIsDismissed(true);
+  };
+
+  if (isDismissed) return null;
 
   return (
-    <>
-      <div className={styles.banner}>
-        <div className={styles.content}>
-          <p className={styles.text}>
-            <Info className={styles.icon} size={16} aria-hidden="true" />
-            <span className={styles.message}>{DISCLAIMER_TEXT}</span>
-            <button
-              type="button"
-              onClick={() => setIsOpen((prev) => !prev)}
-              className={styles.button}
-              aria-expanded={isOpen}
-            >
-              자세히
-            </button>
-          </p>
-        </div>
+    <div className={detailsClassName} role="note">
+      <div className={styles.detailsHeader}>
+        <p className={titleClassName}>{DISCLAIMER_TEXT}</p>
+        <button
+          type="button"
+          onClick={handleDismiss}
+          className={styles.dismissButton}
+        >
+          이해했습니다
+        </button>
       </div>
-
-      {isOpen ? (
-        <div className={detailsClassName} role="note">
-          <p className={titleClassName}>{DISCLAIMER_TEXT}</p>
-          {SUPPORT_TEXT_LINES.map((line, i) => (
-            <p key={i} className={textClassName}>
-              {line}
-            </p>
-          ))}
-        </div>
-      ) : null}
-    </>
+      {SUPPORT_TEXT_LINES.map((line) => (
+        <p key={line} className={textClassName}>
+          {line}
+        </p>
+      ))}
+    </div>
   );
 }

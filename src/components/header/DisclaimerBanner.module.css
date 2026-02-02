@@ -1,54 +1,30 @@
-.banner {
-  width: min(720px, 100%);
-  border-radius: 999px;
-  border: 1px solid rgba(242, 201, 109, 0.25);
-  background: rgba(242, 201, 109, 0.12);
-  padding: 10px 16px;
-}
-
-.content {
-  display: block;
-}
-
-.text {
-  margin: 0;
+.detailsHeader {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.85rem;
-  color: #f6e6c6;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
 }
 
-.icon {
-  color: #f2c96d;
-  flex-shrink: 0;
-}
-
-.message {
-  flex: 1;
-  min-width: 0;
-}
-
-.button {
+.dismissButton {
   border: none;
-  background: transparent;
+  background: rgba(242, 201, 109, 0.16);
   color: #f2c96d;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   padding: 4px 8px;
   border-radius: 999px;
-  margin-left: 4px;
   flex-shrink: 0;
 }
 
-.button:hover {
+.dismissButton:hover {
   color: #ffe3a1;
-  background: rgba(242, 201, 109, 0.12);
+  background: rgba(242, 201, 109, 0.24);
 }
 
 @media (max-width: 640px) {
-  .text {
+  .detailsHeader {
     align-items: flex-start;
   }
 }

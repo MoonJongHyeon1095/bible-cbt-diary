@@ -7,13 +7,17 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
-import DisclaimerBanner from "./DisclaimerBanner";
 import CompactNav from "./navigation/CompactNav";
+import dynamic from "next/dynamic";
 
 type SessionUser = {
   id: string;
   email: string | null;
 };
+
+const DisclaimerBanner = dynamic(() => import("./DisclaimerBanner"), {
+  ssr: false,
+});
 
 export default function AppHeader() {
   const [user, setUser] = useState<SessionUser | null>(null);

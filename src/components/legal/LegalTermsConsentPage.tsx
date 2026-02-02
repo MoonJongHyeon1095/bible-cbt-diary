@@ -91,8 +91,8 @@ export default function LegalTermsConsentPage() {
 
   return (
     <div className={styles.page}>
-      <main className={styles.main}>
-        <div className={styles.shell}>
+      <main className={`${styles.main} ${styles.consentMain}`}>
+        <div className={`${styles.shell} ${styles.consentShell}`}>
           <section>
             <h1 className={styles.title}>이용약관 및 동의</h1>
             <p className={styles.subtitle}>

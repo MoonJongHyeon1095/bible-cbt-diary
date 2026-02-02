@@ -9,7 +9,7 @@
   flex: 1;
   display: flex;
   justify-content: center;
-  padding: 24px 24px 64px;
+  padding: 24px 24px 148px;
 }
 
 .shell {
@@ -17,6 +17,14 @@
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+.consentMain {
+  align-items: center;
+}
+
+.consentShell {
+  padding: 48px 0;
 }
 
 .title {
@@ -278,7 +286,7 @@
 
 @media (max-width: 900px) {
   .main {
-    padding-bottom: 96px;
+    padding-bottom: calc(180px + env(safe-area-inset-bottom));
   }
 
   .agreeItem {

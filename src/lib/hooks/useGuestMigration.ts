@@ -40,7 +40,7 @@ export const useGuestMigration = () => {
       isPromptOpen: true,
       error: null,
     }));
-  }, [pushToast, router]);
+  }, []);
 
   useEffect(() => {
     const resolveSession = async () => {

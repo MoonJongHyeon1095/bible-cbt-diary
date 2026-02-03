@@ -11,6 +11,7 @@ import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "@/app/page.module.css";
+import { useGate } from "@/components/notice/GateProvider";
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";
 
@@ -39,6 +40,7 @@ export default function EmotionNoteTodayPage() {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
+  const { blocker, canShowOnboarding } = useGate();
   const todayLabel = useMemo(() => getTodayLabel(), []);
   const access = useMemo<AccessContext>(
     () => ({ mode: accessMode, accessToken }),
@@ -99,8 +101,15 @@ export default function EmotionNoteTodayPage() {
   });
 
   useEffect(() => {
+    if (blocker && isTourOpen) {
+      setIsTourOpen(false);
+    }
+  }, [blocker, isTourOpen]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (access.mode === "blocked" || isLoading || isAccessLoading) return;
+    if (!canShowOnboarding) return;
     if (isTourOpen) return;
     const stored = window.localStorage.getItem(TOUR_STORAGE_KEY);
     const maxStepIndex = tourSteps.length - 1;
@@ -127,7 +136,14 @@ export default function EmotionNoteTodayPage() {
       setCurrentStep(nextStep);
       setIsTourOpen(true);
     }
-  }, [access.mode, isLoading, isTourOpen, isAccessLoading, tourSteps.length]);
+  }, [
+    access.mode,
+    isLoading,
+    isTourOpen,
+    isAccessLoading,
+    canShowOnboarding,
+    tourSteps.length,
+  ]);
 
   return (
     <div className={styles.page}>

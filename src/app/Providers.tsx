@@ -5,8 +5,10 @@ import { useEffect } from "react";
 import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import { AuthModalProvider } from "@/components/header/AuthModalProvider";
 import Notice from "@/components/Notice";
+import { GateProvider } from "@/components/notice/GateProvider";
 import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import AppUpdateGate from "@/components/AppUpdateGate";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -18,7 +20,7 @@ export default function Providers({ children }: ProvidersProps) {
       return;
     }
 
-    let removeListener: (() => void) | null = null;
+    const removeListeners: Array<() => void> = [];
 
     const register = async () => {
       try {
@@ -28,7 +30,9 @@ export default function Providers({ children }: ProvidersProps) {
         const browserMod = await import("@capacitor/browser");
         const CapBrowser = browserMod.Browser;
 
-        const listener = await CapApp.addListener("appUrlOpen", async ({ url }) => {
+        const appUrlListener = await CapApp.addListener(
+          "appUrlOpen",
+          async ({ url }) => {
           if (!url.startsWith("com.alliance617.emotionaldiary://auth-callback")) {
             return;
           }
@@ -58,7 +62,18 @@ export default function Providers({ children }: ProvidersProps) {
           }
         });
 
-        removeListener = () => listener.remove();
+        removeListeners.push(() => appUrlListener.remove());
+
+        const backButtonListener = await CapApp.addListener("backButton", () => {
+          if (window.history.length > 1) {
+            window.history.back();
+            return;
+          }
+
+          CapApp.exitApp();
+        });
+
+        removeListeners.push(() => backButtonListener.remove());
       } catch (error) {
         console.log("[oauth] failed to load @capacitor/app:", error);
       }
@@ -67,18 +82,21 @@ export default function Providers({ children }: ProvidersProps) {
     register();
 
     return () => {
-      if (removeListener) {
-        removeListener();
-      }
+      removeListeners.forEach((remove) => {
+        remove();
+      });
     };
   }, []);
 
   return (
     <CbtToastProvider>
-      <AuthModalProvider>
-        <Notice />
-        {children}
-      </AuthModalProvider>
+      <GateProvider>
+        <AuthModalProvider>
+          <AppUpdateGate />
+          <Notice />
+          {children}
+        </AuthModalProvider>
+      </GateProvider>
     </CbtToastProvider>
   );
 }

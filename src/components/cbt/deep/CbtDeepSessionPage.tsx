@@ -29,6 +29,7 @@ import { CbtDeepSelectSection } from "./center/CbtDeepSelectSection";
 import { useCbtDeepInternalContext } from "./hooks/useCbtDeepInternalContext";
 import { CbtDeepCognitiveErrorSection } from "./left/CbtDeepCognitiveErrorSection";
 import { CbtDeepAlternativeThoughtSection } from "./right/CbtDeepAlternativeThoughtSection";
+import { useGate } from "@/components/notice/GateProvider";
 
 const parseIds = (value: string | null) => {
   if (!value) return [] as number[];
@@ -107,6 +108,7 @@ function CbtDeepSessionPageContent() {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
+  const { blocker, canShowOnboarding } = useGate();
   const lastErrorsKeyRef = useRef<string>("");
 
   const stepOrder: DeepStep[] = shouldSelectSubNotes
@@ -159,9 +161,16 @@ function CbtDeepSessionPageContent() {
   }, []);
 
   useEffect(() => {
+    if (blocker && isTourOpen) {
+      setIsTourOpen(false);
+    }
+  }, [blocker, isTourOpen]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (isAccessLoading) return;
     if (accessStateMode !== "auth") return;
+    if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
     const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
@@ -190,7 +199,14 @@ function CbtDeepSessionPageContent() {
       setTourStep(nextStep);
       setIsTourOpen(true);
     }
-  }, [isTourOpen, step, tourSteps.length]);
+  }, [
+    isAccessLoading,
+    accessStateMode,
+    isTourOpen,
+    canShowOnboarding,
+    step,
+    tourSteps.length,
+  ]);
 
   const previousAlternatives = useMemo(() => {
     const notes = mainNote ? [mainNote, ...subNotes] : subNotes;

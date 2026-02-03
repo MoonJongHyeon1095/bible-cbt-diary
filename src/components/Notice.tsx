@@ -8,6 +8,7 @@ import {
 } from "@/lib/notice/notice";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useGate } from "@/components/notice/GateProvider";
 import styles from "./Notice.module.css";
 
 const NOTICE_PATHS = ["/", "/today"];
@@ -15,12 +16,27 @@ const NOTICE_PATHS = ["/", "/today"];
 export default function Notice() {
   const [notice, setNotice] = useState<NoticeItem | null>(null);
   const pathname = usePathname();
+  const { status, setNoticeStatus } = useGate();
 
   useEffect(() => {
     let active = true;
 
     const load = async () => {
+      if (!status.terms.ready || !status.update.ready) {
+        setNoticeStatus({ ready: false, open: false });
+        return;
+      }
+
+      if (status.update.blocking || status.terms.blocking) {
+        setNotice(null);
+        setNoticeStatus({ ready: true, open: false });
+        return;
+      }
+
+      setNoticeStatus({ ready: false, open: false });
       if (!pathname || !NOTICE_PATHS.includes(pathname)) {
+        setNotice(null);
+        setNoticeStatus({ ready: true, open: false });
         return;
       }
       const payload = await loadNotices();
@@ -28,9 +44,11 @@ export default function Notice() {
       const nextNotice = pickActiveNotice(payload);
       if (!nextNotice) {
         setNotice(null);
+        setNoticeStatus({ ready: true, open: false });
         return;
       }
       setNotice(nextNotice);
+      setNoticeStatus({ ready: true });
     };
 
     load();
@@ -38,7 +56,21 @@ export default function Notice() {
     return () => {
       active = false;
     };
-  }, [pathname]);
+  }, [
+    pathname,
+    setNoticeStatus,
+    status.terms.ready,
+    status.terms.blocking,
+    status.update.ready,
+    status.update.blocking,
+  ]);
+
+  useEffect(() => {
+    setNoticeStatus({ open: Boolean(notice) });
+    if (notice === null) {
+      setNoticeStatus({ ready: true });
+    }
+  }, [notice, setNoticeStatus]);
 
   if (!notice) return null;
 

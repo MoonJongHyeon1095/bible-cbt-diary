@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import styles from "./Notice.module.css";
+import { useGate } from "@/components/notice/GateProvider";
 
 const APP_STORE_ID = process.env.NEXT_PUBLIC_APP_STORE_ID;
 
@@ -10,9 +11,12 @@ export default function AppUpdateGate() {
   const [requiresUpdate, setRequiresUpdate] = useState(false);
   const [storeLabel, setStoreLabel] = useState("업데이트하기");
   const checkedRef = useRef(false);
+  const { setUpdateStatus } = useGate();
 
   useEffect(() => {
+    setUpdateStatus({ ready: false, blocking: false });
     if (!Capacitor.isNativePlatform()) {
+      setUpdateStatus({ ready: true, blocking: false });
       return;
     }
     if (checkedRef.current) {
@@ -36,18 +40,22 @@ export default function AppUpdateGate() {
           info.updateAvailability === AppUpdateAvailability.UPDATE_IN_PROGRESS;
 
         if (!updateAvailable) {
+          setUpdateStatus({ ready: true, blocking: false });
           return;
         }
 
         if (platform === "android" && info.immediateUpdateAllowed) {
+          setUpdateStatus({ ready: true, blocking: true });
           await AppUpdate.performImmediateUpdate();
           return;
         }
 
         setStoreLabel(platform === "android" ? "Play 스토어로 이동" : "App Store로 이동");
         setRequiresUpdate(true);
+        setUpdateStatus({ ready: true, blocking: true });
       } catch (error) {
         console.log("[app-update] check failed:", error);
+        setUpdateStatus({ ready: true, blocking: false });
       }
     };
 
@@ -56,7 +64,7 @@ export default function AppUpdateGate() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [setUpdateStatus]);
 
   if (!requiresUpdate) return null;
 

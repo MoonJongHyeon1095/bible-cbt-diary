@@ -1,5 +1,4 @@
 import TermsGate from "@/components/common/TermsGate";
-import AppUpdateGate from "@/components/AppUpdateGate";
 import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import Providers from "./Providers";
@@ -25,7 +24,6 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={notoSansKr.variable}>
-        <AppUpdateGate />
         <Providers>
           <TermsGate />
           {children}

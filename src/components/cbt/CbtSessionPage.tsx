@@ -27,6 +27,7 @@ import { CbtMinimalSavingModal } from "./minimal/common/CbtMinimalSavingModal";
 import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognitiveErrorSection";
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
+import { useGate } from "@/components/notice/GateProvider";
 
 type MinimalStep =
   | "incident"
@@ -66,6 +67,7 @@ function CbtSessionPageContent() {
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
+  const { blocker, canShowOnboarding } = useGate();
   const lastErrorsKeyRef = useRef<string>("");
   const { requireAccessContext } = useCbtAccess({
     setError: (message) => {
@@ -153,8 +155,15 @@ function CbtSessionPageContent() {
   }, []);
 
   useEffect(() => {
+    if (blocker && isTourOpen) {
+      setIsTourOpen(false);
+    }
+  }, [blocker, isTourOpen]);
+
+  useEffect(() => {
     if (typeof window === "undefined") return;
     if (accessMode === "blocked" || isAccessLoading) return;
+    if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
     const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
@@ -183,7 +192,14 @@ function CbtSessionPageContent() {
       setTourStep(nextStep);
       setIsTourOpen(true);
     }
-  }, [isTourOpen, step, tourSteps.length]);
+  }, [
+    accessMode,
+    isAccessLoading,
+    isTourOpen,
+    canShowOnboarding,
+    step,
+    tourSteps.length,
+  ]);
 
   const handleBack = () => {
     if (currentStepIndex <= 0) return;

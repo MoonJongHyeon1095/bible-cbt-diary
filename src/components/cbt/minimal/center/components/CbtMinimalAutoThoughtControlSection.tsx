@@ -33,6 +33,7 @@ export function CbtMinimalAutoThoughtControlSection({
           type="button"
           variant="unstyled"
           onClick={onEnableCustom}
+          data-tour="minimal-thought-custom"
           className={styles.secondaryButton}
         >
           또는 직접 생각을 작성해보세요

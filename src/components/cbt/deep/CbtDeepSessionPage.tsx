@@ -15,10 +15,12 @@ import {
   fetchEmotionNoteGraph,
   fetchEmotionNoteById,
 } from "@/components/graph/utils/emotionNoteGraphApi";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import { useRouter, useSearchParams } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { startPerf } from "@/lib/utils/perf";
 import { CbtDeepAutoThoughtSection } from "./center/CbtDeepAutoThoughtSection";
@@ -44,10 +46,23 @@ type DeepStep =
   | "errors"
   | "alternative";
 
+const TOUR_STORAGE_PREFIX = "deep-session-onboarding";
+
+type TourProgress = {
+  lastStep: number;
+  lastTotal: number;
+};
+
+const Tour = dynamic(() => import("@reactour/tour").then((mod) => mod.Tour), {
+  ssr: false,
+});
+
 function CbtDeepSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { pushToast } = useCbtToast();
+  const { accessMode: accessStateMode, isLoading: isAccessLoading } =
+    useAccessContext();
   const { accessMode, accessToken, requireAccessContext } = useCbtAccess({
     setError: (message) => pushToast(message, "error"),
   });
@@ -89,12 +104,43 @@ function CbtDeepSessionPageContent() {
   >([]);
   const [alternativeSeed, setAlternativeSeed] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
+  const [tourStep, setTourStep] = useState(0);
+  const [disabledActions, setDisabledActions] = useState(false);
   const lastErrorsKeyRef = useRef<string>("");
 
   const stepOrder: DeepStep[] = shouldSelectSubNotes
     ? ["select", "incident", "emotion", "thought", "errors", "alternative"]
     : ["incident", "emotion", "thought", "errors", "alternative"];
   const currentStepIndex = stepOrder.indexOf(step);
+
+  const tourSteps = useMemo(() => {
+    if (step === "select") {
+      return [
+        {
+          selector: "[data-tour='deep-select-main']",
+          content: "핵심이 되는 메인 기록이에요.",
+        },
+        {
+          selector: "[data-tour='deep-select-list']",
+          content: "연결할 기록을 1~2개 골라주세요.",
+        },
+        {
+          selector: "[data-tour='deep-select-next']",
+          content: "이 조합으로 심화 세션을 시작해요.",
+        },
+      ];
+    }
+    if (step === "incident") {
+      return [
+        {
+          selector: "[data-tour='deep-incident-input']",
+          content: "이번엔 더 차분히 상황을 다시 적어봐요.",
+        },
+      ];
+    }
+    return [];
+  }, [step]);
 
   useEffect(() => {
     setSelectedSubIds([]);
@@ -111,6 +157,40 @@ function CbtDeepSessionPageContent() {
       void flushTokenSessionUsage();
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (isAccessLoading) return;
+    if (accessStateMode !== "auth") return;
+    if (isTourOpen) return;
+    if (tourSteps.length === 0) return;
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
+    const stored = window.localStorage.getItem(storageKey);
+    const maxStepIndex = tourSteps.length - 1;
+    let progress: TourProgress | null = null;
+    if (stored) {
+      try {
+        progress = JSON.parse(stored) as TourProgress;
+      } catch {
+        progress = null;
+      }
+    }
+
+    if (!progress) {
+      setTourStep(0);
+      setIsTourOpen(true);
+      return;
+    }
+
+    if (tourSteps.length > progress.lastTotal) {
+      const nextStep = Math.max(
+        0,
+        Math.min(progress.lastStep + 1, maxStepIndex),
+      );
+      setTourStep(nextStep);
+      setIsTourOpen(true);
+    }
+  }, [isTourOpen, step, tourSteps.length]);
 
   const previousAlternatives = useMemo(() => {
     const notes = mainNote ? [mainNote, ...subNotes] : subNotes;
@@ -453,6 +533,141 @@ function CbtDeepSessionPageContent() {
           />
         )}
       </div>
+      {isTourOpen ? (
+        <Tour
+          steps={tourSteps}
+          isOpen={isTourOpen}
+          setIsOpen={setIsTourOpen}
+          currentStep={tourStep}
+          setCurrentStep={setTourStep}
+          disabledActions={disabledActions}
+          setDisabledActions={setDisabledActions}
+          showCloseButton
+          components={{
+            Close: ({ onClick }) => (
+              <button
+                type="button"
+                onClick={onClick}
+                aria-label="온보딩 닫기"
+                style={{
+                  position: "absolute",
+                  top: -10,
+                  right: 10,
+                  padding: "4px 10px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  borderRadius: 999,
+                  background: "rgba(22, 26, 33, 0.96)",
+                  color: "#ffffff",
+                  border: "1px solid rgba(255, 255, 255, 0.35)",
+                  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+                  cursor: "pointer",
+                }}
+              >
+                닫기
+              </button>
+            ),
+          }}
+          onClickClose={({ currentStep: stepIndex, setIsOpen }) => {
+            if (typeof window !== "undefined") {
+              const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
+              window.localStorage.setItem(
+                storageKey,
+                JSON.stringify({
+                  lastStep: stepIndex,
+                  lastTotal: tourSteps.length,
+                }),
+              );
+            }
+            setIsOpen(false);
+          }}
+          onClickMask={({ currentStep: stepIndex, setIsOpen }) => {
+            if (typeof window !== "undefined") {
+              const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
+              window.localStorage.setItem(
+                storageKey,
+                JSON.stringify({
+                  lastStep: stepIndex,
+                  lastTotal: tourSteps.length,
+                }),
+              );
+            }
+            setIsOpen(false);
+          }}
+          styles={{
+            popover: (base) => ({
+              ...base,
+              borderRadius: 16,
+              background: "rgba(22, 26, 33, 0.96)",
+              color: "#e6e7ea",
+              border: "1px solid rgba(143, 167, 200, 0.24)",
+              boxShadow:
+                "0 18px 40px rgba(8, 9, 12, 0.65), 0 0 0 1px rgba(255,255,255,0.04) inset",
+              padding: "28px 18px 16px",
+              overflow: "visible",
+            }),
+            close: (base) => ({
+              ...base,
+              color: "#ffffff",
+              background: "rgba(22, 26, 33, 0.96)",
+              borderRadius: 999,
+              width: 26,
+              height: 26,
+              right: 10,
+              top: -10,
+              boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
+              border: "1px solid rgba(255, 255, 255, 0.35)",
+              zIndex: 3,
+              opacity: 1,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }),
+            badge: (base) => ({
+              ...base,
+              background: "#f2c96d",
+              color: "#0f1114",
+              fontWeight: 700,
+              boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
+            }),
+            dot: (base, state) => ({
+              ...base,
+              width: 6,
+              height: 6,
+              margin: "0 4px",
+              background: state?.current ? "#f2c96d" : "rgba(255,255,255,0.25)",
+            }),
+            arrow: (base) => ({
+              ...base,
+              color: "rgba(22, 26, 33, 0.96)",
+            }),
+            maskArea: (base) => ({
+              ...base,
+              rx: 16,
+              ry: 16,
+            }),
+            highlightedArea: (base) => ({
+              ...base,
+              boxShadow: "0 0 0 9999px rgba(5, 7, 10, 0.7)",
+              borderRadius: 16,
+              border: "1px solid rgba(242, 201, 109, 0.55)",
+            }),
+            navigation: (base) => ({
+              ...base,
+              marginTop: 16,
+            }),
+            button: (base) => ({
+              ...base,
+              background: "rgba(143, 167, 200, 0.18)",
+              color: "#e6e7ea",
+              borderRadius: 999,
+              padding: "6px 12px",
+              fontWeight: 600,
+              border: "1px solid rgba(143, 167, 200, 0.25)",
+            }),
+          }}
+        />
+      ) : null}
     </div>
   );
 }

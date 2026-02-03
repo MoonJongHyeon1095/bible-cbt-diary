@@ -1,3 +1,4 @@
+import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
@@ -8,7 +9,6 @@ import Button from "@/components/ui/Button";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
-import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 
 interface CbtDeepIncidentSectionProps {
   userInput: string;
@@ -94,7 +94,8 @@ export function CbtDeepIncidentSection({
     const node = headerRef.current;
     if (!node || typeof window === "undefined") return;
     const rect = node.getBoundingClientRect();
-    const target = window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
+    const target =
+      window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
     const top = Math.max(0, target);
     window.scrollTo({ top, behavior: "auto" });
   }, []);
@@ -105,39 +106,46 @@ export function CbtDeepIncidentSection({
       .map((note, index) => {
         const trigger = note.trigger_text?.trim() ?? "";
         if (!trigger) return null;
-      const thought = note.thought_details?.[0]?.automatic_thought?.trim();
-      const errorDetail = note.error_details?.[0];
-      const errorText =
-        errorDetail?.error_description?.trim() ||
-        errorDetail?.error_label?.trim() ||
-        "";
-      const lines = [
-        { label: "상황", text: trigger },
-        thought ? { label: "자동사고", text: thought } : null,
-        errorText ? { label: "인지오류", text: errorText } : null,
-      ].filter((line): line is { label: string; text: string } => Boolean(line));
-      return {
-        id: `note-${note.id ?? index}`,
-        title: index === 0 ? "최근 기록" : `이전 기록 ${index}`,
-        body: trigger,
-        applyText: trigger,
-        lines,
-      };
-    })
-    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+        const thought = note.thought_details?.[0]?.automatic_thought?.trim();
+        const errorDetail = note.error_details?.[0];
+        const errorText =
+          errorDetail?.error_description?.trim() ||
+          errorDetail?.error_label?.trim() ||
+          "";
+        const lines = [
+          { label: "상황", text: trigger },
+          thought ? { label: "자동사고", text: thought } : null,
+          errorText ? { label: "인지오류", text: errorText } : null,
+        ].filter((line): line is { label: string; text: string } =>
+          Boolean(line),
+        );
+        return {
+          id: `note-${note.id ?? index}`,
+          title: index === 0 ? "최근 기록" : `이전 기록 ${index}`,
+          body: trigger,
+          applyText: trigger,
+          lines,
+        };
+      })
+      .filter((item): item is NonNullable<typeof item> => Boolean(item));
   }, [mainNote, subNotes]);
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset} ref={headerRef}>
-          <CbtMinimalStepHeaderSection title={title} description={description} />
+          <CbtMinimalStepHeaderSection
+            title={title}
+            description={description}
+          />
         </div>
 
         <div className={styles.formStack}>
           <div
             className={`${styles.inputWrap} ${styles.incidentInputCard} ${
-              userInput.trim() ? styles.inputWrapFilled : ""
+              userInput.trim()
+                ? styles.inputWrapFilled
+                : "감정 일기를 기록하는 곳입니다."
             }`}
           >
             <textarea
@@ -146,6 +154,7 @@ export function CbtDeepIncidentSection({
               onChange={(event) => onInputChange(event.target.value)}
               placeholder=""
               rows={1}
+              data-tour="deep-incident-input"
               className={`${styles.textarea} ${styles.incidentTextarea}`}
             />
           </div>

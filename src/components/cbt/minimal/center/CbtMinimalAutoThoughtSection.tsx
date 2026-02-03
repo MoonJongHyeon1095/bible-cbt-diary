@@ -118,33 +118,39 @@ export function CbtMinimalAutoThoughtSection({
           <AiFallbackNotice onRetry={() => void reloadThoughts()} />
         )}
 
-        {wantsCustom ? (
-          <div className={styles.inlineCard}>
-            <CbtMinimalAutoThoughtInputForm
-              value={customThought}
-              onChange={setCustomThought}
-            />
-          </div>
-        ) : loading ? (
-          <CbtMinimalLoadingState message="생각을 정리하고 있어요." />
-        ) : (
-          <CbtCarousel emblaRef={emblaRef}>
-            {thoughts.map((thought, index) => (
-              <div
-                key={`${thought.belief}-${index}`}
-                className={styles.emblaSlide}
-              >
-                <div className={styles.inlineCard}>
-                  <CbtMinimalAutoThoughtTextSection
-                    belief={thought.belief ?? ""}
-                    emotionReason={thought.emotionReason ?? ""}
-                    fallback="생각을 불러오는 중입니다."
-                  />
+        <div
+          data-tour={
+            !wantsCustom && !loading ? "minimal-thought-carousel" : undefined
+          }
+        >
+          {wantsCustom ? (
+            <div className={styles.inlineCard}>
+              <CbtMinimalAutoThoughtInputForm
+                value={customThought}
+                onChange={setCustomThought}
+              />
+            </div>
+          ) : loading ? (
+            <CbtMinimalLoadingState message="생각을 정리하고 있어요." />
+          ) : (
+            <CbtCarousel emblaRef={emblaRef}>
+              {thoughts.map((thought, index) => (
+                <div
+                  key={`${thought.belief}-${index}`}
+                  className={styles.emblaSlide}
+                >
+                  <div className={styles.inlineCard}>
+                    <CbtMinimalAutoThoughtTextSection
+                      belief={thought.belief ?? ""}
+                      emotionReason={thought.emotionReason ?? ""}
+                      fallback="생각을 불러오는 중입니다."
+                    />
+                  </div>
                 </div>
-              </div>
-            ))}
-          </CbtCarousel>
-        )}
+              ))}
+            </CbtCarousel>
+          )}
+        </div>
 
         {wantsCustom ? (
           <CbtMinimalAutoThoughtHintSection />
@@ -159,7 +165,10 @@ export function CbtMinimalAutoThoughtSection({
           />
         )}
 
-        <CbtMinimalFloatingNextButton onClick={handleSubmit} />
+        <CbtMinimalFloatingNextButton
+          onClick={handleSubmit}
+          dataTour="minimal-thought-next"
+        />
       </div>
     </div>
   );

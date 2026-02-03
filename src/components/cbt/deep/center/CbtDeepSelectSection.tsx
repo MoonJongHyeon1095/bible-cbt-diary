@@ -69,7 +69,10 @@ export function CbtDeepSelectSection({
 
         <div className={deepStyles.selectBlock}>
           <p className={minimalStyles.sectionLabel}>Main note</p>
-          <div className={deepStyles.selectSurface}>
+          <div
+            className={deepStyles.selectSurface}
+            data-tour="deep-select-main"
+          >
             <div className={deepStyles.selectHeaderRow}>
               <span className={deepStyles.selectTitle}>
                 {mainNote.title || "감정 노트"}
@@ -112,7 +115,7 @@ export function CbtDeepSelectSection({
             {selectableNotes.length}개
           </span>
         </div>
-        <div className={deepStyles.selectList}>
+        <div className={deepStyles.selectList} data-tour="deep-select-list">
           {selectableNotes.length === 0 ? (
             <div className={deepStyles.selectEmpty}>연결할 기록이 없습니다.</div>
           ) : (
@@ -217,6 +220,7 @@ export function CbtDeepSelectSection({
         onClick={onConfirm}
         ariaLabel="이 조합으로 진행하기"
         disabled={!canConfirm}
+        dataTour="deep-select-next"
       />
     </div>
   );

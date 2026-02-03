@@ -30,6 +30,7 @@ export function CbtMinimalIncidentForm({
           onChange={(event) => onInputChange(event.target.value)}
           placeholder=""
           rows={1}
+          data-tour="minimal-incident-input"
           className={`${styles.textarea} ${styles.incidentTextarea}`}
         />
       </div>
@@ -37,6 +38,7 @@ export function CbtMinimalIncidentForm({
         type="button"
         variant="unstyled"
         onClick={onShowExample}
+        data-tour="minimal-incident-example"
         className={styles.exampleButton}
       >
         예시를 보여주세요

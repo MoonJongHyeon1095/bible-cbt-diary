@@ -77,7 +77,10 @@ export function CbtMinimalIncidentSection({
           onShowExample={handleShowExample}
         />
 
-        <CbtMinimalFloatingNextButton onClick={handleNext} />
+        <CbtMinimalFloatingNextButton
+          onClick={handleNext}
+          dataTour="minimal-incident-next"
+        />
       </div>
 
       <CbtCarouselModal

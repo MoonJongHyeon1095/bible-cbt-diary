@@ -13,6 +13,7 @@ type UseAiUsageGuardOptions = {
 type UsageCacheEntry = {
   allowed: boolean;
   checkedAt: number;
+  message?: string;
 };
 
 const CACHE_TTL_MS = 60_000;
@@ -58,13 +59,29 @@ export function useAiUsageGuard({
   const router = useRouter();
   const hasCheckedRef = useRef(false);
   const lastAllowedRef = useRef<boolean | null>(null);
+  const lastMessageRef = useRef<string | null>(null);
+  const hasNotifiedRef = useRef(false);
   const [gateReady, setGateReady] = useState(!enabled);
+
+  const notifyDenied = useCallback(
+    (message?: string | null) => {
+      if (hasNotifiedRef.current) return;
+      hasNotifiedRef.current = true;
+      pushToast(message ?? "토큰 사용량을 초과했습니다. (KST 09:00 초기화)", "error");
+    },
+    [pushToast],
+  );
 
   const checkUsage = useCallback(async () => {
     const endPerf = startPerf("ai:usageGuard");
     if (cache && hasCheckedRef.current) {
       endPerf();
-      return lastAllowedRef.current ?? true;
+      const lastAllowed = lastAllowedRef.current ?? true;
+      if (!lastAllowed) {
+        notifyDenied(lastMessageRef.current);
+        router.replace(redirectTo);
+      }
+      return lastAllowed;
     }
     if (cache) {
       const cached = readCachedUsage();
@@ -72,6 +89,11 @@ export function useAiUsageGuard({
         hasCheckedRef.current = true;
         lastAllowedRef.current = cached.allowed;
         endPerf();
+        if (!cached.allowed) {
+          lastMessageRef.current = cached.message ?? null;
+          notifyDenied(cached.message);
+          router.replace(redirectTo);
+        }
         return cached.allowed;
       }
     }
@@ -79,16 +101,25 @@ export function useAiUsageGuard({
       hasCheckedRef.current = true;
     }
     let allowed = true;
+    let lastMessage: string | null = null;
+    const captureToast: typeof pushToast = (message, variant) => {
+      if (variant === "error") {
+        lastMessage = message;
+      }
+      pushToast(message, variant);
+    };
     try {
-      allowed = await checkAiUsageLimit(pushToast);
+      allowed = await checkAiUsageLimit(captureToast);
     } catch (error) {
       console.error("ai usage guard failed:", error);
       pushToast("토큰 사용량 확인 중 서버 오류가 발생했습니다.", "error");
+      lastMessage = "토큰 사용량 확인 중 서버 오류가 발생했습니다.";
       allowed = false;
     }
     lastAllowedRef.current = allowed;
+    lastMessageRef.current = lastMessage;
     if (cache) {
-      writeCachedUsage({ allowed, checkedAt: Date.now() });
+      writeCachedUsage({ allowed, checkedAt: Date.now(), message: lastMessage ?? undefined });
     }
     if (!allowed) {
       router.replace(redirectTo);
@@ -97,7 +128,7 @@ export function useAiUsageGuard({
     }
     endPerf();
     return true;
-  }, [cache, pushToast, redirectTo, router]);
+  }, [cache, notifyDenied, pushToast, redirectTo, router]);
 
   useEffect(() => {
     if (!enabled) {

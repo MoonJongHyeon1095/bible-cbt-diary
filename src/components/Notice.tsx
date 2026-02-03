@@ -1,14 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
 import {
-  dismissNotice,
   dismissNoticeToday,
   loadNotices,
   pickActiveNotice,
   type NoticeItem,
 } from "@/lib/notice/notice";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import styles from "./Notice.module.css";
 
 const NOTICE_PATHS = ["/", "/today"];
@@ -47,14 +46,55 @@ export default function Notice() {
     notice.level === "critical"
       ? styles.noticeCritical
       : notice.level === "warning"
-        ? styles.noticeWarning
-        : styles.noticeInfo
+      ? styles.noticeWarning
+      : styles.noticeInfo
   }`;
 
-  const bodyBlocks = notice.body
-    .split(/\n{2,}/)
-    .map((block) => block.trim())
-    .filter(Boolean);
+  const blocks: Array<
+    | { type: "list"; items: string[] }
+    | { type: "paragraph"; text: string }
+  > = [];
+  const lines = notice.body.split("\n");
+  let currentList: string[] | null = null;
+  let currentParagraph: string[] = [];
+
+  const flushParagraph = () => {
+    if (currentParagraph.length === 0) return;
+    blocks.push({ type: "paragraph", text: currentParagraph.join("\n") });
+    currentParagraph = [];
+  };
+
+  const flushList = () => {
+    if (!currentList || currentList.length === 0) return;
+    blocks.push({ type: "list", items: currentList });
+    currentList = null;
+  };
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      flushParagraph();
+      continue;
+    }
+
+    const numberedMatch = trimmed.match(/^\d+\.\s+(.*)$/);
+    if (numberedMatch) {
+      flushParagraph();
+      if (!currentList) {
+        currentList = [];
+      }
+      currentList.push(numberedMatch[1].trim());
+      continue;
+    }
+
+    if (currentList) {
+      flushList();
+    }
+    currentParagraph.push(trimmed);
+  }
+
+  flushParagraph();
+  flushList();
 
   return (
     <div className={styles.noticeOverlay} role="dialog" aria-modal="true">
@@ -66,24 +106,19 @@ export default function Notice() {
         </div>
         <h2 className={styles.noticeTitle}>{notice.title}</h2>
         <div className={styles.noticeBody}>
-          {bodyBlocks.map((block, index) => {
-            const lines = block.split("\n").map((line) => line.trim());
-            const isNumbered = lines.every((line) => /^\d+\.\s+/.test(line));
-            if (isNumbered) {
-              return (
-                <ol key={`block-${index}`} className={styles.noticeList}>
-                  {lines.map((line) => (
-                    <li key={line}>{line.replace(/^\d+\.\s+/, "")}</li>
-                  ))}
-                </ol>
-              );
-            }
-            return (
+          {blocks.map((block, index) =>
+            block.type === "list" ? (
+              <ol key={`block-${index}`} className={styles.noticeList}>
+                {block.items.map((item, itemIndex) => (
+                  <li key={`${item}-${itemIndex}`}>{item}</li>
+                ))}
+              </ol>
+            ) : (
               <p key={`block-${index}`} className={styles.noticeParagraph}>
-                {block}
+                {block.text}
               </p>
-            );
-          })}
+            ),
+          )}
         </div>
         <div className={styles.noticeActions}>
           {notice.link && (
@@ -105,7 +140,7 @@ export default function Notice() {
                 setNotice(null);
               }}
             >
-              오늘만 안 보기
+              오늘 그만 보기
             </button>
           )}
           {notice.force && (

@@ -47,6 +47,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE_DEV }}
+          NEXT_PUBLIC_NOTICE_URL: ${{ secrets.NEXT_PUBLIC_NOTICE_URL }}
+          NEXT_PUBLIC_APP_STORE_ID: ${{ secrets.NEXT_PUBLIC_APP_STORE_ID }}
 
       - name: Sync Capacitor Android
         run: npx cap sync android

@@ -7,10 +7,13 @@ import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/Cb
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import Button from "@/components/ui/Button";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useCbtDeepAutoThought } from "../hooks/useCbtDeepAutoThought";
 
@@ -34,7 +37,7 @@ export function CbtDeepAutoThoughtSection({
   onComplete,
 }: CbtDeepAutoThoughtSectionProps) {
   const { pushToast } = useCbtToast();
-  const { items, loading, error, reload } = useCbtDeepAutoThought({
+  const { items, loading, error, reload, isFallback } = useCbtDeepAutoThought({
     userInput,
     emotion,
     mainNote,
@@ -52,9 +55,13 @@ export function CbtDeepAutoThoughtSection({
   }, [items]);
 
   const currentThought = items[currentIndex] ?? null;
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < items.length - 1;
   const showCustomButton = currentIndex >= 2;
+  const { emblaRef, controls } = useEmblaPagination({
+    slidesCount: items.length,
+    draggable: !loading && !wantsCustom,
+    selectedIndex: currentIndex,
+    onSelectIndex: setCurrentIndex,
+  });
 
   const handleSelect = () => {
     if (wantsCustom) {
@@ -115,6 +122,9 @@ export function CbtDeepAutoThoughtSection({
         <div className={styles.headerInset}>
           <CbtMinimalStepHeaderSection title={TITLE} />
         </div>
+        {isFallback && (
+          <AiFallbackNotice onRetry={() => void reload()} />
+        )}
 
         {wantsCustom ? (
           <div className={styles.inlineCard}>
@@ -124,13 +134,22 @@ export function CbtDeepAutoThoughtSection({
             />
           </div>
         ) : (
-          <div className={styles.inlineCard}>
-            <CbtMinimalAutoThoughtTextSection
-              belief={currentThought?.belief ?? ""}
-              emotionReason={currentThought?.emotionReason ?? ""}
-              fallback="생각을 불러오는 중입니다."
-            />
-          </div>
+          <CbtCarousel emblaRef={emblaRef}>
+            {items.map((item, index) => (
+              <div
+                key={`${item.belief}-${index}`}
+                className={styles.emblaSlide}
+              >
+                <div className={styles.inlineCard}>
+                  <CbtMinimalAutoThoughtTextSection
+                    belief={item.belief ?? ""}
+                    emotionReason={item.emotionReason ?? ""}
+                    fallback="생각을 불러오는 중입니다."
+                  />
+                </div>
+              </div>
+            ))}
+          </CbtCarousel>
         )}
 
         <div className={styles.formStack}>
@@ -138,27 +157,12 @@ export function CbtDeepAutoThoughtSection({
           {wantsCustom ? (
             <CbtMinimalAutoThoughtHintSection />
           ) : (
-            <div className={styles.controlRow}>
-              <Button
-                type="button"
-                variant="unstyled"
-                onClick={() => canGoPrev && setCurrentIndex((prev) => prev - 1)}
-                aria-label="이전 생각 보기"
-                disabled={!canGoPrev}
-                className={styles.smallIconButton}
-              >
-                <ChevronLeft size={18} strokeWidth={2.5} />
-              </Button>
-              <Button
-                type="button"
-                variant="unstyled"
-                onClick={() => canGoNext && setCurrentIndex((prev) => prev + 1)}
-                aria-label="다음 생각 보기"
-                disabled={!canGoNext}
-                className={styles.smallIconButton}
-              >
-                <ChevronRight size={18} strokeWidth={2.5} />
-              </Button>
+            <div className={styles.carouselControlStack}>
+              <CbtCarouselDots
+                count={items.length}
+                currentIndex={currentIndex}
+                onSelect={controls.scrollTo}
+              />
               {showCustomButton && (
                 <Button
                   type="button"

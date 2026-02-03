@@ -3,6 +3,7 @@ import { callGptText } from "./client";
 import { cleanText } from "./utils/text";
 import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
 import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 /**
  * ✅ 기존 단일 분석 결과(호환용)
@@ -36,13 +37,13 @@ export function isValidIndex(n: unknown): n is ErrorIndex {
 }
 
 export function defaultRank(): CognitiveErrorRankResult {
-  return {
+  return markAiFallback({
     ranked: ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as ErrorIndex[]).map((idx) => ({
       index: idx,
       reason:
         "입력 정보가 제한적이라 우선순위 판단이 어려워 기본 순서로 정리했습니다.",
     })),
-  };
+  });
 }
 
 // const RANK_SYSTEM_PROMPT = `

@@ -2,11 +2,13 @@
 
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { generateExtendedAutomaticThoughts } from "@/lib/ai";
 import { EMOTIONS } from "@/lib/constants/emotions";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
@@ -62,6 +64,7 @@ export default function EmotionNoteAddThoughtPage({
   const [aiLoading, setAiLoading] = useState(false);
   const [aiCandidates, setAiCandidates] = useState<ThoughtCandidate[]>([]);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFallback, setAiFallback] = useState(false);
   const [selectedCandidate, setSelectedCandidate] = useState("");
   const [savedCandidates, setSavedCandidates] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -121,6 +124,7 @@ export default function EmotionNoteAddThoughtPage({
     setDirectThought("");
     setAiCandidates([]);
     setAiError(null);
+    setAiFallback(false);
     setSelectedCandidate("");
     setSavedCandidates([]);
     setAiStep("select-emotion");
@@ -162,6 +166,7 @@ export default function EmotionNoteAddThoughtPage({
     if (!ready) return;
     setAiLoading(true);
     setAiError(null);
+    setAiFallback(false);
     setAiCandidates([]);
     try {
       const result = await generateExtendedAutomaticThoughts(
@@ -169,6 +174,7 @@ export default function EmotionNoteAddThoughtPage({
         selectedEmotion,
         { noteProposal: true },
       );
+      setAiFallback(isAiFallback(result));
       const candidates = result.sdtThoughts.map((item) => ({
         belief: item.belief,
         emotionReason: item.emotionReason,
@@ -323,6 +329,9 @@ export default function EmotionNoteAddThoughtPage({
                 )}
 
                 {aiError && <div className={styles.errorBox}>{aiError}</div>}
+                {aiFallback && aiStep === "suggestions" && (
+                  <AiFallbackNotice onRetry={() => void handleGenerateCandidates()} />
+                )}
 
                 {aiStep === "suggestions" && (
                   <AiCandidatesPanel

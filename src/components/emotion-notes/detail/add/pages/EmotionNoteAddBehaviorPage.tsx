@@ -2,6 +2,7 @@
 
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
@@ -9,6 +10,7 @@ import { generateBehaviorSuggestions } from "@/lib/ai";
 import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
 import { getRecommendedBehaviors } from "@/lib/constants/errorBehaviorMap";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
@@ -81,6 +83,7 @@ export default function EmotionNoteAddBehaviorPage({
   >([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFallback, setAiFallback] = useState(false);
   const [suggestionsById, setSuggestionsById] = useState<
     Record<string, string>
   >({});
@@ -113,6 +116,7 @@ export default function EmotionNoteAddBehaviorPage({
     setSelectedBehaviorDescription("");
     setSelectedBehaviorTags([]);
     setAiError(null);
+    setAiFallback(false);
   }, [selectedThoughtId, selectedErrorIds, selectedAlternativeId]);
 
   const selectedThought = useMemo(
@@ -254,6 +258,7 @@ export default function EmotionNoteAddBehaviorPage({
     setExpandedErrorIds([]);
     setExpandedAlternativeIds([]);
     setAiError(null);
+    setAiFallback(false);
     setSuggestionsById({});
     setSavedBehaviorIds([]);
     setSelectedBehaviorId("");
@@ -332,6 +337,7 @@ export default function EmotionNoteAddBehaviorPage({
     if (!ready || !selectedThought || !selectedAlternative) return;
     setAiLoading(true);
     setAiError(null);
+    setAiFallback(false);
     try {
       const suggestions = await generateBehaviorSuggestions(
         triggerText,
@@ -350,6 +356,7 @@ export default function EmotionNoteAddBehaviorPage({
         behaviorCandidates.map((item) => item.behavior),
         { noteProposal: true },
       );
+      setAiFallback(isAiFallback(suggestions));
       const next: Record<string, string> = {};
       suggestions.forEach((item) => {
         next[item.behaviorId] = item.suggestion;
@@ -659,6 +666,9 @@ export default function EmotionNoteAddBehaviorPage({
 
             {!aiLoading && aiError && (
               <div className={styles.errorBox}>{aiError}</div>
+            )}
+            {!aiLoading && aiFallback && aiStep === "suggestions" && (
+              <AiFallbackNotice onRetry={() => void handleGenerateSuggestions()} />
             )}
 
             {!aiLoading && aiStep === "suggestions" && (

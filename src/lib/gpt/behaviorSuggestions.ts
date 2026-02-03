@@ -3,6 +3,7 @@ import type { CognitiveBehaviorId } from "../constants/behaviors";
 import { callGptText } from "./client";
 import { cleanText } from "./utils/text";
 import { parseBehaviorSuggestionsResponse } from "./utils/llm/behaviorSuggestions";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 type BehaviorMeta = {
   id: CognitiveBehaviorId;
@@ -190,6 +191,7 @@ ${cognitiveErrorText || "(없음)"}
 ${behaviorsText}
 `.trim();
 
+  let usedFallback = false;
   try {
     const systemPrompt =
       behaviors.length === 1 ? SYSTEM_PROMPT_SINGLE : SYSTEM_PROMPT;
@@ -212,15 +214,17 @@ ${behaviorsText}
       byId.set(item.behaviorId, s);
     }
 
-    return behaviors.map((behavior) => ({
+    usedFallback = behaviors.some((behavior) => !byId.has(behavior.id));
+    const result = behaviors.map((behavior) => ({
       behaviorId: behavior.id,
       suggestion: byId.get(behavior.id) ?? buildFallbackSuggestion(behavior),
     }));
+    return usedFallback ? markAiFallback(result) : result;
   } catch (e) {
     console.error("행동 제안 생성 실패(JSON):", e);
-    return behaviors.map((behavior) => ({
+    return markAiFallback(behaviors.map((behavior) => ({
       behaviorId: behavior.id,
       suggestion: buildFallbackSuggestion(behavior),
-    }));
+    })));
   }
 }

@@ -11,6 +11,7 @@ import {
 import { cleanText } from "./utils/text";
 import { parseCognitiveErrorsResponse } from "./utils/llm/cognitiveErrors";
 import { formatCognitiveErrorsReferenceForCandidates } from "./utils/cognitiveErrorsPrompt";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 export type DeepCognitiveErrorDetailResult = {
   errors: Array<{
@@ -117,6 +118,7 @@ ${candidatesReference || "(none)"}
 ${uniq.join(", ")}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: DETAIL_SYSTEM_PROMPT,
@@ -144,14 +146,16 @@ ${uniq.join(", ")}
 
     const missing = uniq.filter((c) => !errors.some((e) => e.index === c));
     if (missing.length > 0) {
+      usedFallback = true;
       errors.push(...fallbackDetail(missing).errors);
     }
 
     errors.sort((a, b) => uniq.indexOf(a.index) - uniq.indexOf(b.index));
 
-    return { errors };
+    const result = { errors };
+    return usedFallback ? markAiFallback(result) : result;
   } catch (e) {
     console.error("deep 인지오류 상세 분석 실패(JSON):", e);
-    return fallbackDetail(uniq);
+    return markAiFallback(fallbackDetail(uniq));
   }
 }

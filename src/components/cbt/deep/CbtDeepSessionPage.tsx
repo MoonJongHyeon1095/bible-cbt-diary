@@ -20,6 +20,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { startPerf } from "@/lib/utils/perf";
 import { CbtDeepAutoThoughtSection } from "./center/CbtDeepAutoThoughtSection";
 import { CbtDeepIncidentSection } from "./center/CbtDeepIncidentSection";
 import { CbtDeepSelectSection } from "./center/CbtDeepSelectSection";
@@ -132,6 +133,7 @@ function CbtDeepSessionPageContent() {
       if (lastLoadKeyRef.current === loadKey && mainNote && !notesLoading) {
         return;
       }
+      const endPerf = startPerf(`deep:loadNotes:${loadKey}`);
       inFlightRef.current = true;
       lastLoadKeyRef.current = loadKey;
       const requestId = ++requestIdRef.current;
@@ -212,6 +214,7 @@ function CbtDeepSessionPageContent() {
         setNotesLoading(false);
       } finally {
         inFlightRef.current = false;
+        endPerf();
       }
     };
 
@@ -389,6 +392,7 @@ function CbtDeepSessionPageContent() {
             onInputChange={setUserInput}
             onNext={() => setStep("emotion")}
             mainNote={mainNote}
+            subNotes={subNotes}
           />
         )}
 

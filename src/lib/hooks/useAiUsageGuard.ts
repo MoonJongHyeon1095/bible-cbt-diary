@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
+import { startPerf } from "@/lib/utils/perf";
 
 type UseAiUsageGuardOptions = {
   enabled?: boolean;
@@ -21,7 +22,9 @@ export function useAiUsageGuard({
   const [gateReady, setGateReady] = useState(!enabled);
 
   const checkUsage = useCallback(async () => {
+    const endPerf = startPerf("ai:usageGuard");
     if (cache && hasCheckedRef.current) {
+      endPerf();
       return lastAllowedRef.current ?? true;
     }
     if (cache) {
@@ -38,8 +41,10 @@ export function useAiUsageGuard({
     lastAllowedRef.current = allowed;
     if (!allowed) {
       router.replace(redirectTo);
+      endPerf();
       return false;
     }
+    endPerf();
     return true;
   }, [cache, pushToast, redirectTo, router]);
 

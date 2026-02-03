@@ -21,6 +21,8 @@
     "@supabase/supabase-js": "^2.91.1",
     "d3-force": "^3.0.0",
     "elkjs": "^0.9.3",
+    "embla-carousel": "^8.6.0",
+    "embla-carousel-react": "^8.6.0",
     "lucide-react": "^0.563.0",
     "next": "15.5.9",
     "react": "18.2.0",

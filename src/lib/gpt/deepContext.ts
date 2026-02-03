@@ -3,6 +3,7 @@ import { callGptText } from "./client";
 import type { DeepNoteContext } from "./deepThought.types";
 import { cleanText } from "./utils/text";
 import { parseDeepContextResponse } from "./utils/llm/deepContext";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 export type DeepInternalContext = {
   salient: {
@@ -243,6 +244,6 @@ ${subs2.map(formatNote).join("\n\n") || "(none)"}
     return { salient, cbt, openQuestions, nextStepHint };
   } catch (error) {
     console.error("deep internal context error:", error);
-    return getFallbackDeepInternalContext();
+    return markAiFallback(getFallbackDeepInternalContext());
   }
 }

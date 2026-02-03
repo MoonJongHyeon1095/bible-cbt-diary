@@ -5,6 +5,7 @@ import type { DeepNoteContext, SDTKey } from "./deepThought.types";
 import { normalizeStringArray } from "./utils/array";
 import { normalizeTextValue } from "./utils/text";
 import { parseSdtResponse } from "./utils/llm/sdtThoughts";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 export type DeepAutoThoughtResult = {
   sdt: Record<
@@ -199,6 +200,7 @@ ${subs2.map(formatNote).join("\n\n") || "(none)"}
 ${formatDeepInternalContext(internal)}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -211,30 +213,30 @@ ${formatDeepInternalContext(internal)}
     const sdt = (parsed ?? {}) as Partial<Record<SDTKey, unknown>>;
 
     // schema expects arrays with 1 object each
-    const relItem =
-      normalizeThoughtItem(pickFirstItem(sdt.relatedness)) ??
-      FALLBACK.relatedness;
-    const comItem =
-      normalizeThoughtItem(pickFirstItem(sdt.competence)) ??
-      FALLBACK.competence;
-    const autItem =
-      normalizeThoughtItem(pickFirstItem(sdt.autonomy)) ?? FALLBACK.autonomy;
+    const relCandidate = normalizeThoughtItem(pickFirstItem(sdt.relatedness));
+    const comCandidate = normalizeThoughtItem(pickFirstItem(sdt.competence));
+    const autCandidate = normalizeThoughtItem(pickFirstItem(sdt.autonomy));
+    const relItem = relCandidate ?? FALLBACK.relatedness;
+    const comItem = comCandidate ?? FALLBACK.competence;
+    const autItem = autCandidate ?? FALLBACK.autonomy;
+    usedFallback = !relCandidate || !comCandidate || !autCandidate;
 
-    return {
+    const result = {
       sdt: {
         relatedness: relItem,
         competence: comItem,
         autonomy: autItem,
       },
     };
+    return usedFallback ? markAiFallback(result) : result;
   } catch (error) {
     console.error("deep sdt automatic thoughts error:", error);
-    return {
+    return markAiFallback({
       sdt: {
         relatedness: FALLBACK.relatedness,
         competence: FALLBACK.competence,
         autonomy: FALLBACK.autonomy,
       },
-    };
+    });
   }
 }

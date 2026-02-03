@@ -1,10 +1,8 @@
 import { useCbtAlternativeThoughts } from "@/components/cbt/hooks/useCbtAlternativeThoughts";
-import Button from "@/components/ui/Button";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
 } from "@/lib/types/cbtTypes";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
@@ -12,6 +10,10 @@ import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSecti
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "./components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "./components/CbtMinimalAlternativeThoughtErrorState";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtMinimalAlternativeThoughtSectionProps {
   userInput: string;
@@ -37,6 +39,7 @@ export function CbtMinimalAlternativeThoughtSection({
     alternativeThoughts,
     thoughtsLoading,
     thoughtsError,
+    isFallback,
     generateAlternatives,
   } = useCbtAlternativeThoughts({
     step: 4,
@@ -56,18 +59,12 @@ export function CbtMinimalAlternativeThoughtSection({
 
   const currentThought = alternativeThoughts[currentIndex];
 
-  const canGoPrev = currentIndex > 0;
-  const canGoNext = currentIndex < alternativeThoughts.length - 1;
-
-  const handlePrev = () => {
-    if (!canGoPrev) return;
-    setCurrentIndex((prev) => prev - 1);
-  };
-
-  const handleNext = () => {
-    if (!canGoNext) return;
-    setCurrentIndex((prev) => prev + 1);
-  };
+  const { emblaRef, controls } = useEmblaPagination({
+    slidesCount: alternativeThoughts.length,
+    draggable: !thoughtsLoading,
+    selectedIndex: currentIndex,
+    onSelectIndex: setCurrentIndex,
+  });
 
   if (thoughtsLoading) {
     return (
@@ -95,14 +92,26 @@ export function CbtMinimalAlternativeThoughtSection({
         <div className={styles.headerInset}>
           <CbtMinimalStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
+        {isFallback && (
+          <AiFallbackNotice onRetry={() => void generateAlternatives({ force: true })} />
+        )}
 
-        <div className={styles.inlineCard}>
-          <CbtMinimalAlternativeThoughtBodySection
-            thought={currentThought?.thought ?? ""}
-            technique={currentThought?.technique}
-            fallback="대안사고를 불러오는 중입니다."
-          />
-        </div>
+        <CbtCarousel emblaRef={emblaRef}>
+          {alternativeThoughts.map((thought, index) => (
+            <div
+              key={`${thought.thought}-${index}`}
+              className={styles.emblaSlide}
+            >
+              <div className={styles.inlineCard}>
+                <CbtMinimalAlternativeThoughtBodySection
+                  thought={thought.thought ?? ""}
+                  technique={thought.technique}
+                  fallback="대안사고를 불러오는 중입니다."
+                />
+              </div>
+            </div>
+          ))}
+        </CbtCarousel>
 
         <div className={styles.formStack}>
           <CbtMinimalFloatingNextButton
@@ -112,28 +121,11 @@ export function CbtMinimalAlternativeThoughtSection({
             ariaLabel="이 생각으로 진행"
             disabled={!currentThought?.thought}
           />
-          <div className={styles.controlRow}>
-            <Button
-              type="button"
-              variant="unstyled"
-              onClick={handlePrev}
-              aria-label="이전 생각 보기"
-              disabled={!canGoPrev}
-              className={styles.smallIconButton}
-            >
-              <ChevronLeft size={18} strokeWidth={2.5} />
-            </Button>
-            <Button
-              type="button"
-              variant="unstyled"
-              onClick={handleNext}
-              aria-label="다음 생각 보기"
-              disabled={!canGoNext}
-              className={styles.smallIconButton}
-            >
-              <ChevronRight size={18} strokeWidth={2.5} />
-            </Button>
-          </div>
+          <CbtCarouselDots
+            count={alternativeThoughts.length}
+            currentIndex={currentIndex}
+            onSelect={controls.scrollTo}
+          />
         </div>
       </div>
     </div>

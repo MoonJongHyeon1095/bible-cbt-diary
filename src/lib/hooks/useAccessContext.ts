@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { AccessMode, AccessContext } from "@/lib/types/access";
 import { isGuestStorageAvailable } from "@/lib/utils/guestStorage";
+import { startPerf } from "@/lib/utils/perf";
 
 type AccessState = AccessContext & {
   isLoading: boolean;
@@ -21,6 +22,7 @@ export const useAccessContext = () => {
 
   useEffect(() => {
     const resolveSession = async () => {
+      const endPerf = startPerf("access:resolveSession");
       const { data } = await supabase.auth.getSession();
       const accessToken = data.session?.access_token ?? null;
       if (accessToken) {
@@ -30,6 +32,7 @@ export const useAccessContext = () => {
           userEmail: data.session?.user?.email ?? null,
           isLoading: false,
         });
+        endPerf();
         return;
       }
       setState({
@@ -38,6 +41,7 @@ export const useAccessContext = () => {
         userEmail: null,
         isLoading: false,
       });
+      endPerf();
     };
 
     resolveSession();

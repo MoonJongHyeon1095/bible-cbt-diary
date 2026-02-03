@@ -5,7 +5,8 @@ import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextBu
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 import styles from "../MinimalStyles.module.css";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 
 interface CbtMinimalIncidentSectionProps {
   userInput: string;
@@ -24,12 +25,11 @@ export function CbtMinimalIncidentSection({
   const description =
     "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const [isExampleOpen, setIsExampleOpen] = useState(false);
 
   const handleShowExample = () => {
     if (!ALL_EXAMPLES.length) return;
-    const index = Math.floor(Math.random() * ALL_EXAMPLES.length);
-    const example = ALL_EXAMPLES[index]?.text;
-    if (example) onInputChange(example);
+    setIsExampleOpen(true);
   };
 
   const handleNext = () => {
@@ -53,6 +53,17 @@ export function CbtMinimalIncidentSection({
     window.scrollTo({ top, behavior: "auto" });
   }, []);
 
+  const exampleItems = useMemo(
+    () =>
+      ALL_EXAMPLES.map((example, index) => ({
+        id: `example-${index}`,
+        title: `예시 ${index + 1}`,
+        body: example.text,
+        applyText: example.text,
+      })),
+    [],
+  );
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
@@ -68,6 +79,18 @@ export function CbtMinimalIncidentSection({
 
         <CbtMinimalFloatingNextButton onClick={handleNext} />
       </div>
+
+      <CbtCarouselModal
+        open={isExampleOpen}
+        title="예시를 골라서 시작해볼까요?"
+        items={exampleItems}
+        onClose={() => setIsExampleOpen(false)}
+        onSelect={(value) => onInputChange(value)}
+        emptyMessage="현재 보여줄 예시가 없습니다."
+        selectOnSlide
+        showSelectButton={false}
+        plainSlides
+      />
     </div>
   );
 }

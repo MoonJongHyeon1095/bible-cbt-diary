@@ -2,9 +2,13 @@ import { generateDeepAlternativeThoughts } from "@/lib/ai";
 import { AlternativeThought } from "@/lib/gpt/alternative";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const alternativeThoughtsCache = new Map<string, AlternativeThought[]>();
+const alternativeThoughtsCache = new Map<
+  string,
+  { thoughts: AlternativeThought[]; isFallback: boolean }
+>();
 
 type UseDeepAlternativeThoughtsParams = {
   step: number;
@@ -30,6 +34,7 @@ export function useCbtDeepAlternativeThoughts({
   >([]);
   const [thoughtsLoading, setThoughtsLoading] = useState(false);
   const [thoughtsError, setThoughtsError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const inFlightRef = useRef(false);
 
   const requestKey = JSON.stringify({
@@ -47,7 +52,8 @@ export function useCbtDeepAlternativeThoughts({
       if (!internalContext) return;
       const cached = alternativeThoughtsCache.get(requestKey);
       if (!options?.force && cached) {
-        setAlternativeThoughts(cached);
+        setAlternativeThoughts(cached.thoughts);
+        setIsFallback(cached.isFallback);
         setThoughtsError(null);
         setThoughtsLoading(false);
         return;
@@ -56,6 +62,7 @@ export function useCbtDeepAlternativeThoughts({
       inFlightRef.current = true;
       setThoughtsLoading(true);
       setThoughtsError(null);
+      setIsFallback(false);
 
       try {
         const thoughts = await generateDeepAlternativeThoughts(
@@ -67,8 +74,10 @@ export function useCbtDeepAlternativeThoughts({
           previousAlternatives,
         );
 
-        alternativeThoughtsCache.set(requestKey, thoughts);
+        const fallback = isAiFallback(thoughts);
+        alternativeThoughtsCache.set(requestKey, { thoughts, isFallback: fallback });
         setAlternativeThoughts(thoughts);
+        setIsFallback(fallback);
       } catch (err) {
         setThoughtsError(
           err instanceof Error ? err.message : "오류가 발생했습니다.",
@@ -113,6 +122,7 @@ export function useCbtDeepAlternativeThoughts({
     alternativeThoughts,
     thoughtsLoading,
     thoughtsError,
+    isFallback,
     generateAlternatives,
   };
 }

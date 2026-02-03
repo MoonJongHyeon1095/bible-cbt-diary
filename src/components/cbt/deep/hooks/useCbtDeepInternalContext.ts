@@ -3,6 +3,7 @@ import { createDeepInternalContext } from "@/lib/ai";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { startPerf } from "@/lib/utils/perf";
 
 const contextCache = new Map<string, DeepInternalContext>();
 const inFlight = new Map<string, Promise<DeepInternalContext>>();
@@ -41,6 +42,7 @@ export function useCbtDeepInternalContext(
 
     const load = async () => {
       const requestId = ++requestIdRef.current;
+      const endPerf = startPerf(`deep:internalContext:${key}`);
       setLoading(true);
       setError(null);
       try {
@@ -61,6 +63,7 @@ export function useCbtDeepInternalContext(
         setLoading(false);
       } finally {
         inFlight.delete(key);
+        endPerf();
       }
     };
 

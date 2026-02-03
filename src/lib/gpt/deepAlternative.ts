@@ -7,6 +7,7 @@ import {
 } from "./deepContext";
 import { cleanText } from "./utils/text";
 import { parseAlternativesResponse } from "./utils/llm/alternatives";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 const TECHNIQUES: Array<{
   technique: TechniqueType;
@@ -158,6 +159,7 @@ ${cognitiveErrorText}
 ${previousAltText || "(none)"}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -179,9 +181,11 @@ ${previousAltText || "(none)"}
       byTechnique[technique] = t;
     }
 
-    return toResultByTechnique(byTechnique);
+    usedFallback = TECHNIQUES.some((tech) => !byTechnique[tech.technique]);
+    const result = toResultByTechnique(byTechnique);
+    return usedFallback ? markAiFallback(result) : result;
   } catch (error) {
     console.error("deep alternative error:", error);
-    return toResultByTechnique({});
+    return markAiFallback(toResultByTechnique({}));
   }
 }

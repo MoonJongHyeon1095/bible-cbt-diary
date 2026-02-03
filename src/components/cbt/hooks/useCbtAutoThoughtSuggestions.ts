@@ -4,6 +4,8 @@ import {
   getAutoThoughtCache,
   setAutoThoughtCache,
 } from "@/components/cbt/utils/storage/minimalAutoThoughtCache";
+import { startPerf } from "@/lib/utils/perf";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 
 type UseAutoThoughtSuggestionsParams = {
   userInput: string;
@@ -23,6 +25,7 @@ export function useCbtAutoThoughtSuggestions({
   const [hasShownCustomPrompt, setHasShownCustomPrompt] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const inFlightKeyRef = useRef<string | null>(null);
 
   const cacheKey = useMemo(
@@ -34,14 +37,17 @@ export function useCbtAutoThoughtSuggestions({
     if (!userInput.trim() || !emotion) return;
     if (inFlightKeyRef.current === cacheKey) return;
     inFlightKeyRef.current = cacheKey;
+    const endPerf = startPerf(`ai:autoThoughts:${cacheKey}`);
     setLoading(true);
     setError(null);
+    setIsFallback(false);
     onResetSelection();
     try {
       const result = await generateExtendedAutomaticThoughts(
         userInput,
         emotion,
       );
+      setIsFallback(isAiFallback(result));
       const nextThoughts = result.sdtThoughts.map((item) => ({
         belief: item.belief,
         emotionReason: item.emotionReason,
@@ -53,6 +59,7 @@ export function useCbtAutoThoughtSuggestions({
         thoughts: nextThoughts,
         index: 0,
         hasShownCustomPrompt: false,
+        isFallback: isAiFallback(result),
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
@@ -61,6 +68,7 @@ export function useCbtAutoThoughtSuggestions({
         inFlightKeyRef.current = null;
       }
       setLoading(false);
+      endPerf();
     }
   };
 
@@ -71,6 +79,7 @@ export function useCbtAutoThoughtSuggestions({
       setThoughts(cached.thoughts);
       setCurrentIndex(cached.index);
       setHasShownCustomPrompt(cached.hasShownCustomPrompt);
+      setIsFallback(Boolean(cached.isFallback));
       setLoading(false);
       setError(null);
       return;
@@ -96,9 +105,10 @@ export function useCbtAutoThoughtSuggestions({
       thoughts,
       index: currentIndex,
       hasShownCustomPrompt,
+      isFallback,
     };
     setAutoThoughtCache(cacheKey, entry);
-  }, [cacheKey, currentIndex, hasShownCustomPrompt, thoughts]);
+  }, [cacheKey, currentIndex, hasShownCustomPrompt, thoughts, isFallback]);
 
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < thoughts.length - 1;
@@ -115,13 +125,25 @@ export function useCbtAutoThoughtSuggestions({
     onResetSelection();
   };
 
+  const setIndex = (index: number) => {
+    if (thoughts.length === 0) return;
+    if (!Number.isFinite(index)) return;
+    const nextIndex = Math.max(0, Math.min(index, thoughts.length - 1));
+    setCurrentIndex(nextIndex);
+    onResetSelection();
+  };
+
   return {
+    thoughts,
+    currentIndex,
     currentThought,
     loading,
     error,
+    isFallback,
     shouldShowCustom: hasShownCustomPrompt,
     goNextThought,
     goPrevThought,
+    setIndex,
     canGoPrev,
     canGoNext,
     reloadThoughts: loadThoughts,

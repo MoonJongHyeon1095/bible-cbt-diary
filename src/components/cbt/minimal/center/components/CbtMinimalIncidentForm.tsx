@@ -20,7 +20,7 @@ export function CbtMinimalIncidentForm({
   return (
     <div className={styles.formStack}>
       <div
-        className={`${styles.inputWrap} ${
+        className={`${styles.inputWrap} ${styles.incidentInputCard} ${
           userInput.trim() ? styles.inputWrapFilled : ""
         }`}
       >
@@ -30,7 +30,7 @@ export function CbtMinimalIncidentForm({
           onChange={(event) => onInputChange(event.target.value)}
           placeholder=""
           rows={1}
-          className={styles.textarea}
+          className={`${styles.textarea} ${styles.incidentTextarea}`}
         />
       </div>
       <Button

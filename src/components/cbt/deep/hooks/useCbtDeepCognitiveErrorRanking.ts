@@ -6,6 +6,7 @@ import {
   type ErrorIndex,
 } from "@/lib/ai";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 
 type DetailItem = {
   index: ErrorIndex;
@@ -17,8 +18,10 @@ type RankedItem = { index: ErrorIndex; reason: string; evidenceQuote?: string };
 type CognitiveErrorCacheEntry = {
   ranked: RankedItem[];
   detailByIndex: Partial<Record<ErrorIndex, DetailItem>>;
+  detailFallbackByIndex: Partial<Record<ErrorIndex, boolean>>;
   pageIndex: number;
   withinIndex: number;
+  rankFallback: boolean;
 };
 
 type UseDeepCognitiveErrorRankingParams = {
@@ -44,6 +47,10 @@ export function useCbtDeepCognitiveErrorRanking({
   const [rankLoading, setRankLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [rankFallback, setRankFallback] = useState(false);
+  const [detailFallbackByIndex, setDetailFallbackByIndex] = useState<
+    Partial<Record<ErrorIndex, boolean>>
+  >({});
   const pendingDetailRef = useRef<Set<ErrorIndex>>(new Set());
   const inFlightKeyRef = useRef<string | null>(null);
   const cacheKey = useMemo(() => {
@@ -56,9 +63,11 @@ export function useCbtDeepCognitiveErrorRanking({
   const resetState = () => {
     setRanked([]);
     setDetailByIndex({});
+    setDetailFallbackByIndex({});
     setPageIndex(0);
     setWithinIndex(0);
     setError(null);
+    setRankFallback(false);
     pendingDetailRef.current.clear();
   };
 
@@ -77,10 +86,18 @@ export function useCbtDeepCognitiveErrorRanking({
         internalContext,
         unique,
       );
+      const detailFallback = isAiFallback(detail);
       setDetailByIndex((prev) => {
         const next = { ...prev };
         detail.errors.forEach((item) => {
           next[item.index] = { index: item.index, analysis: item.analysis };
+        });
+        return next;
+      });
+      setDetailFallbackByIndex((prev) => {
+        const next = { ...prev };
+        detail.errors.forEach((item) => {
+          next[item.index] = detailFallback;
         });
         return next;
       });
@@ -100,6 +117,7 @@ export function useCbtDeepCognitiveErrorRanking({
     try {
       const result = await rankDeepCognitiveErrors(userInput, thought);
       setRanked(result.ranked);
+      setRankFallback(isAiFallback(result));
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
     } finally {
@@ -116,8 +134,10 @@ export function useCbtDeepCognitiveErrorRanking({
     if (cached) {
       setRanked(cached.ranked);
       setDetailByIndex(cached.detailByIndex);
+      setDetailFallbackByIndex(cached.detailFallbackByIndex);
       setPageIndex(cached.pageIndex);
       setWithinIndex(cached.withinIndex);
+      setRankFallback(cached.rankFallback);
       setRankLoading(false);
       setDetailLoading(false);
       setError(null);
@@ -144,10 +164,20 @@ export function useCbtDeepCognitiveErrorRanking({
     cognitiveErrorCache.set(cacheKey, {
       ranked,
       detailByIndex,
+      detailFallbackByIndex,
       pageIndex,
       withinIndex,
+      rankFallback,
     });
-  }, [cacheKey, detailByIndex, pageIndex, ranked, withinIndex]);
+  }, [
+    cacheKey,
+    detailByIndex,
+    detailFallbackByIndex,
+    pageIndex,
+    ranked,
+    rankFallback,
+    withinIndex,
+  ]);
 
   useEffect(() => {
     setWithinIndex(0);
@@ -164,6 +194,9 @@ export function useCbtDeepCognitiveErrorRanking({
   const currentDetail = currentRankItem
     ? detailByIndex[currentRankItem.index]
     : null;
+  const currentDetailFallback = currentRankItem
+    ? Boolean(detailFallbackByIndex[currentRankItem.index])
+    : false;
   const currentMeta = currentRankItem
     ? COGNITIVE_ERRORS_BY_INDEX[currentRankItem.index]
     : undefined;
@@ -196,10 +229,25 @@ export function useCbtDeepCognitiveErrorRanking({
     }
   };
 
+  const setCurrentIndex = (index: number) => {
+    if (ranked.length === 0) return;
+    if (!Number.isFinite(index)) return;
+    const next = Math.max(0, Math.min(index, ranked.length - 1));
+    const nextPage = Math.floor(next / BATCH_SIZE);
+    const nextWithin = next % BATCH_SIZE;
+    setPageIndex(nextPage);
+    setWithinIndex(nextWithin);
+  };
+
   return {
+    ranked,
+    detailByIndex,
     currentRankItem,
     currentDetail,
     currentMeta,
+    currentIndex,
+    setCurrentIndex,
+    isFallback: rankFallback || currentDetailFallback,
     loading: rankLoading && ranked.length === 0,
     error,
     rankLoading,

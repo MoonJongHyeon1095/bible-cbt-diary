@@ -5,11 +5,14 @@ import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/Cbt
 import { CbtMinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorErrorState";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCbtDeepCognitiveErrorRanking } from "../hooks/useCbtDeepCognitiveErrorRanking";
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtDeepCognitiveErrorSectionProps {
   userInput: string;
@@ -28,21 +31,32 @@ export function CbtDeepCognitiveErrorSection({
 }: CbtDeepCognitiveErrorSectionProps) {
   const { pushToast } = useCbtToast();
   const {
+    ranked,
+    detailByIndex,
     currentRankItem,
     currentDetail,
     currentMeta,
+    currentIndex,
+    setCurrentIndex,
     loading,
     error,
     rankLoading,
-    handleNext,
-    handlePrev,
-    canPrev,
-    canNext,
+    isFallback,
     reload,
   } = useCbtDeepCognitiveErrorRanking({
     userInput,
     thought,
     internalContext,
+  });
+  const detailCount = ranked.reduce(
+    (count, item) => (detailByIndex[item.index]?.analysis ? count + 1 : count),
+    0,
+  );
+  const { emblaRef, controls } = useEmblaPagination({
+    slidesCount: ranked.length,
+    draggable: !loading && !rankLoading,
+    selectedIndex: currentIndex,
+    onSelectIndex: setCurrentIndex,
   });
 
   const handleSelect = () => {
@@ -84,15 +98,31 @@ export function CbtDeepCognitiveErrorSection({
         <div className={styles.headerInset}>
           <CbtMinimalStepHeaderSection title={HEADER_TEXT} />
         </div>
+        {isFallback && (
+          <AiFallbackNotice onRetry={() => void reload()} />
+        )}
 
         {currentRankItem && (
-          <CbtMinimalCognitiveErrorCard
-            title={currentMeta?.title ?? "인지오류"}
-            infoDescription={currentMeta?.description}
-            evidenceQuote={currentRankItem.evidenceQuote}
-            reason={currentRankItem.reason}
-            detail={currentDetail?.analysis}
-          />
+          <CbtCarousel emblaRef={emblaRef}>
+            {ranked.map((item, index) => {
+              const meta = COGNITIVE_ERRORS_BY_INDEX[item.index];
+              const detail = detailByIndex[item.index];
+              return (
+                <div
+                  key={`${item.index}-${index}`}
+                  className={styles.emblaSlide}
+                >
+                  <CbtMinimalCognitiveErrorCard
+                    title={meta?.title ?? "인지오류"}
+                    infoDescription={meta?.description}
+                    evidenceQuote={item.evidenceQuote}
+                    reason={item.reason}
+                    detail={detail?.analysis}
+                  />
+                </div>
+              );
+            })}
+          </CbtCarousel>
         )}
 
         <div className={styles.formStack}>
@@ -100,28 +130,12 @@ export function CbtDeepCognitiveErrorSection({
             onClick={handleSelect}
             ariaLabel="이 오류로 진행"
           />
-          <div className={styles.controlRow}>
-            <Button
-              type="button"
-              variant="unstyled"
-              onClick={handlePrev}
-              aria-label="이전 오류 보기"
-              disabled={rankLoading || !canPrev}
-              className={styles.smallIconButton}
-            >
-              <ChevronLeft size={18} strokeWidth={2.5} />
-            </Button>
-            <Button
-              type="button"
-              variant="unstyled"
-              onClick={handleNext}
-              aria-label="다음 오류 보기"
-              disabled={rankLoading || !canNext}
-              className={styles.smallIconButton}
-            >
-              <ChevronRight size={18} strokeWidth={2.5} />
-            </Button>
-          </div>
+          <CbtCarouselDots
+            count={detailCount}
+            currentIndex={currentIndex < detailCount ? currentIndex : -1}
+            onSelect={controls.scrollTo}
+            disabled={rankLoading}
+          />
         </div>
       </div>
     </div>

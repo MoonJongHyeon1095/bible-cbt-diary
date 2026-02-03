@@ -2,11 +2,13 @@
 
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { analyzeCognitiveErrorDetails } from "@/lib/ai";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   AlertCircle,
@@ -63,6 +65,7 @@ export default function EmotionNoteAddErrorPage({
   const [savedSuggestions, setSavedSuggestions] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFallback, setAiFallback] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const lastErrorRef = useRef<string | null>(null);
   const selectedErrorMeta = useMemo(
@@ -81,6 +84,7 @@ export default function EmotionNoteAddErrorPage({
     setAiSuggestion("");
     setSelectedSuggestion("");
     setAiError(null);
+    setAiFallback(false);
     setSavedSuggestions([]);
   }, [errorLabel, selectedThoughtId]);
 
@@ -131,6 +135,7 @@ export default function EmotionNoteAddErrorPage({
     setAiSuggestion("");
     setSelectedSuggestion("");
     setAiError(null);
+    setAiFallback(false);
     setSavedSuggestions([]);
   };
 
@@ -178,6 +183,7 @@ export default function EmotionNoteAddErrorPage({
     }
     setAiLoading(true);
     setAiError(null);
+    setAiFallback(false);
     setAiSuggestion("");
     try {
       const result = await analyzeCognitiveErrorDetails(
@@ -186,6 +192,7 @@ export default function EmotionNoteAddErrorPage({
         [meta.index],
         { noteProposal: true },
       );
+      setAiFallback(isAiFallback(result));
       const analysis = result.errors[0]?.analysis ?? "";
       if (!analysis.trim()) {
         throw new Error("인지오류 설명이 없습니다.");
@@ -402,6 +409,9 @@ export default function EmotionNoteAddErrorPage({
                 )}
 
                 {aiError && <div className={styles.errorBox}>{aiError}</div>}
+                {aiFallback && aiStep === "suggestions" && (
+                  <AiFallbackNotice onRetry={() => void handleGenerateSuggestion()} />
+                )}
 
                 {aiStep === "suggestions" && aiSuggestion && (
                   <AiCandidatesPanel

@@ -3,6 +3,7 @@ import { callGptText } from "./client";
 import { normalizeStringArray } from "./utils/array";
 import { normalizeTextValue } from "./utils/text";
 import { parseSdtResponse } from "./utils/llm/sdtThoughts";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 type SDTKey = "relatedness" | "competence" | "autonomy";
 type SDTLabel = "관계성" | "유능감" | "자율성";
@@ -166,6 +167,7 @@ ${situation}
 ${emotion}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -186,6 +188,7 @@ ${emotion}
     const aut = normalizeThoughtItems(sdt.autonomy)
       .map(toThoughtParts)
       .filter((item) => item.belief || item.emotionReason);
+    usedFallback = rel.length === 0 || com.length === 0 || aut.length === 0;
 
     const out: ExtendedThoughtsResult["sdtThoughts"] = [];
 
@@ -216,10 +219,11 @@ ${emotion}
     for (const t of com1) out.push({ category: "유능감", ...t });
     for (const t of aut1) out.push({ category: "자율성", ...t });
 
-    return { sdtThoughts: out };
+    const result = { sdtThoughts: out };
+    return usedFallback ? markAiFallback(result) : result;
   } catch (e) {
     console.error("확장 자동사고(SDT) 생성 실패:", e);
-    return {
+    return markAiFallback({
       sdtThoughts: [
         ...DEFAULT_SDT.relatedness.thoughts.slice(0, 1).map((t) => ({
           category: "관계성" as const,
@@ -237,6 +241,6 @@ ${emotion}
           emotionReason: "",
         })),
       ],
-    };
+    });
   }
 }

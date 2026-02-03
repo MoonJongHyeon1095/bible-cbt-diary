@@ -11,6 +11,9 @@ import { CbtMinimalAutoThoughtInputForm } from "./components/CbtMinimalAutoThoug
 import { CbtMinimalAutoThoughtTextSection } from "./components/CbtMinimalAutoThoughtTextSection";
 import styles from "../MinimalStyles.module.css";
 import Button from "@/components/ui/Button";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 
 interface CbtMinimalAutoThoughtSectionProps {
   userInput: string;
@@ -43,19 +46,25 @@ export function CbtMinimalAutoThoughtSection({
   };
 
   const {
+    thoughts,
+    currentIndex,
     currentThought,
     loading,
     error,
+    isFallback,
     shouldShowCustom,
-    goNextThought,
-    goPrevThought,
-    canGoPrev,
-    canGoNext,
+    setIndex,
     reloadThoughts,
   } = useCbtAutoThoughtSuggestions({
     userInput,
     emotion,
     onResetSelection: resetSelection,
+  });
+  const { emblaRef, controls } = useEmblaPagination({
+    slidesCount: thoughts.length,
+    draggable: !loading && !wantsCustom,
+    selectedIndex: currentIndex,
+    onSelectIndex: setIndex,
   });
 
   const handleSubmit = () => {
@@ -105,6 +114,9 @@ export function CbtMinimalAutoThoughtSection({
           )}
           </CbtMinimalStepHeaderSection>
         </div>
+        {isFallback && !loading && (
+          <AiFallbackNotice onRetry={() => void reloadThoughts()} />
+        )}
 
         {wantsCustom ? (
           <div className={styles.inlineCard}>
@@ -116,13 +128,22 @@ export function CbtMinimalAutoThoughtSection({
         ) : loading ? (
           <CbtMinimalLoadingState message="생각을 정리하고 있어요." />
         ) : (
-          <div className={styles.inlineCard}>
-            <CbtMinimalAutoThoughtTextSection
-              belief={currentThought?.belief ?? ""}
-              emotionReason={currentThought?.emotionReason ?? ""}
-              fallback="생각을 불러오는 중입니다."
-            />
-          </div>
+          <CbtCarousel emblaRef={emblaRef}>
+            {thoughts.map((thought, index) => (
+              <div
+                key={`${thought.belief}-${index}`}
+                className={styles.emblaSlide}
+              >
+                <div className={styles.inlineCard}>
+                  <CbtMinimalAutoThoughtTextSection
+                    belief={thought.belief ?? ""}
+                    emotionReason={thought.emotionReason ?? ""}
+                    fallback="생각을 불러오는 중입니다."
+                  />
+                </div>
+              </div>
+            ))}
+          </CbtCarousel>
         )}
 
         {wantsCustom ? (
@@ -131,10 +152,9 @@ export function CbtMinimalAutoThoughtSection({
           <CbtMinimalAutoThoughtControlSection
             disabled={loading}
             showCustomButton={shouldShowCustom}
-            onNextThought={goNextThought}
-            onPrevThought={goPrevThought}
-            canGoPrev={canGoPrev}
-            canGoNext={canGoNext}
+            dotsCount={thoughts.length}
+            currentIndex={currentIndex}
+            onSelectIndex={controls.scrollTo}
             onEnableCustom={() => onWantsCustomChange(true)}
           />
         )}

@@ -6,14 +6,16 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import Button from "@/components/ui/Button";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
+import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 
 interface CbtDeepIncidentSectionProps {
   userInput: string;
   onInputChange: (value: string) => void;
   onNext: () => void;
   mainNote: EmotionNote;
+  subNotes: EmotionNote[];
 }
 
 export function CbtDeepIncidentSection({
@@ -21,6 +23,7 @@ export function CbtDeepIncidentSection({
   onInputChange,
   onNext,
   mainNote,
+  subNotes,
 }: CbtDeepIncidentSectionProps) {
   const { pushToast } = useCbtToast();
   const title = (
@@ -34,9 +37,10 @@ export function CbtDeepIncidentSection({
   const headerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useCbtAutoResizeTextarea(textareaRef, [userInput]);
+  const [isPreviousOpen, setIsPreviousOpen] = useState(false);
 
   const handleUsePrevious = () => {
-    if (mainNote.trigger_text) onInputChange(mainNote.trigger_text);
+    setIsPreviousOpen(true);
   };
 
   const handleNext = () => {
@@ -95,6 +99,34 @@ export function CbtDeepIncidentSection({
     window.scrollTo({ top, behavior: "auto" });
   }, []);
 
+  const previousItems = useMemo(() => {
+    const allNotes = [mainNote, ...subNotes].filter(Boolean);
+    return allNotes
+      .map((note, index) => {
+        const trigger = note.trigger_text?.trim() ?? "";
+        if (!trigger) return null;
+      const thought = note.thought_details?.[0]?.automatic_thought?.trim();
+      const errorDetail = note.error_details?.[0];
+      const errorText =
+        errorDetail?.error_description?.trim() ||
+        errorDetail?.error_label?.trim() ||
+        "";
+      const lines = [
+        { label: "상황", text: trigger },
+        thought ? { label: "자동사고", text: thought } : null,
+        errorText ? { label: "인지오류", text: errorText } : null,
+      ].filter((line): line is { label: string; text: string } => Boolean(line));
+      return {
+        id: `note-${note.id ?? index}`,
+        title: index === 0 ? "최근 기록" : `이전 기록 ${index}`,
+        body: trigger,
+        applyText: trigger,
+        lines,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => Boolean(item));
+  }, [mainNote, subNotes]);
+
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
@@ -104,7 +136,7 @@ export function CbtDeepIncidentSection({
 
         <div className={styles.formStack}>
           <div
-            className={`${styles.inputWrap} ${
+            className={`${styles.inputWrap} ${styles.incidentInputCard} ${
               userInput.trim() ? styles.inputWrapFilled : ""
             }`}
           >
@@ -114,7 +146,7 @@ export function CbtDeepIncidentSection({
               onChange={(event) => onInputChange(event.target.value)}
               placeholder=""
               rows={1}
-              className={styles.textarea}
+              className={`${styles.textarea} ${styles.incidentTextarea}`}
             />
           </div>
           <Button
@@ -129,6 +161,18 @@ export function CbtDeepIncidentSection({
 
         <CbtMinimalFloatingNextButton onClick={handleNext} />
       </div>
+
+      <CbtCarouselModal
+        open={isPreviousOpen}
+        title="이전의 상황을 살펴볼까요?"
+        items={previousItems}
+        onClose={() => setIsPreviousOpen(false)}
+        onSelect={(value) => onInputChange(value)}
+        emptyMessage="이전 기록을 찾지 못했습니다."
+        selectOnSlide
+        showSelectButton={false}
+        plainSlides
+      />
     </div>
   );
 }

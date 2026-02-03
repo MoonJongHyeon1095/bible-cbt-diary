@@ -2,6 +2,7 @@ export type AutoThoughtCacheEntry = {
   thoughts: Array<{ belief: string; emotionReason: string }>;
   index: number;
   hasShownCustomPrompt: boolean;
+  isFallback?: boolean;
 };
 
 const AUTO_THOUGHT_STORAGE_PREFIX = "minimal-auto-thoughts:";
@@ -34,6 +35,7 @@ export function getAutoThoughtCache(cacheKey: string) {
             })),
             index: parsed.index ?? 0,
             hasShownCustomPrompt: parsed.hasShownCustomPrompt ?? false,
+            isFallback: false,
           }
         : (parsed as AutoThoughtCacheEntry);
     autoThoughtCache.set(cacheKey, normalized);

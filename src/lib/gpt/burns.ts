@@ -4,6 +4,7 @@ import {
   parseBurnsEmpathyResponse,
   type BurnsEmpathyFields,
 } from "./utils/llm/burns";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 export type BurnsEmpathyResult = BurnsEmpathyFields;
 
@@ -120,6 +121,7 @@ ${intensityLine}
 ${thought}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -138,15 +140,21 @@ ${thought}
     };
 
     const fb = FALLBACK(emotion, thought);
-    return {
+    usedFallback = !result.thoughtEmpathy ||
+      !result.emotionEmpathy ||
+      !result.iStatement ||
+      !result.soothing ||
+      !result.observedSelf;
+    const out = {
       thoughtEmpathy: result.thoughtEmpathy || fb.thoughtEmpathy,
       emotionEmpathy: result.emotionEmpathy || fb.emotionEmpathy,
       iStatement: result.iStatement || fb.iStatement,
       soothing: result.soothing || fb.soothing,
       observedSelf: result.observedSelf || fb.observedSelf,
     };
+    return usedFallback ? markAiFallback(out) : out;
   } catch (e) {
     console.error("번즈 공감 생성 실패(JSON):", e);
-    return FALLBACK(emotion, thought);
+    return markAiFallback(FALLBACK(emotion, thought));
   }
 }

@@ -1,0 +1,34 @@
+.notice {
+  color: #fee2e2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: nowrap;
+}
+
+.text {
+  display: grid;
+  gap: 4px;
+}
+
+.title {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.desc {
+  font-size: 0.78rem;
+  color: rgba(254, 226, 226, 0.85);
+}
+
+.action {
+  flex-shrink: 0;
+}
+
+@media (max-width: 600px) {
+  .notice {
+    align-items: center;
+  }
+}

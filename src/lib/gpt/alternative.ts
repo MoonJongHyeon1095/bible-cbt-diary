@@ -3,6 +3,7 @@
 import { callGptText } from "./client";
 import { cleanText } from "./utils/text";
 import { parseAlternativesResponse } from "./utils/llm/alternatives";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 /** =========================
  * Types
@@ -219,6 +220,7 @@ ${thought}
 ${cognitiveErrorText}
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -244,9 +246,11 @@ ${cognitiveErrorText}
       }
     }
 
-    return toResultByTechnique(byTechnique);
+    usedFallback = TECHNIQUES.some((tech) => !byTechnique[tech.technique]);
+    const result = toResultByTechnique(byTechnique);
+    return usedFallback ? markAiFallback(result) : result;
   } catch (e) {
     console.error("대안사고 생성 실패(JSON):", e);
-    return toResultByTechnique({});
+    return markAiFallback(toResultByTechnique({}));
   }
 }

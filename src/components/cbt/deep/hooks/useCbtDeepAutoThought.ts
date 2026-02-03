@@ -3,7 +3,9 @@ import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { DeepAutoThoughtResult } from "@/lib/gpt/deepThought";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { startPerf } from "@/lib/utils/perf";
 
 const buildContext = (note: EmotionNote) => buildDeepNoteContext(note);
 const deepAutoThoughtCache = new Map<
@@ -12,6 +14,7 @@ const deepAutoThoughtCache = new Map<
     items: Array<{ belief: string; emotionReason: string }>;
     autoThought: string;
     result: DeepAutoThoughtResult;
+    isFallback: boolean;
   }
 >();
 const deepAutoThoughtInFlight = new Set<string>();
@@ -38,6 +41,7 @@ export function useCbtDeepAutoThought({
   >([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isFallback, setIsFallback] = useState(false);
   const inFlightKeyRef = useRef<string | null>(null);
   const completedKeyRef = useRef<string | null>(null);
 
@@ -66,14 +70,17 @@ export function useCbtDeepAutoThought({
       setItems(cached.items);
       setAutoThought(cached.autoThought);
       setResult(cached.result);
+      setIsFallback(cached.isFallback);
       setLoading(false);
       return;
     }
     if (deepAutoThoughtInFlight.has(requestKey)) return;
     deepAutoThoughtInFlight.add(requestKey);
     inFlightKeyRef.current = requestKey;
+    const endPerf = startPerf(`deep:autoThought:${requestKey}`);
     setLoading(true);
     setError(null);
+    setIsFallback(false);
     try {
       const mainContext = buildContext(mainNote);
       const subContexts = subNotes.map(buildContext);
@@ -87,6 +94,7 @@ export function useCbtDeepAutoThought({
         internalContext,
       );
       setResult(sdt);
+      const fallback = isAiFallback(sdt);
       const nextItems = [
         {
           belief: sdt.sdt.relatedness.belief.filter(Boolean).join(" ").trim(),
@@ -108,7 +116,9 @@ export function useCbtDeepAutoThought({
         items: nextItems,
         autoThought: nextAutoThought,
         result: sdt,
+        isFallback: fallback,
       });
+      setIsFallback(fallback);
       completedKeyRef.current = requestKey;
     } catch (err) {
       setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
@@ -118,6 +128,7 @@ export function useCbtDeepAutoThought({
       }
       deepAutoThoughtInFlight.delete(requestKey);
       setLoading(false);
+      endPerf();
     }
   }, [emotion, internalContext, items.length, mainNote, requestKey, subNotes, userInput]);
 
@@ -132,6 +143,7 @@ export function useCbtDeepAutoThought({
     result,
     loading,
     error,
+    isFallback,
     reload: loadThought,
   };
 }

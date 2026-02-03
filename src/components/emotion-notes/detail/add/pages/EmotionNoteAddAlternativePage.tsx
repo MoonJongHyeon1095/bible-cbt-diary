@@ -2,10 +2,12 @@
 
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { generateContextualAlternativeThoughts } from "@/lib/ai";
+import { isAiFallback } from "@/lib/utils/aiFallback";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
@@ -73,6 +75,7 @@ export default function EmotionNoteAddAlternativePage({
   const [savedCandidates, setSavedCandidates] = useState<string[]>([]);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [aiFallback, setAiFallback] = useState(false);
   const [directText, setDirectText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const lastErrorRef = useRef<string | null>(null);
@@ -88,6 +91,7 @@ export default function EmotionNoteAddAlternativePage({
     setAiCandidates([]);
     setSelectedCandidate("");
     setAiError(null);
+    setAiFallback(false);
     setSavedCandidates([]);
   }, [selectedThoughtId, selectedErrorIds]);
 
@@ -151,6 +155,7 @@ export default function EmotionNoteAddAlternativePage({
     setSelectedCandidate("");
     setSavedCandidates([]);
     setAiError(null);
+    setAiFallback(false);
     setDirectText("");
   };
 
@@ -211,6 +216,7 @@ export default function EmotionNoteAddAlternativePage({
     if (!ready || !selectedThought) return;
     setAiLoading(true);
     setAiError(null);
+    setAiFallback(false);
     setAiCandidates([]);
     try {
       const result = await generateContextualAlternativeThoughts(
@@ -223,6 +229,7 @@ export default function EmotionNoteAddAlternativePage({
         })),
         { noteProposal: true },
       );
+      setAiFallback(isAiFallback(result));
       setAiCandidates(result);
       setAiStep("suggestions");
     } catch (aiErr) {
@@ -462,6 +469,9 @@ export default function EmotionNoteAddAlternativePage({
 
             {!aiLoading && aiError && (
               <div className={styles.errorBox}>{aiError}</div>
+            )}
+            {!aiLoading && aiFallback && aiStep === "suggestions" && (
+              <AiFallbackNotice onRetry={() => void handleGenerateCandidates()} />
             )}
 
             {!aiLoading && aiStep === "suggestions" && (

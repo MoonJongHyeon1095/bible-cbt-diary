@@ -3,6 +3,7 @@
 // src/lib/gpt/bible.ts
 import { callGptText } from "./client";
 import { parseBibleResponse, type BibleResultFields } from "./utils/llm/bible";
+import { markAiFallback } from "@/lib/utils/aiFallback";
 
 export type BibleResult = BibleResultFields;
 
@@ -74,6 +75,7 @@ ${emotion}
 위 상황과 감정에 맞는 성경 구절 1개와 짧은 기도문을 JSON 스키마로만 출력하라.
 `.trim();
 
+  let usedFallback = false;
   try {
     const raw = await callGptText(prompt, {
       systemPrompt: SYSTEM_PROMPT,
@@ -84,7 +86,12 @@ ${emotion}
     if (!result) throw new Error("No JSON object in LLM output");
 
     const fb = FALLBACK(emotion);
-    return {
+    usedFallback = !result.verse ||
+      !result.book ||
+      result.chapter == null ||
+      result.startVerse == null ||
+      !result.prayer;
+    const out = {
       verse: result.verse || fb.verse,
       book: result.book || fb.book,
       chapter: result.chapter ?? fb.chapter,
@@ -92,8 +99,9 @@ ${emotion}
       endVerse: result.endVerse ?? result.startVerse ?? fb.endVerse,
       prayer: result.prayer || fb.prayer,
     };
+    return usedFallback ? markAiFallback(out) : out;
   } catch (error) {
     console.error("성경 구절 생성 실패(JSON):", error);
-    return FALLBACK(emotion);
+    return markAiFallback(FALLBACK(emotion));
   }
 }

@@ -1,14 +1,29 @@
-import TermsGate from "@/components/common/TermsGate";
+import TermsGate from "@/components/gate/TermsGate";
 import type { Metadata } from "next";
-import { Noto_Sans_KR } from "next/font/google";
+import localFont from "next/font/local";
 import Providers from "./Providers";
 import "./globals.css";
 
-const notoSansKr = Noto_Sans_KR({
+const notoSansKr = localFont({
   variable: "--font-noto-sans-kr",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  preload: false,
+  src: [
+    { path: "../../public/fonts/noto-sans-kr/NotoSansKR-Regular.woff2", weight: "400" },
+    { path: "../../public/fonts/noto-sans-kr/NotoSansKR-Medium.woff2", weight: "500" },
+    { path: "../../public/fonts/noto-sans-kr/NotoSansKR-SemiBold.woff2", weight: "600" },
+    { path: "../../public/fonts/noto-sans-kr/NotoSansKR-Bold.woff2", weight: "700" },
+  ],
+  display: "swap",
+});
+
+const notoSerifKr = localFont({
+  variable: "--font-noto-serif-kr",
+  src: [
+    { path: "../../public/fonts/noto-serif-kr/NotoSerifKR-Regular.woff2", weight: "400" },
+    { path: "../../public/fonts/noto-serif-kr/NotoSerifKR-Medium.woff2", weight: "500" },
+    { path: "../../public/fonts/noto-serif-kr/NotoSerifKR-SemiBold.woff2", weight: "600" },
+    { path: "../../public/fonts/noto-serif-kr/NotoSerifKR-Bold.woff2", weight: "700" },
+  ],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -23,7 +38,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={notoSansKr.variable}>
+      <body className={`${notoSansKr.variable} ${notoSerifKr.variable}`}>
         <Providers>
           <TermsGate />
           {children}

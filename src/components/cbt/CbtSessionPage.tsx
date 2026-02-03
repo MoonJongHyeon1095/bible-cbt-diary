@@ -18,6 +18,7 @@ import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { Check } from "lucide-react";
 import { CbtMinimalAutoThoughtSection } from "./minimal/center/CbtMinimalAutoThoughtSection";
 import { CbtMinimalEmotionSection } from "./minimal/center/CbtMinimalEmotionSection";
 import { CbtMinimalIncidentSection } from "./minimal/center/CbtMinimalIncidentSection";
@@ -27,7 +28,7 @@ import { CbtMinimalSavingModal } from "./minimal/common/CbtMinimalSavingModal";
 import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognitiveErrorSection";
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
-import { useGate } from "@/components/notice/GateProvider";
+import { useGate } from "@/components/gate/GateProvider";
 
 type MinimalStep =
   | "incident"
@@ -305,6 +306,18 @@ function CbtSessionPageContent() {
     }
   };
 
+  const persistTourProgress = (stepIndex: number) => {
+    if (typeof window === "undefined") return;
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
+    window.localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        lastStep: stepIndex,
+        lastTotal: tourSteps.length,
+      }),
+    );
+  };
+
   return (
     <div className={styles.page}>
       <div className={styles.bgWaves} />
@@ -376,56 +389,39 @@ function CbtSessionPageContent() {
           setCurrentStep={setTourStep}
           disabledActions={disabledActions}
           setDisabledActions={setDisabledActions}
-          showCloseButton
-          components={{
-            Close: ({ onClick }) => (
-              <button
-                type="button"
-                onClick={onClick}
-                aria-label="온보딩 닫기"
-                style={{
-                  position: "absolute",
-                  top: -10,
-                  right: 10,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  borderRadius: 999,
-                  background: "rgba(22, 26, 33, 0.96)",
-                  color: "#ffffff",
-                  border: "1px solid rgba(255, 255, 255, 0.35)",
-                  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                  cursor: "pointer",
+          showCloseButton={false}
+          nextButton={({
+            Button,
+            currentStep,
+            setCurrentStep,
+            setIsOpen,
+            stepsLength,
+          }) => {
+            const lastStepIndex = Math.max(0, stepsLength - 1);
+            const isLastStep = currentStep >= lastStepIndex;
+            return (
+              <Button
+                kind="next"
+                hideArrow={isLastStep}
+                onClick={() => {
+                  if (isLastStep) {
+                    persistTourProgress(lastStepIndex);
+                    setIsOpen(false);
+                    return;
+                  }
+                  setCurrentStep(currentStep + 1);
                 }}
               >
-                닫기
-              </button>
-            ),
+                {isLastStep ? <Check size={16} strokeWidth={2.4} /> : null}
+              </Button>
+            );
           }}
           onClickClose={({ currentStep: stepIndex, setIsOpen }) => {
-            if (typeof window !== "undefined") {
-              const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-              window.localStorage.setItem(
-                storageKey,
-                JSON.stringify({
-                  lastStep: stepIndex,
-                  lastTotal: tourSteps.length,
-                }),
-              );
-            }
+            persistTourProgress(stepIndex);
             setIsOpen(false);
           }}
           onClickMask={({ currentStep: stepIndex, setIsOpen }) => {
-            if (typeof window !== "undefined") {
-              const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-              window.localStorage.setItem(
-                storageKey,
-                JSON.stringify({
-                  lastStep: stepIndex,
-                  lastTotal: tourSteps.length,
-                }),
-              );
-            }
+            persistTourProgress(stepIndex);
             setIsOpen(false);
           }}
           styles={{
@@ -439,23 +435,6 @@ function CbtSessionPageContent() {
                 "0 18px 40px rgba(8, 9, 12, 0.65), 0 0 0 1px rgba(255,255,255,0.04) inset",
               padding: "28px 18px 16px",
               overflow: "visible",
-            }),
-            close: (base) => ({
-              ...base,
-              color: "#ffffff",
-              background: "rgba(22, 26, 33, 0.96)",
-              borderRadius: 999,
-              width: 26,
-              height: 26,
-              right: 10,
-              top: -10,
-              boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255, 255, 255, 0.35)",
-              zIndex: 3,
-              opacity: 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
             }),
             badge: (base) => ({
               ...base,

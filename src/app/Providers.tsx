@@ -4,11 +4,12 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import { AuthModalProvider } from "@/components/header/AuthModalProvider";
-import Notice from "@/components/Notice";
-import { GateProvider } from "@/components/notice/GateProvider";
+import NoticeGate from "@/components/gate/NoticeGate";
+import UpdateNoticeGate from "@/components/gate/UpdateNoticeGate";
+import { GateProvider } from "@/components/gate/GateProvider";
 import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import AppUpdateGate from "@/components/AppUpdateGate";
+import AppUpdateGate from "@/components/gate/AppUpdateGate";
 
 type ProvidersProps = {
   children: ReactNode;
@@ -93,7 +94,8 @@ export default function Providers({ children }: ProvidersProps) {
       <GateProvider>
         <AuthModalProvider>
           <AppUpdateGate />
-          <Notice />
+          <UpdateNoticeGate />
+          <NoticeGate />
           {children}
         </AuthModalProvider>
       </GateProvider>

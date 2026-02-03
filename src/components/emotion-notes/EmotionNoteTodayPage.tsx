@@ -10,8 +10,9 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Check } from "lucide-react";
 import styles from "@/app/page.module.css";
-import { useGate } from "@/components/notice/GateProvider";
+import { useGate } from "@/components/gate/GateProvider";
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";
 
@@ -145,6 +146,17 @@ export default function EmotionNoteTodayPage() {
     tourSteps.length,
   ]);
 
+  const persistTourProgress = (stepIndex: number) => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(
+      TOUR_STORAGE_KEY,
+      JSON.stringify({
+        lastStep: stepIndex,
+        lastTotal: tourSteps.length,
+      }),
+    );
+  };
+
   return (
     <div className={styles.page}>
       <AppHeader />
@@ -170,54 +182,42 @@ export default function EmotionNoteTodayPage() {
           setCurrentStep={setCurrentStep}
           disabledActions={disabledActions}
           setDisabledActions={setDisabledActions}
-          showCloseButton
+          showCloseButton={false}
           components={{
-            Close: ({ onClick }) => (
-              <button
-                type="button"
-                onClick={onClick}
-                aria-label="온보딩 닫기"
-                style={{
-                  position: "absolute",
-                  top: -10,
-                  right: 10,
-                  padding: "4px 10px",
-                  fontSize: 12,
-                  fontWeight: 700,
-                  borderRadius: 999,
-                  background: "rgba(22, 26, 33, 0.96)",
-                  color: "#ffffff",
-                  border: "1px solid rgba(255, 255, 255, 0.35)",
-                  boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-                  cursor: "pointer",
+            Close: () => null,
+          }}
+          nextButton={({
+            Button,
+            currentStep: nextStepIndex,
+            setCurrentStep: setTourStepIndex,
+            setIsOpen,
+            stepsLength,
+          }) => {
+            const lastStepIndex = Math.max(0, stepsLength - 1);
+            const isLastStep = nextStepIndex >= lastStepIndex;
+            return (
+              <Button
+                kind="next"
+                hideArrow={isLastStep}
+                onClick={() => {
+                  if (isLastStep) {
+                    persistTourProgress(lastStepIndex);
+                    setIsOpen(false);
+                    return;
+                  }
+                  setTourStepIndex(nextStepIndex + 1);
                 }}
               >
-                닫기
-              </button>
-            ),
+                {isLastStep ? <Check size={16} strokeWidth={2.4} /> : null}
+              </Button>
+            );
           }}
           onClickClose={({ currentStep: step, setIsOpen }) => {
-            if (typeof window !== "undefined") {
-              window.localStorage.setItem(
-                TOUR_STORAGE_KEY,
-                JSON.stringify({
-                  lastStep: step,
-                  lastTotal: tourSteps.length,
-                }),
-              );
-            }
+            persistTourProgress(step);
             setIsOpen(false);
           }}
           onClickMask={({ currentStep: step, setIsOpen }) => {
-            if (typeof window !== "undefined") {
-              window.localStorage.setItem(
-                TOUR_STORAGE_KEY,
-                JSON.stringify({
-                  lastStep: step,
-                  lastTotal: tourSteps.length,
-                }),
-              );
-            }
+            persistTourProgress(step);
             setIsOpen(false);
           }}
           styles={{
@@ -231,23 +231,6 @@ export default function EmotionNoteTodayPage() {
                 "0 18px 40px rgba(8, 9, 12, 0.65), 0 0 0 1px rgba(255,255,255,0.04) inset",
               padding: "28px 18px 16px",
               overflow: "visible",
-            }),
-            close: (base) => ({
-              ...base,
-              color: "#ffffff",
-              background: "rgba(22, 26, 33, 0.96)",
-              borderRadius: 999,
-              width: 26,
-              height: 26,
-              right: 10,
-              top: -10,
-              boxShadow: "0 8px 18px rgba(0,0,0,0.35)",
-              border: "1px solid rgba(255, 255, 255, 0.35)",
-              zIndex: 3,
-              opacity: 1,
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
             }),
             badge: (base) => ({
               ...base,

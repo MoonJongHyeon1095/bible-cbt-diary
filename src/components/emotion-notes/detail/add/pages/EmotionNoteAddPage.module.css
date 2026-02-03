@@ -426,7 +426,7 @@
 .revealTitle {
   font-weight: 600;
   font-size: 1.05rem;
-  font-family: "Noto Serif KR", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-serif-kr), "Nanum Myeongjo", serif;
   color: #f8fafc;
 }
 

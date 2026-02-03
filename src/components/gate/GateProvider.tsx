@@ -7,6 +7,7 @@ type GateStatus = {
   update: {
     ready: boolean;
     blocking: boolean;
+    failed: boolean;
   };
   terms: {
     ready: boolean;
@@ -20,15 +21,16 @@ type GateStatus = {
 
 type GateContextValue = {
   status: GateStatus;
-  blocker: "update" | "terms" | "notice" | null;
+  blocker: "update" | "updateNotice" | "terms" | "notice" | null;
   canShowOnboarding: boolean;
   setUpdateStatus: (next: Partial<GateStatus["update"]>) => void;
   setTermsStatus: (next: Partial<GateStatus["terms"]>) => void;
   setNoticeStatus: (next: Partial<GateStatus["notice"]>) => void;
+  setNoticeState: (next: GateStatus["notice"]) => void;
 };
 
 const initialStatus: GateStatus = {
-  update: { ready: false, blocking: false },
+  update: { ready: false, blocking: false, failed: false },
   terms: { ready: false, blocking: false },
   notice: { ready: false, open: false },
 };
@@ -59,12 +61,20 @@ export function GateProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const setNoticeState = useCallback((next: GateStatus["notice"]) => {
+    setStatus((prev) => ({
+      ...prev,
+      notice: next,
+    }));
+  }, []);
+
   const blocker = useMemo<GateContextValue["blocker"]>(() => {
     if (status.update.blocking) return "update";
+    if (status.update.failed) return "updateNotice";
     if (status.terms.blocking) return "terms";
     if (status.notice.open) return "notice";
     return null;
-  }, [status.update.blocking, status.terms.blocking, status.notice.open]);
+  }, [status.update.blocking, status.update.failed, status.terms.blocking, status.notice.open]);
 
   const canShowOnboarding = useMemo(() => {
     return (
@@ -88,8 +98,17 @@ export function GateProvider({ children }: { children: ReactNode }) {
       setUpdateStatus,
       setTermsStatus,
       setNoticeStatus,
+      setNoticeState,
     }),
-    [status, blocker, canShowOnboarding, setUpdateStatus, setTermsStatus, setNoticeStatus],
+    [
+      status,
+      blocker,
+      canShowOnboarding,
+      setUpdateStatus,
+      setTermsStatus,
+      setNoticeStatus,
+      setNoticeState,
+    ],
   );
 
   return <GateContext.Provider value={value}>{children}</GateContext.Provider>;

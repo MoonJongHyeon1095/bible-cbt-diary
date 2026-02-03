@@ -7,48 +7,49 @@ import {
   type NoticeItem,
 } from "@/lib/notice/notice";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
-import { useGate } from "@/components/notice/GateProvider";
-import styles from "./Notice.module.css";
+import { useCallback, useEffect, useState } from "react";
+import { useGate } from "@/components/gate/GateProvider";
+import styles from "./NoticeGate.module.css";
 
 const NOTICE_PATHS = ["/", "/today"];
 
-export default function Notice() {
+export default function NoticeGate() {
   const [notice, setNotice] = useState<NoticeItem | null>(null);
   const pathname = usePathname();
-  const { status, setNoticeStatus } = useGate();
+  const { status, setNoticeState } = useGate();
+
+  const applyNoticeState = useCallback(
+    (nextNotice: NoticeItem | null, ready: boolean) => {
+      setNotice(nextNotice);
+      setNoticeState({ ready, open: Boolean(nextNotice) });
+    },
+    [setNoticeState],
+  );
 
   useEffect(() => {
     let active = true;
 
     const load = async () => {
       if (!status.terms.ready || !status.update.ready) {
-        setNoticeStatus({ ready: false, open: false });
+        applyNoticeState(null, false);
         return;
       }
 
-      if (status.update.blocking || status.terms.blocking) {
-        setNotice(null);
-        setNoticeStatus({ ready: true, open: false });
+      if (status.update.blocking || status.update.failed || status.terms.blocking) {
+        applyNoticeState(null, true);
         return;
       }
 
-      setNoticeStatus({ ready: false, open: false });
       if (!pathname || !NOTICE_PATHS.includes(pathname)) {
-        setNotice(null);
-        setNoticeStatus({ ready: true, open: false });
+        applyNoticeState(null, true);
         return;
       }
+
+      setNoticeState({ ready: false, open: false });
       const payload = await loadNotices();
       if (!active) return;
       const nextNotice = pickActiveNotice(payload);
-      if (!nextNotice) {
-        setNotice(null);
-        setNoticeStatus({ ready: true, open: false });
-        return;
-      }
-      setNotice(nextNotice);
-      setNoticeStatus({ ready: true });
+      applyNoticeState(nextNotice, true);
     };
 
     load();
@@ -58,19 +59,13 @@ export default function Notice() {
     };
   }, [
     pathname,
-    setNoticeStatus,
+    applyNoticeState,
     status.terms.ready,
     status.terms.blocking,
     status.update.ready,
     status.update.blocking,
+    status.update.failed,
   ]);
-
-  useEffect(() => {
-    setNoticeStatus({ open: Boolean(notice) });
-    if (notice === null) {
-      setNoticeStatus({ ready: true });
-    }
-  }, [notice, setNoticeStatus]);
 
   if (!notice) return null;
 
@@ -169,7 +164,7 @@ export default function Notice() {
               className={`${styles.noticeButton} ${styles.noticeButtonOutline}`}
               onClick={() => {
                 dismissNoticeToday(notice.id);
-                setNotice(null);
+                applyNoticeState(null, true);
               }}
             >
               오늘 그만 보기
@@ -179,7 +174,9 @@ export default function Notice() {
             <button
               type="button"
               className={`${styles.noticeButton} ${styles.noticeButtonPrimary}`}
-              onClick={() => setNotice(null)}
+              onClick={() => {
+                applyNoticeState(null, true);
+              }}
             >
               확인
             </button>

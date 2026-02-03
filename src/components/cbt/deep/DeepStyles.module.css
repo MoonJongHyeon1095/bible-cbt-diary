@@ -8,7 +8,7 @@
 .triggerItem {
   padding: 0;
   color: rgba(255, 255, 255, 0.85);
-  font-family: "Noto Serif KR", "Iropke Batang", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
   font-size: 1.05rem;
   line-height: 1.6;
   transition: transform 0.2s ease, opacity 0.2s ease;

@@ -3,7 +3,7 @@
 import { hasAcceptedTerms } from "@/lib/utils/terms";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { useGate } from "@/components/notice/GateProvider";
+import { useGate } from "@/components/gate/GateProvider";
 
 const EXEMPT_PATHS = [
   "/terms",
@@ -26,7 +26,14 @@ export default function TermsGate() {
 
     if (EXEMPT_PATHS.includes(pathname)) return;
     if (accepted) return;
-    router.replace("/terms");
+
+    const frame = window.requestAnimationFrame(() => {
+      router.replace("/terms");
+    });
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+    };
   }, [pathname, router, setTermsStatus]);
 
   return null;

@@ -19,7 +19,6 @@ export type NoticePayload = {
 
 const NOTICE_URL = process.env.NEXT_PUBLIC_NOTICE_URL;
 
-const CACHE_KEY = "notice_cache_v1";
 const DISMISSED_KEY = "notice_dismissed_v1";
 const DISMISSED_TODAY_KEY = "notice_dismissed_today_v1";
 
@@ -86,15 +85,9 @@ export async function loadNotices(): Promise<NoticePayload | null> {
     const res = await fetch(NOTICE_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`notice fetch failed: ${res.status}`);
     const data = (await res.json()) as NoticePayload;
-    localStorage.setItem(CACHE_KEY, JSON.stringify(data));
     return data;
   } catch {
-    try {
-      const cached = localStorage.getItem(CACHE_KEY);
-      return cached ? (JSON.parse(cached) as NoticePayload) : null;
-    } catch {
-      return null;
-    }
+    return null;
   }
 }
 

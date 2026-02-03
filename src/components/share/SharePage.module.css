@@ -318,7 +318,7 @@
 .publicPage {
   background: radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 55%),
     linear-gradient(180deg, #0f1115, #151a22 65%, #0f1115 100%);
-  font-family: "Noto Serif KR", "Apple SD Gothic Neo", "Nanum Myeongjo", "Noto Sans KR", serif;
+  font-family: var(--font-noto-serif-kr), "Apple SD Gothic Neo", "Nanum Myeongjo", "Noto Sans KR", serif;
   color: #f4f6fb;
 }
 

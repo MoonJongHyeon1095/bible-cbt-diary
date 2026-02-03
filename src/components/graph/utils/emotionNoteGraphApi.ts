@@ -13,13 +13,18 @@ export type EmotionNoteGraphGroupSummary = {
 export const fetchEmotionNoteGraph = async (
   accessToken: string,
   groupId: number,
+  options?: { includeMiddles?: boolean },
 ) => {
-  const response = await fetch(
-    buildApiUrl(`/api/emotion-note-graph?groupId=${groupId}`),
-    {
-      headers: buildAuthHeaders(accessToken),
-    },
+  const includeMiddles =
+    options?.includeMiddles === undefined ? true : options.includeMiddles;
+  const url = buildApiUrl(
+    `/api/emotion-note-graph?groupId=${groupId}&includeMiddles=${
+      includeMiddles ? "1" : "0"
+    }`,
   );
+  const response = await fetch(url, {
+    headers: buildAuthHeaders(accessToken),
+  });
 
   const data = response.ok
     ? ((await response.json()) as {

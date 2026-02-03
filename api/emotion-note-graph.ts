@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode.js";
-import { getQueryParam, json, methodNotAllowed, handleCors } from "./_utils.js";
+import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode.js";
+import { getQueryParam, handleCors, json, methodNotAllowed } from "./_utils.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
@@ -18,7 +18,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const action = getQueryParam(req, "action");
   const groupIdParam = getQueryParam(req, "groupId");
+  const includeMiddlesParam = getQueryParam(req, "includeMiddles");
   const groupId = Number(groupIdParam);
+  const includeMiddles =
+    includeMiddlesParam === null ||
+    includeMiddlesParam === "" ||
+    includeMiddlesParam === "1" ||
+    includeMiddlesParam === "true";
 
   const supabase = createSupabaseAdminClient();
 
@@ -88,18 +94,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  const { data: middles, error: middleError } = await supabase
-    .from("emotion_note_middles")
-    .select("id,from_note_id,to_note_id,created_at")
-    .eq("group_id", groupId)
-    .order("created_at", { ascending: true });
+  let middles: {
+    id: number;
+    from_note_id: number;
+    to_note_id: number;
+    created_at: string;
+  }[] = [];
+  if (includeMiddles) {
+    const { data: middleRows, error: middleError } = await supabase
+      .from("emotion_note_middles")
+      .select("id,from_note_id,to_note_id,created_at")
+      .eq("group_id", groupId)
+      .order("created_at", { ascending: true });
 
-  if (middleError) {
-    return json(res, 500, {
-      notes: notes ?? [],
-      middles: [],
-      message: "연결 정보를 불러오지 못했습니다.",
-    });
+    if (middleError) {
+      return json(res, 500, {
+        notes: notes ?? [],
+        middles: [],
+        message: "연결 정보를 불러오지 못했습니다.",
+      });
+    }
+
+    middles = middleRows ?? [];
   }
 
   const mappedNotes =
@@ -142,5 +158,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     }) ?? [];
 
-  return json(res, 200, { notes: mappedNotes, middles: middles ?? [] });
+  return json(res, 200, { notes: mappedNotes, middles });
 }

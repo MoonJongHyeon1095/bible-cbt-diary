@@ -167,6 +167,7 @@ function CbtDeepSessionPageContent() {
           const { response, data } = await fetchEmotionNoteGraph(
             accessToken,
             groupId,
+            { includeMiddles: false },
           );
           if (requestId !== requestIdRef.current) return;
           if (!response.ok) {

@@ -32,10 +32,11 @@ export default function EmotionNoteCard({
   const longPressOverlayHoldRef = useRef<number | null>(null);
   const [isPressing, setIsPressing] = useState(false);
   const [pressProgress, setPressProgress] = useState(0);
+  const [isTriggered, setIsTriggered] = useState(false);
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const { openAuthModal } = useAuthModal();
 
-  const longPressDuration = 800;
+  const longPressDuration = 500;
   const longPressOverlayDelay = 120;
   const timeLabel = formatKoreanDateTime(note.created_at, {
     hour: "2-digit",
@@ -87,6 +88,9 @@ export default function EmotionNoteCard({
   };
 
   const clearLongPress = (hold = true) => {
+    if (longPressTriggeredRef.current) {
+      return;
+    }
     if (longPressTimeoutRef.current !== null) {
       window.clearTimeout(longPressTimeoutRef.current);
       longPressTimeoutRef.current = null;
@@ -101,6 +105,7 @@ export default function EmotionNoteCard({
   const handlePointerDown = () => {
     clearLongPress(false);
     longPressTriggeredRef.current = false;
+    setIsTriggered(false);
     longPressOverlayDelayRef.current = window.setTimeout(() => {
       setIsPressing(true);
     }, longPressOverlayDelay);
@@ -119,7 +124,9 @@ export default function EmotionNoteCard({
     longPressRafRef.current = window.requestAnimationFrame(tick);
     longPressTimeoutRef.current = window.setTimeout(() => {
       longPressTriggeredRef.current = true;
+      setIsTriggered(true);
       setPressProgress(1);
+      setIsPressing(true);
       if (!canGoDeeper) {
         openAuthModal();
         return;
@@ -130,6 +137,10 @@ export default function EmotionNoteCard({
       const go = async () => {
         const allowed = await checkUsage();
         if (!allowed) {
+          longPressTriggeredRef.current = false;
+          setIsTriggered(false);
+          setPressProgress(0);
+          setIsPressing(false);
           return;
         }
         router.push(graphHref);
@@ -209,12 +220,26 @@ export default function EmotionNoteCard({
       >
         {canGoDeeper ? (
           <>
-            <Waypoints size={22} className={styles.longPressIcon} />
+            <span className={styles.longPressIconWrap}>
+              <span
+                className={`${styles.longPressSpinner} ${
+                  isTriggered ? styles.longPressSpinnerActive : ""
+                }`}
+              />
+              <Waypoints size={22} className={styles.longPressIcon} />
+            </span>
             <span className={styles.longPressText}>Go Deeper</span>
           </>
         ) : (
           <>
-            <Lock size={20} className={styles.longPressIcon} />
+            <span className={styles.longPressIconWrap}>
+              <span
+                className={`${styles.longPressSpinner} ${
+                  isTriggered ? styles.longPressSpinnerActive : ""
+                }`}
+              />
+              <Lock size={20} className={styles.longPressIcon} />
+            </span>
             <span className={styles.longPressText}>로그인이 필요합니다</span>
           </>
         )}

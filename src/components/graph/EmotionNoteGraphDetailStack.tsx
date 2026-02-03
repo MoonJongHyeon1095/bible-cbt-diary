@@ -7,6 +7,7 @@ import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import styles from "./EmotionNoteGraphSection.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 type ModalContent = {
   title: string;
@@ -110,7 +111,7 @@ export default function EmotionNoteGraphDetailStack({
       <div className={styles.detailStack}>
         {sectionItems.map((section) => (
           <div key={section.key} className={styles.detailStackSection}>
-            <button
+            <SafeButton mode="native"
               type="button"
               className={styles.detailStackHeader}
               onClick={() =>
@@ -127,7 +128,7 @@ export default function EmotionNoteGraphDetailStack({
               <span className={styles.detailStackCount}>
                 {section.items.length}
               </span>
-            </button>
+            </SafeButton>
             {openSection === section.key ? (
               <div className={styles.detailStackList}>
                 {section.items.map((item) => (

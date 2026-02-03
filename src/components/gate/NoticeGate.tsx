@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useGate } from "@/components/gate/GateProvider";
 import styles from "./NoticeGate.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 const NOTICE_PATHS = ["/", "/today"];
 
@@ -45,7 +46,7 @@ export default function NoticeGate() {
         return;
       }
 
-      setNoticeState({ ready: false, open: false });
+      applyNoticeState(null, false);
       const payload = await loadNotices();
       if (!active) return;
       const nextNotice = pickActiveNotice(payload);
@@ -159,7 +160,7 @@ export default function NoticeGate() {
             </a>
           )}
           {!notice.force && (
-            <button
+            <SafeButton mode="native"
               type="button"
               className={`${styles.noticeButton} ${styles.noticeButtonOutline}`}
               onClick={() => {
@@ -168,10 +169,10 @@ export default function NoticeGate() {
               }}
             >
               오늘 그만 보기
-            </button>
+            </SafeButton>
           )}
           {notice.force && (
-            <button
+            <SafeButton mode="native"
               type="button"
               className={`${styles.noticeButton} ${styles.noticeButtonPrimary}`}
               onClick={() => {
@@ -179,7 +180,7 @@ export default function NoticeGate() {
               }}
             >
               확인
-            </button>
+            </SafeButton>
           )}
         </div>
       </div>

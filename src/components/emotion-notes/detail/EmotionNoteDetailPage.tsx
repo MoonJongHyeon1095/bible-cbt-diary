@@ -6,7 +6,7 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import AppHeader from "@/components/header/AppHeader";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import {
@@ -361,7 +361,7 @@ export default function EmotionNoteDetailPage({
           <section className={styles.header}>
             <div className={styles.headerActions}>
               {noteId ? (
-                <Button
+                <SafeButton
                   type="button"
                   variant="unstyled"
                   className={`${styles.iconButton} ${styles.iconDanger}`}
@@ -370,7 +370,7 @@ export default function EmotionNoteDetailPage({
                 >
                   <Trash2 size={18} />
                   <span className={styles.srOnly}>삭제</span>
-                </Button>
+                </SafeButton>
               ) : null}
             </div>
           </section>
@@ -378,7 +378,7 @@ export default function EmotionNoteDetailPage({
             <div className={styles.confirmBar}>
               <span>이 기록을 삭제할까요?</span>
               <div className={styles.confirmActions}>
-                <Button
+                <SafeButton
                   variant="danger"
                   size="sm"
                   onClick={async () => {
@@ -392,15 +392,15 @@ export default function EmotionNoteDetailPage({
                   disabled={isDeleting}
                 >
                   삭제
-                </Button>
-                <Button
+                </SafeButton>
+                <SafeButton
                   variant="outline"
                   size="sm"
                   onClick={() => setConfirmDelete(false)}
                   disabled={isDeleting}
                 >
                   취소
-                </Button>
+                </SafeButton>
               </div>
             </div>
           ) : null}

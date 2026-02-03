@@ -1,6 +1,6 @@
 import { Undo2 } from "lucide-react";
 import styles from "../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalFloatingBackButtonProps {
   onClick: () => void;
@@ -14,7 +14,7 @@ export function CbtMinimalFloatingBackButton({
   disabled = false,
 }: CbtMinimalFloatingBackButtonProps) {
   return (
-    <Button
+    <SafeButton
       type="button"
       variant="unstyled"
       onClick={onClick}
@@ -23,6 +23,6 @@ export function CbtMinimalFloatingBackButton({
       className={styles.floatingMiniButton}
     >
       <Undo2 className={styles.floatingMiniIcon} />
-    </Button>
+    </SafeButton>
   );
 }

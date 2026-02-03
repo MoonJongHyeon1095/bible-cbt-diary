@@ -1,7 +1,7 @@
 "use client";
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -100,14 +100,14 @@ export default function EmotionNoteGraphSection({
           <p className={styles.label}>감정 노트 그래프</p>
           <h2 className={styles.title}>{noteCount}개의 감정 기록이 있습니다</h2>
         </div>
-        <Button
+        <SafeButton
           type="button"
           variant="ghost"
           onClick={() => router.push("/graph")}
         >
           <LayoutDashboard size={18} />
           노트 그룹 목록보기
-        </Button>
+        </SafeButton>
       </div>
 
       <EmotionNoteGraphCanvas

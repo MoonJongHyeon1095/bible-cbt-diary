@@ -2,7 +2,7 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
@@ -251,7 +251,7 @@ export default function EmotionNoteCalendarSection({
           <h2 className={styles.title}>{monthLabel}</h2>
         </div>
         <div className={styles.controls}>
-          <Button
+          <SafeButton
             type="button"
             variant="ghost"
             size="icon"
@@ -268,8 +268,8 @@ export default function EmotionNoteCalendarSection({
             aria-label="이전 달"
           >
             <ChevronLeft size={18} />
-          </Button>
-          <Button
+          </SafeButton>
+          <SafeButton
             type="button"
             variant="ghost"
             size="icon"
@@ -286,7 +286,7 @@ export default function EmotionNoteCalendarSection({
             aria-label="다음 달"
           >
             <ChevronRight size={18} />
-          </Button>
+          </SafeButton>
         </div>
       </header>
 
@@ -306,7 +306,7 @@ export default function EmotionNoteCalendarSection({
           const isSelected =
             selectedDate && key === formatDateKey(selectedDate);
           return (
-            <Button
+            <SafeButton
               key={key}
               type="button"
               variant="unstyled"
@@ -331,7 +331,7 @@ export default function EmotionNoteCalendarSection({
               {count > 0 ? (
                 <span className={styles.countNumber}>{count}</span>
               ) : null}
-            </Button>
+            </SafeButton>
           );
         })}
       </div>
@@ -355,7 +355,7 @@ export default function EmotionNoteCalendarSection({
               }}
               className={styles.searchInput}
             />
-            <Button
+            <SafeButton
               type="button"
               variant="unstyled"
               className={styles.searchSubmit}
@@ -363,7 +363,7 @@ export default function EmotionNoteCalendarSection({
               aria-label="검색"
             >
               <CornerDownLeft size={16} />
-            </Button>
+            </SafeButton>
           </div>
         </div>
         <EmotionNoteListSection

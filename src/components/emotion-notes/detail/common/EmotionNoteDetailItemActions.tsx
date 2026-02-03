@@ -1,7 +1,7 @@
 "use client";
 
 import { Copy, Maximize2 } from "lucide-react";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import styles from "@/components/emotion-notes/detail/EmotionNoteDetailPage.module.css";
 
 export type DetailItemActionConfig = {
@@ -32,7 +32,7 @@ export default function EmotionNoteDetailItemActions({ actions }: EmotionNoteDet
   return (
     <div className={styles.detailFooter}>
       <div className={styles.detailFooterLeft}>
-        <Button
+        <SafeButton
           type="button"
           variant="unstyled"
           className={styles.miniIconButton}
@@ -44,8 +44,8 @@ export default function EmotionNoteDetailItemActions({ actions }: EmotionNoteDet
         >
           <Copy size={16} />
           <span className={styles.srOnly}>복사</span>
-        </Button>
-        <Button
+        </SafeButton>
+        <SafeButton
           type="button"
           variant="unstyled"
           className={styles.miniIconButton}
@@ -57,7 +57,7 @@ export default function EmotionNoteDetailItemActions({ actions }: EmotionNoteDet
         >
           <Maximize2 size={16} />
           <span className={styles.srOnly}>확대</span>
-        </Button>
+        </SafeButton>
       </div>
       {timeText ? <span className={styles.detailTime}>{timeText}</span> : null}
     </div>

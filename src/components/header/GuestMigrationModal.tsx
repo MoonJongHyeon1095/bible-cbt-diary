@@ -1,7 +1,7 @@
 "use client";
 
 import { useModalOpen } from "@/components/common/useModalOpen";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import styles from "./GuestMigrationModal.module.css";
 
 type GuestMigrationModalProps = {
@@ -43,7 +43,7 @@ export default function GuestMigrationModal({
         </div>
         {error ? <p className={styles.error}>{error}</p> : null}
         <div className={styles.actions}>
-          <Button
+          <SafeButton
             type="button"
             variant="outline"
             onClick={onDecline}
@@ -51,8 +51,8 @@ export default function GuestMigrationModal({
             className={`${styles.actionButton} ${styles.declineButton}`}
           >
             아니오
-          </Button>
-          <Button
+          </SafeButton>
+          <SafeButton
             type="button"
             variant="primary"
             onClick={onConfirm}
@@ -61,7 +61,7 @@ export default function GuestMigrationModal({
             className={styles.actionButton}
           >
             이전합니다
-          </Button>
+          </SafeButton>
         </div>
       </div>
     </div>

@@ -1,5 +1,5 @@
 import styles from "../../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalAlternativeThoughtErrorStateProps {
   error: string;
@@ -15,14 +15,14 @@ export function CbtMinimalAlternativeThoughtErrorState({
       <div className={styles.sectionInner}>
         <div className={styles.errorState}>
           <p>{error}</p>
-        <Button
+        <SafeButton
           type="button"
           variant="unstyled"
           onClick={onRetry}
           className={styles.secondaryButton}
         >
           다시 불러오기
-        </Button>
+        </SafeButton>
         </div>
       </div>
     </div>

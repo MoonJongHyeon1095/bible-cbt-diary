@@ -1,7 +1,7 @@
 import { ArrowRight } from "lucide-react";
 import { createPortal } from "react-dom";
 import styles from "../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalFloatingNextButtonProps {
   onClick: () => void;
@@ -17,7 +17,7 @@ export function CbtMinimalFloatingNextButton({
   dataTour,
 }: CbtMinimalFloatingNextButtonProps) {
   const button = (
-    <Button
+    <SafeButton
       type="button"
       variant="unstyled"
       onClick={onClick}
@@ -27,7 +27,7 @@ export function CbtMinimalFloatingNextButton({
       className={styles.floatingButton}
     >
       <ArrowRight className={styles.floatingIcon} />
-    </Button>
+    </SafeButton>
   );
 
   if (typeof document === "undefined") {

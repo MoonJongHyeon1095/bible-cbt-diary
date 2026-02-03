@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 type CbtCarouselDotsProps = {
   count: number;
@@ -32,7 +33,7 @@ export default function CbtCarouselDots({
       {visible.map((index) => {
         const isActive = index === safeIndex;
         return (
-          <button
+          <SafeButton mode="native"
             key={`dot-${index}`}
             type="button"
             className={`${styles.carouselDot} ${

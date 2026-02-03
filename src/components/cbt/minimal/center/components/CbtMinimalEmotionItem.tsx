@@ -1,7 +1,7 @@
 import { Check } from "lucide-react";
 import { EMOTIONS } from "@/lib/constants/emotions";
 import styles from "../../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 type EmotionItem = (typeof EMOTIONS)[number];
 
@@ -17,7 +17,7 @@ export function CbtMinimalEmotionItem({
   onSelect,
 }: CbtMinimalEmotionItemProps) {
   return (
-    <Button
+    <SafeButton
       type="button"
       variant="unstyled"
       onClick={() => onSelect(emotion.label)}
@@ -30,6 +30,6 @@ export function CbtMinimalEmotionItem({
         <span>{emotion.label}</span>
         {isSelected && <Check className={styles.floatingMiniIcon} />}
       </span>
-    </Button>
+    </SafeButton>
   );
 }

@@ -5,6 +5,7 @@ import { Check } from "lucide-react";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import deepStyles from "../DeepStyles.module.css";
 import { createPortal } from "react-dom";
+import SafeButton from "@/components/ui/SafeButton";
 
 type CbtDeepSelectSectionProps = {
   mainNote: EmotionNote;
@@ -127,7 +128,7 @@ export function CbtDeepSelectSection({
                 common.errors.length > 0 ||
                 common.behaviors.length > 0;
               return (
-                <button
+                <SafeButton mode="native"
                   key={note.id}
                   type="button"
                   className={`${deepStyles.selectPick} ${
@@ -209,7 +210,7 @@ export function CbtDeepSelectSection({
                       <Check size={16} />
                     </span>
                   )}
-                </button>
+                </SafeButton>
               );
             })
           )}

@@ -2,7 +2,7 @@
 
 import { getOAuthRedirectTo } from "@/lib/auth/oauth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useModalOpen } from "@/components/common/useModalOpen";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
@@ -214,14 +214,14 @@ export default function AuthModal({
               )}
             </div>
           </div>
-          <Button
+          <SafeButton
             type="button"
             variant="unstyled"
             className={styles.close}
             onClick={onClose}
           >
             닫기
-          </Button>
+          </SafeButton>
         </header>
         {isInAppBrowser && (
           <div className={styles.inAppNotice}>
@@ -231,7 +231,7 @@ export default function AuthModal({
             <p className={styles.inAppDescription}>
               Safari/Chrome 같은 외부 브라우저로 열어주세요.
             </p>
-            <Button
+            <SafeButton
               type="button"
               variant="outline"
               size="sm"
@@ -239,7 +239,7 @@ export default function AuthModal({
               onClick={handleOpenExternalBrowser}
             >
               외부 브라우저로 열기
-            </Button>
+            </SafeButton>
           </div>
         )}
 
@@ -301,7 +301,7 @@ export default function AuthModal({
             </div>
           ) : null}
           {message ? <p className={styles.message}>{message}</p> : null}
-          <Button
+          <SafeButton
             type="submit"
             variant="unstyled"
             className={styles.primaryButton}
@@ -310,7 +310,7 @@ export default function AuthModal({
             disabled={isSubmitting}
           >
             {mode === "signin" ? "로그인" : "회원가입"}
-          </Button>
+          </SafeButton>
 
           <div className={styles.dividerRow}>
             <span className={styles.dividerLine} />
@@ -318,7 +318,7 @@ export default function AuthModal({
             <span className={styles.dividerLine} />
           </div>
 
-          <Button
+          <SafeButton
             type="button"
             variant="unstyled"
             className={styles.socialButton}
@@ -346,32 +346,32 @@ export default function AuthModal({
               />
             </svg>
             Google로 계속하기
-          </Button>
+          </SafeButton>
 
           <div className={styles.switchRow}>
             {mode === "signin" ? (
               <span>
                 계정이 없으신가요?{" "}
-                <Button
+                <SafeButton
                   type="button"
                   variant="unstyled"
                   onClick={() => setMode("signup")}
                   className={styles.switchButton}
                 >
                   회원가입
-                </Button>
+                </SafeButton>
               </span>
             ) : (
               <span>
                 이미 계정이 있으신가요?{" "}
-                <Button
+                <SafeButton
                   type="button"
                   variant="unstyled"
                   onClick={() => setMode("signin")}
                   className={styles.switchButton}
                 >
                   로그인
-                </Button>
+                </SafeButton>
               </span>
             )}
           </div>

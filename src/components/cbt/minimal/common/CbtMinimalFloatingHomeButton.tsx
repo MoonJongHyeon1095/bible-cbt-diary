@@ -1,6 +1,6 @@
 import { Home } from "lucide-react";
 import styles from "../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalFloatingHomeButtonProps {
   onClick: () => void;
@@ -14,7 +14,7 @@ export function CbtMinimalFloatingHomeButton({
   disabled = false,
 }: CbtMinimalFloatingHomeButtonProps) {
   return (
-    <Button
+    <SafeButton
       type="button"
       variant="unstyled"
       onClick={onClick}
@@ -23,6 +23,6 @@ export function CbtMinimalFloatingHomeButton({
       className={styles.floatingMiniButton}
     >
       <Home className={styles.floatingMiniIcon} />
-    </Button>
+    </SafeButton>
   );
 }

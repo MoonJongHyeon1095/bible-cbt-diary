@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./TagSelector.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface TagOption {
   id: string;
@@ -92,7 +93,7 @@ export function TagSelector({
             : undefined;
 
         return (
-          <button
+          <SafeButton mode="native"
             key={option.id}
             type="button"
             onClick={() => onSelect(option.label)}
@@ -100,7 +101,7 @@ export function TagSelector({
             className={[styles.button, baseClass].filter(Boolean).join(" ")}
           >
             {option.label}
-          </button>
+          </SafeButton>
         );
       })}
     </div>

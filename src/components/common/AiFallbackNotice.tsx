@@ -1,7 +1,7 @@
 "use client";
 
 import { RefreshCw } from "lucide-react";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import styles from "./AiFallbackNotice.module.css";
 
 type AiFallbackNoticeProps = {
@@ -22,7 +22,7 @@ export default function AiFallbackNotice({
         <div className={styles.desc}>{description}</div>
       </div>
       <div className={styles.action}>
-        <Button
+        <SafeButton
           type="button"
           variant="ghost"
           size="icon"
@@ -31,7 +31,7 @@ export default function AiFallbackNotice({
           icon={<RefreshCw size={18} />}
         >
           {null}
-        </Button>
+        </SafeButton>
       </div>
     </div>
   );

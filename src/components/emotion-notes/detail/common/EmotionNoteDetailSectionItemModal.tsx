@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useModalOpen } from "@/components/common/useModalOpen";
 import EmotionNoteDetailSectionBadge from "./EmotionNoteDetailSectionBadge";
 import styles from "./EmotionNoteDetailSectionItemModal.module.css";
@@ -52,7 +52,7 @@ export default function EmotionNoteDetailSectionItemModal({
           </div>
         ) : null}
         <p className={styles.body}>{body}</p>
-        <Button
+        <SafeButton
           type="button"
           variant="unstyled"
           className={styles.close}
@@ -60,7 +60,7 @@ export default function EmotionNoteDetailSectionItemModal({
           aria-label="닫기"
         >
           <X size={18} />
-        </Button>
+        </SafeButton>
       </div>
     </div>
   );

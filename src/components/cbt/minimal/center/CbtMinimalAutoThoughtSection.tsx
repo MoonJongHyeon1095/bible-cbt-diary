@@ -10,7 +10,7 @@ import { CbtMinimalAutoThoughtHintSection } from "./components/CbtMinimalAutoTho
 import { CbtMinimalAutoThoughtInputForm } from "./components/CbtMinimalAutoThoughtInputForm";
 import { CbtMinimalAutoThoughtTextSection } from "./components/CbtMinimalAutoThoughtTextSection";
 import styles from "../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
@@ -102,14 +102,14 @@ export function CbtMinimalAutoThoughtSection({
             {error && (
               <div className={styles.helperText}>
                 {error}{" "}
-              <Button
+              <SafeButton
                 type="button"
                 variant="unstyled"
                 onClick={() => void reloadThoughts()}
                 className={styles.exampleButton}
               >
                 다시 불러오기
-              </Button>
+              </SafeButton>
             </div>
           )}
           </CbtMinimalStepHeaderSection>

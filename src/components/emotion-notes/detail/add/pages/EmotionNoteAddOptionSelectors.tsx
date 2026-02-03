@@ -4,6 +4,7 @@ import { EMOTIONS } from "@/lib/constants/emotions";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
 import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
 import styles from "./EmotionNoteAddPage.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 type SingleSelectorProps = {
   value: string;
@@ -41,7 +42,7 @@ export function EmotionOptionSelector({ value, onSelect }: SingleSelectorProps) 
       {EMOTIONS.map((emotion) => {
         const active = value === emotion.label;
         return (
-          <button
+          <SafeButton mode="native"
             key={emotion.id}
             type="button"
             onClick={() => onSelect(emotion.label)}
@@ -53,7 +54,7 @@ export function EmotionOptionSelector({ value, onSelect }: SingleSelectorProps) 
             ].join(" ")}
           >
             <span className={styles.optionTitle}>{emotion.label}</span>
-          </button>
+          </SafeButton>
         );
       })}
     </div>
@@ -66,7 +67,7 @@ export function ErrorOptionSelector({ value, onSelect }: SingleSelectorProps) {
       {COGNITIVE_ERRORS.map((error, index) => {
         const active = value === error.title;
         return (
-          <button
+          <SafeButton mode="native"
             key={error.id}
             type="button"
             onClick={() => onSelect(error.title)}
@@ -77,7 +78,7 @@ export function ErrorOptionSelector({ value, onSelect }: SingleSelectorProps) {
             ].join(" ")}
           >
             <span className={styles.optionTitle}>{error.title}</span>
-          </button>
+          </SafeButton>
         );
       })}
     </div>
@@ -95,7 +96,7 @@ export function BehaviorOptionSelector({
       {behaviorOptions.map((behavior, index) => {
         const active = value === behavior.replacement_title;
         return (
-          <button
+          <SafeButton mode="native"
             key={behavior.id}
             type="button"
             onClick={() => onSelect(behavior.replacement_title)}
@@ -108,7 +109,7 @@ export function BehaviorOptionSelector({
             <span className={styles.optionTitle}>
               {behavior.replacement_title}
             </span>
-          </button>
+          </SafeButton>
         );
       })}
     </div>
@@ -126,7 +127,7 @@ export function ErrorTagSelector({
         const active = values.includes(error.title);
         const disabled = !active && values.length >= maxSelected;
         return (
-          <button
+          <SafeButton mode="native"
             key={error.id}
             type="button"
             onClick={() => {
@@ -141,7 +142,7 @@ export function ErrorTagSelector({
             disabled={disabled}
           >
             <span className={styles.optionTitle}>{error.title}</span>
-          </button>
+          </SafeButton>
         );
       })}
     </div>

@@ -8,7 +8,7 @@ import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinim
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
@@ -102,14 +102,14 @@ export function CbtDeepAutoThoughtSection({
           </div>
           <div className={styles.inlineCard}>
             <p className={styles.textBlock}>{error}</p>
-            <Button
+            <SafeButton
               type="button"
               variant="unstyled"
               onClick={() => void reload()}
               className={styles.exampleButton}
             >
               다시 불러오기
-            </Button>
+            </SafeButton>
           </div>
         </div>
       </div>
@@ -164,14 +164,14 @@ export function CbtDeepAutoThoughtSection({
                 onSelect={controls.scrollTo}
               />
               {showCustomButton && (
-                <Button
+                <SafeButton
                   type="button"
                   variant="unstyled"
                   onClick={() => setWantsCustom(true)}
                   className={styles.secondaryButton}
                 >
                   또는 직접 생각을 작성해보세요
-                </Button>
+                </SafeButton>
               )}
             </div>
           )}

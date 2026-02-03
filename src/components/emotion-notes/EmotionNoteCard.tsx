@@ -9,6 +9,7 @@ import type { CSSProperties, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
+import SafeButton from "@/components/ui/SafeButton";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -161,7 +162,7 @@ export default function EmotionNoteCard({
   const resolvedDetailHref = detailHref ?? `/detail?id=${note.id}`;
 
   return (
-    <button
+    <SafeButton mode="native"
       type="button"
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
@@ -244,6 +245,6 @@ export default function EmotionNoteCard({
           </>
         )}
       </div>
-    </button>
+    </SafeButton>
   );
 }

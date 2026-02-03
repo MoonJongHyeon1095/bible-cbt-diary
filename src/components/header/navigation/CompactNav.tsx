@@ -12,6 +12,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import styles from "./CompactNav.module.css";
 import { Drawer } from "./Drawer";
+import SafeButton from "@/components/ui/SafeButton";
 
 const navItems = [
   {
@@ -63,14 +64,14 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
 
   return (
     <>
-      <button
+      <SafeButton mode="native"
         type="button"
         className={styles.menuButton}
         onClick={() => setOpen(true)}
         aria-label="메뉴 열기"
       >
         <Menu size={20} />
-      </button>
+      </SafeButton>
 
       <Drawer
         open={open}
@@ -84,14 +85,14 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
           ) : (
             <span />
           )}
-          <button
+          <SafeButton mode="native"
             type="button"
             className={styles.closeButton}
             onClick={() => setOpen(false)}
             aria-label="닫기"
           >
             <span aria-hidden="true">×</span>
-          </button>
+          </SafeButton>
         </div>
 
         <div className={styles.drawerList}>
@@ -101,7 +102,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
-                <button
+                <SafeButton mode="native"
                   key={item.id}
                   type="button"
                   className={`${styles.drawerItem} ${
@@ -114,7 +115,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>
-                </button>
+                </SafeButton>
               );
             })}
           </div>
@@ -124,7 +125,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
-                <button
+                <SafeButton mode="native"
                   key={item.id}
                   type="button"
                   className={`${styles.drawerItem} ${
@@ -137,7 +138,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>
-                </button>
+                </SafeButton>
               );
             })}
           </div>
@@ -147,7 +148,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
               const Icon = item.icon;
               const active = pathname === item.href;
               return (
-                <button
+                <SafeButton mode="native"
                   key={item.id}
                   type="button"
                   className={`${styles.drawerItem} ${
@@ -160,7 +161,7 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
                 >
                   <Icon size={20} />
                   <span>{item.label}</span>
-                </button>
+                </SafeButton>
               );
             })}
           </div>

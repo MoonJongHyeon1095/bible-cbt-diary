@@ -1,6 +1,7 @@
 "use client";
 
 import styles from "./ExpandableText.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface ExpandableTextProps {
   text: string;
@@ -32,7 +33,7 @@ export function ExpandableText({
       >
         {text}
       </p>
-      <button
+      <SafeButton mode="native"
         type="button"
         onClick={(event) => {
           event.stopPropagation();
@@ -41,7 +42,7 @@ export function ExpandableText({
         className={[styles.toggle, toneText[tone]].join(" ")}
       >
         {expanded ? "접기" : "더보기"}
-      </button>
+      </SafeButton>
     </>
   );
 }

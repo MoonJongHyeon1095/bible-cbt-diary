@@ -5,7 +5,7 @@ import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/Cb
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
@@ -158,14 +158,14 @@ export function CbtDeepIncidentSection({
               className={`${styles.textarea} ${styles.incidentTextarea}`}
             />
           </div>
-          <Button
+          <SafeButton
             type="button"
             variant="unstyled"
             onClick={handleUsePrevious}
             className={styles.exampleButton}
           >
             이전의 상황을 사용합니다
-          </Button>
+          </SafeButton>
         </div>
 
         <CbtMinimalFloatingNextButton onClick={handleNext} />

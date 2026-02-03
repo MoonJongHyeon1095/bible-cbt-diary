@@ -6,7 +6,7 @@ import { useModalOpen } from "@/components/common/useModalOpen";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import CbtCarousel from "./CbtCarousel";
 import CbtCarouselDots from "./CbtCarouselDots";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 
 type CbtCarouselModalItem = {
@@ -71,14 +71,14 @@ export default function CbtCarouselModal({
       >
         <div className={styles.modalHeader}>
           <p className={styles.modalTitle}>{title}</p>
-          <button
+          <SafeButton mode="native"
             type="button"
             className={styles.modalClose}
             onClick={onClose}
             aria-label="닫기"
           >
             <X size={18} strokeWidth={2.2} />
-          </button>
+          </SafeButton>
         </div>
 
         <div className={styles.modalBody}>
@@ -88,7 +88,7 @@ export default function CbtCarouselModal({
             <CbtCarousel emblaRef={emblaRef}>
               {items.map((item) => (
                 <div key={item.id} className={styles.emblaSlide}>
-                  <button
+                  <SafeButton mode="native"
                     type="button"
                     className={
                       plainSlides
@@ -125,7 +125,7 @@ export default function CbtCarouselModal({
                     ) : (
                       <p className={styles.modalSlideText}>{item.body}</p>
                     )}
-                  </button>
+                  </SafeButton>
                 </div>
               ))}
             </CbtCarousel>
@@ -139,7 +139,7 @@ export default function CbtCarouselModal({
             onSelect={controls.scrollTo}
           />
           {showSelectButton && (
-            <Button
+            <SafeButton
               type="button"
               variant="primary"
               onClick={() => {
@@ -151,7 +151,7 @@ export default function CbtCarouselModal({
               disabled={!currentItem}
             >
               {selectLabel}
-            </Button>
+            </SafeButton>
           )}
         </div>
       </div>

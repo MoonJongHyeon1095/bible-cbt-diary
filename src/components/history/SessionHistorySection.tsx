@@ -1,6 +1,6 @@
 "use client";
 
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import type { AccessContext } from "@/lib/types/access";
 import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
@@ -198,14 +198,14 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
           <h2 className={styles.title}>이전 세션 기록</h2>
         </div>
         <div className={styles.actions}>
-          <Button
+          <SafeButton
             variant="danger"
             size="sm"
             onClick={() => setConfirmDeleteAll(true)}
             disabled={loading || histories.length === 0}
           >
             전체 삭제
-          </Button>
+          </SafeButton>
         </div>
       </div>
 
@@ -213,7 +213,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
         <div className={styles.confirmBar}>
           <span>이전 세션 기록이 모두 삭제됩니다.</span>
           <div className={styles.actions}>
-            <Button
+            <SafeButton
               variant="danger"
               size="sm"
               onClick={handleDeleteAll}
@@ -222,15 +222,15 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
               disabled={loading || deletingAll}
             >
               삭제
-            </Button>
-            <Button
+            </SafeButton>
+            <SafeButton
               variant="outline"
               size="sm"
               onClick={() => setConfirmDeleteAll(false)}
               disabled={loading || deletingAll}
             >
               취소
-            </Button>
+            </SafeButton>
           </div>
         </div>
       )}
@@ -249,7 +249,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
           histories.map((history) => (
             <div key={history.id} className={styles.item}>
               <div className={styles.itemTop}>
-                <Button
+                <SafeButton
                   variant="unstyled"
                   className={styles.itemHeaderButton}
                   onClick={() => toggleExpanded(history.id)}
@@ -270,8 +270,8 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
                   >
                     <ChevronDown size={16} />
                   </span>
-                </Button>
-                <Button
+                </SafeButton>
+                <SafeButton
                   variant="ghost"
                   size="icon"
                   className={styles.deleteButton}
@@ -282,7 +282,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
                   loadingBehavior="replace"
                 >
                   <Trash2 size={16} />
-                </Button>
+                </SafeButton>
               </div>
 
               {expanded[history.id] && (

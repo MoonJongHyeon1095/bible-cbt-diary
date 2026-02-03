@@ -4,7 +4,7 @@ import LegalConsentFormContent from "@/components/legal/LegalConsentFormContent"
 import styles from "@/components/legal/LegalPage.module.css";
 import LegalPrivacyPolicyContent from "@/components/legal/LegalPrivacyPolicyContent";
 import LegalTermsOfServiceContent from "@/components/legal/LegalTermsOfServiceContent";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import {
   TERMS_COOKIE_KEY,
   TERMS_STORAGE_KEY,
@@ -102,14 +102,14 @@ export default function LegalTermsConsentPage() {
 
           <section className={styles.accordion}>
             <div className={styles.accordionItem}>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.accordionButton}
                 onClick={() => handleToggleSection("terms")}
               >
                 <strong>이용약관 (Terms of Service)</strong>
                 <span>{openSection === "terms" ? "접기" : "펼치기"}</span>
-              </button>
+              </SafeButton>
               {openSection === "terms" && (
                 <div className={styles.accordionContent}>
                   <LegalTermsOfServiceContent />
@@ -118,14 +118,14 @@ export default function LegalTermsConsentPage() {
             </div>
 
             <div className={styles.accordionItem}>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.accordionButton}
                 onClick={() => handleToggleSection("privacy")}
               >
                 <strong>개인정보 처리방침</strong>
                 <span>{openSection === "privacy" ? "접기" : "펼치기"}</span>
-              </button>
+              </SafeButton>
               {openSection === "privacy" && (
                 <div className={styles.accordionContent}>
                   <LegalPrivacyPolicyContent />
@@ -134,14 +134,14 @@ export default function LegalTermsConsentPage() {
             </div>
 
             <div className={styles.accordionItem}>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.accordionButton}
                 onClick={() => handleToggleSection("consent")}
               >
                 <strong>개인정보 수집·이용 동의서</strong>
                 <span>{openSection === "consent" ? "접기" : "펼치기"}</span>
-              </button>
+              </SafeButton>
               {openSection === "consent" && (
                 <div className={styles.accordionContent}>
                   <LegalConsentFormContent />
@@ -193,14 +193,14 @@ export default function LegalTermsConsentPage() {
                   이용약관에 동의합니다.
                 </span>
               </label>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.viewButton}
                 onClick={() => setOpenSection("terms")}
                 aria-label="이용약관 보기"
               >
                 <ChevronRight size={14} />
-              </button>
+              </SafeButton>
             </div>
             <div className={styles.agreeRow}>
               <label className={styles.agreeItem}>
@@ -215,14 +215,14 @@ export default function LegalTermsConsentPage() {
                   개인정보 처리방침에 동의합니다.
                 </span>
               </label>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.viewButton}
                 onClick={() => setOpenSection("privacy")}
                 aria-label="개인정보 처리방침 보기"
               >
                 <ChevronRight size={14} />
-              </button>
+              </SafeButton>
             </div>
             <div className={styles.agreeRow}>
               <label className={styles.agreeItem}>
@@ -237,14 +237,14 @@ export default function LegalTermsConsentPage() {
                   개인정보 수집·이용 동의서에 동의합니다.
                 </span>
               </label>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.viewButton}
                 onClick={() => setOpenSection("consent")}
                 aria-label="개인정보 수집·이용 동의서 보기"
               >
                 <ChevronRight size={14} />
-              </button>
+              </SafeButton>
             </div>
             <div className={styles.agreeRow}>
               <label className={styles.agreeItem}>
@@ -259,21 +259,21 @@ export default function LegalTermsConsentPage() {
                   AI 기능 이용 및 국외 이전 안내에 동의합니다.
                 </span>
               </label>
-              <button
+              <SafeButton mode="native"
                 type="button"
                 className={styles.viewButton}
                 onClick={() => setOpenSection("consent")}
                 aria-label="개인정보 수집·이용 동의서 보기"
               >
                 <ChevronRight size={14} />
-              </button>
+              </SafeButton>
             </div>
           </div>
           <div className={styles.actions}>
             {canSubmit ? (
-              <Button type="button" variant="primary" onClick={handleSubmit}>
+              <SafeButton type="button" variant="primary" onClick={handleSubmit}>
                 동의하고 시작하기
-              </Button>
+              </SafeButton>
             ) : (
               <p className={styles.agreeHint}>
                 필수 항목에 모두 동의해야 시작할 수 있습니다.

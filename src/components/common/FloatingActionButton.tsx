@@ -2,7 +2,7 @@
 
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import type { ButtonProps } from "@/components/ui/Button";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import styles from "./FloatingActionButton.module.css";
 
 type FloatingActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -27,7 +27,7 @@ export default function FloatingActionButton({
   ...rest
 }: FloatingActionButtonProps) {
   return (
-    <Button
+    <SafeButton
       type="button"
       variant="unstyled"
       className={[
@@ -50,6 +50,6 @@ export default function FloatingActionButton({
       {helperText ? (
         <span className={styles.helperText}>{helperText}</span>
       ) : null}
-    </Button>
+    </SafeButton>
   );
 }

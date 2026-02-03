@@ -3,7 +3,7 @@
 import pageStyles from "@/app/page.module.css";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { BookSearch, Copy } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -65,10 +65,10 @@ export default function ShareLinkPage() {
                 <span className={styles.shareLinkValue}>
                   {shareUrl || buildApiUrl(`/share?sid=${shareId}`)}
                 </span>
-                <Button type="button" variant="outline" onClick={handleCopy}>
+                <SafeButton type="button" variant="outline" onClick={handleCopy}>
                   <Copy size={16} />
                   복사하기
-                </Button>
+                </SafeButton>
               </div>
               <p className={styles.shareLinkWarn}>
                 민감한 정보가 포함되지 않도록 주의해주세요.

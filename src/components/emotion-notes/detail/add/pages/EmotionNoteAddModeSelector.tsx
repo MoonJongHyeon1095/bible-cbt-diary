@@ -2,6 +2,7 @@
 
 import { Lock, Sparkles, PencilLine } from "lucide-react";
 import styles from "./EmotionNoteAddPage.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 export type AddMode = "ai" | "direct";
 
@@ -20,7 +21,7 @@ export default function EmotionNoteAddModeSelector({
 }: EmotionNoteAddModeSelectorProps) {
   return (
     <div className={styles.modeSelectGrid}>
-      <button
+      <SafeButton mode="native"
         type="button"
         onClick={() => {
           if (aiLocked) {
@@ -52,8 +53,8 @@ export default function EmotionNoteAddModeSelector({
             로그인이 필요합니다
           </span>
         ) : null}
-      </button>
-      <button
+      </SafeButton>
+      <SafeButton mode="native"
         type="button"
         onClick={() => onSelect("direct")}
         className={[
@@ -71,7 +72,7 @@ export default function EmotionNoteAddModeSelector({
         <span className={styles.modeSelectDesc}>
           필요한 것들을 선택한 뒤 직접 입력합니다.
         </span>
-      </button>
+      </SafeButton>
     </div>
   );
 }

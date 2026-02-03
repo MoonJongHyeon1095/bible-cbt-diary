@@ -2,6 +2,7 @@
 
 import { useGate } from "@/components/gate/GateProvider";
 import styles from "./NoticeGate.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 export default function UpdateNoticeGate() {
   const { status, setUpdateStatus } = useGate();
@@ -22,13 +23,13 @@ export default function UpdateNoticeGate() {
           </p>
         </div>
         <div className={styles.noticeActions}>
-          <button
+          <SafeButton mode="native"
             type="button"
             className={`${styles.noticeButton} ${styles.noticeButtonPrimary}`}
             onClick={() => setUpdateStatus({ failed: false })}
           >
             확인
-          </button>
+          </SafeButton>
         </div>
       </div>
     </div>

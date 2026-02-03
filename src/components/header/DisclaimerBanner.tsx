@@ -1,5 +1,6 @@
 import { useState } from "react";
 import styles from "./DisclaimerBanner.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 
 type DisclaimerBannerProps = {
   detailsClassName: string;
@@ -39,13 +40,13 @@ export default function DisclaimerBanner({
     <div className={detailsClassName} role="note">
       <div className={styles.detailsHeader}>
         <p className={titleClassName}>{DISCLAIMER_TEXT}</p>
-        <button
+        <SafeButton mode="native"
           type="button"
           onClick={handleDismiss}
           className={styles.dismissButton}
         >
           이해했습니다
-        </button>
+        </SafeButton>
       </div>
       {SUPPORT_TEXT_LINES.map((line) => (
         <p key={line} className={textClassName}>

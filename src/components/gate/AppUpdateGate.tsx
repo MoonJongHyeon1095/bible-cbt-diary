@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
 import styles from "./NoticeGate.module.css";
 import { useGate } from "@/components/gate/GateProvider";
+import SafeButton from "@/components/ui/SafeButton";
 
 const APP_STORE_ID = process.env.NEXT_PUBLIC_APP_STORE_ID;
 
@@ -96,13 +97,13 @@ export default function AppUpdateGate() {
           </p>
         </div>
         <div className={styles.noticeActions}>
-          <button
+          <SafeButton mode="native"
             type="button"
             className={`${styles.noticeButton} ${styles.noticeButtonPrimary}`}
             onClick={handleOpenStore}
           >
             {storeLabel}
-          </button>
+          </SafeButton>
         </div>
       </div>
     </div>

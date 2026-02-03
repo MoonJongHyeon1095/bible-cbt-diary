@@ -1,7 +1,7 @@
 "use client";
 
 import AppTabs from "@/components/tab/AppTabs";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { LogIn, LogOut } from "lucide-react";
@@ -64,7 +64,7 @@ export default function AppHeader() {
         <div className={styles.actions}>
           {user ? (
             <div className={styles.userBox}>
-              <Button
+              <SafeButton
                 type="button"
                 variant="unstyled"
                 className={styles.iconButton}
@@ -73,10 +73,10 @@ export default function AppHeader() {
                 title="로그아웃"
               >
                 <LogOut size={18} />
-              </Button>
+              </SafeButton>
             </div>
           ) : (
-            <Button
+            <SafeButton
               type="button"
               variant="unstyled"
               className={styles.loginButton}
@@ -84,7 +84,7 @@ export default function AppHeader() {
             >
               <LogIn size={18} />
               로그인
-            </Button>
+            </SafeButton>
           )}
         </div>
       </header>

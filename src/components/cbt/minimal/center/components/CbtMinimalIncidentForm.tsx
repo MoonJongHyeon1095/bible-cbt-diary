@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
 import styles from "../../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalIncidentFormProps {
   userInput: string;
@@ -34,7 +34,7 @@ export function CbtMinimalIncidentForm({
           className={`${styles.textarea} ${styles.incidentTextarea}`}
         />
       </div>
-      <Button
+      <SafeButton
         type="button"
         variant="unstyled"
         onClick={onShowExample}
@@ -42,7 +42,7 @@ export function CbtMinimalIncidentForm({
         className={styles.exampleButton}
       >
         예시를 보여주세요
-      </Button>
+      </SafeButton>
     </div>
   );
 }

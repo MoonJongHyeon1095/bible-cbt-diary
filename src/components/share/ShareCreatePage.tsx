@@ -5,7 +5,7 @@ import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { fetchEmotionNote } from "@/components/emotion-notes/detail/utils/emotionNoteApi";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
@@ -339,9 +339,9 @@ export default function ShareCreatePage() {
                 공유 링크 생성은 로그인 후 사용할 수 있습니다.
               </p>
               <div className={styles.actions}>
-                <Button type="button" variant="primary" onClick={openAuthModal}>
+                <SafeButton type="button" variant="primary" onClick={openAuthModal}>
                   로그인하기
-                </Button>
+                </SafeButton>
               </div>
             </div>
           </div>

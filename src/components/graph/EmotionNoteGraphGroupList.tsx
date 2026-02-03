@@ -12,6 +12,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteGraphGroupList.module.css";
 import { fetchEmotionNoteGraphGroups } from "./utils/emotionNoteGraphApi";
 import { getGroupThemeColor } from "./utils/graphColors";
+import SafeButton from "@/components/ui/SafeButton";
 
 type EmotionNoteGraphGroupListProps = {
   accessToken: string;
@@ -191,7 +192,7 @@ export default function EmotionNoteGraphGroupList({
             }
           >
             {nodes.map((node) => (
-              <button
+              <SafeButton mode="native"
                 key={node.id}
                 type="button"
                 className={styles.node}
@@ -215,7 +216,7 @@ export default function EmotionNoteGraphGroupList({
                   <span className={styles.nodeUnit}>개의</span>
                 </span>
                 <span className={styles.nodeLabel}>기록이 있습니다</span>
-              </button>
+              </SafeButton>
             ))}
           </div>
         )}

@@ -1,5 +1,5 @@
 import styles from "../../MinimalStyles.module.css";
-import Button from "@/components/ui/Button";
+import SafeButton from "@/components/ui/SafeButton";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtMinimalAutoThoughtControlSectionProps {
@@ -29,7 +29,7 @@ export function CbtMinimalAutoThoughtControlSection({
       />
 
       {showCustomButton && (
-        <Button
+        <SafeButton
           type="button"
           variant="unstyled"
           onClick={onEnableCustom}
@@ -37,7 +37,7 @@ export function CbtMinimalAutoThoughtControlSection({
           className={styles.secondaryButton}
         >
           또는 직접 생각을 작성해보세요
-        </Button>
+        </SafeButton>
       )}
     </div>
   );

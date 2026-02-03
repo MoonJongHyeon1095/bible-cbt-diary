@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.alliance617.emotionaldiary",
+      "sha256_cert_fingerprints": [
+        "52:BE:2E:55:00:16:00:F9:FB:F2:F0:F2:AC:05:F1:9A:8D:73:F3:F7:6A:C4:BC:BD:BC:04:B4:87:B5:1B:9F:02"
+      ]
+    }
+  }
+]

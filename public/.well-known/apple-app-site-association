@@ -1,0 +1,11 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "RNG6A8JH2G.com.alliance617.emotionaldiary",
+        "paths": ["/auth/*"]
+      }
+    ]
+  }
+}

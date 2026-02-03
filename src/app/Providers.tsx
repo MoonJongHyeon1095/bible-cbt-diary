@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import { AuthModalProvider } from "@/components/header/AuthModalProvider";
+import Notice from "@/components/Notice";
 import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -24,6 +25,8 @@ export default function Providers({ children }: ProvidersProps) {
         const mod = await import("@capacitor/app");
         const CapApp = mod.App;
         const supabase = getSupabaseBrowserClient();
+        const browserMod = await import("@capacitor/browser");
+        const CapBrowser = browserMod.Browser;
 
         const listener = await CapApp.addListener("appUrlOpen", async ({ url }) => {
           if (!url.startsWith("com.alliance617.emotionaldiary://auth-callback")) {
@@ -39,6 +42,7 @@ export default function Providers({ children }: ProvidersProps) {
 
             if (code) {
               await supabase.auth.exchangeCodeForSession(code);
+              await CapBrowser.close();
               return;
             }
 
@@ -47,6 +51,7 @@ export default function Providers({ children }: ProvidersProps) {
                 access_token: accessToken,
                 refresh_token: refreshToken,
               });
+              await CapBrowser.close();
             }
           } catch (error) {
             console.log("[oauth] callback parse error:", error);
@@ -70,7 +75,10 @@ export default function Providers({ children }: ProvidersProps) {
 
   return (
     <CbtToastProvider>
-      <AuthModalProvider>{children}</AuthModalProvider>
+      <AuthModalProvider>
+        <Notice />
+        {children}
+      </AuthModalProvider>
     </CbtToastProvider>
   );
 }

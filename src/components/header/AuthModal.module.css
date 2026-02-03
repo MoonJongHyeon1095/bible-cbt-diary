@@ -157,6 +157,33 @@
   font-size: 0.8rem;
 }
 
+.inAppNotice {
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  background: rgba(255, 193, 7, 0.12);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.inAppTitle {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ffd27a;
+}
+
+.inAppDescription {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.externalButton {
+  align-self: flex-start;
+}
+
 .switchRow {
   text-align: center;
   font-size: 0.85rem;

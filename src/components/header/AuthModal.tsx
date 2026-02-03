@@ -4,6 +4,8 @@ import { getOAuthRedirectTo } from "@/lib/auth/oauth";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import Button from "@/components/ui/Button";
 import { useModalOpen } from "@/components/common/useModalOpen";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
@@ -17,6 +19,29 @@ type AuthModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSignedIn: (user: SessionUser) => void;
+};
+
+const isInAppBrowserUserAgent = (userAgent: string) => {
+  const ua = userAgent.toLowerCase();
+  const inAppHints = [
+    "fban",
+    "fbav",
+    "instagram",
+    "threads",
+    "kakaotalk",
+    "kakao",
+    "line",
+    "naver",
+    "daum",
+    "zalo",
+  ];
+  if (inAppHints.some((hint) => ua.includes(hint))) {
+    return true;
+  }
+  const isAndroidWebView = ua.includes("; wv") || ua.includes(" wv)");
+  const isIosWebView =
+    /iphone|ipad|ipod/.test(ua) && ua.includes("applewebkit") && !ua.includes("safari");
+  return isAndroidWebView || isIosWebView;
 };
 
 export default function AuthModal({
@@ -33,6 +58,8 @@ export default function AuthModal({
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [currentUrl, setCurrentUrl] = useState<string | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
 
   useEffect(() => {
@@ -54,6 +81,16 @@ export default function AuthModal({
 
     return () => data.subscription.unsubscribe();
   }, [isOpen, onClose, onSignedIn, supabase]);
+
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") {
+      return;
+    }
+
+    setCurrentUrl(window.location.href);
+    const ua = window.navigator?.userAgent ?? "";
+    setIsInAppBrowser(isInAppBrowserUserAgent(ua));
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;
@@ -109,6 +146,30 @@ export default function AuthModal({
     setMessage("");
     setError("");
     const redirectTo = getOAuthRedirectTo();
+    if (Capacitor.isNativePlatform()) {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          ...(redirectTo ? { redirectTo } : {}),
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (!error && data?.url) {
+        await Browser.open({
+          url: data.url,
+          presentationStyle: "fullscreen",
+        });
+      }
+
+      setIsSubmitting(false);
+
+      if (error || !data?.url) {
+        setError("소셜 로그인을 시작하지 못했습니다.");
+      }
+      return;
+    }
+
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: redirectTo ? { redirectTo } : undefined,
@@ -117,6 +178,17 @@ export default function AuthModal({
 
     if (error) {
       setError("소셜 로그인을 시작하지 못했습니다.");
+    }
+  };
+
+  const handleOpenExternalBrowser = () => {
+    if (!currentUrl || typeof window === "undefined") {
+      return;
+    }
+
+    const opened = window.open(currentUrl, "_blank", "noopener,noreferrer");
+    if (!opened) {
+      window.location.href = currentUrl;
     }
   };
 
@@ -151,6 +223,25 @@ export default function AuthModal({
             닫기
           </Button>
         </header>
+        {isInAppBrowser && (
+          <div className={styles.inAppNotice}>
+            <p className={styles.inAppTitle}>
+              이 브라우저에서는 Google 로그인이 차단될 수 있어요.
+            </p>
+            <p className={styles.inAppDescription}>
+              Safari/Chrome 같은 외부 브라우저로 열어주세요.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={styles.externalButton}
+              onClick={handleOpenExternalBrowser}
+            >
+              외부 브라우저로 열기
+            </Button>
+          </div>
+        )}
 
         <form className={styles.form} onSubmit={handleAuthSubmit}>
           {mode === "signup" ? (

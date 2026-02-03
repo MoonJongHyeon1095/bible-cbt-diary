@@ -1,0 +1,179 @@
+.noticeOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(8, 10, 14, 0.72);
+  backdrop-filter: blur(6px);
+  animation: noticeFade 220ms ease-out;
+}
+
+.noticeCard {
+  width: min(620px, 100%);
+  border-radius: 18px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #161b23 0%, #12151b 100%);
+  box-shadow: 0 24px 60px rgba(6, 8, 12, 0.6);
+  padding: 28px 28px 24px;
+  color: #eef1f6;
+  animation: noticeRise 260ms ease-out;
+}
+
+.noticeBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  background: rgba(143, 167, 200, 0.16);
+  color: #b9c9e4;
+}
+
+.noticeInfo {
+  color: #9bc6bd;
+  background: rgba(40, 96, 86, 0.2);
+}
+
+.noticeWarning {
+  color: #f0b46b;
+  background: rgba(170, 96, 0, 0.22);
+}
+
+.noticeCritical {
+  color: #ff9a9a;
+  background: rgba(170, 42, 42, 0.2);
+}
+
+.noticeTitle {
+  margin: 0 0 12px;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.noticeBody {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #c7ccd6;
+  white-space: pre-wrap;
+  word-break: keep-all;
+  line-break: strict;
+}
+
+.noticeParagraph {
+  margin: 0 0 12px;
+}
+
+.noticeParagraph:last-child {
+  margin-bottom: 0;
+}
+
+.noticeList {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  color: #d6dbe3;
+}
+
+.noticeList li {
+  margin-bottom: 6px;
+  line-height: 1.55;
+}
+
+.noticeList li:last-child {
+  margin-bottom: 0;
+}
+
+.noticeActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+.noticeButton {
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  border: 1px solid transparent;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 120ms ease, box-shadow 120ms ease, border-color 120ms ease;
+}
+
+.noticeButton:focus-visible {
+  outline: 2px solid #7aa2d6;
+  outline-offset: 2px;
+}
+
+.noticeButtonPrimary {
+  background: #8fa7c8;
+  color: #0f1114;
+  box-shadow: 0 10px 24px rgba(70, 90, 120, 0.35);
+}
+
+.noticeButtonSoft {
+  background: rgba(143, 167, 200, 0.14);
+  color: #d6e3f7;
+  border-color: rgba(143, 167, 200, 0.2);
+}
+
+.noticeButtonOutline {
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #e6e7ea;
+}
+
+.noticeButtonGhost {
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #9aa5b5;
+}
+
+.noticeButton:hover {
+  transform: translateY(-1px);
+}
+
+.noticeButton:active {
+  transform: translateY(0);
+}
+
+@media (max-width: 600px) {
+  .noticeCard {
+    padding: 18px 16px;
+  }
+
+  .noticeActions {
+    flex-direction: column;
+  }
+
+  .noticeButton {
+    width: 100%;
+  }
+}
+
+@keyframes noticeFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes noticeRise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

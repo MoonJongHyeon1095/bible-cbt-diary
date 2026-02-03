@@ -25,6 +25,16 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="@string/custom_url_scheme" android:host="auth-callback" />
             </intent-filter>
+
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="bible-cbt-diary-git-dev-moonjonghyuns-projects.vercel.app"
+                    android:pathPrefix="/auth" />
+            </intent-filter>
         </activity>
 
         <provider

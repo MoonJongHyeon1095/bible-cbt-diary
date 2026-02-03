@@ -1,6 +1,7 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { getDeviceId } from "@/lib/utils/deviceId";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 import type { TokenUsage } from "@/lib/utils/tokenSessionStorage";
 
 export type TokenUsageStatus = {
@@ -17,7 +18,6 @@ export type TokenUsageStatus = {
   is_member: boolean;
 };
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE ?? "";
 const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY ?? "";
 
 const buildUsageHeaders = async () => {
@@ -41,7 +41,7 @@ export const syncTokenUsage = async (
   const deviceId = getDeviceId();
   const headers = await buildUsageHeaders();
   const payloadUsage = { ...usage, ...(counts ?? {}) };
-  const response = await fetch(`${API_BASE}/api/token-usage`, {
+  const response = await fetch(buildApiUrl("/api/token-usage"), {
     method: "POST",
     headers,
     body: JSON.stringify({ deviceId, usage: payloadUsage }),
@@ -56,7 +56,7 @@ export const syncTokenUsage = async (
 export const fetchTokenUsageStatus = async (): Promise<TokenUsageStatus> => {
   const deviceId = getDeviceId();
   const headers = await buildUsageHeaders();
-  const response = await fetch(`${API_BASE}/api/token-usage`, {
+  const response = await fetch(buildApiUrl("/api/token-usage"), {
     method: "POST",
     headers,
     body: JSON.stringify({ deviceId, action: "status" }),

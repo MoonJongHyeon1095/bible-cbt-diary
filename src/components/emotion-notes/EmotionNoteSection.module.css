@@ -35,6 +35,7 @@
   cursor: pointer;
   text-decoration: none;
   color: inherit;
+  position: relative;
 }
 
 .plusIcon {
@@ -46,6 +47,33 @@
 .plusText {
   font-size: 0.75rem;
   color: var(--muted);
+}
+
+.plusButtonLoading {
+  isolation: isolate;
+}
+
+.plusButtonRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: plusSpin 1s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.plusButton > span:not(.plusButtonRing) {
+  position: relative;
+  z-index: 1;
+}
+
+@keyframes plusSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .todayHint {

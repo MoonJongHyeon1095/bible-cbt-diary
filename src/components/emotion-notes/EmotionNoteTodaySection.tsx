@@ -4,6 +4,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
+import { useState } from "react";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNoteSection.module.css";
@@ -25,8 +26,12 @@ export default function EmotionNoteTodaySection({
 }: EmotionNoteTodaySectionProps) {
   const router = useRouter();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const [isStartLoading, setIsStartLoading] = useState(false);
 
   const handleStartSession = async (event: MouseEvent<HTMLAnchorElement>) => {
+    if (isStartLoading) {
+      return;
+    }
     if (
       event.metaKey ||
       event.ctrlKey ||
@@ -37,8 +42,13 @@ export default function EmotionNoteTodaySection({
       return;
     }
     event.preventDefault();
+    setIsStartLoading(true);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
     const allowed = await checkUsage();
     if (!allowed) {
+      setIsStartLoading(false);
       return;
     }
     router.push("/session");
@@ -51,10 +61,18 @@ export default function EmotionNoteTodaySection({
         <h2 className={styles.todayTitle}>오늘의 감정 기록</h2>
         <Link
           href="/session"
-          className={styles.plusButton}
+          className={[
+            styles.plusButton,
+            isStartLoading ? styles.plusButtonLoading : "",
+          ]
+            .filter(Boolean)
+            .join(" ")}
           data-tour="new-note"
           onClick={handleStartSession}
         >
+          {isStartLoading ? (
+            <span className={styles.plusButtonRing} aria-hidden />
+          ) : null}
           <span className={styles.plusIcon} aria-hidden>
             +
           </span>

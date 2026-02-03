@@ -64,6 +64,7 @@ export default function EmotionNoteCalendarSection({
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isAddLoading, setIsAddLoading] = useState(false);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
@@ -389,9 +390,18 @@ export default function EmotionNoteCalendarSection({
           label="이 날의 기록 추가"
           icon={<Plus size={24} />}
           helperText="이 날의 기록 추가"
+          loadingRing={isAddLoading}
           onClick={async () => {
+            if (isAddLoading) {
+              return;
+            }
+            setIsAddLoading(true);
+            await new Promise<void>((resolve) =>
+              requestAnimationFrame(() => resolve()),
+            );
             const allowed = await checkUsage();
             if (!allowed) {
+              setIsAddLoading(false);
               return;
             }
             if (!selectedDate) {

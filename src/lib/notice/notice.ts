@@ -34,17 +34,6 @@ function isWithinWindow(n: NoticeItem) {
   return t >= start && t <= end;
 }
 
-function gteVersion(a?: string, b?: string) {
-  if (!a || !b) return true;
-  const pa = a.split(".").map((x) => parseInt(x, 10) || 0);
-  const pb = b.split(".").map((x) => parseInt(x, 10) || 0);
-  for (let i = 0; i < 3; i += 1) {
-    if ((pa[i] ?? 0) > (pb[i] ?? 0)) return true;
-    if ((pa[i] ?? 0) < (pb[i] ?? 0)) return false;
-  }
-  return true;
-}
-
 export function getDismissedSet(): Set<string> {
   try {
     const arr = JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]");

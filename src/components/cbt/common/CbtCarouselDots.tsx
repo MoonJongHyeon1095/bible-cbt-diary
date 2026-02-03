@@ -25,7 +25,6 @@ export default function CbtCarouselDots({
   const windowSize = Math.min(5, count);
   const half = Math.floor(windowSize / 2);
   const start = Math.max(0, Math.min(safeIndex - half, count - windowSize));
-  const end = start + windowSize;
   const visible = Array.from({ length: windowSize }, (_, i) => start + i);
 
   return (

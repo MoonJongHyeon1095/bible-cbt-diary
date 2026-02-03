@@ -4,7 +4,6 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { Lock, Waypoints } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { CSSProperties, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -139,18 +138,20 @@ export default function EmotionNoteCard({
     }, longPressDuration);
   };
 
-  const handleClick = (event: MouseEvent<HTMLAnchorElement>) => {
+  const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (longPressTriggeredRef.current) {
       event.preventDefault();
       event.stopPropagation();
+      return;
     }
+    router.push(resolvedDetailHref);
   };
 
   const resolvedDetailHref = detailHref ?? `/detail?id=${note.id}`;
 
   return (
-    <Link
-      href={resolvedDetailHref}
+    <button
+      type="button"
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
       onPointerDown={handlePointerDown}
@@ -158,6 +159,7 @@ export default function EmotionNoteCard({
       onPointerLeave={() => clearLongPress()}
       onPointerCancel={() => clearLongPress()}
       onClick={handleClick}
+      onContextMenu={(event) => event.preventDefault()}
     >
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
@@ -217,6 +219,6 @@ export default function EmotionNoteCard({
           </>
         )}
       </div>
-    </Link>
+    </button>
   );
 }

@@ -10,6 +10,45 @@ type UseAiUsageGuardOptions = {
   redirectTo?: string;
 };
 
+type UsageCacheEntry = {
+  allowed: boolean;
+  checkedAt: number;
+};
+
+const CACHE_TTL_MS = 60_000;
+const CACHE_KEY = "aiUsageGuard:last";
+let cachedUsage: UsageCacheEntry | null = null;
+
+const readCachedUsage = (): UsageCacheEntry | null => {
+  if (cachedUsage) return cachedUsage;
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as UsageCacheEntry;
+    if (
+      typeof parsed?.allowed !== "boolean" ||
+      typeof parsed?.checkedAt !== "number"
+    ) {
+      return null;
+    }
+    cachedUsage = parsed;
+    return parsed;
+  } catch {
+    return null;
+  }
+};
+
+const writeCachedUsage = (entry: UsageCacheEntry) => {
+  cachedUsage = entry;
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(entry));
+  } catch {
+    // Ignore storage errors (private mode, quota, etc.).
+  }
+};
+
 export function useAiUsageGuard({
   enabled = true,
   cache = false,
@@ -28,6 +67,15 @@ export function useAiUsageGuard({
       return lastAllowedRef.current ?? true;
     }
     if (cache) {
+      const cached = readCachedUsage();
+      if (cached && Date.now() - cached.checkedAt < CACHE_TTL_MS) {
+        hasCheckedRef.current = true;
+        lastAllowedRef.current = cached.allowed;
+        endPerf();
+        return cached.allowed;
+      }
+    }
+    if (cache) {
       hasCheckedRef.current = true;
     }
     let allowed = true;
@@ -39,6 +87,9 @@ export function useAiUsageGuard({
       allowed = false;
     }
     lastAllowedRef.current = allowed;
+    if (cache) {
+      writeCachedUsage({ allowed, checkedAt: Date.now() });
+    }
     if (!allowed) {
       router.replace(redirectTo);
       endPerf();

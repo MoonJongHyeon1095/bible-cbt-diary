@@ -90,6 +90,7 @@ export default function EmotionNoteDetailPage({
   const [selectedItem, setSelectedItem] = useState<SelectedItem>(null);
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
   const createModalHandler =
     (color: string, icon: ReactNode) =>
     (title: string, body: string, badgeText?: string | null) => {
@@ -496,12 +497,18 @@ export default function EmotionNoteDetailPage({
             helperText="Go Deeper"
             onClick={async () => {
               if (!note?.id) return;
+              setIsGoDeeperLoading(true);
+              await new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve()),
+              );
               if (accessMode !== "auth") {
+                setIsGoDeeperLoading(false);
                 openAuthModal();
                 return;
               }
               const allowed = await checkUsage();
               if (!allowed) {
+                setIsGoDeeperLoading(false);
                 return;
               }
               if (note.group_id) {
@@ -510,6 +517,7 @@ export default function EmotionNoteDetailPage({
               }
               router.push(`/session/deep?mainId=${note.id}`);
             }}
+            loadingRing={isGoDeeperLoading}
             className={styles.fab}
             style={{
               backgroundColor: "#121417",

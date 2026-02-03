@@ -5,7 +5,7 @@ import Button from "@/components/ui/Button";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import EmotionNoteGraphCanvas from "./EmotionNoteGraphCanvas";
 import EmotionNoteGraphDetailStack from "./EmotionNoteGraphDetailStack";
 import styles from "./EmotionNoteGraphSection.module.css";
@@ -54,10 +54,16 @@ export default function EmotionNoteGraphSection({
     elkEdges,
     selectedNodeId,
   );
+  const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
   const handleGoDeeper = async () => {
     if (!selectedNote) return;
+    setIsGoDeeperLoading(true);
+    await new Promise<void>((resolve) =>
+      requestAnimationFrame(() => resolve()),
+    );
     const allowed = await checkUsage();
     if (!allowed) {
+      setIsGoDeeperLoading(false);
       return;
     }
     const query = groupId
@@ -129,6 +135,7 @@ export default function EmotionNoteGraphSection({
               icon={<Route size={20} />}
               className={styles.deepFab}
               onClick={handleGoDeeper}
+              loadingRing={isGoDeeperLoading}
             />
           </>
         ) : null}

@@ -11,62 +11,97 @@ type AccessState = AccessContext & {
 const resolveGuestMode = (): AccessMode =>
   isGuestStorageAvailable() ? "guest" : "blocked";
 
-export const useAccessContext = () => {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
-  const [state, setState] = useState<AccessState>({
-    mode: "blocked",
-    accessToken: null,
-    userEmail: null,
-    isLoading: true,
-  });
+type AccessSubscriber = (state: AccessState) => void;
 
-  useEffect(() => {
-    const resolveSession = async () => {
-      const endPerf = startPerf("access:resolveSession");
-      const { data } = await supabase.auth.getSession();
-      const accessToken = data.session?.access_token ?? null;
-      if (accessToken) {
-        setState({
-          mode: "auth",
-          accessToken,
-          userEmail: data.session?.user?.email ?? null,
-          isLoading: false,
-        });
-        endPerf();
-        return;
-      }
-      setState({
+let sharedState: AccessState = {
+  mode: "blocked",
+  accessToken: null,
+  userEmail: null,
+  isLoading: true,
+};
+
+const subscribers = new Set<AccessSubscriber>();
+let initialized = false;
+let initPromise: Promise<void> | null = null;
+let authSubscription: { subscription: { unsubscribe: () => void } } | null =
+  null;
+
+const emitState = () => {
+  subscribers.forEach((listener) => listener(sharedState));
+};
+
+const setSharedState = (next: AccessState) => {
+  sharedState = next;
+  emitState();
+};
+
+const initAccessContext = (supabase: ReturnType<typeof getSupabaseBrowserClient>) => {
+  if (initialized) return initPromise;
+  initialized = true;
+  initPromise = (async () => {
+    const endPerf = startPerf("access:resolveSession");
+    const { data } = await supabase.auth.getSession();
+    const accessToken = data.session?.access_token ?? null;
+    if (accessToken) {
+      setSharedState({
+        mode: "auth",
+        accessToken,
+        userEmail: data.session?.user?.email ?? null,
+        isLoading: false,
+      });
+      endPerf();
+    } else {
+      setSharedState({
         mode: resolveGuestMode(),
         accessToken: null,
         userEmail: null,
         isLoading: false,
       });
       endPerf();
-    };
+    }
+  })();
 
-    resolveSession();
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session?.access_token) {
-          setState({
-            mode: "auth",
-            accessToken: session.access_token,
-            userEmail: session.user?.email ?? null,
-            isLoading: false,
-          });
-          return;
-        }
-        setState({
-          mode: resolveGuestMode(),
-          accessToken: null,
-          userEmail: null,
+  if (!authSubscription) {
+    const { data } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.access_token) {
+        setSharedState({
+          mode: "auth",
+          accessToken: session.access_token,
+          userEmail: session.user?.email ?? null,
           isLoading: false,
         });
-      },
-    );
+        return;
+      }
+      setSharedState({
+        mode: resolveGuestMode(),
+        accessToken: null,
+        userEmail: null,
+        isLoading: false,
+      });
+    });
+    authSubscription = data ?? null;
+  }
+
+  return initPromise;
+};
+
+export const useAccessContext = () => {
+  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const [state, setState] = useState<AccessState>(sharedState);
+
+  useEffect(() => {
+    let active = true;
+    const handleUpdate = (next: AccessState) => {
+      if (!active) return;
+      setState(next);
+    };
+    subscribers.add(handleUpdate);
+    setState(sharedState);
+    void initAccessContext(supabase);
 
     return () => {
-      authListener.subscription.unsubscribe();
+      active = false;
+      subscribers.delete(handleUpdate);
     };
   }, [supabase]);
 

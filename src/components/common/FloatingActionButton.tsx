@@ -10,6 +10,7 @@ type FloatingActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   icon?: ReactNode;
   helperText?: string;
   loading?: boolean;
+  loadingRing?: boolean;
   loadingText?: ButtonProps["loadingText"];
   loadingBehavior?: ButtonProps["loadingBehavior"];
 };
@@ -19,6 +20,7 @@ export default function FloatingActionButton({
   icon,
   helperText,
   loading,
+  loadingRing,
   loadingText,
   loadingBehavior,
   className,
@@ -28,13 +30,22 @@ export default function FloatingActionButton({
     <Button
       type="button"
       variant="unstyled"
-      className={[styles.button, className].filter(Boolean).join(" ")}
+      className={[
+        styles.button,
+        loadingRing ? styles.hasLoadingRing : "",
+        className,
+      ]
+        .filter(Boolean)
+        .join(" ")}
       aria-label={label}
       loading={loading}
       loadingText={loadingText}
       loadingBehavior={loadingBehavior}
       {...rest}
     >
+      {loadingRing ? (
+        <span className={styles.loadingRing} aria-hidden />
+      ) : null}
       {icon ?? label}
       {helperText ? (
         <span className={styles.helperText}>{helperText}</span>

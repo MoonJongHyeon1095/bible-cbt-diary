@@ -99,12 +99,18 @@
   gap: 10px;
   color: inherit;
   text-decoration: none;
+  text-align: left;
+  font: inherit;
+  appearance: none;
   transition:
     border-color 0.2s ease,
     transform 0.2s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .noteCard:hover {

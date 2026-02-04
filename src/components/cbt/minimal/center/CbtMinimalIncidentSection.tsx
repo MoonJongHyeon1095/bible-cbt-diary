@@ -25,7 +25,9 @@ export function CbtMinimalIncidentSection({
   const description =
     "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
   const headerRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isExampleOpen, setIsExampleOpen] = useState(false);
+  const [highlightInput, setHighlightInput] = useState(false);
 
   const handleShowExample = () => {
     if (!ALL_EXAMPLES.length) return;
@@ -53,6 +55,14 @@ export function CbtMinimalIncidentSection({
     window.scrollTo({ top, behavior: "auto" });
   }, []);
 
+  useEffect(() => {
+    if (!highlightInput) return;
+    const timer = window.setTimeout(() => {
+      setHighlightInput(false);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [highlightInput]);
+
   const exampleItems = useMemo(
     () =>
       ALL_EXAMPLES.map((example, index) => ({
@@ -75,6 +85,8 @@ export function CbtMinimalIncidentSection({
           userInput={userInput}
           onInputChange={onInputChange}
           onShowExample={handleShowExample}
+          highlightInput={highlightInput}
+          textareaRef={textareaRef}
         />
 
         <CbtMinimalFloatingNextButton
@@ -86,9 +98,20 @@ export function CbtMinimalIncidentSection({
       <CbtCarouselModal
         open={isExampleOpen}
         title="예시를 골라서 시작해볼까요?"
+        notice="선택하면 입력창에 자동으로 채워집니다."
         items={exampleItems}
         onClose={() => setIsExampleOpen(false)}
-        onSelect={(value) => onInputChange(value)}
+        onSelect={(value) => {
+          onInputChange(value);
+          setIsExampleOpen(false);
+          pushToast("입력창에 복사했어요.", "success");
+          setHighlightInput(true);
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+            const len = textareaRef.current?.value.length ?? 0;
+            textareaRef.current?.setSelectionRange(len, len);
+          });
+        }}
         emptyMessage="현재 보여줄 예시가 없습니다."
         selectOnSlide
         showSelectButton={false}

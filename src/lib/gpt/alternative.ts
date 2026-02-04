@@ -248,7 +248,7 @@ ${cognitiveErrorText}
 
     usedFallback = TECHNIQUES.some((tech) => !byTechnique[tech.technique]);
     const result = toResultByTechnique(byTechnique);
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (e) {
     console.error("대안사고 생성 실패(JSON):", e);
     return markAiFallback(toResultByTechnique({}));

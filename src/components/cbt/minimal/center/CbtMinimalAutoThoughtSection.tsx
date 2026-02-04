@@ -35,7 +35,7 @@ export function CbtMinimalAutoThoughtSection({
   const title = (
     <>
       {emotion} 뒤에 숨어있는
-      <br />
+      <span className={styles.mobileBreak} aria-hidden="true" />
       생각을 찾아볼게요.
     </>
   );

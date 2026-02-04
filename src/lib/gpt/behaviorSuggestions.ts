@@ -219,7 +219,7 @@ ${behaviorsText}
       behaviorId: behavior.id,
       suggestion: byId.get(behavior.id) ?? buildFallbackSuggestion(behavior),
     }));
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (e) {
     console.error("행동 제안 생성 실패(JSON):", e);
     return markAiFallback(behaviors.map((behavior) => ({

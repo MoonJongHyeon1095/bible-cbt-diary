@@ -26,10 +26,12 @@ export function CbtMinimalEmotionSection({
           title="감정을 선택해주세요."
           center
         />
-        <CbtMinimalEmotionList
-          selectedEmotion={selectedEmotion}
-          onSelectEmotion={onSelectEmotion}
-        />
+        <div className={styles.emotionGridWrap} data-tour="emotion-grid">
+          <CbtMinimalEmotionList
+            selectedEmotion={selectedEmotion}
+            onSelectEmotion={onSelectEmotion}
+          />
+        </div>
         <CbtMinimalEmotionDetailsSection
           emotion={selectedEmotionData}
           isVisible={Boolean(selectedEmotion)}

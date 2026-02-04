@@ -12,7 +12,7 @@ export function CbtMinimalEmotionList({
   onSelectEmotion,
 }: CbtMinimalEmotionListProps) {
   return (
-    <div className={styles.emotionGrid} data-tour="minimal-emotion-grid">
+    <div className={styles.emotionGrid}>
       {EMOTIONS.map((emotion) => (
         <CbtMinimalEmotionItem
           key={emotion.id}

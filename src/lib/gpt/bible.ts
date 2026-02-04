@@ -99,7 +99,7 @@ ${emotion}
       endVerse: result.endVerse ?? result.startVerse ?? fb.endVerse,
       prayer: result.prayer || fb.prayer,
     };
-    return usedFallback ? markAiFallback(out) : out;
+    return usedFallback ? markAiFallback(out, "partial") : out;
   } catch (error) {
     console.error("성경 구절 생성 실패(JSON):", error);
     return markAiFallback(FALLBACK(emotion));

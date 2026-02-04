@@ -152,7 +152,7 @@ ${thought}
       soothing: result.soothing || fb.soothing,
       observedSelf: result.observedSelf || fb.observedSelf,
     };
-    return usedFallback ? markAiFallback(out) : out;
+    return usedFallback ? markAiFallback(out, "partial") : out;
   } catch (e) {
     console.error("번즈 공감 생성 실패(JSON):", e);
     return markAiFallback(FALLBACK(emotion, thought));

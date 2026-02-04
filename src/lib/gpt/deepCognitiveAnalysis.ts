@@ -1,17 +1,14 @@
 // src/lib/gpt/deepCognitiveAnalysis.ts
+import { markAiFallback } from "@/lib/utils/aiFallback";
 import { callGptText } from "./client";
-import {
-  type ErrorIndex,
-  isValidIndex,
-} from "./cognitiveRank";
+import { type ErrorIndex, isValidIndex } from "./cognitiveRank";
 import {
   type DeepInternalContext,
   formatDeepInternalContext,
 } from "./deepContext";
-import { cleanText } from "./utils/text";
-import { parseCognitiveErrorsResponse } from "./utils/llm/cognitiveErrors";
 import { formatCognitiveErrorsReferenceForCandidates } from "./utils/cognitiveErrorsPrompt";
-import { markAiFallback } from "@/lib/utils/aiFallback";
+import { parseCognitiveErrorsResponse } from "./utils/llm/cognitiveErrors";
+import { cleanText } from "./utils/text";
 
 export type DeepCognitiveErrorDetailResult = {
   errors: Array<{
@@ -19,7 +16,6 @@ export type DeepCognitiveErrorDetailResult = {
     analysis: string;
   }>;
 };
-
 
 const DETAIL_SYSTEM_PROMPT = `
 You are an expert who analyzes "cognitive distortions" in detail from a Cognitive Behavioral Therapy (CBT) perspective.
@@ -67,7 +63,9 @@ Cognitive distortion index meanings:
 10. Personalization
 `.trim();
 
-function fallbackDetail(candidates: ErrorIndex[]): DeepCognitiveErrorDetailResult {
+function fallbackDetail(
+  candidates: ErrorIndex[],
+): DeepCognitiveErrorDetailResult {
   const make = (idx: ErrorIndex) => {
     if (idx === 1) {
       return "이 문장에서는 성공/실패처럼 두 극단으로 생각이 기울어져 있어요. 중간 가능성을 스스로 배제하면 감정이 더 커질 수 있어요. 지금 상황에서 ‘중간 단계의 가능성’이 하나라도 있는지, 구체적으로 무엇인지 확인해볼 수 있을까요?";
@@ -153,7 +151,7 @@ ${uniq.join(", ")}
     errors.sort((a, b) => uniq.indexOf(a.index) - uniq.indexOf(b.index));
 
     const result = { errors };
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (e) {
     console.error("deep 인지오류 상세 분석 실패(JSON):", e);
     return markAiFallback(fallbackDetail(uniq));

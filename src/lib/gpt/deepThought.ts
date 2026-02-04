@@ -228,7 +228,7 @@ ${formatDeepInternalContext(internal)}
         autonomy: autItem,
       },
     };
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (error) {
     console.error("deep sdt automatic thoughts error:", error);
     return markAiFallback({

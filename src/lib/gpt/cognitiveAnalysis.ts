@@ -182,7 +182,7 @@ ${uniq.join(", ")}
     errors.sort((a, b) => uniq.indexOf(a.index) - uniq.indexOf(b.index));
 
     const result = { errors };
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (e) {
     console.error("인지오류 상세 분석 실패(JSON):", e);
     return markAiFallback(fallbackDetail(uniq));

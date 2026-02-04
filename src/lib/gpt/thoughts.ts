@@ -220,7 +220,7 @@ ${emotion}
     for (const t of aut1) out.push({ category: "자율성", ...t });
 
     const result = { sdtThoughts: out };
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (e) {
     console.error("확장 자동사고(SDT) 생성 실패:", e);
     return markAiFallback({

@@ -142,6 +142,14 @@ function CbtDeepSessionPageContent() {
         },
       ];
     }
+    if (step === "emotion") {
+      return [
+        {
+          selector: "[data-tour='emotion-grid']",
+          content: "지금 가장 가까운 감정을 골라주세요.",
+        },
+      ];
+    }
     return [];
   }, [step]);
 

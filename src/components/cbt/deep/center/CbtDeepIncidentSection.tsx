@@ -38,6 +38,7 @@ export function CbtDeepIncidentSection({
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   useCbtAutoResizeTextarea(textareaRef, [userInput]);
   const [isPreviousOpen, setIsPreviousOpen] = useState(false);
+  const [highlightInput, setHighlightInput] = useState(false);
 
   const handleUsePrevious = () => {
     setIsPreviousOpen(true);
@@ -100,6 +101,14 @@ export function CbtDeepIncidentSection({
     window.scrollTo({ top, behavior: "auto" });
   }, []);
 
+  useEffect(() => {
+    if (!highlightInput) return;
+    const timer = window.setTimeout(() => {
+      setHighlightInput(false);
+    }, 1400);
+    return () => window.clearTimeout(timer);
+  }, [highlightInput]);
+
   const previousItems = useMemo(() => {
     const allNotes = [mainNote, ...subNotes].filter(Boolean);
     return allNotes
@@ -146,13 +155,13 @@ export function CbtDeepIncidentSection({
               userInput.trim()
                 ? styles.inputWrapFilled
                 : "감정 일기를 기록하는 곳입니다."
-            }`}
+            } ${highlightInput ? styles.inputWrapHighlight : ""}`}
           >
             <textarea
               ref={textareaRef}
               value={userInput}
               onChange={(event) => onInputChange(event.target.value)}
-              placeholder=""
+              placeholder="구체적으로 쓰면 더욱 효과적입니다."
               rows={1}
               data-tour="deep-incident-input"
               className={`${styles.textarea} ${styles.incidentTextarea}`}
@@ -174,9 +183,20 @@ export function CbtDeepIncidentSection({
       <CbtCarouselModal
         open={isPreviousOpen}
         title="이전의 상황을 살펴볼까요?"
+        notice="선택하면 입력창에 자동으로 채워집니다."
         items={previousItems}
         onClose={() => setIsPreviousOpen(false)}
-        onSelect={(value) => onInputChange(value)}
+        onSelect={(value) => {
+          onInputChange(value);
+          setIsPreviousOpen(false);
+          pushToast("입력창에 복사했어요.", "success");
+          setHighlightInput(true);
+          requestAnimationFrame(() => {
+            textareaRef.current?.focus();
+            const len = textareaRef.current?.value.length ?? 0;
+            textareaRef.current?.setSelectionRange(len, len);
+          });
+        }}
         emptyMessage="이전 기록을 찾지 못했습니다."
         selectOnSlide
         showSelectButton={false}

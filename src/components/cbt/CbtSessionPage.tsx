@@ -118,7 +118,7 @@ function CbtSessionPageContent() {
     if (step === "emotion") {
       return [
         {
-          selector: "[data-tour='minimal-emotion-grid']",
+          selector: "[data-tour='emotion-grid']",
           content: "지금 가장 가까운 감정을 골라주세요.",
         },
       ];

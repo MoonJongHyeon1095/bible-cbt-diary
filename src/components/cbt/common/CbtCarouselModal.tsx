@@ -20,6 +20,7 @@ type CbtCarouselModalItem = {
 type CbtCarouselModalProps = {
   open: boolean;
   title: string;
+  notice?: string;
   items: CbtCarouselModalItem[];
   onClose: () => void;
   onSelect: (value: string) => void;
@@ -33,6 +34,7 @@ type CbtCarouselModalProps = {
 export default function CbtCarouselModal({
   open,
   title,
+  notice,
   items,
   onClose,
   onSelect,
@@ -70,7 +72,10 @@ export default function CbtCarouselModal({
         onClick={(event) => event.stopPropagation()}
       >
         <div className={styles.modalHeader}>
-          <p className={styles.modalTitle}>{title}</p>
+          <div>
+            <p className={styles.modalTitle}>{title}</p>
+            {notice ? <p className={styles.modalSubtitle}>{notice}</p> : null}
+          </div>
           <SafeButton mode="native"
             type="button"
             className={styles.modalClose}

@@ -183,7 +183,7 @@ ${previousAltText || "(none)"}
 
     usedFallback = TECHNIQUES.some((tech) => !byTechnique[tech.technique]);
     const result = toResultByTechnique(byTechnique);
-    return usedFallback ? markAiFallback(result) : result;
+    return usedFallback ? markAiFallback(result, "partial") : result;
   } catch (error) {
     console.error("deep alternative error:", error);
     return markAiFallback(toResultByTechnique({}));

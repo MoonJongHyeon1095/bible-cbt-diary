@@ -44,6 +44,18 @@ const isInAppBrowserUserAgent = (userAgent: string) => {
   return isAndroidWebView || isIosWebView;
 };
 
+// 앱이 WebView여도 네이티브에서는 OAuth를 시스템 브라우저로 열 수 있으므로
+// "인앱 브라우저 차단 대상"에서 제외한다.
+const isBlockedInAppBrowser = (
+  userAgent: string,
+  isNativePlatform: boolean,
+) => {
+  if (isNativePlatform) {
+    return false;
+  }
+  return isInAppBrowserUserAgent(userAgent);
+};
+
 export default function AuthModal({
   isOpen,
   onClose,
@@ -60,7 +72,9 @@ export default function AuthModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [currentUrl, setCurrentUrl] = useState<string | null>(null);
+  const [hasTriedExternalOpen, setHasTriedExternalOpen] = useState(false);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+  const isNativePlatform = Capacitor.isNativePlatform();
 
   useEffect(() => {
     if (!isOpen) {
@@ -89,8 +103,32 @@ export default function AuthModal({
 
     setCurrentUrl(window.location.href);
     const ua = window.navigator?.userAgent ?? "";
-    setIsInAppBrowser(isInAppBrowserUserAgent(ua));
-  }, [isOpen]);
+    setIsInAppBrowser(isBlockedInAppBrowser(ua, isNativePlatform));
+  }, [isOpen, isNativePlatform]);
+
+  useEffect(() => {
+    if (!isOpen || !isInAppBrowser || isNativePlatform || hasTriedExternalOpen) {
+      return;
+    }
+    if (!currentUrl) {
+      return;
+    }
+
+    // Threads/인스타/카톡 등 인앱 브라우저에서 열리면
+    // Google OAuth가 막히는 경우가 많아 1회 외부 브라우저로 유도한다.
+    setHasTriedExternalOpen(true);
+    const timer = window.setTimeout(() => {
+      handleOpenExternalBrowser();
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    isOpen,
+    isInAppBrowser,
+    isNativePlatform,
+    hasTriedExternalOpen,
+    currentUrl,
+  ]);
 
   if (!isOpen) {
     return null;
@@ -146,7 +184,9 @@ export default function AuthModal({
     setMessage("");
     setError("");
     const redirectTo = getOAuthRedirectTo();
-    if (Capacitor.isNativePlatform()) {
+    if (isNativePlatform) {
+      // 네이티브 앱에서는 OAuth URL만 받아 시스템 브라우저로 연다.
+      // iOS: ASWebAuthenticationSession / Android: Chrome Custom Tabs
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -167,6 +207,15 @@ export default function AuthModal({
       if (error || !data?.url) {
         setError("소셜 로그인을 시작하지 못했습니다.");
       }
+      return;
+    }
+
+    if (isInAppBrowser) {
+      // 외부 앱 인앱 브라우저에서는 OAuth 차단 가능성이 높아
+      // 브라우저 전환만 시도하고 로그인 흐름은 중단한다.
+      handleOpenExternalBrowser();
+      setIsSubmitting(false);
+      setError("인앱 브라우저에서는 로그인이 막힐 수 있어요.");
       return;
     }
 
@@ -223,25 +272,10 @@ export default function AuthModal({
             닫기
           </SafeButton>
         </header>
-        {isInAppBrowser && (
-          <div className={styles.inAppNotice}>
-            <p className={styles.inAppTitle}>
-              이 브라우저에서는 Google 로그인이 차단될 수 있어요.
-            </p>
-            <p className={styles.inAppDescription}>
-              Safari/Chrome 같은 외부 브라우저로 열어주세요.
-            </p>
-            <SafeButton
-              type="button"
-              variant="outline"
-              size="sm"
-              className={styles.externalButton}
-              onClick={handleOpenExternalBrowser}
-            >
-              외부 브라우저로 열기
-            </SafeButton>
-          </div>
-        )}
+        {/*
+          인앱 브라우저 안내 박스는 제거됨.
+          (인앱 감지 시 자동 외부 브라우저 유도는 유지)
+        */}
 
         <form className={styles.form} onSubmit={handleAuthSubmit}>
           {mode === "signup" ? (

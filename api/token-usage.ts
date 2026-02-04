@@ -1,40 +1,56 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createSupabaseAdminClient } from "../src/lib/supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../src/lib/auth/sessionNode.js";
-import { json, methodNotAllowed, readJson, handleCors } from "./_utils.js";
+import {
+  getQueryParam,
+  json,
+  methodNotAllowed,
+  readJson,
+  handleCors,
+} from "./_utils.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
 
-  if (req.method !== "POST") {
+  if (req.method !== "GET" && req.method !== "POST") {
     return methodNotAllowed(res);
   }
 
-  const body = await readTokenUsageBody(req);
-  const deviceId = normalizeDeviceId(body.deviceId);
-  const usage = body.usage ?? {};
-  const action = body.action;
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const userId = user?.id ?? null;
   const requestId = req.headers["x-request-id"];
   const perf = null;
 
-  if (!deviceId && !userId) {
-    console.error("[token-usage] missing identity", {
-      action,
-      requestId,
-      hasDeviceId: Boolean(deviceId),
-      hasUserId: Boolean(userId),
-    });
-    return json(res, 400, { error: "deviceId or userId is required" });
-  }
-
-  if (action === "status") {
+  if (req.method === "GET") {
+    const deviceId = normalizeDeviceId(getQueryParam(req, "deviceId") ?? undefined);
+    if (!deviceId && !userId) {
+      console.error("[token-usage] missing identity", {
+        action: "status",
+        requestId,
+        hasDeviceId: Boolean(deviceId),
+        hasUserId: Boolean(userId),
+      });
+      return json(res, 400, { error: "deviceId or userId is required" });
+    }
     return handleStatusRequest(res, {
       deviceId,
       userId,
       requestId,
     });
+  }
+
+  const body = await readTokenUsageBody(req);
+  const deviceId = normalizeDeviceId(body.deviceId);
+  const usage = body.usage ?? {};
+
+  if (!deviceId && !userId) {
+    console.error("[token-usage] missing identity", {
+      action: "usage",
+      requestId,
+      hasDeviceId: Boolean(deviceId),
+      hasUserId: Boolean(userId),
+    });
+    return json(res, 400, { error: "deviceId or userId is required" });
   }
 
   return handleUsageRequest(res, {
@@ -46,7 +62,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 }
 
 type TokenUsageBody = {
-  action?: "status";
   deviceId?: string;
   usage?: UsagePayload;
 };

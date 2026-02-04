@@ -3,6 +3,11 @@ import { useRouter } from "next/navigation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import { startPerf } from "@/lib/utils/perf";
+import {
+  readAiUsageGuardCache,
+  writeAiUsageGuardCache,
+} from "@/lib/utils/aiUsageGuardCache";
+import type { UsageCacheEntry } from "@/lib/utils/aiUsageGuardCache";
 
 type UseAiUsageGuardOptions = {
   enabled?: boolean;
@@ -10,45 +15,8 @@ type UseAiUsageGuardOptions = {
   redirectTo?: string;
 };
 
-type UsageCacheEntry = {
-  allowed: boolean;
-  checkedAt: number;
-  message?: string;
-};
-
-const CACHE_TTL_MS = 60_000;
-const CACHE_KEY = "aiUsageGuard:last";
-let cachedUsage: UsageCacheEntry | null = null;
-
-const readCachedUsage = (): UsageCacheEntry | null => {
-  if (cachedUsage) return cachedUsage;
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.sessionStorage.getItem(CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as UsageCacheEntry;
-    if (
-      typeof parsed?.allowed !== "boolean" ||
-      typeof parsed?.checkedAt !== "number"
-    ) {
-      return null;
-    }
-    cachedUsage = parsed;
-    return parsed;
-  } catch {
-    return null;
-  }
-};
-
-const writeCachedUsage = (entry: UsageCacheEntry) => {
-  cachedUsage = entry;
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(entry));
-  } catch {
-    // Ignore storage errors (private mode, quota, etc.).
-  }
-};
+const DEFAULT_DENIED_MESSAGE =
+  "토큰 사용량을 초과했습니다. (KST 09:00 초기화)";
 
 export function useAiUsageGuard({
   enabled = true,
@@ -67,9 +35,26 @@ export function useAiUsageGuard({
     (message?: string | null) => {
       if (hasNotifiedRef.current) return;
       hasNotifiedRef.current = true;
-      pushToast(message ?? "토큰 사용량을 초과했습니다. (KST 09:00 초기화)", "error");
+      pushToast(message ?? DEFAULT_DENIED_MESSAGE, "error");
     },
     [pushToast],
+  );
+
+  const handleDenied = useCallback(
+    (message?: string | null) => {
+      notifyDenied(message);
+      router.replace(redirectTo);
+    },
+    [notifyDenied, redirectTo, router],
+  );
+
+  const hydrateFromCache = useCallback(
+    (cached: UsageCacheEntry) => {
+      hasCheckedRef.current = true;
+      lastAllowedRef.current = cached.allowed;
+      lastMessageRef.current = cached.message ?? null;
+    },
+    [],
   );
 
   const checkUsage = useCallback(async () => {
@@ -78,28 +63,24 @@ export function useAiUsageGuard({
       endPerf();
       const lastAllowed = lastAllowedRef.current ?? true;
       if (!lastAllowed) {
-        notifyDenied(lastMessageRef.current);
-        router.replace(redirectTo);
+        handleDenied(lastMessageRef.current);
       }
       return lastAllowed;
     }
+
     if (cache) {
-      const cached = readCachedUsage();
-      if (cached && Date.now() - cached.checkedAt < CACHE_TTL_MS) {
-        hasCheckedRef.current = true;
-        lastAllowedRef.current = cached.allowed;
+      const cached = readAiUsageGuardCache();
+      if (cached) {
+        hydrateFromCache(cached);
         endPerf();
         if (!cached.allowed) {
-          lastMessageRef.current = cached.message ?? null;
-          notifyDenied(cached.message);
-          router.replace(redirectTo);
+          handleDenied(cached.message ?? null);
         }
         return cached.allowed;
       }
-    }
-    if (cache) {
       hasCheckedRef.current = true;
     }
+
     let allowed = true;
     let lastMessage: string | null = null;
     const captureToast: typeof pushToast = (message, variant) => {
@@ -119,16 +100,20 @@ export function useAiUsageGuard({
     lastAllowedRef.current = allowed;
     lastMessageRef.current = lastMessage;
     if (cache) {
-      writeCachedUsage({ allowed, checkedAt: Date.now(), message: lastMessage ?? undefined });
+      writeAiUsageGuardCache({
+        allowed,
+        checkedAt: Date.now(),
+        message: lastMessage ?? undefined,
+      });
     }
     if (!allowed) {
-      router.replace(redirectTo);
+      handleDenied(lastMessage);
       endPerf();
       return false;
     }
     endPerf();
     return true;
-  }, [cache, notifyDenied, pushToast, redirectTo, router]);
+  }, [cache, handleDenied, hydrateFromCache, pushToast]);
 
   useEffect(() => {
     if (!enabled) {

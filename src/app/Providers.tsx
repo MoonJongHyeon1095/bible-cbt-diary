@@ -10,12 +10,15 @@ import { GateProvider } from "@/components/gate/GateProvider";
 import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import AppUpdateGate from "@/components/gate/AppUpdateGate";
+import { useTokenUsageSync } from "@/lib/hooks/useTokenUsageSync";
 
 type ProvidersProps = {
   children: ReactNode;
 };
 
 export default function Providers({ children }: ProvidersProps) {
+  useTokenUsageSync();
+
   useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
       return;

@@ -17,12 +17,15 @@ type ProvidersProps = {
 
 export default function Providers({ children }: ProvidersProps) {
   useEffect(() => {
+    // Native 앱에서만 backButton/appUrlOpen 이벤트를 듣습니다.
     if (!Capacitor.isNativePlatform()) {
       return;
     }
 
+    // 등록된 native event listener를 정리하기 위한 콜백 목록입니다.
     const removeListeners: Array<() => void> = [];
 
+    // Capacitor App/Broswer 모듈을 동적 로딩한 뒤 이벤트 핸들러를 등록합니다.
     const register = async () => {
       try {
         const mod = await import("@capacitor/app");
@@ -31,6 +34,7 @@ export default function Providers({ children }: ProvidersProps) {
         const browserMod = await import("@capacitor/browser");
         const CapBrowser = browserMod.Browser;
 
+        // OAuth 콜백 딥링크 처리: 세션 교환 후 인앱 브라우저를 닫습니다.
         const appUrlListener = await CapApp.addListener(
           "appUrlOpen",
           async ({ url }) => {
@@ -65,7 +69,14 @@ export default function Providers({ children }: ProvidersProps) {
 
         removeListeners.push(() => appUrlListener.remove());
 
+        // Android 하드웨어 뒤로가기 처리: 히스토리가 있으면 뒤로, 없으면 앱 종료.
         const backButtonListener = await CapApp.addListener("backButton", () => {
+          const pathname = window.location.pathname;
+          if (pathname === "/" || pathname === "/today") {
+            CapApp.exitApp();
+            return;
+          }
+
           if (window.history.length > 1) {
             window.history.back();
             return;
@@ -76,6 +87,7 @@ export default function Providers({ children }: ProvidersProps) {
 
         removeListeners.push(() => backButtonListener.remove());
       } catch (error) {
+        // Capacitor 모듈 로딩 실패 시 로깅만 하고 앱을 계속 구동합니다.
         console.log("[oauth] failed to load @capacitor/app:", error);
       }
     };
@@ -83,6 +95,7 @@ export default function Providers({ children }: ProvidersProps) {
     register();
 
     return () => {
+      // 등록한 모든 native event listener를 해제합니다.
       removeListeners.forEach((remove) => {
         remove();
       });

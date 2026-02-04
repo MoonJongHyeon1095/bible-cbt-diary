@@ -1,5 +1,4 @@
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
-import SafeButton from "@/components/ui/SafeButton";
 import { useRef } from "react";
 import type { RefObject } from "react";
 import styles from "../../MinimalStyles.module.css";

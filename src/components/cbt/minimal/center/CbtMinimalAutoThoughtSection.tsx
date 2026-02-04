@@ -54,7 +54,6 @@ export function CbtMinimalAutoThoughtSection({
     loading,
     error,
     isFallback,
-    shouldShowCustom,
     setIndex,
     reloadThoughts,
   } = useCbtAutoThoughtSuggestions({

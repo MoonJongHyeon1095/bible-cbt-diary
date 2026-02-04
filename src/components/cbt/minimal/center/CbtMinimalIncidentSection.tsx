@@ -8,6 +8,7 @@ import styles from "../MinimalStyles.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { Sparkles } from "lucide-react";
+import SafeButton from "@/components/ui/SafeButton";
 
 interface CbtMinimalIncidentSectionProps {
   userInput: string;

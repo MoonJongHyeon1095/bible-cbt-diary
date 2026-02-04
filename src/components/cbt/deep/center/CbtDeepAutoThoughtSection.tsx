@@ -55,7 +55,6 @@ export function CbtDeepAutoThoughtSection({
   }, [items]);
 
   const currentThought = items[currentIndex] ?? null;
-  const showCustomButton = currentIndex >= 2;
   const { emblaRef, controls } = useEmblaPagination({
     slidesCount: items.length,
     draggable: !loading && !wantsCustom,

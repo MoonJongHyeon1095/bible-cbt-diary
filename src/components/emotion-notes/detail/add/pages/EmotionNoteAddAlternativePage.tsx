@@ -7,8 +7,8 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import BlinkTextarea from "@/components/ui/BlinkTextarea";
 import { generateContextualAlternativeThoughts } from "@/lib/ai";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { isAiFallback } from "@/lib/utils/aiFallback";
-import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -52,6 +52,11 @@ export default function EmotionNoteAddAlternativePage({
   const router = useRouter();
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const {
     accessMode,
     triggerText,
@@ -194,7 +199,7 @@ export default function EmotionNoteAddAlternativePage({
       openAuthModal();
       return false;
     }
-    const allowed = await checkAiUsageLimit(pushToast);
+    const allowed = await checkUsage();
     if (!allowed) return false;
     if (!triggerText.trim()) {
       pushToast("트리거 텍스트를 먼저 입력해주세요.", "error");

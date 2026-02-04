@@ -20,11 +20,16 @@ export type TokenUsageStatus = {
 
 const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY ?? "";
 
-const buildUsageHeaders = async () => {
+const buildUsageHeaders = async (
+  options: { includeContentType?: boolean } = {},
+) => {
   const supabase = getSupabaseBrowserClient();
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  const headers: Record<string, string> = {};
+  if (options.includeContentType ?? true) {
+    headers["Content-Type"] = "application/json";
+  }
   if (APP_API_KEY) {
     headers["x-api-key"] = APP_API_KEY;
   }
@@ -55,7 +60,7 @@ export const syncTokenUsage = async (
 
 export const fetchTokenUsageStatus = async (): Promise<TokenUsageStatus> => {
   const deviceId = getDeviceId();
-  const headers = await buildUsageHeaders();
+  const headers = await buildUsageHeaders({ includeContentType: false });
   const query = new URLSearchParams({ deviceId }).toString();
   const response = await fetch(buildApiUrl(`/api/token-usage?${query}`), {
     method: "GET",

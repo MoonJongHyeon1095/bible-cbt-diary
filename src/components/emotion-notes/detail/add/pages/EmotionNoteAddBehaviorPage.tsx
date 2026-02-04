@@ -10,8 +10,8 @@ import { generateBehaviorSuggestions } from "@/lib/ai";
 import { COGNITIVE_BEHAVIORS } from "@/lib/constants/behaviors";
 import { getRecommendedBehaviors } from "@/lib/constants/errorBehaviorMap";
 import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { isAiFallback } from "@/lib/utils/aiFallback";
-import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import {
   ArrowDownToLine,
   ArrowRight,
@@ -58,6 +58,11 @@ export default function EmotionNoteAddBehaviorPage({
   const router = useRouter();
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const {
     accessMode,
     triggerText,
@@ -311,7 +316,7 @@ export default function EmotionNoteAddBehaviorPage({
       openAuthModal();
       return false;
     }
-    const allowed = await checkAiUsageLimit(pushToast);
+    const allowed = await checkUsage();
     if (!allowed) return false;
     if (!triggerText.trim()) {
       pushToast("트리거 텍스트를 먼저 입력해주세요.", "error");

@@ -12,7 +12,7 @@ import type { UsageCacheEntry } from "@/lib/utils/aiUsageGuardCache";
 type UseAiUsageGuardOptions = {
   enabled?: boolean;
   cache?: boolean;
-  redirectTo?: string;
+  redirectTo?: string | null;
 };
 
 const DEFAULT_DENIED_MESSAGE =
@@ -43,7 +43,9 @@ export function useAiUsageGuard({
   const handleDenied = useCallback(
     (message?: string | null) => {
       notifyDenied(message);
-      router.replace(redirectTo);
+      if (redirectTo) {
+        router.replace(redirectTo);
+      }
     },
     [notifyDenied, redirectTo, router],
   );

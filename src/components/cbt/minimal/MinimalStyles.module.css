@@ -122,7 +122,8 @@
 .title {
   font-size: clamp(1.75rem, 1.4rem + 1.8vw, 2.7rem);
   line-height: 1.25;
-  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
+    serif;
   font-weight: 600;
   color: var(--text);
   letter-spacing: -0.01em;
@@ -147,6 +148,11 @@
   padding: 6px 12px;
   box-shadow: none;
   transition: border-color 0.2s ease;
+}
+
+.inputWrapWithFab {
+  --fab-size: 52px;
+  --fab-inset: 10px;
 }
 
 .incidentInputCard {
@@ -219,6 +225,49 @@
   overflow: hidden;
 }
 
+.textareaShell {
+  position: relative;
+}
+
+.textareaShellWithFab {
+}
+
+.textareaActionRow {
+  position: absolute;
+  left: var(--fab-inset, 12px);
+  bottom: calc(var(--fab-inset, 12px) - 2px);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 1;
+  max-width: calc(100% - (var(--fab-size, 52px) + var(--fab-inset, 12px) + 16px));
+  flex-wrap: wrap;
+}
+
+.textareaActionButton {
+  margin: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(12, 16, 22, 0.6);
+  border: 1px solid rgba(80, 92, 112, 0.5);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  line-height: 1;
+  color: rgba(210, 220, 236, 0.9);
+}
+
+.textareaActionButton:hover {
+  border-color: rgba(140, 160, 196, 0.8);
+  color: #eef3ff;
+}
+
+.textareaActionIcon {
+  width: 14px;
+  height: 14px;
+}
+
 .incidentTextarea {
   font-size: 1.06rem;
   line-height: 1.7;
@@ -262,6 +311,83 @@
   justify-content: center;
   transition: transform 0.2s ease, border-color 0.2s ease;
   overflow: hidden;
+}
+
+.textareaWithFab {
+  padding-bottom: calc(var(--fab-size) + var(--fab-inset) - 2px);
+  padding-right: 14px;
+}
+
+.inlineNextButton {
+  position: absolute;
+  right: calc(var(--fab-inset, 12px) - 8px);
+  bottom: calc(var(--fab-inset, 12px) - 8px);
+  width: calc(var(--fab-size, 52px) - 6px);
+  height: calc(var(--fab-size, 52px) - 6px);
+  border-radius: 999px;
+  border: 1px solid rgba(80, 92, 112, 0.7);
+  background: rgba(16, 20, 28, 0.95);
+  color: var(--text);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  overflow: hidden;
+}
+
+.inlineNextButton:hover {
+  transform: translateY(-1px);
+  border-color: rgba(140, 160, 196, 0.8);
+}
+
+.inlineNextButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inlineNextButton::before {
+  content: "";
+  position: absolute;
+  inset: -45%;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(242, 201, 109, 0.9) 40deg,
+    transparent 90deg,
+    rgba(150, 190, 255, 0.8) 140deg,
+    transparent 200deg
+  );
+  opacity: 0.55;
+  animation: floatingRingSpin 5.5s linear infinite;
+  pointer-events: none;
+}
+
+.inlineNextButton::after {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  border-radius: 999px;
+  background: rgba(16, 20, 28, 0.95);
+  border: 1px solid rgba(80, 92, 112, 0.6);
+  pointer-events: none;
+}
+
+.inlineNextButton:hover::before {
+  opacity: 0.85;
+}
+
+.inlineNextButton:disabled::before {
+  opacity: 0.2;
+  animation-play-state: paused;
+}
+
+.inlineNextIcon {
+  width: 22px;
+  height: 22px;
+  position: relative;
+  z-index: 1;
 }
 
 @media (min-width: 980px) {

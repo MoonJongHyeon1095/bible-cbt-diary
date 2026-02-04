@@ -1,24 +1,23 @@
 import { ArrowRight } from "lucide-react";
-import { createPortal } from "react-dom";
 import styles from "../MinimalStyles.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
-interface CbtMinimalFloatingNextButtonProps {
+interface CbtInlineNextButtonProps {
   onClick: () => void;
   ariaLabel?: string;
   disabled?: boolean;
-  dataTour?: string;
   className?: string;
+  dataTour?: string;
 }
 
-export function CbtMinimalFloatingNextButton({
+export function CbtInlineNextButton({
   onClick,
   ariaLabel = "다음으로",
   disabled = false,
-  dataTour,
   className,
-}: CbtMinimalFloatingNextButtonProps) {
-  const button = (
+  dataTour,
+}: CbtInlineNextButtonProps) {
+  return (
     <SafeButton
       type="button"
       variant="unstyled"
@@ -26,15 +25,9 @@ export function CbtMinimalFloatingNextButton({
       aria-label={ariaLabel}
       disabled={disabled}
       data-tour={dataTour}
-      className={`${styles.floatingButton} ${className ?? ""}`.trim()}
+      className={`${styles.inlineNextButton} ${className ?? ""}`.trim()}
     >
-      <ArrowRight className={styles.floatingIcon} />
+      <ArrowRight className={styles.inlineNextIcon} />
     </SafeButton>
   );
-
-  if (typeof document === "undefined") {
-    return button;
-  }
-
-  return createPortal(button, document.body);
 }

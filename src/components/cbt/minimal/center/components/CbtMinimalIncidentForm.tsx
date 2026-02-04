@@ -7,17 +7,19 @@ import styles from "../../MinimalStyles.module.css";
 interface CbtMinimalIncidentFormProps {
   userInput: string;
   onInputChange: (value: string) => void;
-  onShowExample: () => void;
   highlightInput?: boolean;
   textareaRef?: RefObject<HTMLTextAreaElement>;
+  action?: React.ReactNode;
+  actionRow?: React.ReactNode;
 }
 
 export function CbtMinimalIncidentForm({
   userInput,
   onInputChange,
-  onShowExample,
   highlightInput = false,
   textareaRef,
+  action,
+  actionRow,
 }: CbtMinimalIncidentFormProps) {
   const localRef = useRef<HTMLTextAreaElement | null>(null);
   const resolvedRef = textareaRef ?? localRef;
@@ -28,27 +30,32 @@ export function CbtMinimalIncidentForm({
       <div
         className={`${styles.inputWrap} ${styles.incidentInputCard} ${
           userInput.trim() ? styles.inputWrapFilled : ""
-        } ${highlightInput ? styles.inputWrapHighlight : ""}`}
+        } ${highlightInput ? styles.inputWrapHighlight : ""} ${
+          action ? styles.inputWrapWithFab : ""
+        }`}
       >
-        <textarea
-          ref={resolvedRef}
-          value={userInput}
-          onChange={(event) => onInputChange(event.target.value)}
-          placeholder="구체적으로 적을 수록 효과적입니다."
-          rows={1}
-          data-tour="minimal-incident-input"
-          className={`${styles.textarea} ${styles.incidentTextarea}`}
-        />
+        <div
+          className={`${styles.textareaShell} ${
+            action ? styles.textareaShellWithFab : ""
+          }`}
+        >
+          <textarea
+            ref={resolvedRef}
+            value={userInput}
+            onChange={(event) => onInputChange(event.target.value)}
+            placeholder="구체적으로 적을 수록 효과적입니다."
+            rows={1}
+            data-tour="minimal-incident-input"
+            className={`${styles.textarea} ${styles.incidentTextarea} ${
+              action ? styles.textareaWithFab : ""
+            }`}
+          />
+          {actionRow ? (
+            <div className={styles.textareaActionRow}>{actionRow}</div>
+          ) : null}
+          {action ? action : null}
+        </div>
       </div>
-      <SafeButton
-        type="button"
-        variant="unstyled"
-        onClick={onShowExample}
-        data-tour="minimal-incident-example"
-        className={styles.exampleButton}
-      >
-        예시를 보여주세요
-      </SafeButton>
     </div>
   );
 }

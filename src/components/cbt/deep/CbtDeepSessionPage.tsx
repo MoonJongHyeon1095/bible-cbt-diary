@@ -413,13 +413,21 @@ function CbtDeepSessionPageContent() {
       const resolvedGroupId = result.payload?.groupId ?? groupId;
 
       pushToast("세션 기록이 저장되었습니다.", "success");
+      setIsSaving(false);
       window.setTimeout(() => {
-        void flushTokenSessionUsage({ sessionCount: 1 });
-        clearCbtSessionStorage();
-        if (resolvedGroupId) {
-          router.push(`/graph?groupId=${resolvedGroupId}&noteId=${noteId}`);
-        } else {
-          router.push(`/detail?id=${noteId}`);
+        try {
+          void flushTokenSessionUsage({ sessionCount: 1 });
+          clearCbtSessionStorage();
+          if (resolvedGroupId) {
+            router.push(`/graph?groupId=${resolvedGroupId}&noteId=${noteId}`);
+          } else {
+            router.push(`/detail?id=${noteId}`);
+          }
+        } catch (timeoutError) {
+          console.error("deep 세션 이동 실패:", timeoutError);
+          pushToast("세션 이동 중 문제가 발생했습니다.", "error");
+        } finally {
+          setIsSaving(false);
         }
       }, 180);
     } catch (error) {

@@ -294,10 +294,18 @@ function CbtSessionPageContent() {
       }
 
       pushToast("세션 기록이 저장되었습니다.", "success");
+      setIsSaving(false);
       window.setTimeout(() => {
-        void flushTokenSessionUsage({ sessionCount: 1 });
-        clearCbtSessionStorage();
-        router.push(`/detail?id=${noteId}`);
+        try {
+          void flushTokenSessionUsage({ sessionCount: 1 });
+          clearCbtSessionStorage();
+          router.push(`/detail?id=${noteId}`);
+        } catch (timeoutError) {
+          console.error("세션 이동 실패:", timeoutError);
+          pushToast("세션 이동 중 문제가 발생했습니다.", "error");
+        } finally {
+          setIsSaving(false);
+        }
       }, 180);
     } catch (error) {
       console.error("세션 저장 실패:", error);

@@ -4,6 +4,7 @@ import { CbtMinimalAutoThoughtHintSection } from "@/components/cbt/minimal/cente
 import { CbtMinimalAutoThoughtInputForm } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtInputForm";
 import { CbtMinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtTextSection";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
+import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
@@ -130,6 +131,12 @@ export function CbtDeepAutoThoughtSection({
             <CbtMinimalAutoThoughtInputForm
               value={customThought}
               onChange={setCustomThought}
+              action={
+                <CbtInlineNextButton
+                  onClick={handleSelect}
+                  ariaLabel="다음으로"
+                />
+              }
             />
           </div>
         ) : (
@@ -152,7 +159,9 @@ export function CbtDeepAutoThoughtSection({
         )}
 
         <div className={styles.formStack}>
-          <CbtMinimalFloatingNextButton onClick={handleSelect} />
+          {!wantsCustom && (
+            <CbtMinimalFloatingNextButton onClick={handleSelect} />
+          )}
           {wantsCustom ? (
             <CbtMinimalAutoThoughtHintSection />
           ) : (

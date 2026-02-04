@@ -3,6 +3,7 @@ import { validateUserText } from "@/components/cbt/utils/validation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoThoughtSuggestions } from "@/components/cbt/hooks/useCbtAutoThoughtSuggestions";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
+import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
 import { CbtMinimalAutoThoughtControlSection } from "./components/CbtMinimalAutoThoughtControlSection";
@@ -129,6 +130,12 @@ export function CbtMinimalAutoThoughtSection({
               <CbtMinimalAutoThoughtInputForm
                 value={customThought}
                 onChange={setCustomThought}
+                action={
+                  <CbtInlineNextButton
+                    onClick={handleSubmit}
+                    ariaLabel="다음으로"
+                  />
+                }
               />
             </div>
           ) : loading ? (
@@ -168,10 +175,12 @@ export function CbtMinimalAutoThoughtSection({
           />
         )}
 
-        <CbtMinimalFloatingNextButton
-          onClick={handleSubmit}
-          dataTour="minimal-thought-next"
-        />
+        {!wantsCustom && (
+          <CbtMinimalFloatingNextButton
+            onClick={handleSubmit}
+            dataTour="minimal-thought-next"
+          />
+        )}
       </div>
     </div>
   );

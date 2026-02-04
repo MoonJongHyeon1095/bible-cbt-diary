@@ -1,12 +1,13 @@
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
-import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
+import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import { History } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
 
@@ -155,29 +156,41 @@ export function CbtDeepIncidentSection({
               userInput.trim()
                 ? styles.inputWrapFilled
                 : "감정 일기를 기록하는 곳입니다."
-            } ${highlightInput ? styles.inputWrapHighlight : ""}`}
+            } ${highlightInput ? styles.inputWrapHighlight : ""} ${
+              styles.inputWrapWithFab
+            }`}
           >
-            <textarea
-              ref={textareaRef}
-              value={userInput}
-              onChange={(event) => onInputChange(event.target.value)}
-              placeholder="구체적으로 쓰면 더욱 효과적입니다."
-              rows={1}
-              data-tour="deep-incident-input"
-              className={`${styles.textarea} ${styles.incidentTextarea}`}
-            />
+            <div
+              className={`${styles.textareaShell} ${styles.textareaShellWithFab}`}
+            >
+              <textarea
+                ref={textareaRef}
+                value={userInput}
+                onChange={(event) => onInputChange(event.target.value)}
+                placeholder="구체적으로 쓰면 더욱 효과적입니다."
+                rows={1}
+                data-tour="deep-incident-input"
+                className={`${styles.textarea} ${styles.incidentTextarea} ${styles.textareaWithFab}`}
+              />
+              <div className={styles.textareaActionRow}>
+                <SafeButton
+                  type="button"
+                  variant="unstyled"
+                  onClick={handleUsePrevious}
+                  className={`${styles.exampleButton} ${styles.textareaActionButton}`}
+                >
+                  <History className={styles.textareaActionIcon} />
+                  이전 기록
+                </SafeButton>
+              </div>
+              <CbtInlineNextButton
+                onClick={handleNext}
+                ariaLabel="다음으로"
+              />
+            </div>
           </div>
-          <SafeButton
-            type="button"
-            variant="unstyled"
-            onClick={handleUsePrevious}
-            className={styles.exampleButton}
-          >
-            이전의 상황을 사용합니다
-          </SafeButton>
         </div>
 
-        <CbtMinimalFloatingNextButton onClick={handleNext} />
       </div>
 
       <CbtCarouselModal

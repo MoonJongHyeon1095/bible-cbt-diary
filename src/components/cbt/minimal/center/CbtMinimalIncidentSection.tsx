@@ -1,12 +1,13 @@
 import { validateUserText } from "@/components/cbt/utils/validation";
 import { ALL_EXAMPLES } from "@/lib/constants/examples";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
+import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 import styles from "../MinimalStyles.module.css";
 import { useEffect, useMemo, useRef, useState } from "react";
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
+import { Sparkles } from "lucide-react";
 
 interface CbtMinimalIncidentSectionProps {
   userInput: string;
@@ -84,14 +85,27 @@ export function CbtMinimalIncidentSection({
         <CbtMinimalIncidentForm
           userInput={userInput}
           onInputChange={onInputChange}
-          onShowExample={handleShowExample}
           highlightInput={highlightInput}
           textareaRef={textareaRef}
-        />
-
-        <CbtMinimalFloatingNextButton
-          onClick={handleNext}
-          dataTour="minimal-incident-next"
+          actionRow={
+            <SafeButton
+              type="button"
+              variant="unstyled"
+              onClick={handleShowExample}
+              data-tour="minimal-incident-example"
+              className={`${styles.exampleButton} ${styles.textareaActionButton}`}
+            >
+              <Sparkles className={styles.textareaActionIcon} />
+              예시 보기
+            </SafeButton>
+          }
+          action={
+            <CbtInlineNextButton
+              onClick={handleNext}
+              ariaLabel="다음으로"
+              dataTour="minimal-incident-next"
+            />
+          }
         />
       </div>
 

@@ -50,7 +50,6 @@ export function CbtDeepAutoThoughtSection({
 
   useEffect(() => {
     setCurrentIndex(0);
-    setWantsCustom(false);
     setCustomThought("");
   }, [items]);
 
@@ -163,16 +162,14 @@ export function CbtDeepAutoThoughtSection({
                 currentIndex={currentIndex}
                 onSelect={controls.scrollTo}
               />
-              {showCustomButton && (
-                <SafeButton
-                  type="button"
-                  variant="unstyled"
-                  onClick={() => setWantsCustom(true)}
-                  className={styles.secondaryButton}
-                >
-                  또는 직접 생각을 작성해보세요
-                </SafeButton>
-              )}
+              <SafeButton
+                type="button"
+                variant="unstyled"
+                onClick={() => setWantsCustom(true)}
+                className={`${styles.secondaryButton} ${styles.carouselCustomPrompt}`}
+              >
+                또는 직접 생각을 작성해보세요
+              </SafeButton>
             </div>
           )}
         </div>

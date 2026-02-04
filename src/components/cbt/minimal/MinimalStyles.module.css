@@ -593,6 +593,10 @@
   justify-items: center;
 }
 
+.carouselCustomPrompt {
+  margin-top: 4px;
+}
+
 .carouselDots {
   display: inline-flex;
   align-items: center;

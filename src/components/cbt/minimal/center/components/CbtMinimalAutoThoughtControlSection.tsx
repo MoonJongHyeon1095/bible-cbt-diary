@@ -4,7 +4,6 @@ import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtMinimalAutoThoughtControlSectionProps {
   disabled: boolean;
-  showCustomButton: boolean;
   dotsCount: number;
   currentIndex: number;
   onSelectIndex: (index: number) => void;
@@ -13,7 +12,6 @@ interface CbtMinimalAutoThoughtControlSectionProps {
 
 export function CbtMinimalAutoThoughtControlSection({
   disabled,
-  showCustomButton,
   dotsCount,
   currentIndex,
   onSelectIndex,
@@ -28,17 +26,15 @@ export function CbtMinimalAutoThoughtControlSection({
         disabled={disabled}
       />
 
-      {showCustomButton && (
-        <SafeButton
-          type="button"
-          variant="unstyled"
-          onClick={onEnableCustom}
-          data-tour="minimal-thought-custom"
-          className={styles.secondaryButton}
-        >
-          또는 직접 생각을 작성해보세요
-        </SafeButton>
-      )}
+      <SafeButton
+        type="button"
+        variant="unstyled"
+        onClick={onEnableCustom}
+        data-tour="minimal-thought-custom"
+        className={`${styles.secondaryButton} ${styles.carouselCustomPrompt}`}
+      >
+        또는 직접 생각을 작성해보세요
+      </SafeButton>
     </div>
   );
 }

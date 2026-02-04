@@ -41,6 +41,7 @@ export function CbtMinimalAutoThoughtSection({
   );
 
   const resetSelection = () => {
+    if (wantsCustom) return;
     onWantsCustomChange(false);
     setCustomThought("");
   };
@@ -157,11 +158,13 @@ export function CbtMinimalAutoThoughtSection({
         ) : (
           <CbtMinimalAutoThoughtControlSection
             disabled={loading}
-            showCustomButton={shouldShowCustom}
             dotsCount={thoughts.length}
             currentIndex={currentIndex}
             onSelectIndex={controls.scrollTo}
-            onEnableCustom={() => onWantsCustomChange(true)}
+            onEnableCustom={() => {
+              onWantsCustomChange(true);
+              setCustomThought("");
+            }}
           />
         )}
 

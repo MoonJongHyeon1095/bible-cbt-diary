@@ -2,14 +2,13 @@
 "use client";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { buildApiUrl } from "@/lib/utils/apiBase";
-import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import { postGpt } from "@/lib/api/gpt/postGpt";
 import { getDeviceId } from "@/lib/utils/deviceId";
 import {
   readTokenSessionUsage,
   writeTokenSessionUsage,
 } from "@/lib/utils/tokenSessionStorage";
-import { syncTokenUsage } from "@/lib/utils/tokenUsage";
+import { syncTokenUsage } from "@/lib/api/token-usage/postTokenUsage";
 
 export type GptCallOptions = {
   systemPrompt?: string;
@@ -24,24 +23,16 @@ export async function callGptText(prompt: string, opts: GptCallOptions = {}) {
   const { data } = await supabase.auth.getSession();
   const accessToken = data.session?.access_token;
 
-  const body: Record<string, string> = { prompt };
-  if (opts.systemPrompt) body.systemPrompt = opts.systemPrompt;
-  if (opts.model) body.model = opts.model;
-  if (!accessToken) body.deviceId = getDeviceId();
-
-  const res = await fetch(buildApiUrl("/api/gpt"), {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...(accessToken ? buildAuthHeaders(accessToken) : {}),
-    },
-    body: JSON.stringify(body),
+  const { response, data: dataJson } = await postGpt({
+    prompt,
+    systemPrompt: opts.systemPrompt,
+    model: opts.model,
+    accessToken,
+    deviceId: accessToken ? null : getDeviceId(),
   });
 
-  const dataJson = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    const msg = dataJson?.error ?? `AI 요청 실패 (status: ${res.status})`;
+  if (!response.ok) {
+    const msg = dataJson?.error ?? `AI 요청 실패 (status: ${response.status})`;
     const err = new Error(msg);
     (err as Error & { details?: unknown }).details = dataJson?.details;
     throw err;

@@ -4,11 +4,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import {
-  clearGuestData,
-  hasGuestData,
-  uploadGuestData,
-} from "@/lib/utils/guestStorage";
+import { mergeDeviceData } from "@/lib/api/device-merge/postDeviceMerge";
+import { checkDeviceData } from "@/lib/api/device-merge/checkDeviceData";
 
 type GuestMigrationState = {
   isPromptOpen: boolean;
@@ -26,26 +23,56 @@ export const useGuestMigration = () => {
     error: null,
   });
   const accessTokenRef = useRef<string | null>(null);
-  const promptedRef = useRef(false);
-  const uploadingRef = useRef(false);
+  const mergingRef = useRef(false);
+  const mergedRef = useRef(false);
+  const declinedRef = useRef(false);
 
-  const openPromptIfNeeded = useCallback((accessToken: string | null) => {
+  const runCheck = useCallback(async () => {
+    if (mergingRef.current || mergedRef.current || declinedRef.current) {
+      return;
+    }
+    const accessToken = accessTokenRef.current;
     if (!accessToken) return;
-    if (promptedRef.current) return;
-    if (!hasGuestData()) return;
-    accessTokenRef.current = accessToken;
-    promptedRef.current = true;
-    setState((prev) => ({
-      ...prev,
-      isPromptOpen: true,
-      error: null,
-    }));
+
+    const result = await checkDeviceData(accessToken);
+    if (!result.response.ok || !result.data?.hasData) {
+      return;
+    }
+
+    setState((prev) => ({ ...prev, isPromptOpen: true, error: null }));
   }, []);
+
+  const runMerge = useCallback(async () => {
+    if (mergingRef.current || mergedRef.current) return;
+    const accessToken = accessTokenRef.current;
+    if (!accessToken) return;
+
+    mergingRef.current = true;
+    setState((prev) => ({ ...prev, isUploading: true, error: null }));
+
+    const result = await mergeDeviceData(accessToken);
+    if (result.response.ok) {
+      mergedRef.current = true;
+      setState((prev) => ({ ...prev, isUploading: false, error: null }));
+      pushToast("기기 기록을 회원 기록으로 이전했습니다.", "success");
+      router.refresh();
+      mergingRef.current = false;
+      return;
+    }
+
+    mergingRef.current = false;
+    mergedRef.current = false;
+    setState((prev) => ({ ...prev, isUploading: false, error: null }));
+    pushToast("이전에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
+  }, [pushToast, router]);
 
   useEffect(() => {
     const resolveSession = async () => {
       const { data } = await supabase.auth.getSession();
-      openPromptIfNeeded(data.session?.access_token ?? null);
+      accessTokenRef.current = data.session?.access_token ?? null;
+      if (accessTokenRef.current) {
+        runCheck();
+      }
     };
 
     resolveSession();
@@ -53,8 +80,9 @@ export const useGuestMigration = () => {
       (event, session) => {
         if (!session?.access_token) {
           accessTokenRef.current = null;
-          promptedRef.current = false;
-          uploadingRef.current = false;
+          mergedRef.current = false;
+          mergingRef.current = false;
+          declinedRef.current = false;
           setState((prev) => ({
             ...prev,
             isPromptOpen: false,
@@ -64,45 +92,24 @@ export const useGuestMigration = () => {
         }
 
         if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          openPromptIfNeeded(session.access_token);
+          accessTokenRef.current = session.access_token;
+          runCheck();
         }
       },
     );
 
     return () => authListener.subscription.unsubscribe();
-  }, [openPromptIfNeeded, supabase]);
+  }, [runCheck, supabase]);
 
   const declineMigration = useCallback(() => {
+    declinedRef.current = true;
     setState((prev) => ({ ...prev, isPromptOpen: false }));
   }, []);
 
   const confirmMigration = useCallback(async () => {
-    if (uploadingRef.current) return;
-    const accessToken = accessTokenRef.current;
-    if (!accessToken) return;
-    uploadingRef.current = true;
-    setState((prev) => ({ ...prev, isUploading: true, error: null }));
-
-    const result = await uploadGuestData(accessToken);
-    if (result.ok) {
-      clearGuestData();
-      setState((prev) => ({ ...prev, isPromptOpen: false, isUploading: false }));
-      uploadingRef.current = false;
-      pushToast("기기 기록을 회원 기록으로 이전했습니다.", "success");
-      router.refresh();
-      return;
-    }
-
-    uploadingRef.current = false;
-    setState((prev) => ({
-      ...prev,
-      isUploading: false,
-      isPromptOpen: false,
-      error: null,
-    }));
-    promptedRef.current = false;
-    pushToast("이전에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
-  }, [pushToast, router]);
+    setState((prev) => ({ ...prev, isPromptOpen: false }));
+    await runMerge();
+  }, [runMerge]);
 
   return {
     isPromptOpen: state.isPromptOpen,

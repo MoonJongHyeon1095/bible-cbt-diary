@@ -2,15 +2,17 @@
 
 import type { EmotionNoteBehaviorDetail } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useState } from "react";
-import {
-  createBehaviorDetail,
-  deleteBehaviorDetail,
-  fetchBehaviorDetails,
-  updateBehaviorDetail,
-} from "../utils/emotionNoteApi";
+import { fetchBehaviorDetails } from "@/lib/api/emotion-behavior-details/getEmotionBehaviorDetails";
+import { createBehaviorDetail } from "@/lib/api/emotion-behavior-details/postEmotionBehaviorDetails";
+import { updateBehaviorDetail } from "@/lib/api/emotion-behavior-details/patchEmotionBehaviorDetails";
+import { deleteBehaviorDetail } from "@/lib/api/emotion-behavior-details/deleteEmotionBehaviorDetails";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 type UseBehaviorSectionOptions = {
   noteId?: number | null;
+  access: AccessContext;
   getAccessContext: () => Promise<{
     mode: "auth" | "guest" | "blocked";
     accessToken: string | null;
@@ -25,6 +27,7 @@ type UseBehaviorSectionOptions = {
 
 export default function useEmotionNoteBehaviorSection({
   noteId,
+  access,
   getAccessContext,
   requireAccessContext,
   ensureNoteId,
@@ -33,7 +36,6 @@ export default function useEmotionNoteBehaviorSection({
   const [behaviorLabel, setBehaviorLabel] = useState("");
   const [behaviorDescription, setBehaviorDescription] = useState("");
   const [behaviorErrorTags, setBehaviorErrorTags] = useState<string[]>([]);
-  const [details, setDetails] = useState<EmotionNoteBehaviorDetail[]>([]);
   const [editingBehaviorId, setEditingBehaviorId] = useState<number | null>(
     null,
   );
@@ -45,27 +47,99 @@ export default function useEmotionNoteBehaviorSection({
   >([]);
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadDetails = useCallback(async () => {
-    if (!noteId) {
-      setDetails([]);
-      return;
-    }
+  const detailsQuery = useQuery({
+    queryKey: noteId ? queryKeys.behaviorDetails(access, noteId) : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return [];
+      }
+      const resolved = await getAccessContext();
+      if (resolved.mode === "blocked") {
+        return [];
+      }
+      const { response, data } = await fetchBehaviorDetails(noteId, resolved);
+      if (!response.ok) {
+        throw new Error("emotion_behavior_details fetch failed");
+      }
+      return data.details ?? [];
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+  });
 
-    const access = await getAccessContext();
-    if (access.mode === "blocked") {
-      setDetails([]);
-      return;
-    }
+  const details = detailsQuery.data ?? [];
 
-    const { response, data } = await fetchBehaviorDetails(noteId, access);
+  const createMutation = useMutation({
+    mutationFn: async (payload: {
+      note_id: number;
+      behavior_label: string;
+      behavior_description: string;
+      behavior_error_tags: string[];
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await createBehaviorDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("create behavior detail failed");
+      }
+      return payload.note_id;
+    },
+    onSuccess: (targetNoteId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.behaviorDetails(access, targetNoteId),
+      });
+    },
+  });
 
-    if (!response.ok) {
-      setDetails([]);
-      return;
-    }
-    setDetails(data.details ?? []);
-  }, [getAccessContext, noteId]);
+  const updateMutation = useMutation({
+    mutationFn: async (payload: {
+      id: number;
+      behavior_label: string;
+      behavior_description: string;
+      behavior_error_tags: string[];
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await updateBehaviorDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("update behavior detail failed");
+      }
+      return payload.id;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.behaviorDetails(access, noteId),
+        });
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (detailId: number) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await deleteBehaviorDetail(detailId, resolved);
+      if (!response.ok) {
+        throw new Error("delete behavior detail failed");
+      }
+      return detailId;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.behaviorDetails(access, noteId),
+        });
+      }
+    },
+  });
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
@@ -73,16 +147,11 @@ export default function useEmotionNoteBehaviorSection({
       return;
     }
 
-    const access = await requireAccessContext();
-    if (!access) {
-      return;
-    }
-
     const payload = {
       note_id: ensuredNoteId,
       behavior_label: behaviorLabel.trim(),
       behavior_description: behaviorDescription.trim(),
-      error_tags: behaviorErrorTags,
+      behavior_error_tags: behaviorErrorTags,
     };
 
     if (!payload.behavior_label || !payload.behavior_description) {
@@ -90,9 +159,9 @@ export default function useEmotionNoteBehaviorSection({
       return;
     }
 
-    const response = await createBehaviorDetail(payload, access);
-
-    if (!response.ok) {
+    try {
+      await createMutation.mutateAsync(payload);
+    } catch {
       setError("행동 반응 저장에 실패했습니다.");
       return;
     }
@@ -100,26 +169,19 @@ export default function useEmotionNoteBehaviorSection({
     setBehaviorLabel("");
     setBehaviorDescription("");
     setBehaviorErrorTags([]);
-    await loadDetails();
   }, [
     behaviorDescription,
     behaviorErrorTags,
     behaviorLabel,
+    createMutation,
     ensureNoteId,
-    loadDetails,
-    requireAccessContext,
     setError,
   ]);
 
   const handleAddWithValues = useCallback(
-    async (label: string, description: string, errorTags: string[]) => {
+    async (label: string, description: string, errors: string[]) => {
       const ensuredNoteId = ensureNoteId();
       if (!ensuredNoteId) {
-        return false;
-      }
-
-      const access = await requireAccessContext();
-      if (!access) {
         return false;
       }
 
@@ -127,7 +189,7 @@ export default function useEmotionNoteBehaviorSection({
         note_id: ensuredNoteId,
         behavior_label: label.trim(),
         behavior_description: description.trim(),
-        error_tags: errorTags,
+        behavior_error_tags: errors,
       };
 
       if (!payload.behavior_label || !payload.behavior_description) {
@@ -135,9 +197,9 @@ export default function useEmotionNoteBehaviorSection({
         return false;
       }
 
-      const response = await createBehaviorDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await createMutation.mutateAsync(payload);
+      } catch {
         setError("행동 반응 저장에 실패했습니다.");
         return false;
       }
@@ -145,10 +207,9 @@ export default function useEmotionNoteBehaviorSection({
       setBehaviorLabel("");
       setBehaviorDescription("");
       setBehaviorErrorTags([]);
-      await loadDetails();
       return true;
     },
-    [ensureNoteId, loadDetails, requireAccessContext, setError],
+    [createMutation, ensureNoteId, setError],
   );
 
   const startEditing = useCallback((detail: EmotionNoteBehaviorDetail) => {
@@ -168,17 +229,12 @@ export default function useEmotionNoteBehaviorSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const access = await requireAccessContext();
-      if (!access) {
-        setIsUpdating(false);
-        return;
-      }
 
       const payload = {
         id: detailId,
         behavior_label: editingBehaviorLabel.trim(),
         behavior_description: editingBehaviorDescription.trim(),
-        error_tags: editingBehaviorErrorTags,
+        behavior_error_tags: editingBehaviorErrorTags,
       };
 
       if (!payload.behavior_label || !payload.behavior_description) {
@@ -187,16 +243,15 @@ export default function useEmotionNoteBehaviorSection({
         return;
       }
 
-      const response = await updateBehaviorDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await updateMutation.mutateAsync(payload);
+      } catch {
         setError("행동 반응 수정에 실패했습니다.");
         setIsUpdating(false);
         return;
       }
 
       cancelEditing();
-      await loadDetails();
       setIsUpdating(false);
     },
     [
@@ -204,40 +259,32 @@ export default function useEmotionNoteBehaviorSection({
       editingBehaviorDescription,
       editingBehaviorErrorTags,
       editingBehaviorLabel,
-      loadDetails,
-      requireAccessContext,
       setError,
+      updateMutation,
     ],
   );
 
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const access = await requireAccessContext();
-      if (!access) {
-        setDeletingId(null);
-        return;
-      }
-
-      const response = await deleteBehaviorDetail(detailId, access);
-
-      if (!response.ok) {
+      try {
+        await deleteMutation.mutateAsync(detailId);
+      } catch {
         setError("행동 반응 삭제에 실패했습니다.");
         setDeletingId(null);
         return;
       }
 
-      await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessContext, setError],
+    [deleteMutation, setError],
   );
 
   return {
+    details,
     behaviorLabel,
     behaviorDescription,
     behaviorErrorTags,
-    details,
     editingBehaviorId,
     editingBehaviorLabel,
     editingBehaviorDescription,
@@ -248,10 +295,8 @@ export default function useEmotionNoteBehaviorSection({
     setEditingBehaviorLabel,
     setEditingBehaviorDescription,
     setEditingBehaviorErrorTags,
-    setDetails,
     isUpdating,
     deletingId,
-    loadDetails,
     handleAdd,
     handleAddWithValues,
     startEditing,

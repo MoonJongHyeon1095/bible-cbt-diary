@@ -1,11 +1,13 @@
 "use client";
 
 import pageStyles from "@/app/page.module.css";
-import { buildApiUrl } from "@/lib/utils/apiBase";
+import { fetchShareSnapshot } from "@/lib/api/share/getShareSnapshot";
 import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import styles from "./SharePage.module.css";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type ShareSection = "thought" | "error" | "alternative" | "behavior";
 
@@ -26,55 +28,28 @@ const SECTION_ICONS: Record<ShareSection, React.ReactNode> = {
 export default function SharePublicPage() {
   const searchParams = useSearchParams();
   const shareId = searchParams.get("sid");
-
-  const [share, setShare] = useState<{
-    title: string;
-    trigger_text: string;
-    sections: Record<string, unknown>;
-  } | null>(null);
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const loadShare = async () => {
+  const shareQuery = useQuery({
+    queryKey: shareId ? queryKeys.share.snapshot(shareId) : ["share-snapshot"],
+    queryFn: async () => {
       if (!shareId) {
-        setError("공유 링크가 올바르지 않습니다.");
-        setIsLoading(false);
-        return;
+        return null;
       }
-
-      try {
-        const response = await fetch(
-          buildApiUrl(`/api/share-snap-shots?sid=${shareId}`),
-        );
-        const data = response.ok
-          ? ((await response.json()) as {
-              share: {
-                title: string;
-                trigger_text: string;
-                sections: Record<string, unknown>;
-              } | null;
-              message?: string;
-            })
-          : { share: null, message: "공유 내용을 불러오지 못했습니다." };
-
-        if (!response.ok || !data.share) {
-          setError(data.message ?? "공유 내용을 찾을 수 없습니다.");
-          setIsLoading(false);
-          return;
-        }
-
-        setShare(data.share);
-        setIsLoading(false);
-      } catch {
-        setError("공유 내용을 불러오지 못했습니다.");
-        setIsLoading(false);
+      const { response, data } = await fetchShareSnapshot(shareId);
+      if (!response.ok || !data.share) {
+        throw new Error(data.message ?? "share snapshot not found");
       }
-    };
+      return data.share;
+    },
+    enabled: Boolean(shareId),
+  });
 
-    setIsLoading(true);
-    loadShare();
-  }, [shareId]);
+  const share = shareQuery.data ?? null;
+  const isLoading = shareQuery.isPending || shareQuery.isFetching;
+  const error = !shareId
+    ? "공유 링크가 올바르지 않습니다."
+    : shareQuery.isError
+      ? "공유 내용을 불러오지 못했습니다."
+      : "";
 
   const sections = useMemo(() => {
     if (!share) return [] as { key: ShareSection; items: unknown[] }[];

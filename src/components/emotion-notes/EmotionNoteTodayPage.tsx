@@ -1,7 +1,8 @@
 "use client";
 
 import EmotionNoteTodaySection from "@/components/emotion-notes/EmotionNoteTodaySection";
-import { fetchEmotionNotes } from "@/components/emotion-notes/utils/emotionNotesListApi";
+import { fetchEmotionNotes } from "@/lib/api/emotion-notes/getEmotionNotes";
+import { queryKeys } from "@/lib/queryKeys";
 import AppHeader from "@/components/header/AppHeader";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
@@ -10,10 +11,11 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Check } from "lucide-react";
 import styles from "@/app/page.module.css";
 import { useGate } from "@/components/gate/GateProvider";
+import { useQuery } from "@tanstack/react-query";
 
 const TOUR_STORAGE_KEY = "today-onboarding-step";
 
@@ -38,7 +40,6 @@ export default function EmotionNoteTodayPage() {
   const { accessMode, accessToken, isLoading: isAccessLoading } =
     useAccessContext();
   const [notes, setNotes] = useState<EmotionNote[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
@@ -77,27 +78,32 @@ export default function EmotionNoteTodayPage() {
     return steps;
   }, [notes.length]);
 
-  const fetchNotes = useCallback(async () => {
+  const notesQuery = useQuery({
+    queryKey: queryKeys.emotionNotes.list(access),
+    queryFn: async () => {
+      const { response, data } = await fetchEmotionNotes(access);
+      if (!response.ok) {
+        throw new Error("emotion_notes fetch failed");
+      }
+      return data.notes ?? [];
+    },
+    enabled: access.mode !== "blocked",
+  });
+
+  const isLoading = notesQuery.isPending || notesQuery.isFetching;
+
+  useEffect(() => {
     if (access.mode === "blocked") {
       setNotes([]);
       return;
     }
-    const { response, data } = await fetchEmotionNotes(access);
-    if (!response.ok) {
-      setNotes([]);
-      return;
+    if (notesQuery.data) {
+      setNotes(notesQuery.data);
     }
-    setNotes(data.notes ?? []);
-  }, [access]);
-
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      await fetchNotes();
-      setIsLoading(false);
-    };
-    load();
-  }, [fetchNotes, accessMode, accessToken]);
+    if (notesQuery.isError) {
+      setNotes([]);
+    }
+  }, [access.mode, notesQuery.data, notesQuery.isError]);
   useStorageBlockedRedirect({
     enabled: !isAccessLoading && accessMode === "blocked",
   });

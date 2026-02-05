@@ -33,12 +33,12 @@ export default function GuestMigrationModal({
       >
         <div className={styles.header}>
           <h2 className={styles.title}>
-            기기에 저장된 사용 기록이 있습니다.
+            로그인 전 작성하신 기록이 있습니다.
             <span className={styles.mobileBreak} aria-hidden="true" />
             회원 계정으로 이전하시겠습니까?
           </h2>
           <p className={styles.body}>
-            로그인 전 작성한 감정노트 기록 등이 회원 기록으로 통합됩니다.
+            로그인 전 생성된 감정노트 등이 회원 기록으로 통합됩니다.
           </p>
         </div>
         {error ? <p className={styles.error}>{error}</p> : null}

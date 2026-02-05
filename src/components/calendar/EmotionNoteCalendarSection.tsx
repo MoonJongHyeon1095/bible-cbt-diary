@@ -17,7 +17,9 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteCalendarSection.module.css";
-import { fetchEmotionNotesByRange } from "./utils/emotionNoteCalendarApi";
+import { fetchEmotionNotesByRange } from "@/lib/api/emotion-notes/getEmotionNotesByRange";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type DayCell = {
   date: Date;
@@ -57,13 +59,11 @@ export default function EmotionNoteCalendarSection({
 }: EmotionNoteCalendarSectionProps) {
   const initialMonth = initialSelectedDate ?? new Date();
   const [currentMonth, setCurrentMonth] = useState(() => initialMonth);
-  const [notes, setNotes] = useState<EmotionNote[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
     () => initialSelectedDate,
   );
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isAddLoading, setIsAddLoading] = useState(false);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
@@ -98,6 +98,38 @@ export default function EmotionNoteCalendarSection({
     setSelectedDate(initialSelectedDate);
     setCurrentMonth(initialSelectedDate);
   }, [initialSelectedDate, initialDateKey]);
+
+  const rangeStart = useMemo(
+    () => new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1),
+    [currentMonth],
+  );
+  const rangeEnd = useMemo(
+    () => new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 1),
+    [currentMonth],
+  );
+
+  const notesQuery = useQuery({
+    queryKey: queryKeys.emotionNotes.range(
+      access,
+      rangeStart.toISOString(),
+      rangeEnd.toISOString(),
+    ),
+    queryFn: async () => {
+      const { response, data } = await fetchEmotionNotesByRange(
+        rangeStart,
+        rangeEnd,
+        access,
+      );
+      if (!response.ok) {
+        throw new Error("emotion_notes_range fetch failed");
+      }
+      return data.notes ?? [];
+    },
+    enabled: access.mode !== "blocked",
+  });
+
+  const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
+  const isLoading = notesQuery.isPending || notesQuery.isFetching;
 
   const countsByDate = useMemo(() => {
     const counts = new Map<string, number>();
@@ -177,34 +209,10 @@ export default function EmotionNoteCalendarSection({
   }, [normalizedQuery]);
 
   useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
-      const start = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth(),
-        1,
-      );
-      const end = new Date(
-        currentMonth.getFullYear(),
-        currentMonth.getMonth() + 1,
-        1,
-      );
-      const { response, data } = await fetchEmotionNotesByRange(
-        start,
-        end,
-        access,
-      );
-      if (!response.ok) {
-        setNotes([]);
-        setIsLoading(false);
-        return;
-      }
-      setNotes(data.notes ?? []);
-      setIsLoading(false);
-    };
-
-    load();
-  }, [access, currentMonth]);
+    if (access.mode === "blocked") {
+      return;
+    }
+  }, [access.mode]);
 
   const visibleNotes = normalizedQuery ? searchResults : selectedNotes;
   const getDetailHref = useMemo(

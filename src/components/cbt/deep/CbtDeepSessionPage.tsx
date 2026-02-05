@@ -8,13 +8,13 @@ import { CbtMinimalFloatingHomeButton } from "@/components/cbt/minimal/common/Cb
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
 import { CbtMinimalSavingModal } from "@/components/cbt/minimal/common/CbtMinimalSavingModal";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
-import { saveDeepSessionAPI } from "@/components/cbt/utils/cbtSessionApi";
+import { saveDeepSessionAPI } from "@/lib/api/cbt/postDeepSession";
 import { formatAutoTitle } from "@/components/cbt/utils/formatAutoTitle";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import {
   fetchEmotionNoteGraph,
   fetchEmotionNoteById,
-} from "@/components/graph/utils/emotionNoteGraphApi";
+} from "@/lib/api/graph/getEmotionNoteGraph";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
@@ -24,7 +24,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Check } from "lucide-react";
-import { startPerf } from "@/lib/utils/perf";
+import { queryKeys } from "@/lib/queryKeys";
 import { CbtDeepAutoThoughtSection } from "./center/CbtDeepAutoThoughtSection";
 import { CbtDeepIncidentSection } from "./center/CbtDeepIncidentSection";
 import { CbtDeepSelectSection } from "./center/CbtDeepSelectSection";
@@ -36,6 +36,7 @@ import {
   useCbtDeepSessionFlow,
   type DeepStep,
 } from "@/components/cbt/hooks/useCbtDeepSessionFlow";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 const parseIds = (value: string | null) => {
   if (!value) return [] as number[];
@@ -65,6 +66,7 @@ function CbtDeepSessionPageContent() {
   const { accessMode, accessToken, requireAccessContext } = useCbtAccess({
     setError: (message) => pushToast(message, "error"),
   });
+  const queryClient = useQueryClient();
 
   const mainIdParam = searchParams.get("mainId") ?? "";
   const groupIdParam = searchParams.get("groupId") ?? "";
@@ -89,9 +91,6 @@ function CbtDeepSessionPageContent() {
   const [subNotes, setSubNotes] = useState<EmotionNote[]>([]);
   const [groupNotes, setGroupNotes] = useState<EmotionNote[]>([]);
   const [selectedSubIds, setSelectedSubIds] = useState<number[]>([]);
-  const requestIdRef = useRef(0);
-  const lastLoadKeyRef = useRef("");
-  const inFlightRef = useRef(false);
   const { state: flow, actions } = useCbtDeepSessionFlow(
     shouldSelectSubNotes ? "select" : "incident",
   );
@@ -106,6 +105,23 @@ function CbtDeepSessionPageContent() {
     ? ["select", "incident", "emotion", "thought", "errors", "alternative"]
     : ["incident", "emotion", "thought", "errors", "alternative"];
   const currentStepIndex = stepOrder.indexOf(flow.step);
+
+  const saveDeepMutation = useMutation({
+    mutationFn: async (args: {
+      access: { mode: "auth" | "guest" | "blocked"; accessToken: string | null };
+      payload: {
+        title: string;
+        trigger_text: string;
+        emotion: string;
+        automatic_thought: string;
+        selected_cognitive_error: SelectedCognitiveError | null;
+        selected_alternative_thought: string;
+        main_id: number;
+        sub_ids: number[];
+        group_id: number | null;
+      };
+    }) => saveDeepSessionAPI(args.access, args.payload),
+  });
 
   const tourSteps = useMemo(() => {
     if (flow.step === "select") {
@@ -215,118 +231,144 @@ function CbtDeepSessionPageContent() {
     return alternatives.filter(Boolean);
   }, [mainNote, subNotes]);
 
-  const loadKey = useMemo(
-    () => `${mainIdParam}|${groupIdParam}|${subIdsParam}`,
-    [groupIdParam, mainIdParam, subIdsParam],
+  const hasValidMainId = Number.isFinite(mainId) && !Number.isNaN(mainId);
+  const invalidGroupId = Boolean(groupIdParam && groupId === null);
+  const invalidSubIds = Boolean(
+    groupId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
   );
 
+  const graphQuery = useQuery({
+    queryKey:
+      groupId && accessMode === "auth" && accessToken
+        ? queryKeys.graph.group(accessToken, groupId, false)
+        : ["noop"],
+    queryFn: async () => {
+      const { response, data } = await fetchEmotionNoteGraph(
+        accessToken!,
+        groupId as number,
+        { includeMiddles: false },
+      );
+      if (!response.ok) {
+        throw new Error("emotion_note_graph fetch failed");
+      }
+      return data.notes ?? [];
+    },
+    enabled:
+      Boolean(groupId) &&
+      accessMode === "auth" &&
+      Boolean(accessToken) &&
+      hasValidMainId &&
+      !invalidGroupId &&
+      !invalidSubIds,
+  });
+
+  const noteQuery = useQuery({
+    queryKey:
+      !groupId && accessMode === "auth" && accessToken && hasValidMainId
+        ? queryKeys.graph.note(accessToken, mainId)
+        : ["noop"],
+    queryFn: async () => {
+      const { response, data } = await fetchEmotionNoteById(
+        accessToken!,
+        mainId,
+      );
+      if (!response.ok || !data.note) {
+        throw new Error("emotion_note fetch failed");
+      }
+      return data.note;
+    },
+    enabled:
+      !groupId &&
+      accessMode === "auth" &&
+      Boolean(accessToken) &&
+      hasValidMainId &&
+      !invalidGroupId,
+  });
+
   useEffect(() => {
-    const load = async () => {
-      if (inFlightRef.current && lastLoadKeyRef.current === loadKey) {
+    if (!hasValidMainId) {
+      setNotesError("mainId가 필요합니다.");
+      setNotesLoading(false);
+      return;
+    }
+
+    if (invalidGroupId) {
+      setNotesError("groupId가 올바르지 않습니다.");
+      setNotesLoading(false);
+      return;
+    }
+
+    if (invalidSubIds) {
+      setNotesError("subIds는 1~2개여야 합니다.");
+      setNotesLoading(false);
+      return;
+    }
+
+    if (accessMode !== "auth" || !accessToken) {
+      return;
+    }
+
+    if (groupId) {
+      setNotesLoading(graphQuery.isPending || graphQuery.isFetching);
+      if (graphQuery.isError) {
+        setNotesError("노트를 불러오지 못했습니다.");
         return;
       }
-      if (lastLoadKeyRef.current === loadKey && mainNote && !notesLoading) {
-        return;
-      }
-      const endPerf = startPerf(`deep:loadNotes:${loadKey}`);
-      inFlightRef.current = true;
-      lastLoadKeyRef.current = loadKey;
-      const requestId = ++requestIdRef.current;
-      try {
-        if (!Number.isFinite(mainId) || Number.isNaN(mainId)) {
-          setNotesError("mainId가 필요합니다.");
-          setNotesLoading(false);
-          return;
-        }
+      if (!graphQuery.data) return;
+      const allNotes =
+        graphQuery.data?.slice().sort((a, b) => {
+          const aTime = new Date(a.created_at).getTime();
+          const bTime = new Date(b.created_at).getTime();
+          return bTime - aTime;
+        }) ?? [];
+      const main = allNotes.find((note) => note.id === mainId) ?? null;
+      const subs = allNotes
+        .filter((note) => subIdSet.has(note.id))
+        .sort((a, b) => b.id - a.id);
 
-        if (groupIdParam && groupId === null) {
-          setNotesError("groupId가 올바르지 않습니다.");
-          setNotesLoading(false);
-          return;
-        }
-
-        if (groupId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2)) {
-          setNotesError("subIds는 1~2개여야 합니다.");
-          setNotesLoading(false);
-          return;
-        }
-
-        if (accessMode !== "auth" || !accessToken || requestId !== requestIdRef.current) {
-          return;
-        }
-
-        setNotesLoading(true);
-        setNotesError(null);
-
-        if (groupId) {
-          const { response, data } = await fetchEmotionNoteGraph(
-            accessToken,
-            groupId,
-            { includeMiddles: false },
-          );
-          if (requestId !== requestIdRef.current) return;
-          if (!response.ok) {
-            setNotesError("노트를 불러오지 못했습니다.");
-            setNotesLoading(false);
-            return;
-          }
-          const allNotes =
-            data.notes?.slice().sort((a, b) => {
-              const aTime = new Date(a.created_at).getTime();
-              const bTime = new Date(b.created_at).getTime();
-              return bTime - aTime;
-            }) ?? [];
-          const main = allNotes.find((note) => note.id === mainId) ?? null;
-          const subs = allNotes
-            .filter((note) => subIdSet.has(note.id))
-            .sort((a, b) => b.id - a.id);
-
-          if (!main) {
-            setNotesError("메인 노트를 찾지 못했습니다.");
-            setNotesLoading(false);
-            return;
-          }
-
-          setMainNote(main);
-          setSubNotes(subs);
-          setGroupNotes(allNotes);
-          setNotesLoading(false);
-          return;
-        }
-
-        const { response, data } = await fetchEmotionNoteById(
-          accessToken,
-          mainId,
-        );
-        if (requestId !== requestIdRef.current) return;
-        if (!response.ok || !data.note) {
-          setNotesError("노트를 불러오지 못했습니다.");
-          setNotesLoading(false);
-          return;
-        }
-        setMainNote(data.note);
-        setSubNotes([]);
-        setGroupNotes([]);
+      if (!main) {
+        setNotesError("메인 노트를 찾지 못했습니다.");
         setNotesLoading(false);
-      } finally {
-        inFlightRef.current = false;
-        endPerf();
+        return;
       }
-    };
 
-    void load();
+      setNotesError(null);
+      setMainNote(main);
+      setSubNotes(subs);
+      setGroupNotes(allNotes);
+      setNotesLoading(false);
+      return;
+    }
+
+    setNotesLoading(noteQuery.isPending || noteQuery.isFetching);
+    if (noteQuery.isError) {
+      setNotesError("노트를 불러오지 못했습니다.");
+      setNotesLoading(false);
+      return;
+    }
+    if (!noteQuery.data) return;
+    setNotesError(null);
+    setMainNote(noteQuery.data);
+    setSubNotes([]);
+    setGroupNotes([]);
+    setNotesLoading(false);
   }, [
-    groupId,
-    groupIdParam,
-    mainId,
-    loadKey,
-    mainNote,
-    notesLoading,
-    subIdSet,
-    subIds.length,
-    hasSubIdsParam,
     accessMode,
     accessToken,
+    graphQuery.data,
+    graphQuery.isError,
+    graphQuery.isFetching,
+    graphQuery.isPending,
+    groupId,
+    hasValidMainId,
+    invalidGroupId,
+    invalidSubIds,
+    mainId,
+    noteQuery.data,
+    noteQuery.isError,
+    noteQuery.isFetching,
+    noteQuery.isPending,
+    subIdSet,
   ]);
 
   const {
@@ -379,16 +421,19 @@ function CbtDeepSessionPageContent() {
     setIsSaving(true);
 
     try {
-      const result = await saveDeepSessionAPI(access, {
-        title: formatAutoTitle(new Date(), flow.selectedEmotion),
-        trigger_text: flow.userInput,
-        emotion: flow.selectedEmotion,
-        automatic_thought: flow.autoThought,
-        selected_cognitive_error: flow.selectedCognitiveErrors[0] ?? null,
-        selected_alternative_thought: thought,
-        main_id: mainNote.id,
-        sub_ids: subNotes.map((note) => note.id),
-        group_id: groupId ?? null,
+      const result = await saveDeepMutation.mutateAsync({
+        access,
+        payload: {
+          title: formatAutoTitle(new Date(), flow.selectedEmotion),
+          trigger_text: flow.userInput,
+          emotion: flow.selectedEmotion,
+          automatic_thought: flow.autoThought,
+          selected_cognitive_error: flow.selectedCognitiveErrors[0] ?? null,
+          selected_alternative_thought: thought,
+          main_id: mainNote.id,
+          sub_ids: subNotes.map((note) => note.id),
+          group_id: groupId ?? null,
+        },
       });
 
       if (!result.ok) {
@@ -402,7 +447,9 @@ function CbtDeepSessionPageContent() {
       const resolvedGroupId = result.payload?.groupId ?? groupId;
 
       pushToast("세션 기록이 저장되었습니다.", "success");
-      setIsSaving(false);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.graph.all });
       window.setTimeout(() => {
         try {
           void flushTokenSessionUsage({ sessionCount: 1 });

@@ -7,9 +7,12 @@ import {
   MEMBER_DAILY_LIMIT,
   MEMBER_MONTHLY_LIMIT,
 } from "@/lib/utils/aiUsageGuard";
-import { fetchTokenUsageStatus } from "@/lib/utils/tokenUsage";
-import { useEffect, useMemo, useState } from "react";
+import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
+import { useMemo } from "react";
 import styles from "./UsagePage.module.css";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { getDeviceId } from "@/lib/utils/deviceId";
 
 type UsageState = {
   daily: number;
@@ -21,32 +24,28 @@ const formatPercent = (value: number) =>
   `${Math.round(value * 100).toLocaleString("ko-KR")}%`;
 
 export default function UsagePage() {
-  const [state, setState] = useState<UsageState | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const deviceId = getDeviceId();
+  const usageQuery = useQuery({
+    queryKey: queryKeys.tokenUsage.byDevice(deviceId),
+    queryFn: fetchTokenUsageStatus,
+    staleTime: 60_000,
+  });
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const status = await fetchTokenUsageStatus();
-        if (!active) return;
-        setState({
-          daily: status.usage.daily_usage,
-          monthly: status.usage.monthly_usage,
-          isMember: status.is_member,
-        });
-      } catch (err) {
-        if (!active) return;
-        console.error("usage status load failed:", err);
-        setError(
-          "사용량 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.",
-        );
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+  const state: UsageState | null = useMemo(
+    () =>
+      usageQuery.data
+        ? {
+            daily: usageQuery.data.usage.daily_usage,
+            monthly: usageQuery.data.usage.monthly_usage,
+            isMember: usageQuery.data.is_member,
+          }
+        : null,
+    [usageQuery.data],
+  );
+
+  const error = usageQuery.isError
+    ? "사용량 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요."
+    : null;
 
   const limits = useMemo(() => {
     if (!state) {

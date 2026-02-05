@@ -1,4 +1,4 @@
-import { syncTokenUsage } from "@/lib/utils/tokenUsage";
+import { syncTokenUsage } from "@/lib/api/token-usage/postTokenUsage";
 import { safeSessionStorage } from "@/lib/utils/safeStorage";
 
 export const TOKEN_SESSION_KEY = "gpt_usage_total";

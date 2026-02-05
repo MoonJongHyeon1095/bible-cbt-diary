@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 
 type UseEmblaPaginationOptions = {
@@ -22,6 +22,11 @@ export function useEmblaPagination({
   const [canPrev, setCanPrev] = useState(false);
   const [canNext, setCanNext] = useState(false);
   const [internalIndex, setInternalIndex] = useState(0);
+  const onSelectIndexRef = useRef(onSelectIndex);
+
+  useEffect(() => {
+    onSelectIndexRef.current = onSelectIndex;
+  }, [onSelectIndex]);
 
   const currentIndex = selectedIndex ?? internalIndex;
 
@@ -32,7 +37,7 @@ export function useEmblaPagination({
       setCanPrev(emblaApi.canScrollPrev());
       setCanNext(emblaApi.canScrollNext());
       setInternalIndex(index);
-      onSelectIndex?.(index);
+      onSelectIndexRef.current?.(index);
     };
     emblaApi.on("select", update);
     emblaApi.on("reInit", update);
@@ -41,7 +46,7 @@ export function useEmblaPagination({
       emblaApi.off("select", update);
       emblaApi.off("reInit", update);
     };
-  }, [emblaApi, onSelectIndex]);
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;

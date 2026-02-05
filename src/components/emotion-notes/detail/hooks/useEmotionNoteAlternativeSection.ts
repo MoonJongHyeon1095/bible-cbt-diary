@@ -2,15 +2,17 @@
 
 import type { EmotionNoteAlternativeDetail } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useState } from "react";
-import {
-  createAlternativeDetail,
-  deleteAlternativeDetail,
-  fetchAlternativeDetails,
-  updateAlternativeDetail,
-} from "../utils/emotionNoteApi";
+import { fetchAlternativeDetails } from "@/lib/api/emotion-alternative-details/getEmotionAlternativeDetails";
+import { createAlternativeDetail } from "@/lib/api/emotion-alternative-details/postEmotionAlternativeDetails";
+import { updateAlternativeDetail } from "@/lib/api/emotion-alternative-details/patchEmotionAlternativeDetails";
+import { deleteAlternativeDetail } from "@/lib/api/emotion-alternative-details/deleteEmotionAlternativeDetails";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 type UseAlternativeSectionOptions = {
   noteId?: number | null;
+  access: AccessContext;
   getAccessContext: () => Promise<{
     mode: "auth" | "guest" | "blocked";
     accessToken: string | null;
@@ -25,49 +27,106 @@ type UseAlternativeSectionOptions = {
 
 export default function useEmotionNoteAlternativeSection({
   noteId,
+  access,
   getAccessContext,
   requireAccessContext,
   ensureNoteId,
   setError,
 }: UseAlternativeSectionOptions) {
   const [alternativeText, setAlternativeText] = useState("");
-  const [details, setDetails] = useState<EmotionNoteAlternativeDetail[]>([]);
   const [editingAlternativeId, setEditingAlternativeId] = useState<
     number | null
   >(null);
   const [editingAlternativeText, setEditingAlternativeText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadDetails = useCallback(async () => {
-    if (!noteId) {
-      setDetails([]);
-      return;
-    }
+  const detailsQuery = useQuery({
+    queryKey: noteId ? queryKeys.alternativeDetails(access, noteId) : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return [];
+      }
+      const resolved = await getAccessContext();
+      if (resolved.mode === "blocked") {
+        return [];
+      }
+      const { response, data } = await fetchAlternativeDetails(noteId, resolved);
+      if (!response.ok) {
+        throw new Error("emotion_alternative_details fetch failed");
+      }
+      return data.details ?? [];
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+  });
 
-    const access = await getAccessContext();
-    if (access.mode === "blocked") {
-      setDetails([]);
-      return;
-    }
+  const details = detailsQuery.data ?? [];
 
-    const { response, data } = await fetchAlternativeDetails(noteId, access);
+  const createMutation = useMutation({
+    mutationFn: async (payload: { note_id: number; alternative: string }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await createAlternativeDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("create alternative detail failed");
+      }
+      return payload.note_id;
+    },
+    onSuccess: (targetNoteId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.alternativeDetails(access, targetNoteId),
+      });
+    },
+  });
 
-    if (!response.ok) {
-      setDetails([]);
-      return;
-    }
-    setDetails(data.details ?? []);
-  }, [getAccessContext, noteId]);
+  const updateMutation = useMutation({
+    mutationFn: async (payload: { id: number; alternative: string }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await updateAlternativeDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("update alternative detail failed");
+      }
+      return payload.id;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.alternativeDetails(access, noteId),
+        });
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (detailId: number) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await deleteAlternativeDetail(detailId, resolved);
+      if (!response.ok) {
+        throw new Error("delete alternative detail failed");
+      }
+      return detailId;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.alternativeDetails(access, noteId),
+        });
+      }
+    },
+  });
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
     if (!ensuredNoteId) {
-      return;
-    }
-
-    const access = await requireAccessContext();
-    if (!access) {
       return;
     }
 
@@ -81,32 +140,20 @@ export default function useEmotionNoteAlternativeSection({
       return;
     }
 
-    const response = await createAlternativeDetail(payload, access);
-
-    if (!response.ok) {
+    try {
+      await createMutation.mutateAsync(payload);
+    } catch {
       setError("대안 사고 저장에 실패했습니다.");
       return;
     }
 
     setAlternativeText("");
-    await loadDetails();
-  }, [
-    alternativeText,
-    ensureNoteId,
-    loadDetails,
-    requireAccessContext,
-    setError,
-  ]);
+  }, [alternativeText, createMutation, ensureNoteId, setError]);
 
   const handleAddWithValues = useCallback(
     async (alternative: string) => {
       const ensuredNoteId = ensureNoteId();
       if (!ensuredNoteId) {
-        return false;
-      }
-
-      const access = await requireAccessContext();
-      if (!access) {
         return false;
       }
 
@@ -120,18 +167,17 @@ export default function useEmotionNoteAlternativeSection({
         return false;
       }
 
-      const response = await createAlternativeDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await createMutation.mutateAsync(payload);
+      } catch {
         setError("대안 사고 저장에 실패했습니다.");
         return false;
       }
 
       setAlternativeText("");
-      await loadDetails();
       return true;
     },
-    [ensureNoteId, loadDetails, requireAccessContext, setError],
+    [createMutation, ensureNoteId, setError],
   );
 
   const startEditing = useCallback((detail: EmotionNoteAlternativeDetail) => {
@@ -147,11 +193,6 @@ export default function useEmotionNoteAlternativeSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const access = await requireAccessContext();
-      if (!access) {
-        setIsUpdating(false);
-        return;
-      }
 
       const payload = {
         id: detailId,
@@ -164,48 +205,34 @@ export default function useEmotionNoteAlternativeSection({
         return;
       }
 
-      const response = await updateAlternativeDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await updateMutation.mutateAsync(payload);
+      } catch {
         setError("대안 사고 수정에 실패했습니다.");
         setIsUpdating(false);
         return;
       }
 
       cancelEditing();
-      await loadDetails();
       setIsUpdating(false);
     },
-    [
-      cancelEditing,
-      editingAlternativeText,
-      loadDetails,
-      requireAccessContext,
-      setError,
-    ],
+    [cancelEditing, editingAlternativeText, setError, updateMutation],
   );
 
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const access = await requireAccessContext();
-      if (!access) {
-        setDeletingId(null);
-        return;
-      }
-
-      const response = await deleteAlternativeDetail(detailId, access);
-
-      if (!response.ok) {
+      try {
+        await deleteMutation.mutateAsync(detailId);
+      } catch {
         setError("대안 사고 삭제에 실패했습니다.");
         setDeletingId(null);
         return;
       }
 
-      await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessContext, setError],
+    [deleteMutation, setError],
   );
 
   return {
@@ -215,10 +242,8 @@ export default function useEmotionNoteAlternativeSection({
     editingAlternativeText,
     setAlternativeText,
     setEditingAlternativeText,
-    setDetails,
     isUpdating,
     deletingId,
-    loadDetails,
     handleAdd,
     handleAddWithValues,
     startEditing,

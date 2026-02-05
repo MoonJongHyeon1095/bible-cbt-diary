@@ -4,8 +4,9 @@ import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
 import {
   saveMinimalPatternAPI,
-  saveSessionHistoryAPI,
-} from "@/components/cbt/utils/cbtSessionApi";
+  type MinimalSavePayload,
+} from "@/lib/api/cbt/postMinimalSession";
+import { saveSessionHistoryAPI } from "@/lib/api/session-history/postSessionHistory";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError, SessionHistory } from "@/lib/types/cbtTypes";
@@ -30,6 +31,8 @@ import {
   useCbtMinimalSessionFlow,
   type MinimalStep,
 } from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
 
@@ -59,6 +62,7 @@ function CbtSessionPageContent() {
       pushToast(message, "error");
     },
   });
+  const queryClient = useQueryClient();
   const dateParam = searchParams.get("date");
   const hasDateParam = Boolean(
     dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam),
@@ -81,6 +85,20 @@ function CbtSessionPageContent() {
     "alternative",
   ];
   const currentStepIndex = stepOrder.indexOf(flow.step);
+
+  const saveMinimalMutation = useMutation({
+    mutationFn: async (args: {
+      access: { mode: "auth" | "guest" | "blocked"; accessToken: string | null };
+      payload: MinimalSavePayload;
+    }) => saveMinimalPatternAPI(args.access, args.payload),
+  });
+
+  const saveHistoryMutation = useMutation({
+    mutationFn: async (args: {
+      access: { mode: "auth" | "guest" | "blocked"; accessToken: string | null };
+      payload: SessionHistory;
+    }) => saveSessionHistoryAPI(args.access, args.payload),
+  });
 
   const tourSteps = useMemo(() => {
     if (flow.step === "incident") {
@@ -251,15 +269,18 @@ function CbtSessionPageContent() {
     setIsSaving(true);
 
     try {
-      const { ok, payload } = await saveMinimalPatternAPI(
+      const { ok, payload } = await saveMinimalMutation.mutateAsync({
         access,
-        minimalPayload,
-      );
+        payload: minimalPayload,
+      });
       if (!ok) {
         throw new Error("save_minimal_note_failed");
       }
 
-      const historyResult = await saveSessionHistoryAPI(access, historyItem);
+      const historyResult = await saveHistoryMutation.mutateAsync({
+        access,
+        payload: historyItem,
+      });
       if (!historyResult.ok) {
         throw new Error("save_session_history_failed");
       }
@@ -270,7 +291,8 @@ function CbtSessionPageContent() {
       }
 
       pushToast("세션 기록이 저장되었습니다.", "success");
-      setIsSaving(false);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all });
       window.setTimeout(() => {
         try {
           void flushTokenSessionUsage({ sessionCount: 1 });

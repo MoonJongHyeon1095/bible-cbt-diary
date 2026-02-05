@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
 import { AuthModalProvider } from "@/components/header/AuthModalProvider";
 import NoticeGate from "@/components/gate/NoticeGate";
@@ -11,13 +11,35 @@ import { Capacitor } from "@capacitor/core";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import AppUpdateGate from "@/components/gate/AppUpdateGate";
 import { useTokenUsageSync } from "@/lib/hooks/useTokenUsageSync";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 type ProvidersProps = {
   children: ReactNode;
 };
 
 export default function Providers({ children }: ProvidersProps) {
-  useTokenUsageSync();
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 30_000,
+            gcTime: 10 * 60_000,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: true,
+            retry: 1,
+          },
+          mutations: {
+            retry: 0,
+          },
+        },
+      }),
+  );
+
+  const TokenUsageSync = () => {
+    useTokenUsageSync();
+    return null;
+  };
 
   useEffect(() => {
     // Native 앱에서만 backButton/appUrlOpen 이벤트를 듣습니다.
@@ -128,15 +150,18 @@ export default function Providers({ children }: ProvidersProps) {
   }, []);
 
   return (
-    <CbtToastProvider>
-      <GateProvider>
-        <AuthModalProvider>
-          <AppUpdateGate />
-          <UpdateNoticeGate />
-          <NoticeGate />
-          {children}
-        </AuthModalProvider>
-      </GateProvider>
-    </CbtToastProvider>
+    <QueryClientProvider client={queryClient}>
+      <TokenUsageSync />
+      <CbtToastProvider>
+        <GateProvider>
+          <AuthModalProvider>
+            <AppUpdateGate />
+            <UpdateNoticeGate />
+            <NoticeGate />
+            {children}
+          </AuthModalProvider>
+        </GateProvider>
+      </CbtToastProvider>
+    </QueryClientProvider>
   );
 }

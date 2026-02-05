@@ -3,16 +3,18 @@
 import pageStyles from "@/app/page.module.css";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
-import { fetchEmotionNote } from "@/components/emotion-notes/detail/utils/emotionNoteApi";
+import { fetchEmotionNote } from "@/lib/api/emotion-notes/getEmotionNote";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { buildApiUrl } from "@/lib/utils/apiBase";
-import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
+import { createShareSnapshot } from "@/lib/api/share/postShareSnapshot";
 import { ArrowLeft, Share2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./SharePage.module.css";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 const SECTION_LABELS = {
   thought: "자동 사고",
@@ -39,30 +41,47 @@ export default function ShareCreatePage() {
   const idParam = searchParams.get("id");
   const noteId = idParam ? Number(idParam) : null;
 
-  const [noteTitle, setNoteTitle] = useState("");
-  const [triggerText, setTriggerText] = useState("");
-  const [details, setDetails] = useState({
-    thought: [] as { id: number; automatic_thought: string; emotion: string }[],
-    error: [] as {
-      id: number;
-      error_label: string;
-      error_description: string;
-    }[],
-    alternative: [] as { id: number; alternative: string }[],
-    behavior: [] as {
-      id: number;
-      behavior_label: string;
-      behavior_description: string;
-      error_tags: string[] | null;
-    }[],
+  const access = useMemo<AccessContext>(
+    () => ({ mode: accessMode, accessToken }),
+    [accessMode, accessToken],
+  );
+  const noteQuery = useQuery({
+    queryKey:
+      noteId && access.mode === "auth"
+        ? queryKeys.emotionNotes.detail(access, noteId)
+        : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return null;
+      }
+      const { response, data } = await fetchEmotionNote(noteId, access);
+      if (!response.ok || !data.note) {
+        throw new Error("emotion_note fetch failed");
+      }
+      return data.note;
+    },
+    enabled: Boolean(noteId) && access.mode === "auth",
   });
+
+  const note = noteQuery.data ?? null;
+  const isLoading = noteQuery.isPending || noteQuery.isFetching;
+  const details = useMemo(
+    () => ({
+      thought: note?.thought_details ?? [],
+      error: note?.error_details ?? [],
+      alternative: note?.alternative_details ?? [],
+      behavior: note?.behavior_details ?? [],
+    }),
+    [note],
+  );
+  const noteTitle = note?.title ?? "";
+  const triggerText = note?.trigger_text ?? "";
   const [selection, setSelection] = useState<ShareSelection>({
     thought: [],
     error: [],
     alternative: [],
     behavior: [],
   });
-  const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -100,42 +119,14 @@ export default function ShareCreatePage() {
   const isAllSelected = totalAvailable > 0 && totalSelected === totalAvailable;
 
   useEffect(() => {
-    const loadNote = async () => {
-      if (!noteId || Number.isNaN(noteId)) {
-        setError("공유할 기록을 찾을 수 없습니다.");
-        setIsLoading(false);
-        return;
-      }
-      if (accessMode !== "auth" || !accessToken) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { response, data } = await fetchEmotionNote(noteId, {
-        mode: accessMode,
-        accessToken,
-      });
-
-      if (!response.ok || !data.note) {
-        setError("기록을 불러오지 못했습니다.");
-        setIsLoading(false);
-        return;
-      }
-
-      setNoteTitle(data.note.title ?? "");
-      setTriggerText(data.note.trigger_text ?? "");
-      setDetails({
-        thought: data.note.thought_details ?? [],
-        error: data.note.error_details ?? [],
-        alternative: data.note.alternative_details ?? [],
-        behavior: data.note.behavior_details ?? [],
-      });
-      setIsLoading(false);
-    };
-
-    setIsLoading(true);
-    loadNote();
-  }, [accessMode, accessToken, noteId]);
+    if (!noteId || Number.isNaN(noteId)) {
+      setError("공유할 기록을 찾을 수 없습니다.");
+      return;
+    }
+    if (noteQuery.isError) {
+      setError("기록을 불러오지 못했습니다.");
+    }
+  }, [noteId, noteQuery.isError]);
 
   const toggleItem = (section: SectionKey, id: number) => {
     setSelection((prev) => {
@@ -156,6 +147,25 @@ export default function ShareCreatePage() {
     });
   };
 
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      if (!noteId || Number.isNaN(noteId)) {
+        throw new Error("invalid note");
+      }
+      if (accessMode !== "auth" || !accessToken) {
+        throw new Error("auth required");
+      }
+      return createShareSnapshot({
+        accessToken,
+        noteId,
+        selectedThoughtIds: selection.thought,
+        selectedErrorIds: selection.error,
+        selectedAlternativeIds: selection.alternative,
+        selectedBehaviorIds: selection.behavior,
+      });
+    },
+  });
+
   const handleCreate = async () => {
     setError("");
     if (!noteId || Number.isNaN(noteId)) {
@@ -174,35 +184,12 @@ export default function ShareCreatePage() {
 
     setIsSubmitting(true);
     try {
-      const response = await fetch(buildApiUrl("/api/share-snap-shots"), {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...buildAuthHeaders(accessToken),
-        },
-        body: JSON.stringify({
-          noteId,
-          selectedThoughtIds: selection.thought,
-          selectedErrorIds: selection.error,
-          selectedAlternativeIds: selection.alternative,
-          selectedBehaviorIds: selection.behavior,
-        }),
-      });
-
-      const data = response.ok
-        ? ((await response.json()) as {
-            ok: boolean;
-            publicId?: string;
-            message?: string;
-          })
-        : { ok: false, message: "공유 링크 생성에 실패했습니다." };
-
+      const { response, data } = await createMutation.mutateAsync();
       if (!response.ok || !data.ok || !data.publicId) {
         setError(data.message ?? "공유 링크 생성에 실패했습니다.");
         setIsSubmitting(false);
         return;
       }
-
       router.push(`/share/link?sid=${data.publicId}&noteId=${noteId}`);
     } catch {
       setError("공유 링크 생성에 실패했습니다.");

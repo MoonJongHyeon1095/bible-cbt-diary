@@ -3,12 +3,9 @@ import { AlternativeThought } from "@/lib/gpt/alternative";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { isAiFallback } from "@/lib/utils/aiFallback";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-const alternativeThoughtsCache = new Map<
-  string,
-  { thoughts: AlternativeThought[]; isFallback: boolean }
->();
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type UseDeepAlternativeThoughtsParams = {
   step: number;
@@ -29,94 +26,77 @@ export function useCbtDeepAlternativeThoughts({
   selectedCognitiveErrors,
   previousAlternatives,
 }: UseDeepAlternativeThoughtsParams) {
-  const [alternativeThoughts, setAlternativeThoughts] = useState<
-    AlternativeThought[]
-  >([]);
-  const [thoughtsLoading, setThoughtsLoading] = useState(false);
-  const [thoughtsError, setThoughtsError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
-  const inFlightRef = useRef(false);
-
-  const requestKey = JSON.stringify({
-    userInput,
-    emotion,
-    autoThought,
-    internalContext,
-    selectedCognitiveErrors,
-    previousAlternatives,
-  });
-
-  const generateAlternatives = useCallback(
-    async (options?: { force?: boolean }) => {
-      if (inFlightRef.current) return;
-      if (!internalContext) return;
-      const cached = alternativeThoughtsCache.get(requestKey);
-      if (!options?.force && cached) {
-        setAlternativeThoughts(cached.thoughts);
-        setIsFallback(cached.isFallback);
-        setThoughtsError(null);
-        setThoughtsLoading(false);
-        return;
-      }
-
-      inFlightRef.current = true;
-      setThoughtsLoading(true);
-      setThoughtsError(null);
-      setIsFallback(false);
-
-      try {
-        const thoughts = await generateDeepAlternativeThoughts(
-          userInput,
-          emotion,
-          autoThought,
-          internalContext,
-          selectedCognitiveErrors,
-          previousAlternatives,
-        );
-
-        const fallback = isAiFallback(thoughts);
-        alternativeThoughtsCache.set(requestKey, { thoughts, isFallback: fallback });
-        setAlternativeThoughts(thoughts);
-        setIsFallback(fallback);
-      } catch (err) {
-        setThoughtsError(
-          err instanceof Error ? err.message : "오류가 발생했습니다.",
-        );
-        console.error("deep 대안사고 생성 오류:", err);
-      } finally {
-        inFlightRef.current = false;
-        setThoughtsLoading(false);
-      }
-    },
+  const requestKey = useMemo(
+    () =>
+      JSON.stringify({
+        userInput,
+        emotion,
+        autoThought,
+        internalContext,
+        selectedCognitiveErrors,
+        previousAlternatives,
+      }),
     [
       autoThought,
       emotion,
       internalContext,
       previousAlternatives,
-      requestKey,
       selectedCognitiveErrors,
       userInput,
     ],
   );
 
-  useEffect(() => {
-    if (
+  const query = useQuery({
+    queryKey: queryKeys.ai.deepAlternativeThoughts(requestKey),
+    queryFn: async () => {
+      if (!internalContext) {
+        return { thoughts: [] as AlternativeThought[], isFallback: false };
+      }
+      const thoughts = await generateDeepAlternativeThoughts(
+        userInput,
+        emotion,
+        autoThought,
+        internalContext,
+        selectedCognitiveErrors,
+        previousAlternatives,
+      );
+      return { thoughts, isFallback: isAiFallback(thoughts) };
+    },
+    enabled:
       step === 4 &&
-      alternativeThoughts.length === 0 &&
-      !thoughtsLoading &&
-      autoThought.trim() &&
-      internalContext
-    ) {
-      void generateAlternatives();
+      Boolean(autoThought.trim()) &&
+      Boolean(internalContext) &&
+      Boolean(userInput.trim()),
+  });
+
+  const alternativeThoughts = query.data?.thoughts ?? [];
+  const isFallback = query.data?.isFallback ?? false;
+  const thoughtsLoading = query.isPending || query.isFetching;
+  const thoughtsError = query.isError
+    ? query.error instanceof Error
+      ? query.error.message
+      : "오류가 발생했습니다."
+    : null;
+
+  const refetchRef = useRef(query.refetch);
+  const dataRef = useRef(query.data);
+  const loadingRef = useRef(thoughtsLoading);
+
+  useEffect(() => {
+    refetchRef.current = query.refetch;
+    dataRef.current = query.data;
+    loadingRef.current = thoughtsLoading;
+  }, [query.refetch, query.data, thoughtsLoading]);
+
+  const generateAlternatives = useCallback(async (options?: { force?: boolean }) => {
+    if (options?.force) {
+      await refetchRef.current();
+      return;
     }
-  }, [
-    alternativeThoughts.length,
-    autoThought,
-    generateAlternatives,
-    internalContext,
-    step,
-    thoughtsLoading,
-  ]);
+    if (!dataRef.current && !loadingRef.current) {
+      await refetchRef.current();
+    }
+  }, []);
 
   return {
     alternativeThoughts,

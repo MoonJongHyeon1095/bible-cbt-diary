@@ -1,11 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { generateExtendedAutomaticThoughts } from "@/lib/ai";
-import {
-  getAutoThoughtCache,
-  setAutoThoughtCache,
-} from "@/components/cbt/utils/storage/minimalAutoThoughtCache";
 import { startPerf } from "@/lib/utils/perf";
 import { isAiFallback } from "@/lib/utils/aiFallback";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type UseAutoThoughtSuggestionsParams = {
   userInput: string;
@@ -18,76 +16,57 @@ export function useCbtAutoThoughtSuggestions({
   emotion,
   onResetSelection,
 }: UseAutoThoughtSuggestionsParams) {
-  const [thoughts, setThoughts] = useState<
-    Array<{ belief: string; emotionReason: string }>
-  >([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [hasShownCustomPrompt, setHasShownCustomPrompt] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
-  const inFlightKeyRef = useRef<string | null>(null);
+  const resetRef = useRef(onResetSelection);
 
   const cacheKey = useMemo(
     () => `${emotion}::${userInput.trim()}`,
     [emotion, userInput],
   );
 
-  const loadThoughts = async () => {
-    if (!userInput.trim() || !emotion) return;
-    if (inFlightKeyRef.current === cacheKey) return;
-    inFlightKeyRef.current = cacheKey;
-    const endPerf = startPerf(`ai:autoThoughts:${cacheKey}`);
-    setLoading(true);
-    setError(null);
-    setIsFallback(false);
-    onResetSelection();
-    try {
-      const result = await generateExtendedAutomaticThoughts(
-        userInput,
-        emotion,
-      );
-      setIsFallback(isAiFallback(result));
-      const nextThoughts = result.sdtThoughts.map((item) => ({
-        belief: item.belief,
-        emotionReason: item.emotionReason,
-      }));
-      setThoughts(nextThoughts);
-      setCurrentIndex(0);
-      setHasShownCustomPrompt(false);
-      setAutoThoughtCache(cacheKey, {
-        thoughts: nextThoughts,
-        index: 0,
-        hasShownCustomPrompt: false,
-        isFallback: isAiFallback(result),
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-    } finally {
-      if (inFlightKeyRef.current === cacheKey) {
-        inFlightKeyRef.current = null;
+  const query = useQuery({
+    queryKey: queryKeys.ai.autoThoughtSuggestions(cacheKey),
+    queryFn: async () => {
+      const endPerf = startPerf(`ai:autoThoughts:${cacheKey}`);
+      try {
+        const result = await generateExtendedAutomaticThoughts(
+          userInput,
+          emotion,
+        );
+        const thoughts = result.sdtThoughts.map((item) => ({
+          belief: item.belief,
+          emotionReason: item.emotionReason,
+        }));
+        return {
+          thoughts,
+          isFallback: isAiFallback(result),
+        };
+      } finally {
+        endPerf();
       }
-      setLoading(false);
-      endPerf();
-    }
-  };
+    },
+    enabled: Boolean(userInput.trim() && emotion),
+  });
+
+  const thoughts = useMemo(() => query.data?.thoughts ?? [], [query.data]);
+  const isFallback = query.data?.isFallback ?? false;
+  const loading = query.isPending || query.isFetching;
+  const error = query.isError
+    ? query.error instanceof Error
+      ? query.error.message
+      : "오류가 발생했습니다."
+    : null;
 
   useEffect(() => {
-    if (!userInput.trim() || !emotion) return;
-    const cached = getAutoThoughtCache(cacheKey);
-    if (cached) {
-      setThoughts(cached.thoughts);
-      setCurrentIndex(cached.index);
-      setHasShownCustomPrompt(cached.hasShownCustomPrompt);
-      setIsFallback(Boolean(cached.isFallback));
-      setLoading(false);
-      setError(null);
-      return;
-    }
+    resetRef.current = onResetSelection;
+  }, [onResetSelection]);
+
+  useEffect(() => {
+    setCurrentIndex(0);
     setHasShownCustomPrompt(false);
-    void loadThoughts();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey, emotion, userInput]);
+    resetRef.current();
+  }, [cacheKey]);
 
   const currentThought = useMemo(() => {
     return thoughts[currentIndex] ?? null;
@@ -98,17 +77,6 @@ export function useCbtAutoThoughtSuggestions({
       setHasShownCustomPrompt(true);
     }
   }, [currentIndex]);
-
-  useEffect(() => {
-    if (!cacheKey || thoughts.length === 0) return;
-    const entry = {
-      thoughts,
-      index: currentIndex,
-      hasShownCustomPrompt,
-      isFallback,
-    };
-    setAutoThoughtCache(cacheKey, entry);
-  }, [cacheKey, currentIndex, hasShownCustomPrompt, thoughts, isFallback]);
 
   const canGoPrev = currentIndex > 0;
   const canGoNext = currentIndex < thoughts.length - 1;
@@ -133,6 +101,10 @@ export function useCbtAutoThoughtSuggestions({
     onResetSelection();
   };
 
+  const reloadThoughts = async () => {
+    await query.refetch();
+  };
+
   return {
     thoughts,
     currentIndex,
@@ -146,6 +118,6 @@ export function useCbtAutoThoughtSuggestions({
     setIndex,
     canGoPrev,
     canGoNext,
-    reloadThoughts: loadThoughts,
+    reloadThoughts,
   };
 }

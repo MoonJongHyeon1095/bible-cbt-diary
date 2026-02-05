@@ -2,12 +2,14 @@
 
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
-import {
-  deleteEmotionNote,
-  fetchEmotionNote,
-  saveEmotionNote,
-} from "../utils/emotionNoteApi";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { deleteEmotionNote } from "@/lib/api/emotion-notes/deleteEmotionNote";
+import { fetchEmotionNote } from "@/lib/api/emotion-notes/getEmotionNote";
+import { createEmotionNote } from "@/lib/api/emotion-notes/postEmotionNote";
+import { updateEmotionNote } from "@/lib/api/emotion-notes/patchEmotionNote";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 import useEmotionNoteAlternativeSection from "./useEmotionNoteAlternativeSection";
 import useEmotionNoteBehaviorSection from "./useEmotionNoteBehaviorSection";
 import useEmotionNoteAccess from "./useEmotionNoteAccess";
@@ -19,11 +21,12 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   const [note, setNote] = useState<EmotionNote | null>(null);
   const [title, setTitle] = useState("");
   const [triggerText, setTriggerText] = useState("");
-  const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const lastLoadedIdRef = useRef<number | null>(null);
+  const queryClient = useQueryClient();
 
   const isNew = !noteId;
 
@@ -35,91 +38,90 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     ensureNoteId,
   } = useEmotionNoteAccess({ noteId, setError });
 
+  const access = useMemo<AccessContext>(
+    () => ({ mode: accessMode, accessToken }),
+    [accessMode, accessToken],
+  );
+
   const thoughtSectionState = useEmotionNoteThoughtSection({
     noteId,
+    access,
     getAccessContext,
     requireAccessContext,
     ensureNoteId,
     setError,
   });
-  const { setDetails: setThoughtDetails } = thoughtSectionState;
-
   const errorSectionState = useEmotionNoteErrorSection({
     noteId,
+    access,
     getAccessContext,
     requireAccessContext,
     ensureNoteId,
     setError,
   });
-  const { setDetails: setErrorDetails } = errorSectionState;
 
   const alternativeSectionState = useEmotionNoteAlternativeSection({
     noteId,
+    access,
     getAccessContext,
     requireAccessContext,
     ensureNoteId,
     setError,
   });
-  const { setDetails: setAlternativeDetails } = alternativeSectionState;
 
   const behaviorSectionState = useEmotionNoteBehaviorSection({
     noteId,
+    access,
     getAccessContext,
     requireAccessContext,
     ensureNoteId,
     setError,
   });
-  const { setDetails: setBehaviorDetails } = behaviorSectionState;
+  const noteQuery = useQuery({
+    queryKey:
+      noteId && access.mode !== "blocked"
+        ? queryKeys.emotionNotes.detail(access, noteId)
+        : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return null;
+      }
+      const { response, data } = await fetchEmotionNote(noteId, access);
+      if (!response.ok) {
+        throw new Error("emotion_note fetch failed");
+      }
+      if (!data.note) {
+        throw new Error("note not found");
+      }
+      return data.note;
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+  });
 
-  const loadNote = useCallback(async () => {
+  const isLoading = noteQuery.isPending || noteQuery.isFetching;
+
+  useEffect(() => {
     if (!noteId) {
       setNote(null);
       setTitle("");
       setTriggerText("");
-      setThoughtDetails([]);
-      setErrorDetails([]);
-      setAlternativeDetails([]);
-      setBehaviorDetails([]);
+      lastLoadedIdRef.current = null;
       return;
     }
-
-    const access = await getAccessContext();
-    if (access.mode === "blocked") {
+    if (noteQuery.data) {
+      setNote(noteQuery.data);
+      if (lastLoadedIdRef.current !== noteQuery.data.id) {
+        setTitle(noteQuery.data.title);
+        setTriggerText(noteQuery.data.trigger_text);
+        lastLoadedIdRef.current = noteQuery.data.id;
+      }
       return;
     }
-
-    const { response, data } = await fetchEmotionNote(noteId, access);
-
-    if (!response.ok) {
-      return;
-    }
-    if (!data.note) {
+    if (noteQuery.isError) {
       setError("기록을 찾을 수 없습니다.");
       setNote(null);
-      return;
     }
-
-    setNote(data.note);
-    setTitle(data.note.title);
-    setTriggerText(data.note.trigger_text);
-    setThoughtDetails(data.note.thought_details ?? []);
-    setErrorDetails(data.note.error_details ?? []);
-    setAlternativeDetails(data.note.alternative_details ?? []);
-    setBehaviorDetails(data.note.behavior_details ?? []);
-  }, [
-    getAccessContext,
-    noteId,
-    setError,
-    setAlternativeDetails,
-    setBehaviorDetails,
-    setErrorDetails,
-    setThoughtDetails,
-  ]);
-
-  useEffect(() => {
-    setIsLoading(true);
-    loadNote().finally(() => setIsLoading(false));
-  }, [loadNote, accessMode, accessToken]);
+  }, [noteId, noteQuery.data, noteQuery.isError]);
 
   const handleSaveNote = async () => {
     setError("");
@@ -143,10 +145,15 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
       return;
     }
 
-    const { response, data } = await saveEmotionNote(
-      noteId ? { id: noteId, ...payload } : payload,
-      access,
-    );
+    const { response, data } = noteId
+      ? await updateEmotionNote(
+          {
+            id: noteId,
+            ...payload,
+          },
+          access,
+        )
+      : await createEmotionNote(payload, access);
 
     if (!response.ok || !data.ok) {
       setError(data.message ?? "저장에 실패했습니다.");
@@ -157,11 +164,12 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     if (noteId) {
       setMessage("수정되었습니다.");
       setIsSaving(false);
-      await loadNote();
+      await queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
       return;
     }
 
     if (data.noteId) {
+      await queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
       router.push(`/detail?id=${data.noteId}`);
       return;
     }
@@ -195,6 +203,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     }
 
     setIsDeleting(false);
+    await queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
     router.push("/today");
     return true;
   };

@@ -2,15 +2,17 @@
 
 import type { EmotionNoteErrorDetail } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useState } from "react";
-import {
-  createErrorDetail,
-  deleteErrorDetail,
-  fetchErrorDetails,
-  updateErrorDetail,
-} from "../utils/emotionNoteApi";
+import { fetchErrorDetails } from "@/lib/api/emotion-error-details/getEmotionErrorDetails";
+import { createErrorDetail } from "@/lib/api/emotion-error-details/postEmotionErrorDetails";
+import { updateErrorDetail } from "@/lib/api/emotion-error-details/patchEmotionErrorDetails";
+import { deleteErrorDetail } from "@/lib/api/emotion-error-details/deleteEmotionErrorDetails";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 type UseErrorSectionOptions = {
   noteId?: number | null;
+  access: AccessContext;
   getAccessContext: () => Promise<{
     mode: "auth" | "guest" | "blocked";
     accessToken: string | null;
@@ -25,6 +27,7 @@ type UseErrorSectionOptions = {
 
 export default function useEmotionNoteErrorSection({
   noteId,
+  access,
   getAccessContext,
   requireAccessContext,
   ensureNoteId,
@@ -32,42 +35,106 @@ export default function useEmotionNoteErrorSection({
 }: UseErrorSectionOptions) {
   const [errorLabel, setErrorLabel] = useState("");
   const [errorDescription, setErrorDescription] = useState("");
-  const [details, setDetails] = useState<EmotionNoteErrorDetail[]>([]);
   const [editingErrorId, setEditingErrorId] = useState<number | null>(null);
   const [editingErrorLabel, setEditingErrorLabel] = useState("");
   const [editingErrorDescription, setEditingErrorDescription] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadDetails = useCallback(async () => {
-    if (!noteId) {
-      setDetails([]);
-      return;
-    }
+  const detailsQuery = useQuery({
+    queryKey: noteId ? queryKeys.errorDetails(access, noteId) : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return [];
+      }
+      const resolved = await getAccessContext();
+      if (resolved.mode === "blocked") {
+        return [];
+      }
+      const { response, data } = await fetchErrorDetails(noteId, resolved);
+      if (!response.ok) {
+        throw new Error("emotion_error_details fetch failed");
+      }
+      return data.details ?? [];
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+  });
 
-    const access = await getAccessContext();
-    if (access.mode === "blocked") {
-      setDetails([]);
-      return;
-    }
+  const details = detailsQuery.data ?? [];
 
-    const { response, data } = await fetchErrorDetails(noteId, access);
+  const createMutation = useMutation({
+    mutationFn: async (payload: {
+      note_id: number;
+      error_label: string;
+      error_description: string;
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await createErrorDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("create error detail failed");
+      }
+      return payload.note_id;
+    },
+    onSuccess: (targetNoteId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.errorDetails(access, targetNoteId),
+      });
+    },
+  });
 
-    if (!response.ok) {
-      setDetails([]);
-      return;
-    }
-    setDetails(data.details ?? []);
-  }, [getAccessContext, noteId]);
+  const updateMutation = useMutation({
+    mutationFn: async (payload: {
+      id: number;
+      error_label: string;
+      error_description: string;
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await updateErrorDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("update error detail failed");
+      }
+      return payload.id;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.errorDetails(access, noteId),
+        });
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (detailId: number) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await deleteErrorDetail(detailId, resolved);
+      if (!response.ok) {
+        throw new Error("delete error detail failed");
+      }
+      return detailId;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.errorDetails(access, noteId),
+        });
+      }
+    },
+  });
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
     if (!ensuredNoteId) {
-      return;
-    }
-
-    const access = await requireAccessContext();
-    if (!access) {
       return;
     }
 
@@ -82,34 +149,21 @@ export default function useEmotionNoteErrorSection({
       return;
     }
 
-    const response = await createErrorDetail(payload, access);
-
-    if (!response.ok) {
+    try {
+      await createMutation.mutateAsync(payload);
+    } catch {
       setError("인지 오류 저장에 실패했습니다.");
       return;
     }
 
     setErrorLabel("");
     setErrorDescription("");
-    await loadDetails();
-  }, [
-    ensureNoteId,
-    errorDescription,
-    errorLabel,
-    loadDetails,
-    requireAccessContext,
-    setError,
-  ]);
+  }, [createMutation, ensureNoteId, errorDescription, errorLabel, setError]);
 
   const handleAddWithValues = useCallback(
     async (label: string, description: string) => {
       const ensuredNoteId = ensureNoteId();
       if (!ensuredNoteId) {
-        return false;
-      }
-
-      const access = await requireAccessContext();
-      if (!access) {
         return false;
       }
 
@@ -124,26 +178,18 @@ export default function useEmotionNoteErrorSection({
         return false;
       }
 
-      const response = await createErrorDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await createMutation.mutateAsync(payload);
+      } catch {
         setError("인지 오류 저장에 실패했습니다.");
         return false;
       }
 
       setErrorLabel("");
       setErrorDescription("");
-      await loadDetails();
       return true;
     },
-    [
-      ensureNoteId,
-      loadDetails,
-      requireAccessContext,
-      setError,
-      setErrorDescription,
-      setErrorLabel,
-    ],
+    [createMutation, ensureNoteId, setError],
   );
 
   const startEditing = useCallback((detail: EmotionNoteErrorDetail) => {
@@ -161,11 +207,6 @@ export default function useEmotionNoteErrorSection({
   const handleUpdate = useCallback(
     async (detailId: number) => {
       setIsUpdating(true);
-      const access = await requireAccessContext();
-      if (!access) {
-        setIsUpdating(false);
-        return;
-      }
 
       const payload = {
         id: detailId,
@@ -179,55 +220,46 @@ export default function useEmotionNoteErrorSection({
         return;
       }
 
-      const response = await updateErrorDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await updateMutation.mutateAsync(payload);
+      } catch {
         setError("인지 오류 수정에 실패했습니다.");
         setIsUpdating(false);
         return;
       }
 
       cancelEditing();
-      await loadDetails();
       setIsUpdating(false);
     },
     [
       cancelEditing,
       editingErrorDescription,
       editingErrorLabel,
-      loadDetails,
-      requireAccessContext,
       setError,
+      updateMutation,
     ],
   );
 
   const handleDelete = useCallback(
     async (detailId: number) => {
       setDeletingId(detailId);
-      const access = await requireAccessContext();
-      if (!access) {
-        setDeletingId(null);
-        return;
-      }
-
-      const response = await deleteErrorDetail(detailId, access);
-
-      if (!response.ok) {
+      try {
+        await deleteMutation.mutateAsync(detailId);
+      } catch {
         setError("인지 오류 삭제에 실패했습니다.");
         setDeletingId(null);
         return;
       }
 
-      await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessContext, setError],
+    [deleteMutation, setError],
   );
 
   return {
+    details,
     errorLabel,
     errorDescription,
-    details,
     editingErrorId,
     editingErrorLabel,
     editingErrorDescription,
@@ -235,10 +267,8 @@ export default function useEmotionNoteErrorSection({
     setErrorDescription,
     setEditingErrorLabel,
     setEditingErrorDescription,
-    setDetails,
     isUpdating,
     deletingId,
-    loadDetails,
     handleAdd,
     handleAddWithValues,
     startEditing,

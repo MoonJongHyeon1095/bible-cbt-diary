@@ -6,7 +6,7 @@ import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { ChevronDown, Trash2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./SessionHistorySection.module.css";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
@@ -14,11 +14,11 @@ import SessionHistorySectionCard, {
   SessionHistorySectionItalic,
   SessionHistorySectionText,
 } from "./SessionHistorySectionCard";
-import {
-  deleteAllSessionHistories,
-  deleteSessionHistory,
-  fetchSessionHistories,
-} from "./utils/sessionHistoryApi";
+import { deleteAllSessionHistories } from "@/lib/api/session-history/deleteAllSessionHistories";
+import { deleteSessionHistory } from "@/lib/api/session-history/deleteSessionHistory";
+import { fetchSessionHistories } from "@/lib/api/session-history/getSessionHistories";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const formatHistoryDate = (value: string) =>
   formatKoreanDateTime(value, {
@@ -49,28 +49,24 @@ type SessionHistorySectionProps = {
 
 export default function SessionHistorySection({ access }: SessionHistorySectionProps) {
   const pageSize = 20;
-  const [histories, setHistories] = useState<SessionHistory[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
   const [notice, setNotice] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
-  const nextOffsetRef = useRef(0);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const queryClient = useQueryClient();
 
-  const fetchPage = useCallback(
-    async (offset: number) => {
+  const historiesQuery = useInfiniteQuery({
+    queryKey: queryKeys.sessionHistory.list(access),
+    queryFn: async ({ pageParam = 0 }) => {
       const { response, data } = await fetchSessionHistories(access, {
         limit: pageSize,
-        offset,
+        offset: pageParam as number,
       });
       if (!response.ok) {
-        return { ok: false, histories: [] as SessionHistory[] };
+        throw new Error("session_history fetch failed");
       }
-
       const normalized = (data.histories ?? []).map((history) => ({
         ...history,
         emotionThoughtPairs: Array.isArray(history.emotionThoughtPairs)
@@ -80,63 +76,41 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
           history.selectedCognitiveErrors,
         ),
       }));
-      return { ok: true, histories: normalized };
+      return normalized as SessionHistory[];
     },
-    [access, pageSize],
-  );
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, pages) => {
+      if (!lastPage || lastPage.length < pageSize) {
+        return undefined;
+      }
+      const total = pages.reduce((sum, page) => sum + page.length, 0);
+      return total;
+    },
+    enabled: access.mode !== "blocked",
+  });
 
-  const loadHistories = useCallback(async () => {
-    setLoading(true);
-    setNotice(null);
-    nextOffsetRef.current = 0;
-    const { ok, histories: fetchedHistories } = await fetchPage(0);
-    if (!ok) {
-      setNotice("세션 기록을 불러오지 못했습니다.");
-      setHistories([]);
-      setLoading(false);
-      setHasMore(false);
-      return;
-    }
-    setHistories(fetchedHistories);
-    setHasMore(fetchedHistories.length >= pageSize);
-    nextOffsetRef.current = fetchedHistories.length;
-    setLoading(false);
-  }, [fetchPage, pageSize]);
+  const histories = useMemo(() => {
+    const pages = historiesQuery.data?.pages ?? [];
+    const seen = new Set<string>();
+    const result: SessionHistory[] = [];
+    pages.forEach((page) => {
+      page.forEach((item) => {
+        if (seen.has(item.id)) return;
+        seen.add(item.id);
+        result.push(item);
+      });
+    });
+    return result;
+  }, [historiesQuery.data?.pages]);
 
-  useEffect(() => {
-    loadHistories();
-  }, [loadHistories]);
+  const loading = historiesQuery.isPending;
+  const isLoadingMore = historiesQuery.isFetchingNextPage;
+  const hasMore = Boolean(historiesQuery.hasNextPage);
 
   const loadMore = useCallback(async () => {
-    if (loading || isLoadingMore || !hasMore) {
-      return;
-    }
-    setIsLoadingMore(true);
-    const offset = nextOffsetRef.current;
-    const { ok, histories: fetchedHistories } = await fetchPage(offset);
-    if (!ok) {
-      setNotice("세션 기록을 불러오지 못했습니다.");
-      setIsLoadingMore(false);
-      return;
-    }
-
-    if (fetchedHistories.length === 0) {
-      setHasMore(false);
-      setIsLoadingMore(false);
-      return;
-    }
-
-    setHistories((prev) => {
-      const existingIds = new Set(prev.map((item) => item.id));
-      const nextItems = fetchedHistories.filter(
-        (item) => !existingIds.has(item.id),
-      );
-      return [...prev, ...nextItems];
-    });
-    nextOffsetRef.current += fetchedHistories.length;
-    setHasMore(fetchedHistories.length >= pageSize);
-    setIsLoadingMore(false);
-  }, [fetchPage, hasMore, isLoadingMore, loading, pageSize]);
+    if (!hasMore || isLoadingMore) return;
+    await historiesQuery.fetchNextPage();
+  }, [hasMore, historiesQuery, isLoadingMore]);
 
   useEffect(() => {
     const node = sentinelRef.current;
@@ -157,31 +131,75 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
     return () => observer.disconnect();
   }, [hasMore, loadMore]);
 
+  useEffect(() => {
+    if (historiesQuery.isError) {
+      setNotice("세션 기록을 불러오지 못했습니다.");
+      return;
+    }
+    setNotice(null);
+  }, [historiesQuery.isError]);
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const { response } = await deleteSessionHistory(access, id);
+      if (!response.ok) {
+        throw new Error("delete session history failed");
+      }
+      return id;
+    },
+    onSuccess: (deletedId) => {
+      queryClient.setQueryData(
+        queryKeys.sessionHistory.list(access),
+        (prev) => {
+          if (!prev || typeof prev !== "object") return prev;
+          const pages = (prev as { pages?: SessionHistory[][] }).pages ?? [];
+          const nextPages = pages.map((page) =>
+            page.filter((item) => item.id !== deletedId),
+          );
+          return { ...(prev as object), pages: nextPages };
+        },
+      );
+    },
+  });
+
+  const deleteAllMutation = useMutation({
+    mutationFn: async () => {
+      const { response } = await deleteAllSessionHistories(access);
+      if (!response.ok) {
+        throw new Error("delete all session history failed");
+      }
+      return true;
+    },
+    onSuccess: () => {
+      queryClient.setQueryData(queryKeys.sessionHistory.list(access), (prev) => {
+        if (!prev || typeof prev !== "object") return prev;
+        return { ...(prev as object), pages: [[]] };
+      });
+    },
+  });
+
   const handleDelete = async (id: string) => {
     setDeletingId(id);
-    const { response } = await deleteSessionHistory(access, id);
-    if (!response.ok) {
+    try {
+      await deleteMutation.mutateAsync(id);
+    } catch {
       setNotice("세션 기록을 삭제하지 못했습니다.");
       setDeletingId(null);
       return;
     }
-    setHistories((prev) => prev.filter((item) => item.id !== id));
-    nextOffsetRef.current = Math.max(0, nextOffsetRef.current - 1);
     setDeletingId(null);
   };
 
   const handleDeleteAll = async () => {
     setDeletingAll(true);
-    const { response } = await deleteAllSessionHistories(access);
-    if (!response.ok) {
+    try {
+      await deleteAllMutation.mutateAsync();
+    } catch {
       setNotice("세션 기록을 삭제하지 못했습니다.");
       setDeletingAll(false);
       return;
     }
-    setHistories([]);
     setExpanded({});
-    setHasMore(false);
-    nextOffsetRef.current = 0;
     setConfirmDeleteAll(false);
     setDeletingAll(false);
   };

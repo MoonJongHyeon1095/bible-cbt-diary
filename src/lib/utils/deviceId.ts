@@ -19,3 +19,5 @@ export const getDeviceId = () => {
     return "unknown";
   }
 };
+
+export const isDeviceIdAvailable = () => getDeviceId() !== "unknown";

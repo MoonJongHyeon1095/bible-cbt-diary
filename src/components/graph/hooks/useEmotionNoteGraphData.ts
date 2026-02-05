@@ -1,11 +1,12 @@
 "use client";
 
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteTypes";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import {
-  fetchEmotionNoteGraph,
   fetchEmotionNoteById,
-} from "../utils/emotionNoteGraphApi";
+  fetchEmotionNoteGraph,
+} from "@/lib/api/graph/getEmotionNoteGraph";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type UseEmotionNoteGraphDataParams = {
   accessToken: string;
@@ -18,54 +19,68 @@ export const useEmotionNoteGraphData = ({
   groupId,
   noteId,
 }: UseEmotionNoteGraphDataParams) => {
-  const [notes, setNotes] = useState<EmotionNote[]>([]);
-  const [middles, setMiddles] = useState<EmotionNoteMiddle[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      if (!groupId && !noteId) {
-        setNotes([]);
-        setMiddles([]);
-        setIsLoading(false);
-        return;
+  const groupQuery = useQuery({
+    queryKey: queryKeys.graph.group(accessToken, groupId ?? 0, true),
+    queryFn: async () => {
+      if (!groupId) {
+        return { notes: [], middles: [] };
       }
-      setIsLoading(true);
-      if (groupId) {
-        const { response, data } = await fetchEmotionNoteGraph(
-          accessToken,
-          groupId,
-        );
-        if (!response.ok) {
-          setNotes([]);
-          setMiddles([]);
-          setIsLoading(false);
-          return;
-        }
-        setNotes(data.notes ?? []);
-        setMiddles(data.middles ?? []);
-        setIsLoading(false);
-        return;
+      const { response, data } = await fetchEmotionNoteGraph(
+        accessToken,
+        groupId,
+      );
+      if (!response.ok) {
+        throw new Error("emotion_note_graph fetch failed");
       }
+      return { notes: data.notes ?? [], middles: data.middles ?? [] };
+    },
+    enabled: Boolean(accessToken && groupId),
+  });
 
-      if (noteId) {
-        const { response, data } = await fetchEmotionNoteById(
-          accessToken,
-          noteId,
-        );
-        if (!response.ok || !data.note) {
-          setNotes([]);
-          setMiddles([]);
-          setIsLoading(false);
-          return;
-        }
-        setNotes([data.note]);
-        setMiddles([]);
-        setIsLoading(false);
+  const noteQuery = useQuery({
+    queryKey: queryKeys.graph.note(accessToken, noteId ?? 0),
+    queryFn: async () => {
+      if (!noteId) {
+        return { notes: [], middles: [] };
       }
-    };
-    load();
-  }, [accessToken, groupId, noteId]);
+      const { response, data } = await fetchEmotionNoteById(
+        accessToken,
+        noteId,
+      );
+      if (!response.ok || !data.note) {
+        throw new Error("emotion_note_graph_note fetch failed");
+      }
+      return { notes: [data.note], middles: [] };
+    },
+    enabled: Boolean(accessToken && noteId && !groupId),
+  });
 
-  return { notes, middles, isLoading };
+  const result = useMemo(() => {
+    if (groupId) {
+      return {
+        notes: groupQuery.data?.notes ?? [],
+        middles: groupQuery.data?.middles ?? [],
+        isLoading: groupQuery.isPending || groupQuery.isFetching,
+      };
+    }
+    if (noteId) {
+      return {
+        notes: noteQuery.data?.notes ?? [],
+        middles: noteQuery.data?.middles ?? [],
+        isLoading: noteQuery.isPending || noteQuery.isFetching,
+      };
+    }
+    return { notes: [], middles: [], isLoading: false };
+  }, [
+    groupId,
+    noteId,
+    groupQuery.data,
+    groupQuery.isPending,
+    groupQuery.isFetching,
+    noteQuery.data,
+    noteQuery.isPending,
+    noteQuery.isFetching,
+  ]);
+
+  return result;
 };

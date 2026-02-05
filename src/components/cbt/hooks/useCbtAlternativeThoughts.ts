@@ -1,16 +1,12 @@
 import { generateContextualAlternativeThoughts } from "@/lib/ai";
-import { AlternativeThought } from "@/lib/gpt/alternative";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
 } from "@/lib/types/cbtTypes";
 import { isAiFallback } from "@/lib/utils/aiFallback";
-import { useCallback, useEffect, useRef, useState } from "react";
-
-const alternativeThoughtsCache = new Map<
-  string,
-  { thoughts: AlternativeThought[]; isFallback: boolean }
->();
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type UseAlternativeThoughtsParams = {
   step: number;
@@ -25,80 +21,63 @@ export function useCbtAlternativeThoughts({
   emotionThoughtPairs,
   selectedCognitiveErrors,
 }: UseAlternativeThoughtsParams) {
-  const [alternativeThoughts, setAlternativeThoughts] = useState<
-    AlternativeThought[]
-  >([]);
-  const [thoughtsLoading, setThoughtsLoading] = useState(false);
-  const [thoughtsError, setThoughtsError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
-  const inFlightRef = useRef(false);
-
-  const requestKey = JSON.stringify({
-    userInput,
-    emotionThoughtPairs,
-    selectedCognitiveErrors,
-  });
-
-  const generateAlternatives = useCallback(
-    async (options?: { force?: boolean }) => {
-      if (inFlightRef.current) return;
-      const cached = alternativeThoughtsCache.get(requestKey);
-      if (!options?.force && cached) {
-        setAlternativeThoughts(cached.thoughts);
-        setIsFallback(cached.isFallback);
-        setThoughtsError(null);
-        setThoughtsLoading(false);
-        return;
-      }
-
-      inFlightRef.current = true;
-      setThoughtsLoading(true);
-      setThoughtsError(null);
-      setIsFallback(false);
-
-      try {
-        const emotions = emotionThoughtPairs.map((p) => p.emotion).join(", ");
-        const firstPair = emotionThoughtPairs[0];
-        const thoughts = await generateContextualAlternativeThoughts(
-          userInput,
-          emotions,
-          firstPair?.thought ?? "",
-          selectedCognitiveErrors,
-        );
-
-        const fallback = isAiFallback(thoughts);
-        alternativeThoughtsCache.set(requestKey, { thoughts, isFallback: fallback });
-        setAlternativeThoughts(thoughts);
-        setIsFallback(fallback);
-      } catch (err) {
-        setThoughtsError(
-          err instanceof Error ? err.message : "오류가 발생했습니다.",
-        );
-        console.error("대안사고 생성 오류:", err);
-      } finally {
-        inFlightRef.current = false;
-        setThoughtsLoading(false);
-      }
-    },
-    [emotionThoughtPairs, requestKey, selectedCognitiveErrors, userInput],
+  const requestKey = useMemo(
+    () =>
+      JSON.stringify({
+        userInput,
+        emotionThoughtPairs,
+        selectedCognitiveErrors,
+      }),
+    [emotionThoughtPairs, selectedCognitiveErrors, userInput],
   );
 
-  useEffect(() => {
-    if (
+  const query = useQuery({
+    queryKey: queryKeys.ai.alternativeThoughts(requestKey),
+    queryFn: async () => {
+      const emotions = emotionThoughtPairs.map((p) => p.emotion).join(", ");
+      const firstPair = emotionThoughtPairs[0];
+      const thoughts = await generateContextualAlternativeThoughts(
+        userInput,
+        emotions,
+        firstPair?.thought ?? "",
+        selectedCognitiveErrors,
+      );
+      return { thoughts, isFallback: isAiFallback(thoughts) };
+    },
+    enabled:
       step === 4 &&
-      alternativeThoughts.length === 0 &&
-      !thoughtsLoading &&
-      emotionThoughtPairs.length > 0
-    ) {
-      void generateAlternatives();
+      emotionThoughtPairs.length > 0 &&
+      Boolean(userInput.trim()),
+  });
+
+  const alternativeThoughts = query.data?.thoughts ?? [];
+  const isFallback = query.data?.isFallback ?? false;
+  const thoughtsLoading = query.isPending || query.isFetching;
+  const thoughtsError = query.isError
+    ? query.error instanceof Error
+      ? query.error.message
+      : "오류가 발생했습니다."
+    : null;
+
+  const refetchRef = useRef(query.refetch);
+  const dataRef = useRef(query.data);
+  const loadingRef = useRef(thoughtsLoading);
+
+  useEffect(() => {
+    refetchRef.current = query.refetch;
+    dataRef.current = query.data;
+    loadingRef.current = thoughtsLoading;
+  }, [query.refetch, query.data, thoughtsLoading]);
+
+  const generateAlternatives = useCallback(async (options?: { force?: boolean }) => {
+    if (options?.force) {
+      await refetchRef.current();
+      return;
     }
-  }, [
-    alternativeThoughts.length,
-    emotionThoughtPairs.length,
-    generateAlternatives,
-    step,
-    thoughtsLoading,
-  ]);
+    if (!dataRef.current && !loadingRef.current) {
+      await refetchRef.current();
+    }
+  }, []);
 
   return {
     alternativeThoughts,

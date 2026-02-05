@@ -1,17 +1,29 @@
 "use client";
 
 import { useCallback, useEffect, useRef } from "react";
-import { fetchTokenUsageStatus } from "@/lib/utils/tokenUsage";
+import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 import { getAiUsageDecision } from "@/lib/utils/aiUsageGuard";
 import {
   AI_USAGE_GUARD_CACHE_KEY,
   writeAiUsageGuardCache,
 } from "@/lib/utils/aiUsageGuardCache";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import { getDeviceId } from "@/lib/utils/deviceId";
 
 const FOCUS_DEBOUNCE_MS = 3000;
 
 export const useTokenUsageSync = () => {
   const lastSyncAtRef = useRef(0);
+  const deviceId = getDeviceId();
+
+  const usageQuery = useQuery({
+    queryKey: queryKeys.tokenUsage.byDevice(deviceId),
+    queryFn: fetchTokenUsageStatus,
+    staleTime: 30_000,
+    gcTime: 10 * 60_000,
+    refetchOnWindowFocus: true,
+  });
 
   const syncOnce = useCallback(async () => {
     const now = Date.now();
@@ -21,8 +33,11 @@ export const useTokenUsageSync = () => {
     lastSyncAtRef.current = now;
 
     try {
-      const status = await fetchTokenUsageStatus();
-      const decision = getAiUsageDecision(status);
+      const result = await usageQuery.refetch();
+      if (!result.data) {
+        return;
+      }
+      const decision = getAiUsageDecision(result.data);
       writeAiUsageGuardCache({
         allowed: decision.allowed,
         checkedAt: Date.now(),
@@ -31,7 +46,7 @@ export const useTokenUsageSync = () => {
     } catch (error) {
       console.error("token usage sync failed:", error);
     }
-  }, []);
+  }, [usageQuery]);
 
   useEffect(() => {
     void syncOnce();

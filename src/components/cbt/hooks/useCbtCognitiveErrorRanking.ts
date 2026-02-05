@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   analyzeCognitiveErrorDetails,
   COGNITIVE_ERRORS_BY_INDEX,
@@ -6,22 +6,14 @@ import {
   type ErrorIndex,
 } from "@/lib/ai";
 import { isAiFallback } from "@/lib/utils/aiFallback";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type DetailItem = {
   index: ErrorIndex;
   analysis: string;
 };
 
-type RankedItem = { index: ErrorIndex; reason: string; evidenceQuote?: string };
-
-type CognitiveErrorCacheEntry = {
-  ranked: RankedItem[];
-  detailByIndex: Partial<Record<ErrorIndex, DetailItem>>;
-  detailFallbackByIndex: Partial<Record<ErrorIndex, boolean>>;
-  pageIndex: number;
-  withinIndex: number;
-  rankFallback: boolean;
-};
 
 type UseCognitiveErrorRankingParams = {
   userInput: string;
@@ -29,148 +21,96 @@ type UseCognitiveErrorRankingParams = {
 };
 
 const BATCH_SIZE = 3;
-const cognitiveErrorCache = new Map<string, CognitiveErrorCacheEntry>();
 
 export function useCbtCognitiveErrorRanking({
   userInput,
   thought,
 }: UseCognitiveErrorRankingParams) {
-  const [ranked, setRanked] = useState<RankedItem[]>([]);
   const [detailByIndex, setDetailByIndex] = useState<
     Partial<Record<ErrorIndex, DetailItem>>
   >({});
   const [pageIndex, setPageIndex] = useState(0);
   const [withinIndex, setWithinIndex] = useState(0);
-  const [rankLoading, setRankLoading] = useState(true);
-  const [detailLoading, setDetailLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [rankFallback, setRankFallback] = useState(false);
   const [detailFallbackByIndex, setDetailFallbackByIndex] = useState<
     Partial<Record<ErrorIndex, boolean>>
   >({});
-  const pendingDetailRef = useRef<Set<ErrorIndex>>(new Set());
-  const inFlightKeyRef = useRef<string | null>(null);
+
   const cacheKey = useMemo(
     () => `${userInput.trim()}::${thought.trim()}`,
     [userInput, thought],
   );
 
-  const resetState = () => {
-    setRanked([]);
+  const rankQuery = useQuery({
+    queryKey: queryKeys.ai.cognitiveErrorRank(cacheKey),
+    queryFn: async () => rankCognitiveErrors(userInput, thought),
+    enabled: Boolean(userInput.trim() && thought.trim()),
+  });
+
+  const ranked = useMemo(() => rankQuery.data?.ranked ?? [], [rankQuery.data]);
+  const rankFallback = rankQuery.data ? isAiFallback(rankQuery.data) : false;
+  const rankLoading = rankQuery.isPending || rankQuery.isFetching;
+
+  useEffect(() => {
     setDetailByIndex({});
     setDetailFallbackByIndex({});
     setPageIndex(0);
     setWithinIndex(0);
     setError(null);
-    setRankFallback(false);
-    pendingDetailRef.current.clear();
-  };
-
-  const fetchDetails = async (indices: ErrorIndex[]) => {
-    const unique = indices.filter(
-      (idx) => !detailByIndex[idx] && !pendingDetailRef.current.has(idx),
-    );
-    if (unique.length === 0) return;
-    unique.forEach((idx) => pendingDetailRef.current.add(idx));
-    setDetailLoading(true);
-    try {
-      const detail = await analyzeCognitiveErrorDetails(
-        userInput,
-        thought,
-        unique,
-      );
-      const detailFallback = isAiFallback(detail);
-      setDetailByIndex((prev) => {
-        const next = { ...prev };
-        detail.errors.forEach((item) => {
-          next[item.index] = { index: item.index, analysis: item.analysis };
-        });
-        return next;
-      });
-      setDetailFallbackByIndex((prev) => {
-        const next = { ...prev };
-        detail.errors.forEach((item) => {
-          next[item.index] = detailFallback;
-        });
-        return next;
-      });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-    } finally {
-      unique.forEach((idx) => pendingDetailRef.current.delete(idx));
-      setDetailLoading(false);
-    }
-  };
-
-  const loadRanked = async () => {
-    if (inFlightKeyRef.current === cacheKey) return;
-    inFlightKeyRef.current = cacheKey;
-    setRankLoading(true);
-    resetState();
-    try {
-      const result = await rankCognitiveErrors(userInput, thought);
-      setRanked(result.ranked);
-      setRankFallback(isAiFallback(result));
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-    } finally {
-      if (inFlightKeyRef.current === cacheKey) {
-        inFlightKeyRef.current = null;
-      }
-      setRankLoading(false);
-    }
-  };
+  }, [cacheKey]);
 
   useEffect(() => {
-    if (!userInput.trim() || !thought.trim()) return;
-    const cached = cognitiveErrorCache.get(cacheKey);
-    if (cached) {
-      setRanked(cached.ranked);
-      setDetailByIndex(cached.detailByIndex);
-      setDetailFallbackByIndex(cached.detailFallbackByIndex);
-      setPageIndex(cached.pageIndex);
-      setWithinIndex(cached.withinIndex);
-      setRankFallback(cached.rankFallback);
-      setRankLoading(false);
-      setDetailLoading(false);
-      setError(null);
-      return;
+    if (rankQuery.isError) {
+      setError("오류가 발생했습니다.");
     }
-    void loadRanked();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cacheKey, userInput, thought]);
+  }, [rankQuery.isError]);
 
   const currentIndices = useMemo(() => {
     const start = pageIndex * BATCH_SIZE;
     return ranked.slice(start, start + BATCH_SIZE).map((item) => item.index);
   }, [pageIndex, ranked]);
 
-  useEffect(() => {
-    const missing = currentIndices.filter((idx) => !detailByIndex[idx]);
-    if (missing.length === 0) return;
-    void fetchDetails(missing);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentIndices]);
+  const missing = useMemo(
+    () => currentIndices.filter((idx) => !detailByIndex[idx]),
+    [currentIndices, detailByIndex],
+  );
+
+  const detailKey = missing.join(",");
+
+  const detailQuery = useQuery({
+    queryKey: queryKeys.ai.cognitiveErrorDetail(cacheKey, detailKey),
+    queryFn: async () =>
+      analyzeCognitiveErrorDetails(userInput, thought, missing),
+    enabled: Boolean(detailKey) && Boolean(rankQuery.data),
+  });
+
+  const detailLoading = detailQuery.isPending || detailQuery.isFetching;
+  const currentIndex = pageIndex * BATCH_SIZE + withinIndex;
 
   useEffect(() => {
-    if (!cacheKey || ranked.length === 0) return;
-    cognitiveErrorCache.set(cacheKey, {
-      ranked,
-      detailByIndex,
-      detailFallbackByIndex,
-      pageIndex,
-      withinIndex,
-      rankFallback,
+    if (!detailQuery.data) return;
+    const detailFallback = isAiFallback(detailQuery.data);
+    setDetailByIndex((prev) => {
+      const next = { ...prev };
+      detailQuery.data.errors.forEach((item) => {
+        next[item.index] = { index: item.index, analysis: item.analysis };
+      });
+      return next;
     });
-  }, [
-    cacheKey,
-    detailByIndex,
-    detailFallbackByIndex,
-    pageIndex,
-    ranked,
-    rankFallback,
-    withinIndex,
-  ]);
+    setDetailFallbackByIndex((prev) => {
+      const next = { ...prev };
+      detailQuery.data.errors.forEach((item) => {
+        next[item.index] = detailFallback;
+      });
+      return next;
+    });
+  }, [detailQuery.data]);
+
+  useEffect(() => {
+    if (detailQuery.isError) {
+      setError("오류가 발생했습니다.");
+    }
+  }, [detailQuery.isError]);
 
   useEffect(() => {
     setWithinIndex(0);
@@ -180,7 +120,6 @@ export function useCbtCognitiveErrorRanking({
     const start = pageIndex * BATCH_SIZE;
     return ranked[start + withinIndex] ?? null;
   }, [pageIndex, ranked, withinIndex]);
-  const currentIndex = pageIndex * BATCH_SIZE + withinIndex;
   const canPrev = currentIndex > 0;
   const canNext = currentIndex < ranked.length - 1;
 
@@ -200,10 +139,8 @@ export function useCbtCognitiveErrorRanking({
       setWithinIndex((prev) => prev + 1);
       return;
     }
-    const nextStart = (pageIndex + 1) * BATCH_SIZE;
-    if (nextStart < ranked.length) {
+    if (pageIndex < Math.ceil(ranked.length / BATCH_SIZE) - 1) {
       setPageIndex((prev) => prev + 1);
-      return;
     }
   };
 
@@ -214,41 +151,48 @@ export function useCbtCognitiveErrorRanking({
       return;
     }
     if (pageIndex > 0) {
-      const prevPage = pageIndex - 1;
-      const prevStart = prevPage * BATCH_SIZE;
-      const prevEnd = Math.min(prevStart + BATCH_SIZE, ranked.length);
-      setPageIndex(prevPage);
-      setWithinIndex(Math.max(prevEnd - prevStart - 1, 0));
+      setPageIndex((prev) => prev - 1);
+      setWithinIndex(BATCH_SIZE - 1);
     }
   };
 
-  const setCurrentIndex = (index: number) => {
-    if (ranked.length === 0) return;
-    if (!Number.isFinite(index)) return;
-    const next = Math.max(0, Math.min(index, ranked.length - 1));
-    const nextPage = Math.floor(next / BATCH_SIZE);
-    const nextWithin = next % BATCH_SIZE;
-    setPageIndex(nextPage);
-    setWithinIndex(nextWithin);
+  const handleSelectIndex = (index: number) => {
+    setPageIndex(Math.floor(index / BATCH_SIZE));
+    setWithinIndex(index % BATCH_SIZE);
+  };
+
+  const reset = () => {
+    setDetailByIndex({});
+    setDetailFallbackByIndex({});
+    setPageIndex(0);
+    setWithinIndex(0);
+    setError(null);
   };
 
   return {
     ranked,
     detailByIndex,
+    currentMeta,
     currentRankItem,
     currentDetail,
-    currentMeta,
-    currentIndex,
-    setCurrentIndex,
-    isFallback: rankFallback || currentDetailFallback,
-    loading: rankLoading && ranked.length === 0,
-    error,
-    rankLoading,
-    detailLoading,
-    handleNext,
-    handlePrev,
+    currentDetailFallback,
     canPrev,
     canNext,
-    reload: loadRanked,
+    pageIndex,
+    withinIndex,
+    currentIndex,
+    loading: rankLoading,
+    rankLoading,
+    detailLoading,
+    error,
+    isFallback: rankFallback,
+    setCurrentIndex: handleSelectIndex,
+    reload: async () => {
+      await rankQuery.refetch();
+    },
+    handleNext,
+    handlePrev,
+    handleSelectIndex,
+    reset,
   };
 }

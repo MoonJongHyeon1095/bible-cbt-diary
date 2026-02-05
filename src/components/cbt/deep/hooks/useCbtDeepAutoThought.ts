@@ -4,20 +4,11 @@ import type { DeepAutoThoughtResult } from "@/lib/gpt/deepThought";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { isAiFallback } from "@/lib/utils/aiFallback";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { startPerf } from "@/lib/utils/perf";
+import { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 const buildContext = (note: EmotionNote) => buildDeepNoteContext(note);
-const deepAutoThoughtCache = new Map<
-  string,
-  {
-    items: Array<{ belief: string; emotionReason: string }>;
-    autoThought: string;
-    result: DeepAutoThoughtResult;
-    isFallback: boolean;
-  }
->();
-const deepAutoThoughtInFlight = new Set<string>();
 
 type UseDeepAutoThoughtParams = {
   userInput: string;
@@ -34,17 +25,6 @@ export function useCbtDeepAutoThought({
   subNotes,
   internalContext,
 }: UseDeepAutoThoughtParams) {
-  const [autoThought, setAutoThought] = useState("");
-  const [result, setResult] = useState<DeepAutoThoughtResult | null>(null);
-  const [items, setItems] = useState<
-    Array<{ belief: string; emotionReason: string }>
-  >([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [isFallback, setIsFallback] = useState(false);
-  const inFlightKeyRef = useRef<string | null>(null);
-  const completedKeyRef = useRef<string | null>(null);
-
   const requestKey = useMemo(() => {
     const ids = [mainNote?.id, ...subNotes.map((note) => note.id)].filter(
       Boolean,
@@ -59,29 +39,12 @@ export function useCbtDeepAutoThought({
     });
   }, [emotion, internalContext, mainNote?.id, subNotes, userInput]);
 
-  const loadThought = useCallback(async () => {
-    if (!userInput.trim() || !emotion || !mainNote || !internalContext) {
-      return;
-    }
-    if (inFlightKeyRef.current === requestKey) return;
-    if (completedKeyRef.current === requestKey && items.length > 0) return;
-    const cached = deepAutoThoughtCache.get(requestKey);
-    if (cached) {
-      setItems(cached.items);
-      setAutoThought(cached.autoThought);
-      setResult(cached.result);
-      setIsFallback(cached.isFallback);
-      setLoading(false);
-      return;
-    }
-    if (deepAutoThoughtInFlight.has(requestKey)) return;
-    deepAutoThoughtInFlight.add(requestKey);
-    inFlightKeyRef.current = requestKey;
-    const endPerf = startPerf(`deep:autoThought:${requestKey}`);
-    setLoading(true);
-    setError(null);
-    setIsFallback(false);
-    try {
+  const query = useQuery({
+    queryKey: queryKeys.ai.deepAutoThought(requestKey),
+    queryFn: async () => {
+      if (!userInput.trim() || !emotion || !mainNote || !internalContext) {
+        return null;
+      }
       const mainContext = buildContext(mainNote);
       const subContexts = subNotes.map(buildContext);
       // 이 로그 지우지 마 절대
@@ -93,8 +56,6 @@ export function useCbtDeepAutoThought({
         subContexts,
         internalContext,
       );
-      setResult(sdt);
-      const fallback = isAiFallback(sdt);
       const nextItems = [
         {
           belief: sdt.sdt.relatedness.belief.filter(Boolean).join(" ").trim(),
@@ -109,41 +70,34 @@ export function useCbtDeepAutoThought({
           emotionReason: sdt.sdt.autonomy.emotion_reason,
         },
       ];
-      setItems(nextItems);
       const nextAutoThought = nextItems.map((item) => item.belief).join(" ");
-      setAutoThought(nextAutoThought);
-      deepAutoThoughtCache.set(requestKey, {
+      return {
         items: nextItems,
         autoThought: nextAutoThought,
         result: sdt,
-        isFallback: fallback,
-      });
-      setIsFallback(fallback);
-      completedKeyRef.current = requestKey;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-    } finally {
-      if (inFlightKeyRef.current === requestKey) {
-        inFlightKeyRef.current = null;
-      }
-      deepAutoThoughtInFlight.delete(requestKey);
-      setLoading(false);
-      endPerf();
-    }
-  }, [emotion, internalContext, items.length, mainNote, requestKey, subNotes, userInput]);
-
-  useEffect(() => {
-    if (!userInput.trim() || !emotion || !mainNote || !internalContext) return;
-    void loadThought();
-  }, [loadThought, requestKey, userInput, emotion, mainNote, internalContext]);
+        isFallback: isAiFallback(sdt),
+      };
+    },
+    enabled:
+      Boolean(userInput.trim()) &&
+      Boolean(emotion) &&
+      Boolean(mainNote) &&
+      Boolean(internalContext),
+  });
 
   return {
-    autoThought,
-    items,
-    result,
-    loading,
-    error,
-    isFallback,
-    reload: loadThought,
+    autoThought: query.data?.autoThought ?? "",
+    items: query.data?.items ?? [],
+    result: (query.data?.result ?? null) as DeepAutoThoughtResult | null,
+    loading: query.isPending || query.isFetching,
+    error: query.isError
+      ? query.error instanceof Error
+        ? query.error.message
+        : "오류가 발생했습니다."
+      : null,
+    isFallback: query.data?.isFallback ?? false,
+    reload: async () => {
+      await query.refetch();
+    },
   };
 }

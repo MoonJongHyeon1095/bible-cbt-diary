@@ -2,15 +2,17 @@
 
 import type { EmotionNoteDetail } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useState } from "react";
-import {
-  createThoughtDetail,
-  deleteThoughtDetail,
-  fetchThoughtDetails,
-  updateThoughtDetail,
-} from "../utils/emotionNoteApi";
+import { fetchThoughtDetails } from "@/lib/api/emotion-note-details/getEmotionNoteDetails";
+import { createThoughtDetail } from "@/lib/api/emotion-note-details/postEmotionNoteDetails";
+import { updateThoughtDetail } from "@/lib/api/emotion-note-details/patchEmotionNoteDetails";
+import { deleteThoughtDetail } from "@/lib/api/emotion-note-details/deleteEmotionNoteDetails";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 type UseThoughtSectionOptions = {
   noteId?: number | null;
+  access: AccessContext;
   getAccessContext: () => Promise<{
     mode: "auth" | "guest" | "blocked";
     accessToken: string | null;
@@ -25,6 +27,7 @@ type UseThoughtSectionOptions = {
 
 export default function useEmotionNoteThoughtSection({
   noteId,
+  access,
   getAccessContext,
   requireAccessContext,
   ensureNoteId,
@@ -32,33 +35,102 @@ export default function useEmotionNoteThoughtSection({
 }: UseThoughtSectionOptions) {
   const [detailThought, setDetailThought] = useState("");
   const [detailEmotion, setDetailEmotion] = useState("");
-  const [details, setDetails] = useState<EmotionNoteDetail[]>([]);
   const [editingThoughtId, setEditingThoughtId] = useState<number | null>(null);
   const [editingThoughtText, setEditingThoughtText] = useState("");
   const [editingEmotionText, setEditingEmotionText] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const queryClient = useQueryClient();
 
-  const loadDetails = useCallback(async () => {
-    if (!noteId) {
-      setDetails([]);
-      return;
-    }
+  const detailsQuery = useQuery({
+    queryKey: noteId ? queryKeys.thoughtDetails(access, noteId) : ["noop"],
+    queryFn: async () => {
+      if (!noteId) {
+        return [];
+      }
+      const resolved = await getAccessContext();
+      if (resolved.mode === "blocked") {
+        return [];
+      }
+      const { response, data } = await fetchThoughtDetails(noteId, resolved);
+      if (!response.ok) {
+        throw new Error("emotion_note_details fetch failed");
+      }
+      return data.details ?? [];
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+  });
 
-    const access = await getAccessContext();
-    if (access.mode === "blocked") {
-      setDetails([]);
-      return;
-    }
+  const details = detailsQuery.data ?? [];
 
-    const { response, data } = await fetchThoughtDetails(noteId, access);
+  const createMutation = useMutation({
+    mutationFn: async (payload: {
+      note_id: number;
+      automatic_thought: string;
+      emotion: string;
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await createThoughtDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("create thought detail failed");
+      }
+      return payload.note_id;
+    },
+    onSuccess: (targetNoteId) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.thoughtDetails(access, targetNoteId),
+      });
+    },
+  });
 
-    if (!response.ok) {
-      setDetails([]);
-      return;
-    }
-    setDetails(data.details ?? []);
-  }, [getAccessContext, noteId]);
+  const updateMutation = useMutation({
+    mutationFn: async (payload: {
+      id: number;
+      automatic_thought: string;
+      emotion: string;
+    }) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await updateThoughtDetail(payload, resolved);
+      if (!response.ok) {
+        throw new Error("update thought detail failed");
+      }
+      return payload.id;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.thoughtDetails(access, noteId),
+        });
+      }
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (detailId: number) => {
+      const resolved = await requireAccessContext();
+      if (!resolved) {
+        throw new Error("access blocked");
+      }
+      const response = await deleteThoughtDetail(detailId, resolved);
+      if (!response.ok) {
+        throw new Error("delete thought detail failed");
+      }
+      return detailId;
+    },
+    onSuccess: () => {
+      if (noteId) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.thoughtDetails(access, noteId),
+        });
+      }
+    },
+  });
 
   const handleAdd = useCallback(async () => {
     const ensuredNoteId = ensureNoteId();
@@ -82,21 +154,20 @@ export default function useEmotionNoteThoughtSection({
       return;
     }
 
-    const response = await createThoughtDetail(payload, access);
-
-    if (!response.ok) {
+    try {
+      await createMutation.mutateAsync(payload);
+    } catch {
       setError("자동 사고 저장에 실패했습니다.");
       return;
     }
 
     setDetailThought("");
     setDetailEmotion("");
-    await loadDetails();
   }, [
     detailEmotion,
     detailThought,
+    createMutation,
     ensureNoteId,
-    loadDetails,
     requireAccessContext,
     setError,
   ]);
@@ -124,21 +195,20 @@ export default function useEmotionNoteThoughtSection({
         return false;
       }
 
-      const response = await createThoughtDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await createMutation.mutateAsync(payload);
+      } catch {
         setError("자동 사고 저장에 실패했습니다.");
         return false;
       }
 
       setDetailThought("");
       setDetailEmotion("");
-      await loadDetails();
       return true;
     },
     [
+      createMutation,
       ensureNoteId,
-      loadDetails,
       requireAccessContext,
       setError,
       setDetailEmotion,
@@ -179,25 +249,24 @@ export default function useEmotionNoteThoughtSection({
         return;
       }
 
-      const response = await updateThoughtDetail(payload, access);
-
-      if (!response.ok) {
+      try {
+        await updateMutation.mutateAsync(payload);
+      } catch {
         setError("자동 사고 수정에 실패했습니다.");
         setIsUpdating(false);
         return;
       }
 
       cancelEditing();
-      await loadDetails();
       setIsUpdating(false);
     },
     [
       cancelEditing,
       editingEmotionText,
       editingThoughtText,
-      loadDetails,
       requireAccessContext,
       setError,
+      updateMutation,
     ],
   );
 
@@ -210,18 +279,16 @@ export default function useEmotionNoteThoughtSection({
         return;
       }
 
-      const response = await deleteThoughtDetail(detailId, access);
-
-      if (!response.ok) {
+      try {
+        await deleteMutation.mutateAsync(detailId);
+      } catch {
         setError("자동 사고 삭제에 실패했습니다.");
         setDeletingId(null);
         return;
       }
-
-      await loadDetails();
       setDeletingId(null);
     },
-    [loadDetails, requireAccessContext, setError],
+    [deleteMutation, requireAccessContext, setError],
   );
 
   return {
@@ -235,10 +302,8 @@ export default function useEmotionNoteThoughtSection({
     setDetailEmotion,
     setEditingThoughtText,
     setEditingEmotionText,
-    setDetails,
     isUpdating,
     deletingId,
-    loadDetails,
     handleAdd,
     handleAddWithValues,
     startEditing,

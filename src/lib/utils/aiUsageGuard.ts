@@ -1,6 +1,6 @@
 import type { CbtToastVariant } from "@/components/cbt/common/CbtToast";
-import { fetchTokenUsageStatus } from "@/lib/utils/tokenUsage";
-import type { TokenUsageStatus } from "@/lib/utils/tokenUsage";
+import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
+import type { TokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 
 export const MEMBER_DAILY_LIMIT = 20000;
 export const MEMBER_MONTHLY_LIMIT = 150000;

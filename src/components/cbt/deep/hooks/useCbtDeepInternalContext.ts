@@ -1,12 +1,11 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import { createDeepInternalContext } from "@/lib/ai";
 import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 import { startPerf } from "@/lib/utils/perf";
-
-const contextCache = new Map<string, DeepInternalContext>();
-const inFlight = new Map<string, Promise<DeepInternalContext>>();
 
 const buildKey = (mainNote: EmotionNote | null, subNotes: EmotionNote[]) => {
   if (!mainNote) return "";
@@ -19,56 +18,32 @@ export function useCbtDeepInternalContext(
   subNotes: EmotionNote[],
 ) {
   const key = useMemo(() => buildKey(mainNote, subNotes), [mainNote, subNotes]);
-  const [context, setContext] = useState<DeepInternalContext | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const requestIdRef = useRef(0);
 
-  useEffect(() => {
-    if (!key || !mainNote) {
-      setContext(null);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const cached = contextCache.get(key);
-    if (cached) {
-      setContext(cached);
-      setLoading(false);
-      setError(null);
-      return;
-    }
-
-    const load = async () => {
-      const requestId = ++requestIdRef.current;
+  const query = useQuery({
+    queryKey: queryKeys.ai.deepInternalContext(key),
+    queryFn: async () => {
+      if (!mainNote) {
+        return null as DeepInternalContext | null;
+      }
       const endPerf = startPerf(`deep:internalContext:${key}`);
-      setLoading(true);
-      setError(null);
       try {
         const mainContext = buildDeepNoteContext(mainNote);
         const subContexts = subNotes.map(buildDeepNoteContext);
-        const inFlightPromise =
-          inFlight.get(key) ??
-          createDeepInternalContext(mainContext, subContexts);
-        inFlight.set(key, inFlightPromise);
-        const result = await inFlightPromise;
-        if (requestId !== requestIdRef.current) return;
-        contextCache.set(key, result);
-        setContext(result);
-        setLoading(false);
-      } catch (err) {
-        if (requestId !== requestIdRef.current) return;
-        setError(err instanceof Error ? err.message : "오류가 발생했습니다.");
-        setLoading(false);
+        return createDeepInternalContext(mainContext, subContexts);
       } finally {
-        inFlight.delete(key);
         endPerf();
       }
-    };
+    },
+    enabled: Boolean(key && mainNote),
+  });
 
-    void load();
-  }, [key, mainNote, subNotes]);
-
-  return { context, error, loading };
+  return {
+    context: query.data ?? null,
+    error: query.isError
+      ? query.error instanceof Error
+        ? query.error.message
+        : "오류가 발생했습니다."
+      : null,
+    loading: query.isPending || query.isFetching,
+  };
 }

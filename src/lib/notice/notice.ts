@@ -1,3 +1,6 @@
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
+export { loadNotices } from "@/lib/api/notice/getNotice";
+
 export type NoticeLevel = "info" | "warning" | "critical";
 
 export type NoticeItem = {
@@ -16,8 +19,6 @@ export type NoticePayload = {
   updatedAt: string;
   items: NoticeItem[];
 };
-
-const NOTICE_URL = process.env.NEXT_PUBLIC_NOTICE_URL;
 
 const DISMISSED_KEY = "notice_dismissed_v1";
 const DISMISSED_TODAY_KEY = "notice_dismissed_today_v1";
@@ -78,19 +79,6 @@ function isDismissedToday(id: string) {
   }
 }
 
-export async function loadNotices(): Promise<NoticePayload | null> {
-  if (!NOTICE_URL) return null;
-
-  try {
-    const res = await fetch(NOTICE_URL, { cache: "no-store" });
-    if (!res.ok) throw new Error(`notice fetch failed: ${res.status}`);
-    const data = (await res.json()) as NoticePayload;
-    return data;
-  } catch {
-    return null;
-  }
-}
-
 export function pickActiveNotice(payload: NoticePayload | null): NoticeItem | null {
   if (!payload?.items?.length) return null;
 
@@ -109,4 +97,3 @@ export function pickActiveNotice(payload: NoticePayload | null): NoticeItem | nu
   );
   return notDismissed || null;
 }
-import { safeLocalStorage } from "@/lib/utils/safeStorage";

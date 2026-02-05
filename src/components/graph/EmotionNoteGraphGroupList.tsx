@@ -10,9 +10,11 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteGraphGroupList.module.css";
-import { fetchEmotionNoteGraphGroups } from "./utils/emotionNoteGraphApi";
+import { fetchEmotionNoteGraphGroups } from "@/lib/api/graph/getEmotionNoteGraph";
 import { getGroupThemeColor } from "./utils/graphColors";
 import SafeButton from "@/components/ui/SafeButton";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/lib/queryKeys";
 
 type EmotionNoteGraphGroupListProps = {
   accessToken: string;
@@ -50,7 +52,6 @@ export default function EmotionNoteGraphGroupList({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const nodesRef = useRef<GroupNode[]>([]);
   const [nodes, setNodes] = useState<GroupNode[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
@@ -72,20 +73,28 @@ export default function EmotionNoteGraphGroupList({
     return () => observer.disconnect();
   }, []);
 
-  useEffect(() => {
-    const load = async () => {
-      setIsLoading(true);
+  const groupsQuery = useQuery({
+    queryKey: queryKeys.graph.groups(accessToken),
+    queryFn: async () => {
       const { response, data } = await fetchEmotionNoteGraphGroups(accessToken);
       if (!response.ok) {
-        setNodes([]);
-        setIsLoading(false);
-        return;
+        throw new Error("emotion_note_graph_groups fetch failed");
       }
-      setNodes(buildNodes(data.groups));
-      setIsLoading(false);
-    };
-    load();
-  }, [accessToken]);
+      return data.groups ?? [];
+    },
+    enabled: Boolean(accessToken),
+  });
+
+  const isLoading = groupsQuery.isPending || groupsQuery.isFetching;
+  const groups = useMemo(() => groupsQuery.data ?? [], [groupsQuery.data]);
+
+  useEffect(() => {
+    if (groupsQuery.isError) {
+      setNodes([]);
+      return;
+    }
+    setNodes(buildNodes(groups));
+  }, [groups, groupsQuery.isError]);
 
   useEffect(() => {
     nodesRef.current = nodes;

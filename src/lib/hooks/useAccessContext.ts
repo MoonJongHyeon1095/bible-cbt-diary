@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import type { AccessMode, AccessContext } from "@/lib/types/access";
+import type { AccessContext, AccessMode } from "@/lib/types/access";
 import { isGuestStorageAvailable } from "@/lib/utils/guestStorage";
 import { startPerf } from "@/lib/utils/perf";
+import { useEffect, useMemo, useState } from "react";
 
 type AccessState = AccessContext & {
   isLoading: boolean;
@@ -35,7 +35,9 @@ const setSharedState = (next: AccessState) => {
   emitState();
 };
 
-const initAccessContext = (supabase: ReturnType<typeof getSupabaseBrowserClient>) => {
+const initAccessContext = (
+  supabase: ReturnType<typeof getSupabaseBrowserClient>,
+) => {
   if (initialized) return initPromise;
   initialized = true;
   initPromise = (async () => {
@@ -99,6 +101,7 @@ export const useAccessContext = () => {
     setState(sharedState);
     void initAccessContext(supabase);
 
+    // return 문 cleanup 콜백 : 컴포넌트가 언마운트될 때 또는 deps가 바뀌어 effect가 교체되기 직전에 실행
     return () => {
       active = false;
       subscribers.delete(handleUpdate);

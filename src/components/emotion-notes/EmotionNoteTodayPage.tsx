@@ -7,6 +7,7 @@ import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -108,11 +109,11 @@ export default function EmotionNoteTodayPage() {
   }, [blocker, isTourOpen]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!safeLocalStorage.isAvailable()) return;
     if (access.mode === "blocked" || isLoading || isAccessLoading) return;
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
-    const stored = window.localStorage.getItem(TOUR_STORAGE_KEY);
+    const stored = safeLocalStorage.getItem(TOUR_STORAGE_KEY);
     const maxStepIndex = tourSteps.length - 1;
     let progress: TourProgress | null = null;
     if (stored) {
@@ -147,8 +148,8 @@ export default function EmotionNoteTodayPage() {
   ]);
 
   const persistTourProgress = (stepIndex: number) => {
-    if (typeof window === "undefined") return;
-    window.localStorage.setItem(
+    if (!safeLocalStorage.isAvailable()) return;
+    safeLocalStorage.setItem(
       TOUR_STORAGE_KEY,
       JSON.stringify({
         lastStep: stepIndex,

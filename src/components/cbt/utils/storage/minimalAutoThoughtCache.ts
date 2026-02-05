@@ -11,9 +11,8 @@ const autoThoughtCache = new Map<string, AutoThoughtCacheEntry>();
 export function getAutoThoughtCache(cacheKey: string) {
   const cached = autoThoughtCache.get(cacheKey);
   if (cached) return cached;
-  if (typeof window === "undefined") return null;
   try {
-    const raw = sessionStorage.getItem(
+    const raw = safeSessionStorage.getItem(
       `${AUTO_THOUGHT_STORAGE_PREFIX}${cacheKey}`,
     );
     if (!raw) return null;
@@ -50,9 +49,8 @@ export function setAutoThoughtCache(
   entry: AutoThoughtCacheEntry,
 ) {
   autoThoughtCache.set(cacheKey, entry);
-  if (typeof window === "undefined") return;
   try {
-    sessionStorage.setItem(
+    safeSessionStorage.setItem(
       `${AUTO_THOUGHT_STORAGE_PREFIX}${cacheKey}`,
       JSON.stringify(entry),
     );
@@ -63,17 +61,17 @@ export function setAutoThoughtCache(
 
 export function clearAutoThoughtCache() {
   autoThoughtCache.clear();
-  if (typeof window === "undefined") return;
   try {
     const keys: string[] = [];
-    for (let i = 0; i < sessionStorage.length; i += 1) {
-      const key = sessionStorage.key(i);
+    for (let i = 0; i < safeSessionStorage.length; i += 1) {
+      const key = safeSessionStorage.key(i);
       if (key && key.startsWith(AUTO_THOUGHT_STORAGE_PREFIX)) {
         keys.push(key);
       }
     }
-    keys.forEach((key) => sessionStorage.removeItem(key));
+    keys.forEach((key) => safeSessionStorage.removeItem(key));
   } catch {
     /* ignore */
   }
 }
+import { safeSessionStorage } from "@/lib/utils/safeStorage";

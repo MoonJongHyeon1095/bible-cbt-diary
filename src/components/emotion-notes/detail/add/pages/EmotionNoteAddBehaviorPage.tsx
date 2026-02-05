@@ -20,13 +20,15 @@ import {
   Footprints,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
+import { useAddFlow } from "../common/useAddFlow";
+import { toggleListValue } from "../common/toggleList";
 import EmotionNoteAddModeSelector, {
   AddMode,
 } from "./EmotionNoteAddModeSelector";
@@ -39,16 +41,60 @@ import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 import EmotionNoteAddSummaryItem from "./EmotionNoteAddSummaryItem";
 
-type BehaviorAiStep =
-  | "select-thought"
-  | "select-errors"
-  | "select-alternative"
-  | "suggestions";
-type BehaviorDirectStep = "select-tags" | "select-behavior" | "input";
-
 type EmotionNoteAddBehaviorPageProps = {
   noteId: number;
   mode?: AddMode;
+};
+
+type LocalState = {
+  selectedThoughtId: string;
+  selectedErrorIds: string[];
+  selectedAlternativeId: string;
+  expandedThoughtIds: string[];
+  expandedErrorIds: string[];
+  expandedAlternativeIds: string[];
+  suggestionsById: Record<string, string>;
+  savedBehaviorIds: string[];
+  selectedBehaviorId: string;
+  selectedBehaviorLabel: string;
+  selectedBehaviorDescription: string;
+  selectedBehaviorTags: string[];
+  directBehaviorLabel: string;
+  directBehaviorTags: string[];
+  directDescription: string;
+};
+
+type LocalAction =
+  | { type: "PATCH"; patch: Partial<LocalState> }
+  | { type: "RESET" };
+
+const initialLocalState: LocalState = {
+  selectedThoughtId: "",
+  selectedErrorIds: [],
+  selectedAlternativeId: "",
+  expandedThoughtIds: [],
+  expandedErrorIds: [],
+  expandedAlternativeIds: [],
+  suggestionsById: {},
+  savedBehaviorIds: [],
+  selectedBehaviorId: "",
+  selectedBehaviorLabel: "",
+  selectedBehaviorDescription: "",
+  selectedBehaviorTags: [],
+  directBehaviorLabel: "",
+  directBehaviorTags: [],
+  directDescription: "",
+};
+
+const localReducer = (state: LocalState, action: LocalAction): LocalState => {
+  switch (action.type) {
+    case "PATCH":
+      return { ...state, ...action.patch };
+    case "RESET":
+      return initialLocalState;
+    default:
+      return state;
+  }
 };
 
 export default function EmotionNoteAddBehaviorPage({
@@ -74,36 +120,17 @@ export default function EmotionNoteAddBehaviorPage({
   } = useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
 
-  const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
-  const [aiStep, setAiStep] = useState<BehaviorAiStep>("select-thought");
-  const [directStep, setDirectStep] =
-    useState<BehaviorDirectStep>("select-tags");
-  const [selectedThoughtId, setSelectedThoughtId] = useState("");
-  const [selectedErrorIds, setSelectedErrorIds] = useState<string[]>([]);
-  const [selectedAlternativeId, setSelectedAlternativeId] = useState("");
-  const [expandedThoughtIds, setExpandedThoughtIds] = useState<string[]>([]);
-  const [expandedErrorIds, setExpandedErrorIds] = useState<string[]>([]);
-  const [expandedAlternativeIds, setExpandedAlternativeIds] = useState<
-    string[]
-  >([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiFallback, setAiFallback] = useState(false);
-  const [suggestionsById, setSuggestionsById] = useState<
-    Record<string, string>
-  >({});
-  const [savedBehaviorIds, setSavedBehaviorIds] = useState<string[]>([]);
-  const [selectedBehaviorId, setSelectedBehaviorId] = useState("");
-  const [selectedBehaviorLabel, setSelectedBehaviorLabel] = useState("");
-  const [selectedBehaviorDescription, setSelectedBehaviorDescription] =
-    useState("");
-  const [selectedBehaviorTags, setSelectedBehaviorTags] = useState<string[]>(
+  const [local, localDispatch] = useReducer(localReducer, initialLocalState);
+  const patchLocal = useCallback(
+    (patch: Partial<LocalState>) =>
+      localDispatch({ type: "PATCH", patch }),
     [],
   );
-  const [directBehaviorLabel, setDirectBehaviorLabel] = useState("");
-  const [directBehaviorTags, setDirectBehaviorTags] = useState<string[]>([]);
-  const [directDescription, setDirectDescription] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const { state: flow, actions: flowActions } = useAddFlow({
+    initialMode: forcedMode ?? null,
+    initialAiStep: "select-thought",
+    initialDirectStep: "select-tags",
+  });
   const lastErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -114,36 +141,44 @@ export default function EmotionNoteAddBehaviorPage({
   }, [error, pushToast]);
 
   useEffect(() => {
-    setSuggestionsById({});
-    setSavedBehaviorIds([]);
-    setSelectedBehaviorId("");
-    setSelectedBehaviorLabel("");
-    setSelectedBehaviorDescription("");
-    setSelectedBehaviorTags([]);
-    setAiError(null);
-    setAiFallback(false);
-  }, [selectedThoughtId, selectedErrorIds, selectedAlternativeId]);
+    patchLocal({
+      suggestionsById: {},
+      savedBehaviorIds: [],
+      selectedBehaviorId: "",
+      selectedBehaviorLabel: "",
+      selectedBehaviorDescription: "",
+      selectedBehaviorTags: [],
+    });
+    flowActions.setAiError(null);
+    flowActions.setAiFallback(false);
+  }, [
+    flowActions,
+    local.selectedAlternativeId,
+    local.selectedErrorIds,
+    local.selectedThoughtId,
+    patchLocal,
+  ]);
 
   const selectedThought = useMemo(
     () =>
       thoughtSection.details.find(
-        (detail) => String(detail.id) === selectedThoughtId,
+        (detail) => String(detail.id) === local.selectedThoughtId,
       ) ?? null,
-    [selectedThoughtId, thoughtSection.details],
+    [local.selectedThoughtId, thoughtSection.details],
   );
   const selectedErrors = useMemo(
     () =>
       errorSection.details.filter((detail) =>
-        selectedErrorIds.includes(String(detail.id)),
+        local.selectedErrorIds.includes(String(detail.id)),
       ),
-    [errorSection.details, selectedErrorIds],
+    [errorSection.details, local.selectedErrorIds],
   );
   const selectedAlternative = useMemo(
     () =>
       alternativeSection.details.find(
-        (detail) => String(detail.id) === selectedAlternativeId,
+        (detail) => String(detail.id) === local.selectedAlternativeId,
       ) ?? null,
-    [selectedAlternativeId, alternativeSection.details],
+    [local.selectedAlternativeId, alternativeSection.details],
   );
 
   const behaviorCandidates = useMemo(() => {
@@ -176,9 +211,9 @@ export default function EmotionNoteAddBehaviorPage({
   const selectedDirectBehavior = useMemo(
     () =>
       COGNITIVE_BEHAVIORS.find(
-        (behavior) => behavior.replacement_title === directBehaviorLabel,
+        (behavior) => behavior.replacement_title === local.directBehaviorLabel,
       ) ?? null,
-    [directBehaviorLabel],
+    [local.directBehaviorLabel],
   );
   const selectedDirectBehaviorDescription = useMemo(() => {
     if (!selectedDirectBehavior) return "설명이 없습니다.";
@@ -190,7 +225,7 @@ export default function EmotionNoteAddBehaviorPage({
   }, [selectedDirectBehavior]);
   const selectedDirectTagMetas = useMemo(
     () =>
-      directBehaviorTags.map((tag) => {
+      local.directBehaviorTags.map((tag) => {
         const meta = COGNITIVE_ERRORS.find((item) => item.title === tag);
         return {
           id: meta?.id ?? null,
@@ -198,7 +233,7 @@ export default function EmotionNoteAddBehaviorPage({
           description: meta?.description ?? "설명이 없습니다.",
         };
       }),
-    [directBehaviorTags],
+    [local.directBehaviorTags],
   );
   const directBehaviorOptions = useMemo(() => {
     if (selectedDirectTagMetas.length === 0) {
@@ -217,33 +252,33 @@ export default function EmotionNoteAddBehaviorPage({
   }, [selectedDirectTagMetas]);
 
   const handleClose = () => {
-    if (mode === "ai") {
-      if (aiStep === "suggestions") {
-        setAiStep("select-alternative");
+    if (flow.mode === "ai") {
+      if (flow.aiStep === "suggestions") {
+        flowActions.setAiStep("select-alternative");
         return;
       }
-      if (aiStep === "select-alternative") {
-        setAiStep("select-errors");
+      if (flow.aiStep === "select-alternative") {
+        flowActions.setAiStep("select-errors");
         return;
       }
-      if (aiStep === "select-errors") {
-        setAiStep("select-thought");
-        return;
-      }
-    }
-    if (mode === "direct") {
-      if (directStep === "input") {
-        setDirectStep("select-behavior");
-        return;
-      }
-      if (directStep === "select-behavior") {
-        setDirectStep("select-tags");
+      if (flow.aiStep === "select-errors") {
+        flowActions.setAiStep("select-thought");
         return;
       }
     }
-    if (mode && !forcedMode) {
+    if (flow.mode === "direct") {
+      if (flow.directStep === "input") {
+        flowActions.setDirectStep("select-behavior");
+        return;
+      }
+      if (flow.directStep === "select-behavior") {
+        flowActions.setDirectStep("select-tags");
+        return;
+      }
+    }
+    if (flow.mode && !forcedMode) {
       resetFlow();
-      setMode(null);
+      flowActions.setMode(null);
       return;
     }
     if (forcedMode) {
@@ -253,62 +288,47 @@ export default function EmotionNoteAddBehaviorPage({
     router.push(`/detail?id=${noteId}`);
   };
 
-  const resetFlow = () => {
-    setAiStep("select-thought");
-    setDirectStep("select-tags");
-    setSelectedThoughtId("");
-    setSelectedErrorIds([]);
-    setSelectedAlternativeId("");
-    setExpandedThoughtIds([]);
-    setExpandedErrorIds([]);
-    setExpandedAlternativeIds([]);
-    setAiError(null);
-    setAiFallback(false);
-    setSuggestionsById({});
-    setSavedBehaviorIds([]);
-    setSelectedBehaviorId("");
-    setSelectedBehaviorLabel("");
-    setSelectedBehaviorDescription("");
-    setSelectedBehaviorTags([]);
-    setDirectBehaviorLabel("");
-    setDirectBehaviorTags([]);
-    setDirectDescription("");
-  };
+  const resetFlow = useCallback(() => {
+    localDispatch({ type: "RESET" });
+    flowActions.reset({
+      mode: forcedMode ?? null,
+      aiStep: "select-thought",
+      directStep: "select-tags",
+    });
+  }, [flowActions, forcedMode]);
 
   const handleModeSelect = (next: AddMode) => {
     if (forcedMode) return;
     resetFlow();
-    setMode(next);
+    flowActions.setMode(next);
   };
 
   useEffect(() => {
     if (!forcedMode) return;
     resetFlow();
-    setMode(forcedMode);
-  }, [forcedMode]);
+    flowActions.setMode(forcedMode);
+  }, [flowActions, forcedMode, resetFlow]);
 
   const toggleError = (id: string) => {
-    if (!selectedErrorIds.includes(id) && selectedErrorIds.length >= 2) {
+    const result = toggleListValue(local.selectedErrorIds, id, { max: 2 });
+    if (result.overflowed) {
       pushToast("인지오류는 최대 2개까지 선택할 수 있어요.", "error");
       return;
     }
-    setSelectedErrorIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id);
-      }
-      return [...prev, id];
-    });
+    patchLocal({ selectedErrorIds: result.next });
   };
 
   const handleSelectThought = (id: string) => {
-    setSelectedThoughtId(id);
-    setSelectedErrorIds([]);
-    setSelectedAlternativeId("");
+    patchLocal({
+      selectedThoughtId: id,
+      selectedErrorIds: [],
+      selectedAlternativeId: "",
+    });
   };
 
   const handleToggleError = (id: string) => {
     toggleError(id);
-    setSelectedAlternativeId("");
+    patchLocal({ selectedAlternativeId: "" });
   };
 
   const ensureAiReady = async () => {
@@ -340,9 +360,7 @@ export default function EmotionNoteAddBehaviorPage({
   const handleGenerateSuggestions = async () => {
     const ready = await ensureAiReady();
     if (!ready || !selectedThought || !selectedAlternative) return;
-    setAiLoading(true);
-    setAiError(null);
-    setAiFallback(false);
+    flowActions.startAi();
     try {
       const suggestions = await generateBehaviorSuggestions(
         triggerText,
@@ -361,18 +379,18 @@ export default function EmotionNoteAddBehaviorPage({
         behaviorCandidates.map((item) => item.behavior),
         { noteProposal: true },
       );
-      setAiFallback(isAiFallback(suggestions));
+      flowActions.setAiFallback(isAiFallback(suggestions));
       const next: Record<string, string> = {};
       suggestions.forEach((item) => {
         next[item.behaviorId] = item.suggestion;
       });
-      setSuggestionsById(next);
-      setAiStep("suggestions");
+      patchLocal({ suggestionsById: next });
+      flowActions.setAiStep("suggestions");
     } catch (aiErr) {
       console.error(aiErr);
-      setAiError("AI 제안을 불러오지 못했습니다.");
+      flowActions.setAiError("AI 제안을 불러오지 못했습니다.");
     } finally {
-      setAiLoading(false);
+      flowActions.finishAi();
     }
   };
 
@@ -381,41 +399,48 @@ export default function EmotionNoteAddBehaviorPage({
       (item) => item.behavior.id === behaviorId,
     );
     if (!candidate) return;
-    const suggestion = suggestionsById[behaviorId] ?? "";
-    setSelectedBehaviorId(behaviorId);
-    setSelectedBehaviorLabel(candidate.behavior.replacement_title);
-    setSelectedBehaviorTags(candidate.tags);
-    setSelectedBehaviorDescription(suggestion);
+    const suggestion = local.suggestionsById[behaviorId] ?? "";
+    patchLocal({
+      selectedBehaviorId: behaviorId,
+      selectedBehaviorLabel: candidate.behavior.replacement_title,
+      selectedBehaviorTags: candidate.tags,
+      selectedBehaviorDescription: suggestion,
+    });
   };
 
   const handleSaveAi = async () => {
-    if (!selectedBehaviorLabel.trim() || !selectedBehaviorDescription.trim()) {
+    if (
+      !local.selectedBehaviorLabel.trim() ||
+      !local.selectedBehaviorDescription.trim()
+    ) {
       pushToast("행동 반응을 선택해주세요.", "error");
       return;
     }
-    if (savedBehaviorIds.includes(selectedBehaviorId)) {
+    if (local.savedBehaviorIds.includes(local.selectedBehaviorId)) {
       pushToast("이미 저장된 제안입니다.", "info");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await behaviorSection.handleAddWithValues(
-      selectedBehaviorLabel.trim(),
-      selectedBehaviorDescription.trim(),
-      selectedBehaviorTags,
+      local.selectedBehaviorLabel.trim(),
+      local.selectedBehaviorDescription.trim(),
+      local.selectedBehaviorTags,
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
-      setSavedBehaviorIds((prev) =>
-        prev.includes(selectedBehaviorId)
-          ? prev
-          : [...prev, selectedBehaviorId],
-      );
+      patchLocal({
+        savedBehaviorIds: local.savedBehaviorIds.includes(
+          local.selectedBehaviorId,
+        )
+          ? local.savedBehaviorIds
+          : [...local.savedBehaviorIds, local.selectedBehaviorId],
+      });
       pushToast("행동 반응을 저장했어요.", "success");
     }
   };
 
   const handleSaveDirect = async () => {
-    const validation = validateUserText(directDescription, {
+    const validation = validateUserText(local.directDescription, {
       minLength: 10,
       minLengthMessage: "행동 반응 설명을 10자 이상 입력해주세요.",
     });
@@ -423,17 +448,20 @@ export default function EmotionNoteAddBehaviorPage({
       pushToast(validation.message, "error");
       return;
     }
-    if (!directBehaviorLabel.trim() || directBehaviorTags.length === 0) {
+    if (
+      !local.directBehaviorLabel.trim() ||
+      local.directBehaviorTags.length === 0
+    ) {
       pushToast("행동 반응과 인지오류를 선택해주세요.", "error");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await behaviorSection.handleAddWithValues(
-      directBehaviorLabel.trim(),
-      directDescription.trim(),
-      directBehaviorTags,
+      local.directBehaviorLabel.trim(),
+      local.directDescription.trim(),
+      local.directBehaviorTags,
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
       pushToast("행동 반응을 저장했어요.", "success");
       router.push(`/detail?id=${noteId}`);
@@ -441,16 +469,17 @@ export default function EmotionNoteAddBehaviorPage({
   };
 
   const isSelectedSaved = useMemo(
-    () => savedBehaviorIds.includes(selectedBehaviorId),
-    [savedBehaviorIds, selectedBehaviorId],
+    () => local.savedBehaviorIds.includes(local.selectedBehaviorId),
+    [local.savedBehaviorIds, local.selectedBehaviorId],
   );
 
-  const showAiNext = mode === "ai" && aiStep !== "suggestions";
+  const showAiNext = flow.mode === "ai" && flow.aiStep !== "suggestions";
   const showDirectNext =
-    mode === "direct" &&
-    (directStep === "select-tags" || directStep === "select-behavior");
-  const showAiSave = mode === "ai" && aiStep === "suggestions";
-  const showDirectSave = mode === "direct" && directStep === "input";
+    flow.mode === "direct" &&
+    (flow.directStep === "select-tags" ||
+      flow.directStep === "select-behavior");
+  const showAiSave = flow.mode === "ai" && flow.aiStep === "suggestions";
+  const showDirectSave = flow.mode === "direct" && flow.directStep === "input";
   const saveLabel = isSelectedSaved ? "저장됨" : "저장";
   const saveIcon = isSelectedSaved ? (
     <Check size={22} />
@@ -459,36 +488,38 @@ export default function EmotionNoteAddBehaviorPage({
   );
 
   const nextDisabledAi =
-    (aiStep === "select-thought" && !selectedThoughtId) ||
-    (aiStep === "select-errors" && selectedErrorIds.length === 0) ||
-    (aiStep === "select-alternative" && !selectedAlternativeId);
+    (flow.aiStep === "select-thought" && !local.selectedThoughtId) ||
+    (flow.aiStep === "select-errors" && local.selectedErrorIds.length === 0) ||
+    (flow.aiStep === "select-alternative" && !local.selectedAlternativeId);
   const nextDisabledDirect =
-    (directStep === "select-tags" && directBehaviorTags.length === 0) ||
-    (directStep === "select-behavior" && !directBehaviorLabel.trim());
+    (flow.directStep === "select-tags" &&
+      local.directBehaviorTags.length === 0) ||
+    (flow.directStep === "select-behavior" &&
+      !local.directBehaviorLabel.trim());
 
   const handleAiNext = () => {
-    if (aiStep === "select-thought") {
-      setAiStep("select-errors");
+    if (flow.aiStep === "select-thought") {
+      flowActions.setAiStep("select-errors");
       return;
     }
-    if (aiStep === "select-errors") {
-      setAiStep("select-alternative");
+    if (flow.aiStep === "select-errors") {
+      flowActions.setAiStep("select-alternative");
       return;
     }
-    if (aiStep === "select-alternative") {
+    if (flow.aiStep === "select-alternative") {
       void handleGenerateSuggestions();
     }
   };
 
   const handleDirectNext = () => {
-    if (directStep === "select-tags") {
-      if (directBehaviorTags.length === 0) return;
-      setDirectStep("select-behavior");
+    if (flow.directStep === "select-tags") {
+      if (local.directBehaviorTags.length === 0) return;
+      flowActions.setDirectStep("select-behavior");
       return;
     }
-    if (directStep === "select-behavior") {
-      if (!directBehaviorLabel.trim()) return;
-      setDirectStep("input");
+    if (flow.directStep === "select-behavior") {
+      if (!local.directBehaviorLabel.trim()) return;
+      flowActions.setDirectStep("input");
     }
   };
 
@@ -504,7 +535,7 @@ export default function EmotionNoteAddBehaviorPage({
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
             <EmotionNoteAddModeSelector
-              value={mode}
+              value={flow.mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
               onLockedClick={() => openAuthModal()}
@@ -512,9 +543,9 @@ export default function EmotionNoteAddBehaviorPage({
           </div>
         ) : null}
 
-        {mode === "ai" && (
+        {flow.mode === "ai" && (
           <div className={styles.sectionStack}>
-            {!aiLoading && aiStep === "select-thought" && (
+            {!flow.aiLoading && flow.aiStep === "select-thought" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="자동사고 선택"
@@ -527,11 +558,12 @@ export default function EmotionNoteAddBehaviorPage({
                   }
                 >
                   {thoughtSection.details.map((detail) => {
-                    const isSelected = selectedThoughtId === String(detail.id);
+                    const isSelected =
+                      local.selectedThoughtId === String(detail.id);
                     const emotionLabel =
                       detail.emotion?.trim() || "감정 미선택";
                     const thoughtText = detail.automatic_thought?.trim() || "-";
-                    const isExpanded = expandedThoughtIds.includes(
+                    const isExpanded = local.expandedThoughtIds.includes(
                       String(detail.id),
                     );
                     return (
@@ -547,11 +579,19 @@ export default function EmotionNoteAddBehaviorPage({
                           text={thoughtText}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedThoughtIds((prev) =>
-                              prev.includes(String(detail.id))
-                                ? prev.filter((id) => id !== String(detail.id))
-                                : [...prev, String(detail.id)],
-                            )
+                            patchLocal({
+                              expandedThoughtIds:
+                                local.expandedThoughtIds.includes(
+                                  String(detail.id),
+                                )
+                                  ? local.expandedThoughtIds.filter(
+                                      (id) => id !== String(detail.id),
+                                    )
+                                  : [
+                                      ...local.expandedThoughtIds,
+                                      String(detail.id),
+                                    ],
+                            })
                           }
                         />
                       </SelectionCard>
@@ -560,7 +600,7 @@ export default function EmotionNoteAddBehaviorPage({
                 </SelectionPanel>
               </div>
             )}
-            {!aiLoading && aiStep === "select-errors" && (
+            {!flow.aiLoading && flow.aiStep === "select-errors" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="인지오류 선택"
@@ -573,12 +613,12 @@ export default function EmotionNoteAddBehaviorPage({
                   }
                 >
                   {errorSection.details.map((errorDetail) => {
-                    const isSelected = selectedErrorIds.includes(
+                    const isSelected = local.selectedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     const description =
                       errorDetail.error_description || "설명이 없습니다.";
-                    const isExpanded = expandedErrorIds.includes(
+                    const isExpanded = local.expandedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     return (
@@ -596,13 +636,19 @@ export default function EmotionNoteAddBehaviorPage({
                           text={description}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedErrorIds((prev) =>
-                              prev.includes(String(errorDetail.id))
-                                ? prev.filter(
-                                    (id) => id !== String(errorDetail.id),
-                                  )
-                                : [...prev, String(errorDetail.id)],
-                            )
+                            patchLocal({
+                              expandedErrorIds:
+                                local.expandedErrorIds.includes(
+                                  String(errorDetail.id),
+                                )
+                                  ? local.expandedErrorIds.filter(
+                                      (id) => id !== String(errorDetail.id),
+                                    )
+                                  : [
+                                      ...local.expandedErrorIds,
+                                      String(errorDetail.id),
+                                    ],
+                            })
                           }
                         />
                       </SelectionCard>
@@ -612,7 +658,7 @@ export default function EmotionNoteAddBehaviorPage({
               </div>
             )}
 
-            {!aiLoading && aiStep === "select-alternative" && (
+            {!flow.aiLoading && flow.aiStep === "select-alternative" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="대안적 접근 선택"
@@ -626,9 +672,9 @@ export default function EmotionNoteAddBehaviorPage({
                 >
                   {alternativeSection.details.map((alternative) => {
                     const isSelected =
-                      selectedAlternativeId === String(alternative.id);
+                      local.selectedAlternativeId === String(alternative.id);
                     const text = alternative.alternative?.trim() || "-";
-                    const isExpanded = expandedAlternativeIds.includes(
+                    const isExpanded = local.expandedAlternativeIds.includes(
                       String(alternative.id),
                     );
                     return (
@@ -636,20 +682,28 @@ export default function EmotionNoteAddBehaviorPage({
                         key={alternative.id}
                         selected={isSelected}
                         onSelect={() =>
-                          setSelectedAlternativeId(String(alternative.id))
+                          patchLocal({
+                            selectedAlternativeId: String(alternative.id),
+                          })
                         }
                       >
                         <ExpandableText
                           text={text}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedAlternativeIds((prev) =>
-                              prev.includes(String(alternative.id))
-                                ? prev.filter(
-                                    (id) => id !== String(alternative.id),
-                                  )
-                                : [...prev, String(alternative.id)],
-                            )
+                            patchLocal({
+                              expandedAlternativeIds:
+                                local.expandedAlternativeIds.includes(
+                                  String(alternative.id),
+                                )
+                                  ? local.expandedAlternativeIds.filter(
+                                      (id) => id !== String(alternative.id),
+                                    )
+                                  : [
+                                      ...local.expandedAlternativeIds,
+                                      String(alternative.id),
+                                    ],
+                            })
                           }
                         />
                       </SelectionCard>
@@ -659,7 +713,7 @@ export default function EmotionNoteAddBehaviorPage({
               </div>
             )}
 
-            {aiLoading && (
+            {flow.aiLoading && (
               <div className={styles.stepCenter}>
                 <AiLoadingCard
                   title="행동 반응 생성 중"
@@ -669,14 +723,14 @@ export default function EmotionNoteAddBehaviorPage({
               </div>
             )}
 
-            {!aiLoading && aiError && (
-              <div className={styles.errorBox}>{aiError}</div>
+            {!flow.aiLoading && flow.aiError && (
+              <div className={styles.errorBox}>{flow.aiError}</div>
             )}
-            {!aiLoading && aiFallback && aiStep === "suggestions" && (
+            {!flow.aiLoading && flow.aiFallback && flow.aiStep === "suggestions" && (
               <AiFallbackNotice onRetry={() => void handleGenerateSuggestions()} />
             )}
 
-            {!aiLoading && aiStep === "suggestions" && (
+            {!flow.aiLoading && flow.aiStep === "suggestions" && (
               <AiCandidatesPanel
                 title="AI 행동 반응 후보"
                 description="원하는 행동을 선택한 뒤 저장하세요."
@@ -686,10 +740,10 @@ export default function EmotionNoteAddBehaviorPage({
                 <div className={styles.candidateList}>
                   {behaviorCandidates.map((candidate, index) => {
                     const suggestion =
-                      suggestionsById[candidate.behavior.id] ?? "";
+                      local.suggestionsById[candidate.behavior.id] ?? "";
                     const isSelected =
-                      selectedBehaviorId === candidate.behavior.id;
-                    const saved = savedBehaviorIds.includes(
+                      local.selectedBehaviorId === candidate.behavior.id;
+                    const saved = local.savedBehaviorIds.includes(
                       candidate.behavior.id,
                     );
                     return (
@@ -718,23 +772,24 @@ export default function EmotionNoteAddBehaviorPage({
           </div>
         )}
 
-        {mode === "direct" && (
+        {flow.mode === "direct" && (
           <div className={styles.sectionStack}>
-            {directStep === "select-tags" && (
+            {flow.directStep === "select-tags" && (
               <div className={styles.stepCenter}>
                 <div className={styles.selectionRow}>
                   <p className={styles.sectionTitle}>
                     인지오류 선택 (최대 2개)
                   </p>
                   <ErrorTagSelector
-                    values={directBehaviorTags}
+                    values={local.directBehaviorTags}
                     maxSelected={2}
                     onToggle={(tag) => {
-                      setDirectBehaviorTags((prev) =>
-                        prev.includes(tag)
-                          ? prev.filter((item) => item !== tag)
-                          : [...prev, tag],
+                      const result = toggleListValue(
+                        local.directBehaviorTags,
+                        tag,
+                        { max: 2 },
                       );
+                      patchLocal({ directBehaviorTags: result.next });
                     }}
                   />
                   <EmotionNoteAddSelectionReveal
@@ -759,13 +814,15 @@ export default function EmotionNoteAddBehaviorPage({
               </div>
             )}
 
-            {directStep === "select-behavior" && (
+            {flow.directStep === "select-behavior" && (
               <div className={styles.stepCenter}>
                 <div className={styles.selectionRow}>
                   <p className={styles.sectionTitle}>행동 반응 선택</p>
                   <BehaviorOptionSelector
-                    value={directBehaviorLabel}
-                    onSelect={setDirectBehaviorLabel}
+                    value={local.directBehaviorLabel}
+                    onSelect={(value) =>
+                      patchLocal({ directBehaviorLabel: value })
+                    }
                     options={directBehaviorOptions}
                   />
                   <EmotionNoteAddSelectionReveal
@@ -793,21 +850,21 @@ export default function EmotionNoteAddBehaviorPage({
               </div>
             )}
 
-            {directStep === "input" && (
+            {flow.directStep === "input" && (
               <>
-                {(directBehaviorLabel.trim() ||
-                  directBehaviorTags.length > 0) && (
+                {(local.directBehaviorLabel.trim() ||
+                  local.directBehaviorTags.length > 0) && (
                   <details className={styles.summaryBox}>
                     <summary className={styles.summaryToggle}>
                       선택한 내용 보기
                     </summary>
                     <div className={styles.summaryBody}>
-                      {directBehaviorLabel.trim() ? (
+                      {local.directBehaviorLabel.trim() ? (
                         <>
                           <p className={styles.summaryLabel}>행동 반응</p>
                           <div className={styles.summaryGrid}>
                             <EmotionNoteAddSummaryItem
-                              label={directBehaviorLabel}
+                              label={local.directBehaviorLabel}
                               body={selectedDirectBehaviorDescription}
                             />
                           </div>
@@ -833,8 +890,10 @@ export default function EmotionNoteAddBehaviorPage({
                 )}
                 <div className={styles.inputStack}>
                   <BlinkTextarea
-                    value={directDescription}
-                    onChange={setDirectDescription}
+                    value={local.directDescription}
+                    onChange={(value) =>
+                      patchLocal({ directDescription: value })
+                    }
                     placeholder="행동 반응 설명을 적어주세요."
                   />
                   <p className={styles.helperText}>
@@ -853,8 +912,8 @@ export default function EmotionNoteAddBehaviorPage({
           icon={<ArrowRight size={22} />}
           helperText="다음"
           onClick={handleAiNext}
-          disabled={nextDisabledAi || aiLoading}
-          loading={aiLoading}
+          disabled={nextDisabledAi || flow.aiLoading}
+          loading={flow.aiLoading}
           className={styles.fab}
         />
       )}
@@ -876,9 +935,11 @@ export default function EmotionNoteAddBehaviorPage({
             helperText="행동 반응 저장"
             onClick={() => void handleSaveAi()}
             disabled={
-              !selectedBehaviorLabel.trim() || isSaving || isSelectedSaved
+              !local.selectedBehaviorLabel.trim() ||
+              flow.isSaving ||
+              isSelectedSaved
             }
-            loading={isSaving}
+            loading={flow.isSaving}
             className={styles.fab}
           />
           <FloatingActionButton
@@ -896,8 +957,8 @@ export default function EmotionNoteAddBehaviorPage({
           icon={<ArrowDownToLine size={22} />}
           helperText="행동 반응 저장"
           onClick={() => void handleSaveDirect()}
-          disabled={isSaving}
-          loading={isSaving}
+          disabled={flow.isSaving}
+          loading={flow.isSaving}
           className={styles.fab}
         />
       )}

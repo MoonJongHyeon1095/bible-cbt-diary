@@ -1,4 +1,5 @@
 import { TERMS_STORAGE_KEY, TERMS_VERSION } from "@/lib/constants/legal";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 
 type StoredAgreement = {
   version: number;
@@ -11,8 +12,8 @@ type StoredAgreement = {
 };
 
 export function hasAcceptedTerms(): boolean {
-  if (typeof window === "undefined") return true;
-  const raw = window.localStorage.getItem(TERMS_STORAGE_KEY);
+  if (!safeLocalStorage.isAvailable()) return true;
+  const raw = safeLocalStorage.getItem(TERMS_STORAGE_KEY);
   if (!raw) return false;
   try {
     const parsed = JSON.parse(raw) as StoredAgreement;

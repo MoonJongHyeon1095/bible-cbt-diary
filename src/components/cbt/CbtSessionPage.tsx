@@ -8,11 +8,8 @@ import {
 } from "@/components/cbt/utils/cbtSessionApi";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import type {
-  EmotionThoughtPair,
-  SelectedCognitiveError,
-  SessionHistory,
-} from "@/lib/types/cbtTypes";
+import type { SelectedCognitiveError, SessionHistory } from "@/lib/types/cbtTypes";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import dynamic from "next/dynamic";
@@ -29,13 +26,10 @@ import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognit
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
 import { useGate } from "@/components/gate/GateProvider";
-
-type MinimalStep =
-  | "incident"
-  | "emotion"
-  | "thought"
-  | "errors"
-  | "alternative";
+import {
+  useCbtMinimalSessionFlow,
+  type MinimalStep,
+} from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
 
 const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
 
@@ -53,17 +47,7 @@ function CbtSessionPageContent() {
   const searchParams = useSearchParams();
   const { pushToast } = useCbtToast();
   const { accessMode, isLoading: isAccessLoading } = useAccessContext();
-  const [step, setStep] = useState<MinimalStep>("incident");
-  const [userInput, setUserInput] = useState("");
-  const [selectedEmotion, setSelectedEmotion] = useState("");
-  const [emotionThoughtPairs, setEmotionThoughtPairs] = useState<
-    EmotionThoughtPair[]
-  >([]);
-  const [selectedCognitiveErrors, setSelectedCognitiveErrors] = useState<
-    SelectedCognitiveError[]
-  >([]);
-  const [autoThoughtWantsCustom, setAutoThoughtWantsCustom] = useState(false);
-  const [alternativeSeed, setAlternativeSeed] = useState(0);
+  const { state: flow, actions } = useCbtMinimalSessionFlow();
   const [isSaving, setIsSaving] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
@@ -96,10 +80,10 @@ function CbtSessionPageContent() {
     "errors",
     "alternative",
   ];
-  const currentStepIndex = stepOrder.indexOf(step);
+  const currentStepIndex = stepOrder.indexOf(flow.step);
 
   const tourSteps = useMemo(() => {
-    if (step === "incident") {
+    if (flow.step === "incident") {
       return [
         {
           selector: "[data-tour='minimal-incident-input']",
@@ -115,7 +99,7 @@ function CbtSessionPageContent() {
         },
       ];
     }
-    if (step === "emotion") {
+    if (flow.step === "emotion") {
       return [
         {
           selector: "[data-tour='emotion-grid']",
@@ -123,7 +107,7 @@ function CbtSessionPageContent() {
         },
       ];
     }
-    if (step === "thought") {
+    if (flow.step === "thought") {
       return [
         {
           selector: "[data-tour='minimal-thought-carousel']",
@@ -135,14 +119,14 @@ function CbtSessionPageContent() {
         },
       ];
     }
-    if (step === "errors") {
+    if (flow.step === "errors") {
       return [];
     }
-    if (step === "alternative") {
+    if (flow.step === "alternative") {
       return [];
     }
     return [];
-  }, [step]);
+  }, [flow.step]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -162,13 +146,12 @@ function CbtSessionPageContent() {
   }, [blocker, isTourOpen]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
     if (accessMode === "blocked" || isAccessLoading) return;
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-    const stored = window.localStorage.getItem(storageKey);
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+    const stored = safeLocalStorage.getItem(storageKey);
     const maxStepIndex = tourSteps.length - 1;
     let progress: TourProgress | null = null;
     if (stored) {
@@ -198,17 +181,17 @@ function CbtSessionPageContent() {
     isAccessLoading,
     isTourOpen,
     canShowOnboarding,
-    step,
+    flow.step,
     tourSteps.length,
   ]);
 
   const handleBack = () => {
     if (currentStepIndex <= 0) return;
-    if (step === "thought" && autoThoughtWantsCustom) {
-      setAutoThoughtWantsCustom(false);
+    if (flow.step === "thought" && flow.autoThoughtWantsCustom) {
+      actions.setWantsCustom(false);
       return;
     }
-    setStep(stepOrder[currentStepIndex - 1]);
+    actions.setStep(stepOrder[currentStepIndex - 1]);
   };
 
   const handleGoHome = () => {
@@ -217,13 +200,7 @@ function CbtSessionPageContent() {
   };
 
   const handleSubmitThought = (thought: string) => {
-    const nextPair: EmotionThoughtPair = {
-      emotion: selectedEmotion,
-      intensity: null,
-      thought,
-    };
-    setEmotionThoughtPairs([nextPair]);
-    setStep("errors");
+    actions.setThoughtPair(thought, flow.selectedEmotion);
   };
 
   const handleSelectErrors = (errors: SelectedCognitiveError[]) => {
@@ -235,12 +212,11 @@ function CbtSessionPageContent() {
         detail: item.detail,
       })),
     );
+    const seedBump = nextKey !== lastErrorsKeyRef.current;
     if (nextKey !== lastErrorsKeyRef.current) {
-      setAlternativeSeed((prev) => prev + 1);
       lastErrorsKeyRef.current = nextKey;
     }
-    setSelectedCognitiveErrors(errors);
-    setStep("alternative");
+    actions.setErrors(errors, seedBump);
   };
 
   const handleComplete = async (thought: string) => {
@@ -248,7 +224,7 @@ function CbtSessionPageContent() {
     const access = await requireAccessContext();
     if (!access) return;
 
-    const pairsToSave = emotionThoughtPairs.map((pair) => ({
+    const pairsToSave = flow.emotionThoughtPairs.map((pair) => ({
       ...pair,
       intensity: null,
     }));
@@ -256,20 +232,20 @@ function CbtSessionPageContent() {
     const historyItem: SessionHistory = {
       id: Date.now().toString(),
       timestamp: new Date().toISOString(),
-      userInput,
+      userInput: flow.userInput,
       emotionThoughtPairs: pairsToSave,
-      selectedCognitiveErrors,
+      selectedCognitiveErrors: flow.selectedCognitiveErrors,
       selectedAlternativeThought: thought,
       selectedBehavior: null,
       bibleVerse: null,
     };
 
     const minimalPayload = {
-      triggerText: userInput,
-      emotion: selectedEmotion,
-      automaticThought: emotionThoughtPairs[0]?.thought ?? "",
+      triggerText: flow.userInput,
+      emotion: flow.selectedEmotion,
+      automaticThought: flow.emotionThoughtPairs[0]?.thought ?? "",
       alternativeThought: thought,
-      cognitiveError: selectedCognitiveErrors[0] ?? null,
+      cognitiveError: flow.selectedCognitiveErrors[0] ?? null,
     };
 
     setIsSaving(true);
@@ -315,9 +291,8 @@ function CbtSessionPageContent() {
   };
 
   const persistTourProgress = (stepIndex: number) => {
-    if (typeof window === "undefined") return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-    window.localStorage.setItem(
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+    safeLocalStorage.setItem(
       storageKey,
       JSON.stringify({
         lastStep: stepIndex,
@@ -340,50 +315,50 @@ function CbtSessionPageContent() {
           <CbtMinimalFloatingHomeButton onClick={handleGoHome} />
         </div>
 
-        {step === "incident" && (
+        {flow.step === "incident" && (
           <CbtMinimalIncidentSection
-            userInput={userInput}
-            onInputChange={setUserInput}
-            onNext={() => setStep("emotion")}
+            userInput={flow.userInput}
+            onInputChange={actions.setUserInput}
+            onNext={() => actions.setStep("emotion")}
             title={incidentTitle}
           />
         )}
 
-        {step === "emotion" && (
+        {flow.step === "emotion" && (
           <CbtMinimalEmotionSection
-            selectedEmotion={selectedEmotion}
-            onSelectEmotion={setSelectedEmotion}
+            selectedEmotion={flow.selectedEmotion}
+            onSelectEmotion={actions.setSelectedEmotion}
             onNext={() => {
-              setAutoThoughtWantsCustom(false);
-              setStep("thought");
+              actions.setWantsCustom(false);
+              actions.setStep("thought");
             }}
           />
         )}
 
-        {step === "thought" && (
+        {flow.step === "thought" && (
           <CbtMinimalAutoThoughtSection
-            userInput={userInput}
-            emotion={selectedEmotion}
-            wantsCustom={autoThoughtWantsCustom}
-            onWantsCustomChange={setAutoThoughtWantsCustom}
+            userInput={flow.userInput}
+            emotion={flow.selectedEmotion}
+            wantsCustom={flow.autoThoughtWantsCustom}
+            onWantsCustomChange={actions.setWantsCustom}
             onSubmitThought={handleSubmitThought}
           />
         )}
 
-        {step === "errors" && (
+        {flow.step === "errors" && (
           <CbtMinimalCognitiveErrorSection
-            userInput={userInput}
-            thought={emotionThoughtPairs[0]?.thought ?? ""}
+            userInput={flow.userInput}
+            thought={flow.emotionThoughtPairs[0]?.thought ?? ""}
             onSelect={handleSelectErrors}
           />
         )}
 
-        {step === "alternative" && (
+        {flow.step === "alternative" && (
           <CbtMinimalAlternativeThoughtSection
-            userInput={userInput}
-            emotionThoughtPairs={emotionThoughtPairs}
-            selectedCognitiveErrors={selectedCognitiveErrors}
-            seed={alternativeSeed}
+            userInput={flow.userInput}
+            emotionThoughtPairs={flow.emotionThoughtPairs}
+            selectedCognitiveErrors={flow.selectedCognitiveErrors}
+            seed={flow.alternativeSeed}
             onSelect={handleComplete}
           />
         )}

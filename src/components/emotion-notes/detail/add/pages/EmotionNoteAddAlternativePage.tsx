@@ -17,13 +17,15 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
+import { useAddFlow } from "../common/useAddFlow";
+import { toggleListValue } from "../common/toggleList";
 import EmotionNoteAddModeSelector, {
   AddMode,
 } from "./EmotionNoteAddModeSelector";
@@ -31,13 +33,47 @@ import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import EmotionNoteAddSummaryItem from "./EmotionNoteAddSummaryItem";
 
-type AlternativeAiStep = "select-thought" | "select-errors" | "suggestions";
-type AlternativeDirectStep = "select-thought" | "select-errors" | "input";
-
 type AlternativeCandidate = {
   thought: string;
   technique: string;
   techniqueDescription: string;
+};
+
+type LocalState = {
+  selectedThoughtId: string;
+  selectedErrorIds: string[];
+  expandedThoughtIds: string[];
+  expandedErrorIds: string[];
+  aiCandidates: AlternativeCandidate[];
+  selectedCandidate: string;
+  savedCandidates: string[];
+  directText: string;
+};
+
+type LocalAction =
+  | { type: "PATCH"; patch: Partial<LocalState> }
+  | { type: "RESET" };
+
+const initialLocalState: LocalState = {
+  selectedThoughtId: "",
+  selectedErrorIds: [],
+  expandedThoughtIds: [],
+  expandedErrorIds: [],
+  aiCandidates: [],
+  selectedCandidate: "",
+  savedCandidates: [],
+  directText: "",
+};
+
+const localReducer = (state: LocalState, action: LocalAction): LocalState => {
+  switch (action.type) {
+    case "PATCH":
+      return { ...state, ...action.patch };
+    case "RESET":
+      return initialLocalState;
+    default:
+      return state;
+  }
 };
 
 type EmotionNoteAddAlternativePageProps = {
@@ -67,22 +103,17 @@ export default function EmotionNoteAddAlternativePage({
   } = useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
 
-  const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
-  const [aiStep, setAiStep] = useState<AlternativeAiStep>("select-thought");
-  const [directStep, setDirectStep] =
-    useState<AlternativeDirectStep>("select-thought");
-  const [selectedThoughtId, setSelectedThoughtId] = useState("");
-  const [selectedErrorIds, setSelectedErrorIds] = useState<string[]>([]);
-  const [expandedThoughtIds, setExpandedThoughtIds] = useState<string[]>([]);
-  const [expandedErrorIds, setExpandedErrorIds] = useState<string[]>([]);
-  const [aiCandidates, setAiCandidates] = useState<AlternativeCandidate[]>([]);
-  const [selectedCandidate, setSelectedCandidate] = useState("");
-  const [savedCandidates, setSavedCandidates] = useState<string[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiFallback, setAiFallback] = useState(false);
-  const [directText, setDirectText] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [local, localDispatch] = useReducer(localReducer, initialLocalState);
+  const patchLocal = useCallback(
+    (patch: Partial<LocalState>) =>
+      localDispatch({ type: "PATCH", patch }),
+    [],
+  );
+  const { state: flow, actions: flowActions } = useAddFlow({
+    initialMode: forcedMode ?? null,
+    initialAiStep: "select-thought",
+    initialDirectStep: "select-thought",
+  });
   const lastErrorRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -93,53 +124,51 @@ export default function EmotionNoteAddAlternativePage({
   }, [error, pushToast]);
 
   useEffect(() => {
-    setAiCandidates([]);
-    setSelectedCandidate("");
-    setAiError(null);
-    setAiFallback(false);
-    setSavedCandidates([]);
-  }, [selectedThoughtId, selectedErrorIds]);
+    patchLocal({ aiCandidates: [], selectedCandidate: "", savedCandidates: [] });
+    flowActions.setAiError(null);
+    flowActions.setAiFallback(false);
+  }, [flowActions, local.selectedThoughtId, local.selectedErrorIds, patchLocal]);
 
   const selectedThought = useMemo(
     () =>
       thoughtSection.details.find(
-        (detail) => String(detail.id) === selectedThoughtId,
+        (detail) => String(detail.id) === local.selectedThoughtId,
       ) ?? null,
-    [selectedThoughtId, thoughtSection.details],
+    [local.selectedThoughtId, thoughtSection.details],
   );
 
   const selectedErrors = useMemo(
     () =>
       errorSection.details.filter((detail) =>
-        selectedErrorIds.includes(String(detail.id)),
+        local.selectedErrorIds.includes(String(detail.id)),
       ),
-    [errorSection.details, selectedErrorIds],
+    [errorSection.details, local.selectedErrorIds],
   );
 
   const handleClose = () => {
-    if (mode === "ai") {
-      if (aiStep === "suggestions") {
-        setAiStep("select-errors");
+    if (flow.mode === "ai") {
+      if (flow.aiStep === "suggestions") {
+        flowActions.setAiStep("select-errors");
         return;
       }
-      if (aiStep === "select-errors") {
-        setAiStep("select-thought");
-        return;
-      }
-    }
-    if (mode === "direct") {
-      if (directStep === "input") {
-        setDirectStep("select-errors");
-        return;
-      }
-      if (directStep === "select-errors") {
-        setDirectStep("select-thought");
+      if (flow.aiStep === "select-errors") {
+        flowActions.setAiStep("select-thought");
         return;
       }
     }
-    if (mode && !forcedMode) {
+    if (flow.mode === "direct") {
+      if (flow.directStep === "input") {
+        flowActions.setDirectStep("select-errors");
+        return;
+      }
+      if (flow.directStep === "select-errors") {
+        flowActions.setDirectStep("select-thought");
+        return;
+      }
+    }
+    if (flow.mode && !forcedMode) {
       resetFlow();
-      setMode(null);
+      flowActions.setMode(null);
       return;
     }
     if (forcedMode) {
@@ -149,49 +178,38 @@ export default function EmotionNoteAddAlternativePage({
     router.push(`/detail?id=${noteId}`);
   };
 
-  const resetFlow = () => {
-    setAiStep("select-thought");
-    setDirectStep("select-thought");
-    setSelectedThoughtId("");
-    setSelectedErrorIds([]);
-    setExpandedThoughtIds([]);
-    setExpandedErrorIds([]);
-    setAiCandidates([]);
-    setSelectedCandidate("");
-    setSavedCandidates([]);
-    setAiError(null);
-    setAiFallback(false);
-    setDirectText("");
-  };
+  const resetFlow = useCallback(() => {
+    localDispatch({ type: "RESET" });
+    flowActions.reset({
+      mode: forcedMode ?? null,
+      aiStep: "select-thought",
+      directStep: "select-thought",
+    });
+  }, [flowActions, forcedMode]);
 
   const handleModeSelect = (next: AddMode) => {
     if (forcedMode) return;
     resetFlow();
-    setMode(next);
+    flowActions.setMode(next);
   };
 
   useEffect(() => {
     if (!forcedMode) return;
     resetFlow();
-    setMode(forcedMode);
-  }, [forcedMode]);
+    flowActions.setMode(forcedMode);
+  }, [flowActions, forcedMode, resetFlow]);
 
   const toggleError = (id: string) => {
-    setSelectedErrorIds((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((item) => item !== id);
-      }
-      if (prev.length >= 2) {
-        pushToast("인지오류는 최대 2개까지 선택할 수 있어요.", "error");
-        return prev;
-      }
-      return [...prev, id];
-    });
+    const result = toggleListValue(local.selectedErrorIds, id, { max: 2 });
+    if (result.overflowed) {
+      pushToast("인지오류는 최대 2개까지 선택할 수 있어요.", "error");
+      return;
+    }
+    patchLocal({ selectedErrorIds: result.next });
   };
 
   const handleSelectThought = (id: string) => {
-    setSelectedThoughtId(id);
-    setSelectedErrorIds([]);
+    patchLocal({ selectedThoughtId: id, selectedErrorIds: [] });
   };
 
   const ensureAiReady = async () => {
@@ -219,10 +237,8 @@ export default function EmotionNoteAddAlternativePage({
   const handleGenerateCandidates = async () => {
     const ready = await ensureAiReady();
     if (!ready || !selectedThought) return;
-    setAiLoading(true);
-    setAiError(null);
-    setAiFallback(false);
-    setAiCandidates([]);
+    flowActions.startAi();
+    patchLocal({ aiCandidates: [] });
     try {
       const result = await generateContextualAlternativeThoughts(
         triggerText,
@@ -234,41 +250,43 @@ export default function EmotionNoteAddAlternativePage({
         })),
         { noteProposal: true },
       );
-      setAiFallback(isAiFallback(result));
-      setAiCandidates(result);
-      setAiStep("suggestions");
+      flowActions.setAiFallback(isAiFallback(result));
+      patchLocal({ aiCandidates: result });
+      flowActions.setAiStep("suggestions");
     } catch (aiErr) {
       console.error(aiErr);
-      setAiError("AI 제안을 불러오지 못했습니다.");
+      flowActions.setAiError("AI 제안을 불러오지 못했습니다.");
     } finally {
-      setAiLoading(false);
+      flowActions.finishAi();
     }
   };
 
   const handleSaveAi = async () => {
-    if (!selectedCandidate.trim()) {
+    if (!local.selectedCandidate.trim()) {
       pushToast("대안사고를 선택해주세요.", "error");
       return;
     }
-    if (savedCandidates.includes(selectedCandidate)) {
+    if (local.savedCandidates.includes(local.selectedCandidate)) {
       pushToast("이미 저장된 제안입니다.", "info");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await alternativeSection.handleAddWithValues(
-      selectedCandidate.trim(),
+      local.selectedCandidate.trim(),
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
-      setSavedCandidates((prev) =>
-        prev.includes(selectedCandidate) ? prev : [...prev, selectedCandidate],
-      );
+      patchLocal({
+        savedCandidates: local.savedCandidates.includes(local.selectedCandidate)
+          ? local.savedCandidates
+          : [...local.savedCandidates, local.selectedCandidate],
+      });
       pushToast("대안사고를 저장했어요.", "success");
     }
   };
 
   const handleSaveDirect = async () => {
-    const validation = validateUserText(directText, {
+    const validation = validateUserText(local.directText, {
       minLength: 10,
       minLengthMessage: "대안사고를 10자 이상 입력해주세요.",
     });
@@ -280,9 +298,11 @@ export default function EmotionNoteAddAlternativePage({
       pushToast("자동사고와 인지오류를 먼저 선택해주세요.", "error");
       return;
     }
-    setIsSaving(true);
-    const ok = await alternativeSection.handleAddWithValues(directText.trim());
-    setIsSaving(false);
+    flowActions.setSaving(true);
+    const ok = await alternativeSection.handleAddWithValues(
+      local.directText.trim(),
+    );
+    flowActions.setSaving(false);
     if (ok) {
       pushToast("대안사고를 저장했어요.", "success");
       router.push(`/detail?id=${noteId}`);
@@ -290,14 +310,14 @@ export default function EmotionNoteAddAlternativePage({
   };
 
   const isSelectedSaved = useMemo(
-    () => savedCandidates.includes(selectedCandidate),
-    [savedCandidates, selectedCandidate],
+    () => local.savedCandidates.includes(local.selectedCandidate),
+    [local.savedCandidates, local.selectedCandidate],
   );
 
-  const showAiNext = mode === "ai" && aiStep !== "suggestions";
-  const showDirectNext = mode === "direct" && directStep !== "input";
-  const showAiSave = mode === "ai" && aiStep === "suggestions";
-  const showDirectSave = mode === "direct" && directStep === "input";
+  const showAiNext = flow.mode === "ai" && flow.aiStep !== "suggestions";
+  const showDirectNext = flow.mode === "direct" && flow.directStep !== "input";
+  const showAiSave = flow.mode === "ai" && flow.aiStep === "suggestions";
+  const showDirectSave = flow.mode === "direct" && flow.directStep === "input";
   const saveLabel = isSelectedSaved ? "저장됨" : "저장";
   const saveIcon = isSelectedSaved ? (
     <Check size={22} />
@@ -306,30 +326,30 @@ export default function EmotionNoteAddAlternativePage({
   );
 
   const nextDisabledAi =
-    (aiStep === "select-thought" && !selectedThoughtId) ||
-    (aiStep === "select-errors" && selectedErrorIds.length === 0);
+    (flow.aiStep === "select-thought" && !local.selectedThoughtId) ||
+    (flow.aiStep === "select-errors" && local.selectedErrorIds.length === 0);
 
   const nextDisabledDirect =
-    (directStep === "select-thought" && !selectedThoughtId) ||
-    (directStep === "select-errors" && selectedErrorIds.length === 0);
+    (flow.directStep === "select-thought" && !local.selectedThoughtId) ||
+    (flow.directStep === "select-errors" && local.selectedErrorIds.length === 0);
 
   const handleAiNext = () => {
-    if (aiStep === "select-thought") {
-      setAiStep("select-errors");
+    if (flow.aiStep === "select-thought") {
+      flowActions.setAiStep("select-errors");
       return;
     }
-    if (aiStep === "select-errors") {
+    if (flow.aiStep === "select-errors") {
       void handleGenerateCandidates();
     }
   };
 
   const handleDirectNext = () => {
-    if (directStep === "select-thought") {
-      setDirectStep("select-errors");
+    if (flow.directStep === "select-thought") {
+      flowActions.setDirectStep("select-errors");
       return;
     }
-    if (directStep === "select-errors") {
-      setDirectStep("input");
+    if (flow.directStep === "select-errors") {
+      flowActions.setDirectStep("input");
     }
   };
 
@@ -350,7 +370,7 @@ export default function EmotionNoteAddAlternativePage({
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
             <EmotionNoteAddModeSelector
-              value={mode}
+              value={flow.mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
               onLockedClick={() => openAuthModal()}
@@ -358,9 +378,9 @@ export default function EmotionNoteAddAlternativePage({
           </div>
         ) : null}
 
-        {mode === "ai" && (
+        {flow.mode === "ai" && (
           <div className={styles.sectionStack}>
-            {!aiLoading && aiStep === "select-thought" && (
+            {!flow.aiLoading && flow.aiStep === "select-thought" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="자동사고 선택"
@@ -374,11 +394,12 @@ export default function EmotionNoteAddAlternativePage({
                   tone="green"
                 >
                   {thoughtSection.details.map((detail) => {
-                    const isSelected = selectedThoughtId === String(detail.id);
+                    const isSelected =
+                      local.selectedThoughtId === String(detail.id);
                     const emotionLabel =
                       detail.emotion?.trim() || "감정 미선택";
                     const thoughtText = detail.automatic_thought?.trim() || "-";
-                    const isExpanded = expandedThoughtIds.includes(
+                    const isExpanded = local.expandedThoughtIds.includes(
                       String(detail.id),
                     );
                     return (
@@ -395,11 +416,19 @@ export default function EmotionNoteAddAlternativePage({
                           text={thoughtText}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedThoughtIds((prev) =>
-                              prev.includes(String(detail.id))
-                                ? prev.filter((id) => id !== String(detail.id))
-                                : [...prev, String(detail.id)],
-                            )
+                            patchLocal({
+                              expandedThoughtIds:
+                                local.expandedThoughtIds.includes(
+                                  String(detail.id),
+                                )
+                                  ? local.expandedThoughtIds.filter(
+                                      (id) => id !== String(detail.id),
+                                    )
+                                  : [
+                                      ...local.expandedThoughtIds,
+                                      String(detail.id),
+                                    ],
+                            })
                           }
                           tone="green"
                         />
@@ -409,7 +438,7 @@ export default function EmotionNoteAddAlternativePage({
                 </SelectionPanel>
               </div>
             )}
-            {!aiLoading && aiStep === "select-errors" && (
+            {!flow.aiLoading && flow.aiStep === "select-errors" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="인지오류 선택"
@@ -423,12 +452,12 @@ export default function EmotionNoteAddAlternativePage({
                   tone="green"
                 >
                   {errorSection.details.map((errorDetail) => {
-                    const isSelected = selectedErrorIds.includes(
+                    const isSelected = local.selectedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     const description =
                       errorDetail.error_description || "설명이 없습니다.";
-                    const isExpanded = expandedErrorIds.includes(
+                    const isExpanded = local.expandedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     return (
@@ -445,13 +474,19 @@ export default function EmotionNoteAddAlternativePage({
                           text={description}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedErrorIds((prev) =>
-                              prev.includes(String(errorDetail.id))
-                                ? prev.filter(
-                                    (id) => id !== String(errorDetail.id),
-                                  )
-                                : [...prev, String(errorDetail.id)],
-                            )
+                            patchLocal({
+                              expandedErrorIds:
+                                local.expandedErrorIds.includes(
+                                  String(errorDetail.id),
+                                )
+                                  ? local.expandedErrorIds.filter(
+                                      (id) => id !== String(errorDetail.id),
+                                    )
+                                  : [
+                                      ...local.expandedErrorIds,
+                                      String(errorDetail.id),
+                                    ],
+                            })
                           }
                           tone="green"
                         />
@@ -462,7 +497,7 @@ export default function EmotionNoteAddAlternativePage({
               </div>
             )}
 
-            {aiLoading && (
+            {flow.aiLoading && (
               <div className={styles.stepCenter}>
                 <AiLoadingCard
                   title="대안사고 생성 중"
@@ -472,31 +507,36 @@ export default function EmotionNoteAddAlternativePage({
               </div>
             )}
 
-            {!aiLoading && aiError && (
-              <div className={styles.errorBox}>{aiError}</div>
+            {!flow.aiLoading && flow.aiError && (
+              <div className={styles.errorBox}>{flow.aiError}</div>
             )}
-            {!aiLoading && aiFallback && aiStep === "suggestions" && (
+            {!flow.aiLoading && flow.aiFallback && flow.aiStep === "suggestions" && (
               <AiFallbackNotice onRetry={() => void handleGenerateCandidates()} />
             )}
 
-            {!aiLoading && aiStep === "suggestions" && (
+            {!flow.aiLoading && flow.aiStep === "suggestions" && (
               <AiCandidatesPanel
                 title="AI 대안사고 후보"
                 description="원하는 제안을 선택한 뒤 저장하세요."
-                countText={`${aiCandidates.length}개 추천`}
+                countText={`${local.aiCandidates.length}개 추천`}
                 tone="green"
               >
                 <div className={styles.candidateList}>
-                  {aiCandidates.map((candidate, index) => {
+                  {local.aiCandidates.map((candidate, index) => {
                     const isSelected =
-                      selectedCandidate.trim() === candidate.thought.trim();
-                    const saved = savedCandidates.includes(candidate.thought);
+                      local.selectedCandidate.trim() ===
+                      candidate.thought.trim();
+                    const saved = local.savedCandidates.includes(
+                      candidate.thought,
+                    );
                     return (
                       <SelectionCard
                         key={`${candidate.thought}-${index}`}
                         selected={isSelected}
                         saved={saved}
-                        onSelect={() => setSelectedCandidate(candidate.thought)}
+                        onSelect={() =>
+                          patchLocal({ selectedCandidate: candidate.thought })
+                        }
                         tone="green"
                       >
                         <p className={styles.sectionTitle}>
@@ -514,9 +554,9 @@ export default function EmotionNoteAddAlternativePage({
           </div>
         )}
 
-        {mode === "direct" && (
+        {flow.mode === "direct" && (
           <div className={styles.sectionStack}>
-            {directStep === "select-thought" && (
+            {flow.directStep === "select-thought" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="자동사고 선택"
@@ -530,11 +570,12 @@ export default function EmotionNoteAddAlternativePage({
                   tone="green"
                 >
                   {thoughtSection.details.map((detail) => {
-                    const isSelected = selectedThoughtId === String(detail.id);
+                    const isSelected =
+                      local.selectedThoughtId === String(detail.id);
                     const emotionLabel =
                       detail.emotion?.trim() || "감정 미선택";
                     const thoughtText = detail.automatic_thought?.trim() || "-";
-                    const isExpanded = expandedThoughtIds.includes(
+                    const isExpanded = local.expandedThoughtIds.includes(
                       String(detail.id),
                     );
                     return (
@@ -551,11 +592,19 @@ export default function EmotionNoteAddAlternativePage({
                           text={thoughtText}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedThoughtIds((prev) =>
-                              prev.includes(String(detail.id))
-                                ? prev.filter((id) => id !== String(detail.id))
-                                : [...prev, String(detail.id)],
-                            )
+                            patchLocal({
+                              expandedThoughtIds:
+                                local.expandedThoughtIds.includes(
+                                  String(detail.id),
+                                )
+                                  ? local.expandedThoughtIds.filter(
+                                      (id) => id !== String(detail.id),
+                                    )
+                                  : [
+                                      ...local.expandedThoughtIds,
+                                      String(detail.id),
+                                    ],
+                            })
                           }
                           tone="green"
                         />
@@ -565,7 +614,7 @@ export default function EmotionNoteAddAlternativePage({
                 </SelectionPanel>
               </div>
             )}
-            {directStep === "select-errors" && (
+            {flow.directStep === "select-errors" && (
               <div className={styles.stepCenter}>
                 <SelectionPanel
                   title="인지오류 선택"
@@ -579,12 +628,12 @@ export default function EmotionNoteAddAlternativePage({
                   tone="green"
                 >
                   {errorSection.details.map((errorDetail) => {
-                    const isSelected = selectedErrorIds.includes(
+                    const isSelected = local.selectedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     const description =
                       errorDetail.error_description || "설명이 없습니다.";
-                    const isExpanded = expandedErrorIds.includes(
+                    const isExpanded = local.expandedErrorIds.includes(
                       String(errorDetail.id),
                     );
                     return (
@@ -601,13 +650,19 @@ export default function EmotionNoteAddAlternativePage({
                           text={description}
                           expanded={isExpanded}
                           onToggle={() =>
-                            setExpandedErrorIds((prev) =>
-                              prev.includes(String(errorDetail.id))
-                                ? prev.filter(
-                                    (id) => id !== String(errorDetail.id),
-                                  )
-                                : [...prev, String(errorDetail.id)],
-                            )
+                            patchLocal({
+                              expandedErrorIds:
+                                local.expandedErrorIds.includes(
+                                  String(errorDetail.id),
+                                )
+                                  ? local.expandedErrorIds.filter(
+                                      (id) => id !== String(errorDetail.id),
+                                    )
+                                  : [
+                                      ...local.expandedErrorIds,
+                                      String(errorDetail.id),
+                                    ],
+                            })
                           }
                           tone="green"
                         />
@@ -618,7 +673,7 @@ export default function EmotionNoteAddAlternativePage({
               </div>
             )}
 
-            {directStep === "input" && (
+            {flow.directStep === "input" && (
               <>
                 {(selectedThought || selectedErrors.length > 0) && (
                   <details className={styles.summaryBox}>
@@ -665,8 +720,8 @@ export default function EmotionNoteAddAlternativePage({
                 )}
                 <div className={styles.inputStack}>
                   <BlinkTextarea
-                    value={directText}
-                    onChange={setDirectText}
+                    value={local.directText}
+                    onChange={(value) => patchLocal({ directText: value })}
                     placeholder="대안적 사고를 적어주세요."
                   />
                   <p className={styles.helperText}>
@@ -685,8 +740,8 @@ export default function EmotionNoteAddAlternativePage({
           icon={<ArrowRight size={22} />}
           helperText="다음"
           onClick={handleAiNext}
-          disabled={nextDisabledAi || aiLoading}
-          loading={aiLoading}
+          disabled={nextDisabledAi || flow.aiLoading}
+          loading={flow.aiLoading}
           className={styles.fab}
         />
       )}
@@ -707,8 +762,12 @@ export default function EmotionNoteAddAlternativePage({
             icon={saveIcon}
             helperText="대안사고 저장"
             onClick={() => void handleSaveAi()}
-            disabled={!selectedCandidate.trim() || isSaving || isSelectedSaved}
-            loading={isSaving}
+            disabled={
+              !local.selectedCandidate.trim() ||
+              flow.isSaving ||
+              isSelectedSaved
+            }
+            loading={flow.isSaving}
             className={styles.fab}
           />
           <FloatingActionButton
@@ -726,8 +785,8 @@ export default function EmotionNoteAddAlternativePage({
           icon={<ArrowDownToLine size={22} />}
           helperText="대안사고 저장"
           onClick={() => void handleSaveDirect()}
-          disabled={isSaving}
-          loading={isSaving}
+          disabled={flow.isSaving}
+          loading={flow.isSaving}
           className={styles.fab}
         />
       )}

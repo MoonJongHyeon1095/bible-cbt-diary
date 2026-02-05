@@ -7,7 +7,7 @@ import { useModalOpen } from "@/components/common/useModalOpen";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
 import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
 
 type SessionUser = {
@@ -106,34 +106,6 @@ export default function AuthModal({
     setIsInAppBrowser(isBlockedInAppBrowser(ua, isNativePlatform));
   }, [isOpen, isNativePlatform]);
 
-  useEffect(() => {
-    if (!isOpen || !isInAppBrowser || isNativePlatform || hasTriedExternalOpen) {
-      return;
-    }
-    if (!currentUrl) {
-      return;
-    }
-
-    // Threads/인스타/카톡 등 인앱 브라우저에서 열리면
-    // Google OAuth가 막히는 경우가 많아 1회 외부 브라우저로 유도한다.
-    setHasTriedExternalOpen(true);
-    const timer = window.setTimeout(() => {
-      handleOpenExternalBrowser();
-    }, 300);
-
-    return () => window.clearTimeout(timer);
-  }, [
-    isOpen,
-    isInAppBrowser,
-    isNativePlatform,
-    hasTriedExternalOpen,
-    currentUrl,
-  ]);
-
-  if (!isOpen) {
-    return null;
-  }
-
   const handleAuthSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsSubmitting(true);
@@ -230,7 +202,7 @@ export default function AuthModal({
     }
   };
 
-  const handleOpenExternalBrowser = () => {
+  const handleOpenExternalBrowser = useCallback(() => {
     if (!currentUrl || typeof window === "undefined") {
       return;
     }
@@ -239,7 +211,36 @@ export default function AuthModal({
     if (!opened) {
       window.location.href = currentUrl;
     }
-  };
+  }, [currentUrl]);
+
+  useEffect(() => {
+    if (!isOpen || !isInAppBrowser || isNativePlatform || hasTriedExternalOpen) {
+      return;
+    }
+    if (!currentUrl) {
+      return;
+    }
+
+    // Threads/인스타/카톡 등 인앱 브라우저에서 열리면
+    // Google OAuth가 막히는 경우가 많아 1회 외부 브라우저로 유도한다.
+    setHasTriedExternalOpen(true);
+    const timer = window.setTimeout(() => {
+      handleOpenExternalBrowser();
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, [
+    isOpen,
+    isInAppBrowser,
+    isNativePlatform,
+    hasTriedExternalOpen,
+    currentUrl,
+    handleOpenExternalBrowser,
+  ]);
+
+  if (!isOpen) {
+    return null;
+  }
 
   return (
     <div className={styles.backdrop} onClick={onClose}>

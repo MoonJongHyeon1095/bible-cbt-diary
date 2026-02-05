@@ -18,13 +18,14 @@ import {
   Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { ExpandableText } from "../common/ExpandableText";
 import { SelectionCard } from "../common/SelectionCard";
 import { SelectionPanel } from "../common/SelectionPanel";
+import { useAddFlow } from "../common/useAddFlow";
 import EmotionNoteAddModeSelector, {
   AddMode,
 } from "./EmotionNoteAddModeSelector";
@@ -34,12 +35,44 @@ import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 import EmotionNoteAddSummaryItem from "./EmotionNoteAddSummaryItem";
 
-type ErrorAiStep = "select-error" | "select-thought" | "suggestions";
-type ErrorDirectStep = "select-error" | "input";
-
 type EmotionNoteAddErrorPageProps = {
   noteId: number;
   mode?: AddMode;
+};
+
+type LocalState = {
+  errorLabel: string;
+  directDescription: string;
+  selectedThoughtId: string;
+  expandedThoughtIds: string[];
+  aiSuggestion: string;
+  selectedSuggestion: string;
+  savedSuggestions: string[];
+};
+
+type LocalAction =
+  | { type: "PATCH"; patch: Partial<LocalState> }
+  | { type: "RESET" };
+
+const initialLocalState: LocalState = {
+  errorLabel: "",
+  directDescription: "",
+  selectedThoughtId: "",
+  expandedThoughtIds: [],
+  aiSuggestion: "",
+  selectedSuggestion: "",
+  savedSuggestions: [],
+};
+
+const localReducer = (state: LocalState, action: LocalAction): LocalState => {
+  switch (action.type) {
+    case "PATCH":
+      return { ...state, ...action.patch };
+    case "RESET":
+      return initialLocalState;
+    default:
+      return state;
+  }
 };
 
 export default function EmotionNoteAddErrorPage({
@@ -58,24 +91,22 @@ export default function EmotionNoteAddErrorPage({
     useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
 
-  const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
-  const [errorLabel, setErrorLabel] = useState("");
-  const [directDescription, setDirectDescription] = useState("");
-  const [aiStep, setAiStep] = useState<ErrorAiStep>("select-error");
-  const [directStep, setDirectStep] = useState<ErrorDirectStep>("select-error");
-  const [selectedThoughtId, setSelectedThoughtId] = useState("");
-  const [expandedThoughtIds, setExpandedThoughtIds] = useState<string[]>([]);
-  const [aiSuggestion, setAiSuggestion] = useState("");
-  const [selectedSuggestion, setSelectedSuggestion] = useState("");
-  const [savedSuggestions, setSavedSuggestions] = useState<string[]>([]);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiFallback, setAiFallback] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+  const [local, localDispatch] = useReducer(localReducer, initialLocalState);
+  const patchLocal = useCallback(
+    (patch: Partial<LocalState>) =>
+      localDispatch({ type: "PATCH", patch }),
+    [],
+  );
+  const { state: flow, actions: flowActions } = useAddFlow({
+    initialMode: forcedMode ?? null,
+    initialAiStep: "select-error",
+    initialDirectStep: "select-error",
+  });
   const lastErrorRef = useRef<string | null>(null);
   const selectedErrorMeta = useMemo(
-    () => COGNITIVE_ERRORS.find((item) => item.title === errorLabel) ?? null,
-    [errorLabel],
+    () =>
+      COGNITIVE_ERRORS.find((item) => item.title === local.errorLabel) ?? null,
+    [local.errorLabel],
   );
 
   useEffect(() => {
@@ -86,41 +117,40 @@ export default function EmotionNoteAddErrorPage({
   }, [error, pushToast]);
 
   useEffect(() => {
-    setAiSuggestion("");
-    setSelectedSuggestion("");
-    setAiError(null);
-    setAiFallback(false);
-    setSavedSuggestions([]);
-  }, [errorLabel, selectedThoughtId]);
+    patchLocal({ aiSuggestion: "", selectedSuggestion: "" });
+    flowActions.setAiError(null);
+    flowActions.setAiFallback(false);
+    patchLocal({ savedSuggestions: [] });
+  }, [flowActions, local.errorLabel, local.selectedThoughtId, patchLocal]);
 
   const selectedThought = useMemo(
     () =>
       thoughtSection.details.find(
-        (detail) => String(detail.id) === selectedThoughtId,
+        (detail) => String(detail.id) === local.selectedThoughtId,
       ) ?? null,
-    [selectedThoughtId, thoughtSection.details],
+    [local.selectedThoughtId, thoughtSection.details],
   );
 
   const handleClose = () => {
-    if (mode === "ai") {
-      if (aiStep === "suggestions") {
-        setAiStep("select-thought");
+    if (flow.mode === "ai") {
+      if (flow.aiStep === "suggestions") {
+        flowActions.setAiStep("select-thought");
         return;
       }
-      if (aiStep === "select-thought") {
-        setAiStep("select-error");
-        return;
-      }
-    }
-    if (mode === "direct") {
-      if (directStep === "input") {
-        setDirectStep("select-error");
+      if (flow.aiStep === "select-thought") {
+        flowActions.setAiStep("select-error");
         return;
       }
     }
-    if (mode && !forcedMode) {
+    if (flow.mode === "direct") {
+      if (flow.directStep === "input") {
+        flowActions.setDirectStep("select-error");
+        return;
+      }
+    }
+    if (flow.mode && !forcedMode) {
       resetFlow();
-      setMode(null);
+      flowActions.setMode(null);
       return;
     }
     if (forcedMode) {
@@ -130,31 +160,26 @@ export default function EmotionNoteAddErrorPage({
     router.push(`/detail?id=${noteId}`);
   };
 
-  const resetFlow = () => {
-    setErrorLabel("");
-    setDirectDescription("");
-    setAiStep("select-error");
-    setDirectStep("select-error");
-    setSelectedThoughtId("");
-    setExpandedThoughtIds([]);
-    setAiSuggestion("");
-    setSelectedSuggestion("");
-    setAiError(null);
-    setAiFallback(false);
-    setSavedSuggestions([]);
-  };
+  const resetFlow = useCallback(() => {
+    localDispatch({ type: "RESET" });
+    flowActions.reset({
+      mode: forcedMode ?? null,
+      aiStep: "select-error",
+      directStep: "select-error",
+    });
+  }, [flowActions, forcedMode]);
 
   const handleModeSelect = (next: AddMode) => {
     if (forcedMode) return;
     resetFlow();
-    setMode(next);
+    flowActions.setMode(next);
   };
 
   useEffect(() => {
     if (!forcedMode) return;
     resetFlow();
-    setMode(forcedMode);
-  }, [forcedMode]);
+    flowActions.setMode(forcedMode);
+  }, [flowActions, forcedMode, resetFlow]);
 
   const ensureAiReady = async () => {
     if (aiLocked) {
@@ -167,7 +192,7 @@ export default function EmotionNoteAddErrorPage({
       pushToast("트리거 텍스트를 먼저 입력해주세요.", "error");
       return false;
     }
-    if (!errorLabel.trim()) {
+    if (!local.errorLabel.trim()) {
       pushToast("인지오류를 먼저 선택해주세요.", "error");
       return false;
     }
@@ -181,15 +206,15 @@ export default function EmotionNoteAddErrorPage({
   const handleGenerateSuggestion = async () => {
     const ready = await ensureAiReady();
     if (!ready || !selectedThought) return;
-    const meta = COGNITIVE_ERRORS.find((error) => error.title === errorLabel);
+    const meta = COGNITIVE_ERRORS.find(
+      (error) => error.title === local.errorLabel,
+    );
     if (!meta) {
       pushToast("인지오류 정보를 찾을 수 없습니다.", "error");
       return;
     }
-    setAiLoading(true);
-    setAiError(null);
-    setAiFallback(false);
-    setAiSuggestion("");
+    flowActions.startAi();
+    patchLocal({ aiSuggestion: "" });
     try {
       const result = await analyzeCognitiveErrorDetails(
         triggerText,
@@ -197,24 +222,23 @@ export default function EmotionNoteAddErrorPage({
         [meta.index],
         { noteProposal: true },
       );
-      setAiFallback(isAiFallback(result));
+      flowActions.setAiFallback(isAiFallback(result));
       const analysis = result.errors[0]?.analysis ?? "";
       if (!analysis.trim()) {
         throw new Error("인지오류 설명이 없습니다.");
       }
-      setAiSuggestion(analysis);
-      setSelectedSuggestion(analysis);
-      setAiStep("suggestions");
+      patchLocal({ aiSuggestion: analysis, selectedSuggestion: analysis });
+      flowActions.setAiStep("suggestions");
     } catch (aiErr) {
       console.error(aiErr);
-      setAiError("AI 제안을 불러오지 못했습니다.");
+      flowActions.setAiError("AI 제안을 불러오지 못했습니다.");
     } finally {
-      setAiLoading(false);
+      flowActions.finishAi();
     }
   };
 
   const handleSaveAi = async () => {
-    if (!errorLabel.trim() || !selectedSuggestion.trim()) {
+    if (!local.errorLabel.trim() || !local.selectedSuggestion.trim()) {
       pushToast("인지오류 제안을 선택해주세요.", "error");
       return;
     }
@@ -222,24 +246,26 @@ export default function EmotionNoteAddErrorPage({
       pushToast("이미 저장된 제안입니다.", "info");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await errorSection.handleAddWithValues(
-      errorLabel.trim(),
-      selectedSuggestion.trim(),
+      local.errorLabel.trim(),
+      local.selectedSuggestion.trim(),
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
-      setSavedSuggestions((prev) =>
-        prev.includes(selectedSuggestion)
-          ? prev
-          : [...prev, selectedSuggestion],
-      );
+      patchLocal({
+        savedSuggestions: local.savedSuggestions.includes(
+          local.selectedSuggestion,
+        )
+          ? local.savedSuggestions
+          : [...local.savedSuggestions, local.selectedSuggestion],
+      });
       pushToast("인지오류를 저장했어요.", "success");
     }
   };
 
   const handleSaveDirect = async () => {
-    const validation = validateUserText(directDescription, {
+    const validation = validateUserText(local.directDescription, {
       minLength: 10,
       minLengthMessage: "인지오류 설명을 10자 이상 입력해주세요.",
     });
@@ -247,16 +273,16 @@ export default function EmotionNoteAddErrorPage({
       pushToast(validation.message, "error");
       return;
     }
-    if (!errorLabel.trim()) {
+    if (!local.errorLabel.trim()) {
       pushToast("인지오류를 선택해주세요.", "error");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await errorSection.handleAddWithValues(
-      errorLabel.trim(),
-      directDescription.trim(),
+      local.errorLabel.trim(),
+      local.directDescription.trim(),
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
       pushToast("인지오류를 저장했어요.", "success");
       router.push(`/detail?id=${noteId}`);
@@ -264,14 +290,15 @@ export default function EmotionNoteAddErrorPage({
   };
 
   const isSelectedSaved = useMemo(
-    () => savedSuggestions.includes(selectedSuggestion),
-    [savedSuggestions, selectedSuggestion],
+    () => local.savedSuggestions.includes(local.selectedSuggestion),
+    [local.savedSuggestions, local.selectedSuggestion],
   );
 
-  const showAiNext = mode === "ai" && aiStep !== "suggestions";
-  const showDirectNext = mode === "direct" && directStep === "select-error";
-  const showAiSave = mode === "ai" && aiStep === "suggestions";
-  const showDirectSave = mode === "direct" && directStep === "input";
+  const showAiNext = flow.mode === "ai" && flow.aiStep !== "suggestions";
+  const showDirectNext =
+    flow.mode === "direct" && flow.directStep === "select-error";
+  const showAiSave = flow.mode === "ai" && flow.aiStep === "suggestions";
+  const showDirectSave = flow.mode === "direct" && flow.directStep === "input";
   const saveLabel = isSelectedSaved ? "저장됨" : "저장";
   const saveIcon = isSelectedSaved ? (
     <Check size={22} />
@@ -280,17 +307,17 @@ export default function EmotionNoteAddErrorPage({
   );
 
   const nextDisabledAi =
-    (aiStep === "select-error" && !errorLabel.trim()) ||
-    (aiStep === "select-thought" && !selectedThoughtId);
+    (flow.aiStep === "select-error" && !local.errorLabel.trim()) ||
+    (flow.aiStep === "select-thought" && !local.selectedThoughtId);
 
   const handleAiNext = () => {
-    if (aiStep === "select-error") {
-      if (!errorLabel.trim()) return;
-      setAiStep("select-thought");
+    if (flow.aiStep === "select-error") {
+      if (!local.errorLabel.trim()) return;
+      flowActions.setAiStep("select-thought");
       return;
     }
-    if (aiStep === "select-thought") {
-      if (!selectedThoughtId) return;
+    if (flow.aiStep === "select-thought") {
+      if (!local.selectedThoughtId) return;
       void handleGenerateSuggestion();
     }
   };
@@ -307,7 +334,7 @@ export default function EmotionNoteAddErrorPage({
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
             <EmotionNoteAddModeSelector
-              value={mode}
+              value={flow.mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
               onLockedClick={() => openAuthModal()}
@@ -315,9 +342,9 @@ export default function EmotionNoteAddErrorPage({
           </div>
         ) : null}
 
-        {mode === "ai" && (
+        {flow.mode === "ai" && (
           <div className={styles.sectionStack}>
-            {aiLoading ? (
+            {flow.aiLoading ? (
               <div className={styles.stepCenter}>
                 <AiLoadingCard
                   title="인지오류 설명 생성 중"
@@ -327,17 +354,19 @@ export default function EmotionNoteAddErrorPage({
               </div>
             ) : (
               <>
-                {aiStep === "select-error" && (
+                {flow.aiStep === "select-error" && (
                   <div className={styles.selectionRow}>
                     <p className={styles.sectionTitle}>인지오류 선택</p>
                     <p className={styles.sectionHint}>
                       인지오류를 먼저 선택해야 합니다.
                     </p>
                     <ErrorOptionSelector
-                      value={errorLabel}
+                      value={local.errorLabel}
                       onSelect={(next) => {
-                        setErrorLabel(next);
-                        setSelectedSuggestion("");
+                        patchLocal({
+                          errorLabel: next,
+                          selectedSuggestion: "",
+                        });
                       }}
                     />
                     <EmotionNoteAddSelectionReveal
@@ -357,7 +386,7 @@ export default function EmotionNoteAddErrorPage({
                   </div>
                 )}
 
-                {aiStep === "select-thought" && (
+                {flow.aiStep === "select-thought" && (
                   <div className={styles.stepCenter}>
                     <SelectionPanel
                       title="자동사고 선택"
@@ -372,12 +401,12 @@ export default function EmotionNoteAddErrorPage({
                     >
                       {thoughtSection.details.map((detail) => {
                         const isSelected =
-                          selectedThoughtId === String(detail.id);
+                          local.selectedThoughtId === String(detail.id);
                         const emotionLabel =
                           detail.emotion?.trim() || "감정 미선택";
                         const thoughtText =
                           detail.automatic_thought?.trim() || "-";
-                        const isExpanded = expandedThoughtIds.includes(
+                        const isExpanded = local.expandedThoughtIds.includes(
                           String(detail.id),
                         );
                         return (
@@ -385,27 +414,35 @@ export default function EmotionNoteAddErrorPage({
                             key={detail.id}
                             selected={isSelected}
                             onSelect={() =>
-                              setSelectedThoughtId(String(detail.id))
+                              patchLocal({
+                                selectedThoughtId: String(detail.id),
+                              })
                             }
                             tone="rose"
                           >
                             <span className={styles.selectedChip}>
                               {emotionLabel}
                             </span>
-                            <ExpandableText
-                              text={thoughtText}
-                              expanded={isExpanded}
-                              onToggle={() =>
-                                setExpandedThoughtIds((prev) =>
-                                  prev.includes(String(detail.id))
-                                    ? prev.filter(
-                                        (id) => id !== String(detail.id),
+                              <ExpandableText
+                                text={thoughtText}
+                                expanded={isExpanded}
+                                onToggle={() =>
+                                  patchLocal({
+                                    expandedThoughtIds:
+                                      local.expandedThoughtIds.includes(
+                                        String(detail.id),
                                       )
-                                    : [...prev, String(detail.id)],
-                                )
-                              }
-                              tone="rose"
-                            />
+                                        ? local.expandedThoughtIds.filter(
+                                            (id) => id !== String(detail.id),
+                                          )
+                                        : [
+                                            ...local.expandedThoughtIds,
+                                            String(detail.id),
+                                          ],
+                                  })
+                                }
+                                tone="rose"
+                              />
                           </SelectionCard>
                         );
                       })}
@@ -413,24 +450,28 @@ export default function EmotionNoteAddErrorPage({
                   </div>
                 )}
 
-                {aiError && <div className={styles.errorBox}>{aiError}</div>}
-                {aiFallback && aiStep === "suggestions" && (
+                {flow.aiError && (
+                  <div className={styles.errorBox}>{flow.aiError}</div>
+                )}
+                {flow.aiFallback && flow.aiStep === "suggestions" && (
                   <AiFallbackNotice onRetry={() => void handleGenerateSuggestion()} />
                 )}
 
-                {aiStep === "suggestions" && aiSuggestion && (
+                {flow.aiStep === "suggestions" && local.aiSuggestion && (
                   <AiCandidatesPanel
                     title="AI 인지오류 제안"
                     description="선택한 제안을 저장하세요."
                     tone="rose"
                   >
                     <SelectionCard
-                      selected={Boolean(selectedSuggestion.trim())}
-                      saved={savedSuggestions.includes(aiSuggestion)}
-                      onSelect={() => setSelectedSuggestion(aiSuggestion)}
+                      selected={Boolean(local.selectedSuggestion.trim())}
+                      saved={local.savedSuggestions.includes(local.aiSuggestion)}
+                      onSelect={() =>
+                        patchLocal({ selectedSuggestion: local.aiSuggestion })
+                      }
                       tone="rose"
                     >
-                      {aiSuggestion}
+                      {local.aiSuggestion}
                     </SelectionCard>
                   </AiCandidatesPanel>
                 )}
@@ -439,17 +480,17 @@ export default function EmotionNoteAddErrorPage({
           </div>
         )}
 
-        {mode === "direct" && (
+        {flow.mode === "direct" && (
           <div className={styles.sectionStack}>
-            {directStep === "select-error" && (
+            {flow.directStep === "select-error" && (
               <div className={styles.selectionRow}>
                 <p className={styles.sectionTitle}>인지오류 선택</p>
                 <p className={styles.sectionHint}>
                   선택한 인지오류는 설명과 함께 저장됩니다.
                 </p>
                 <ErrorOptionSelector
-                  value={errorLabel}
-                  onSelect={setErrorLabel}
+                  value={local.errorLabel}
+                  onSelect={(value) => patchLocal({ errorLabel: value })}
                 />
                 <EmotionNoteAddSelectionReveal
                   isVisible={Boolean(selectedErrorMeta)}
@@ -468,9 +509,9 @@ export default function EmotionNoteAddErrorPage({
               </div>
             )}
 
-            {directStep === "input" && (
+            {flow.directStep === "input" && (
               <>
-                {errorLabel.trim() && (
+                {local.errorLabel.trim() && (
                   <details className={styles.summaryBox}>
                     <summary className={styles.summaryToggle}>
                       <span className={styles.summaryToggleContent}>
@@ -478,14 +519,14 @@ export default function EmotionNoteAddErrorPage({
                           선택한 인지오류 보기
                         </span>
                         <span className={styles.selectedChip}>
-                          {errorLabel}
+                          {local.errorLabel}
                         </span>
                       </span>
                     </summary>
                     <div className={styles.summaryBody}>
                       <div className={styles.summaryGrid}>
                         <EmotionNoteAddSummaryItem
-                          label={errorLabel}
+                          label={local.errorLabel}
                           body={
                             selectedErrorMeta?.description || "설명이 없습니다."
                           }
@@ -496,8 +537,10 @@ export default function EmotionNoteAddErrorPage({
                 )}
                 <div className={styles.inputStack}>
                   <BlinkTextarea
-                    value={directDescription}
-                    onChange={setDirectDescription}
+                    value={local.directDescription}
+                    onChange={(value) =>
+                      patchLocal({ directDescription: value })
+                    }
                     placeholder="인지오류 설명을 적어주세요."
                   />
                   <p className={styles.helperText}>
@@ -516,8 +559,8 @@ export default function EmotionNoteAddErrorPage({
           icon={<ArrowRight size={22} />}
           helperText="다음"
           onClick={handleAiNext}
-          disabled={nextDisabledAi || aiLoading}
-          loading={aiLoading}
+          disabled={nextDisabledAi || flow.aiLoading}
+          loading={flow.aiLoading}
           className={styles.fab}
         />
       )}
@@ -526,8 +569,8 @@ export default function EmotionNoteAddErrorPage({
           label="다음"
           icon={<ArrowRight size={22} />}
           helperText="다음"
-          onClick={() => setDirectStep("input")}
-          disabled={!errorLabel.trim()}
+          onClick={() => flowActions.setDirectStep("input")}
+          disabled={!local.errorLabel.trim()}
           className={styles.fab}
         />
       )}
@@ -538,8 +581,12 @@ export default function EmotionNoteAddErrorPage({
             icon={saveIcon}
             helperText="인지오류 저장"
             onClick={() => void handleSaveAi()}
-            disabled={!selectedSuggestion.trim() || isSaving || isSelectedSaved}
-            loading={isSaving}
+            disabled={
+              !local.selectedSuggestion.trim() ||
+              flow.isSaving ||
+              isSelectedSaved
+            }
+            loading={flow.isSaving}
             className={styles.fab}
           />
           <FloatingActionButton
@@ -557,8 +604,8 @@ export default function EmotionNoteAddErrorPage({
           icon={<ArrowDownToLine size={22} />}
           helperText="인지오류 저장"
           onClick={() => void handleSaveDirect()}
-          disabled={isSaving}
-          loading={isSaving}
+          disabled={flow.isSaving}
+          loading={flow.isSaving}
           className={styles.fab}
         />
       )}

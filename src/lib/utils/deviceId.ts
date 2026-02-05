@@ -1,3 +1,5 @@
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
+
 const DEVICE_ID_KEY = "device_id";
 
 const randomId = () =>
@@ -5,13 +7,13 @@ const randomId = () =>
 
 export const getDeviceId = () => {
   try {
-    const existing = localStorage.getItem(DEVICE_ID_KEY);
+    const existing = safeLocalStorage.getItem(DEVICE_ID_KEY);
     if (existing) return existing;
     const id =
       typeof crypto !== "undefined" && "randomUUID" in crypto
         ? crypto.randomUUID()
         : randomId();
-    localStorage.setItem(DEVICE_ID_KEY, id);
+    safeLocalStorage.setItem(DEVICE_ID_KEY, id);
     return id;
   } catch {
     return "unknown";

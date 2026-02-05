@@ -18,11 +18,12 @@ import {
   Check,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useReducer, useRef } from "react";
 import useEmotionNoteDetail from "../../hooks/useEmotionNoteDetail";
 import { AiCandidatesPanel } from "../common/AiCandidatesPanel";
 import { AiLoadingCard } from "../common/AiLoadingCard";
 import { SelectionCard } from "../common/SelectionCard";
+import { useAddFlow } from "../common/useAddFlow";
 import EmotionNoteAddModeSelector, {
   AddMode,
 } from "./EmotionNoteAddModeSelector";
@@ -31,12 +32,40 @@ import styles from "./EmotionNoteAddPage.module.css";
 import EmotionNoteAddPageLayout from "./EmotionNoteAddPageLayout";
 import EmotionNoteAddSelectionReveal from "./EmotionNoteAddSelectionReveal";
 
-type ThoughtAddStep = "select-emotion" | "suggestions";
-type ThoughtDirectStep = "select-emotion" | "input";
-
 type ThoughtCandidate = {
   belief: string;
   emotionReason: string;
+};
+
+type LocalState = {
+  selectedEmotion: string;
+  directThought: string;
+  aiCandidates: ThoughtCandidate[];
+  selectedCandidate: string;
+  savedCandidates: string[];
+};
+
+type LocalAction =
+  | { type: "PATCH"; patch: Partial<LocalState> }
+  | { type: "RESET" };
+
+const initialLocalState: LocalState = {
+  selectedEmotion: "",
+  directThought: "",
+  aiCandidates: [],
+  selectedCandidate: "",
+  savedCandidates: [],
+};
+
+const localReducer = (state: LocalState, action: LocalAction): LocalState => {
+  switch (action.type) {
+    case "PATCH":
+      return { ...state, ...action.patch };
+    case "RESET":
+      return initialLocalState;
+    default:
+      return state;
+  }
 };
 
 type EmotionNoteAddThoughtPageProps = {
@@ -60,23 +89,21 @@ export default function EmotionNoteAddThoughtPage({
     useEmotionNoteDetail(noteId);
   const aiLocked = accessMode !== "auth";
 
-  const [mode, setMode] = useState<AddMode | null>(forcedMode ?? null);
-  const [selectedEmotion, setSelectedEmotion] = useState("");
-  const [directThought, setDirectThought] = useState("");
-  const [aiStep, setAiStep] = useState<ThoughtAddStep>("select-emotion");
-  const [directStep, setDirectStep] =
-    useState<ThoughtDirectStep>("select-emotion");
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiCandidates, setAiCandidates] = useState<ThoughtCandidate[]>([]);
-  const [aiError, setAiError] = useState<string | null>(null);
-  const [aiFallback, setAiFallback] = useState(false);
-  const [selectedCandidate, setSelectedCandidate] = useState("");
-  const [savedCandidates, setSavedCandidates] = useState<string[]>([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [local, localDispatch] = useReducer(localReducer, initialLocalState);
+  const patchLocal = useCallback(
+    (patch: Partial<LocalState>) =>
+      localDispatch({ type: "PATCH", patch }),
+    [],
+  );
+  const { state: flow, actions: flowActions } = useAddFlow({
+    initialMode: forcedMode ?? null,
+    initialAiStep: "select-emotion",
+    initialDirectStep: "select-emotion",
+  });
   const lastErrorRef = useRef<string | null>(null);
   const selectedEmotionMeta = useMemo(
-    () => EMOTIONS.find((item) => item.label === selectedEmotion) ?? null,
-    [selectedEmotion],
+    () => EMOTIONS.find((item) => item.label === local.selectedEmotion) ?? null,
+    [local.selectedEmotion],
   );
 
   useEffect(() => {
@@ -87,34 +114,36 @@ export default function EmotionNoteAddThoughtPage({
   }, [error, pushToast]);
 
   const isSelectedSaved = useMemo(
-    () => savedCandidates.includes(selectedCandidate),
-    [savedCandidates, selectedCandidate],
+    () => local.savedCandidates.includes(local.selectedCandidate),
+    [local.savedCandidates, local.selectedCandidate],
   );
 
   const canSaveAi = useMemo(
     () =>
       Boolean(
-        selectedEmotion.trim() && selectedCandidate.trim() && !isSelectedSaved,
+        local.selectedEmotion.trim() &&
+          local.selectedCandidate.trim() &&
+          !isSelectedSaved,
       ),
-    [selectedCandidate, selectedEmotion, isSelectedSaved],
+    [local.selectedCandidate, local.selectedEmotion, isSelectedSaved],
   );
 
   const handleClose = () => {
-    if (mode === "ai") {
-      if (aiStep === "suggestions") {
-        setAiStep("select-emotion");
+    if (flow.mode === "ai") {
+      if (flow.aiStep === "suggestions") {
+        flowActions.setAiStep("select-emotion");
         return;
       }
     }
-    if (mode === "direct") {
-      if (directStep === "input") {
-        setDirectStep("select-emotion");
+    if (flow.mode === "direct") {
+      if (flow.directStep === "input") {
+        flowActions.setDirectStep("select-emotion");
         return;
       }
     }
-    if (mode && !forcedMode) {
+    if (flow.mode && !forcedMode) {
       resetFlow();
-      setMode(null);
+      flowActions.setMode(null);
       return;
     }
     if (forcedMode) {
@@ -124,29 +153,28 @@ export default function EmotionNoteAddThoughtPage({
     router.push(`/detail?id=${noteId}`);
   };
 
-  const resetFlow = () => {
-    setSelectedEmotion("");
-    setDirectThought("");
-    setAiCandidates([]);
-    setAiError(null);
-    setAiFallback(false);
-    setSelectedCandidate("");
-    setSavedCandidates([]);
-    setAiStep("select-emotion");
-    setDirectStep("select-emotion");
-  };
+  const resetFlow = useCallback(() => {
+    localDispatch({ type: "RESET" });
+    flowActions.setAiError(null);
+    flowActions.setAiFallback(false);
+    flowActions.reset({
+      mode: forcedMode ?? null,
+      aiStep: "select-emotion",
+      directStep: "select-emotion",
+    });
+  }, [flowActions, forcedMode]);
 
   const handleModeSelect = (next: AddMode) => {
     if (forcedMode) return;
     resetFlow();
-    setMode(next);
+    flowActions.setMode(next);
   };
 
   useEffect(() => {
     if (!forcedMode) return;
     resetFlow();
-    setMode(forcedMode);
-  }, [forcedMode]);
+    flowActions.setMode(forcedMode);
+  }, [flowActions, forcedMode, resetFlow]);
 
   const ensureAiReady = async () => {
     if (aiLocked) {
@@ -159,7 +187,7 @@ export default function EmotionNoteAddThoughtPage({
       pushToast("트리거 텍스트를 먼저 입력해주세요.", "error");
       return false;
     }
-    if (!selectedEmotion.trim()) {
+    if (!local.selectedEmotion.trim()) {
       pushToast("감정을 먼저 선택해주세요.", "error");
       return false;
     }
@@ -169,28 +197,26 @@ export default function EmotionNoteAddThoughtPage({
   const handleGenerateCandidates = async () => {
     const ready = await ensureAiReady();
     if (!ready) return;
-    setAiLoading(true);
-    setAiError(null);
-    setAiFallback(false);
-    setAiCandidates([]);
+    flowActions.startAi();
+    patchLocal({ aiCandidates: [] });
     try {
       const result = await generateExtendedAutomaticThoughts(
         triggerText,
-        selectedEmotion,
+        local.selectedEmotion,
         { noteProposal: true },
       );
-      setAiFallback(isAiFallback(result));
+      flowActions.setAiFallback(isAiFallback(result));
       const candidates = result.sdtThoughts.map((item) => ({
         belief: item.belief,
         emotionReason: item.emotionReason,
       }));
-      setAiCandidates(candidates);
-      setAiStep("suggestions");
+      patchLocal({ aiCandidates: candidates });
+      flowActions.setAiStep("suggestions");
     } catch (aiErr) {
       console.error(aiErr);
-      setAiError("AI 제안을 불러오지 못했습니다.");
+      flowActions.setAiError("AI 제안을 불러오지 못했습니다.");
     } finally {
-      setAiLoading(false);
+      flowActions.finishAi();
     }
   };
 
@@ -203,22 +229,24 @@ export default function EmotionNoteAddThoughtPage({
       pushToast("자동사고를 선택해주세요.", "error");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await thoughtSection.handleAddWithValues(
-      selectedCandidate.trim(),
-      selectedEmotion.trim(),
+      local.selectedCandidate.trim(),
+      local.selectedEmotion.trim(),
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
-      setSavedCandidates((prev) =>
-        prev.includes(selectedCandidate) ? prev : [...prev, selectedCandidate],
-      );
+      patchLocal({
+        savedCandidates: local.savedCandidates.includes(local.selectedCandidate)
+          ? local.savedCandidates
+          : [...local.savedCandidates, local.selectedCandidate],
+      });
       pushToast("자동사고를 저장했어요.", "success");
     }
   };
 
   const handleSaveDirect = async () => {
-    const validation = validateUserText(directThought, {
+    const validation = validateUserText(local.directThought, {
       minLength: 10,
       minLengthMessage: "자동사고를 10자 이상 입력해주세요.",
     });
@@ -226,26 +254,27 @@ export default function EmotionNoteAddThoughtPage({
       pushToast(validation.message, "error");
       return;
     }
-    if (!selectedEmotion.trim()) {
+    if (!local.selectedEmotion.trim()) {
       pushToast("감정을 선택해주세요.", "error");
       return;
     }
-    setIsSaving(true);
+    flowActions.setSaving(true);
     const ok = await thoughtSection.handleAddWithValues(
-      directThought.trim(),
-      selectedEmotion.trim(),
+      local.directThought.trim(),
+      local.selectedEmotion.trim(),
     );
-    setIsSaving(false);
+    flowActions.setSaving(false);
     if (ok) {
       pushToast("자동사고를 저장했어요.", "success");
       router.push(`/detail?id=${noteId}`);
     }
   };
 
-  const showAiNext = mode === "ai" && aiStep === "select-emotion";
-  const showDirectNext = mode === "direct" && directStep === "select-emotion";
-  const showAiSave = mode === "ai" && aiStep === "suggestions";
-  const showDirectSave = mode === "direct" && directStep === "input";
+  const showAiNext = flow.mode === "ai" && flow.aiStep === "select-emotion";
+  const showDirectNext =
+    flow.mode === "direct" && flow.directStep === "select-emotion";
+  const showAiSave = flow.mode === "ai" && flow.aiStep === "suggestions";
+  const showDirectSave = flow.mode === "direct" && flow.directStep === "input";
   const saveLabel = isSelectedSaved ? "저장됨" : "저장";
   const saveIcon = isSelectedSaved ? (
     <Check size={22} />
@@ -265,7 +294,7 @@ export default function EmotionNoteAddThoughtPage({
           <div className={styles.sectionStack}>
             <p className={styles.sectionTitle}>작성 방식</p>
             <EmotionNoteAddModeSelector
-              value={mode}
+              value={flow.mode}
               onSelect={handleModeSelect}
               aiLocked={aiLocked}
               onLockedClick={() => openAuthModal()}
@@ -273,9 +302,9 @@ export default function EmotionNoteAddThoughtPage({
           </div>
         ) : null}
 
-        {mode === "ai" && (
+        {flow.mode === "ai" && (
           <div className={styles.sectionStack}>
-            {aiLoading ? (
+            {flow.aiLoading ? (
               <div className={styles.stepCenter}>
                 <AiLoadingCard
                   title="자동사고 생성 중"
@@ -285,27 +314,29 @@ export default function EmotionNoteAddThoughtPage({
               </div>
             ) : (
               <>
-                {aiStep === "select-emotion" && (
+                {flow.aiStep === "select-emotion" && (
                   <div className={styles.selectionRow}>
                     <p className={styles.sectionTitle}>감정 선택</p>
                     <p className={styles.sectionHint}>
                       감정을 먼저 선택해야 AI 제안을 받을 수 있어요.
                     </p>
                     <EmotionOptionSelector
-                      value={selectedEmotion}
+                      value={local.selectedEmotion}
                       onSelect={(next) => {
-                        setSelectedEmotion(next);
-                        setSelectedCandidate("");
-                        setAiCandidates([]);
-                        setAiError(null);
-                        setSavedCandidates([]);
-                        setAiStep("select-emotion");
+                        patchLocal({
+                          selectedEmotion: next,
+                          selectedCandidate: "",
+                          aiCandidates: [],
+                          savedCandidates: [],
+                        });
+                        flowActions.setAiError(null);
+                        flowActions.setAiStep("select-emotion");
                       }}
                     />
                   </div>
                 )}
 
-                {aiStep === "select-emotion" && (
+                {flow.aiStep === "select-emotion" && (
                   <EmotionNoteAddSelectionReveal
                     isVisible={Boolean(selectedEmotionMeta)}
                   >
@@ -333,23 +364,26 @@ export default function EmotionNoteAddThoughtPage({
                   </EmotionNoteAddSelectionReveal>
                 )}
 
-                {aiError && <div className={styles.errorBox}>{aiError}</div>}
-                {aiFallback && aiStep === "suggestions" && (
+                {flow.aiError && (
+                  <div className={styles.errorBox}>{flow.aiError}</div>
+                )}
+                {flow.aiFallback && flow.aiStep === "suggestions" && (
                   <AiFallbackNotice onRetry={() => void handleGenerateCandidates()} />
                 )}
 
-                {aiStep === "suggestions" && (
+                {flow.aiStep === "suggestions" && (
                   <AiCandidatesPanel
                     title="AI 자동사고 후보"
                     description="원하는 제안을 선택한 뒤 저장하세요."
-                    countText={`${aiCandidates.length}개 추천`}
+                    countText={`${local.aiCandidates.length}개 추천`}
                     tone="amber"
                   >
                     <div className={styles.candidateList}>
-                      {aiCandidates.map((candidate, index) => {
+                      {local.aiCandidates.map((candidate, index) => {
                         const isSelected =
-                          selectedCandidate.trim() === candidate.belief.trim();
-                        const saved = savedCandidates.includes(
+                          local.selectedCandidate.trim() ===
+                          candidate.belief.trim();
+                        const saved = local.savedCandidates.includes(
                           candidate.belief,
                         );
                         return (
@@ -358,7 +392,9 @@ export default function EmotionNoteAddThoughtPage({
                             selected={isSelected}
                             saved={saved}
                             onSelect={() =>
-                              setSelectedCandidate(candidate.belief)
+                              patchLocal({
+                                selectedCandidate: candidate.belief,
+                              })
                             }
                             tone="amber"
                           >
@@ -379,18 +415,20 @@ export default function EmotionNoteAddThoughtPage({
           </div>
         )}
 
-        {mode === "direct" && (
+        {flow.mode === "direct" && (
           <div className={styles.sectionStack}>
-            {directStep === "select-emotion" && (
+            {flow.directStep === "select-emotion" && (
               <div className={styles.selectionRow}>
                 <p className={styles.sectionTitle}>감정 선택</p>
                 <p className={styles.sectionHint}>
                   선택한 감정은 자동사고와 함께 저장됩니다.
                 </p>
-                <EmotionOptionSelector
-                  value={selectedEmotion}
-                  onSelect={setSelectedEmotion}
-                />
+                    <EmotionOptionSelector
+                      value={local.selectedEmotion}
+                      onSelect={(value) =>
+                        patchLocal({ selectedEmotion: value })
+                      }
+                    />
                 <EmotionNoteAddSelectionReveal
                   isVisible={Boolean(selectedEmotionMeta)}
                 >
@@ -419,19 +457,19 @@ export default function EmotionNoteAddThoughtPage({
               </div>
             )}
 
-            {directStep === "input" && (
+            {flow.directStep === "input" && (
               <>
-                {selectedEmotion.trim() && (
+                {local.selectedEmotion.trim() && (
                   <div className={styles.inputMeta}>
                     <span className={styles.selectedChip}>
-                      선택된 감정: {selectedEmotion}
+                      선택된 감정: {local.selectedEmotion}
                     </span>
                   </div>
                 )}
                 <div className={styles.inputStack}>
                   <BlinkTextarea
-                    value={directThought}
-                    onChange={setDirectThought}
+                    value={local.directThought}
+                    onChange={(value) => patchLocal({ directThought: value })}
                     placeholder="어떤 생각이 숨어있을까요?"
                   />
                   <p className={styles.helperText}>
@@ -450,8 +488,8 @@ export default function EmotionNoteAddThoughtPage({
           icon={<ArrowRight size={22} />}
           helperText="다음"
           onClick={() => void handleGenerateCandidates()}
-          disabled={!selectedEmotion.trim() || aiLoading}
-          loading={aiLoading}
+          disabled={!local.selectedEmotion.trim() || flow.aiLoading}
+          loading={flow.aiLoading}
           className={styles.fab}
         />
       )}
@@ -460,8 +498,8 @@ export default function EmotionNoteAddThoughtPage({
           label="다음"
           icon={<ArrowRight size={22} />}
           helperText="다음"
-          onClick={() => setDirectStep("input")}
-          disabled={!selectedEmotion.trim()}
+          onClick={() => flowActions.setDirectStep("input")}
+          disabled={!local.selectedEmotion.trim()}
           className={styles.fab}
         />
       )}
@@ -472,8 +510,8 @@ export default function EmotionNoteAddThoughtPage({
             icon={saveIcon}
             helperText="자동사고 저장"
             onClick={() => void handleSaveAi()}
-            disabled={!canSaveAi || isSaving}
-            loading={isSaving}
+            disabled={!canSaveAi || flow.isSaving}
+            loading={flow.isSaving}
             className={styles.fab}
           />
           <FloatingActionButton
@@ -491,8 +529,8 @@ export default function EmotionNoteAddThoughtPage({
           icon={<ArrowDownToLine size={22} />}
           helperText="자동사고 저장"
           onClick={() => void handleSaveDirect()}
-          disabled={isSaving}
-          loading={isSaving}
+          disabled={flow.isSaving}
+          loading={flow.isSaving}
           className={styles.fab}
         />
       )}

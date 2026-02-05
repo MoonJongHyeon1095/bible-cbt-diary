@@ -1,6 +1,7 @@
 import { useState } from "react";
 import styles from "./DisclaimerBanner.module.css";
 import SafeButton from "@/components/ui/SafeButton";
+import { safeSessionStorage } from "@/lib/utils/safeStorage";
 
 type DisclaimerBannerProps = {
   detailsClassName: string;
@@ -23,14 +24,11 @@ export default function DisclaimerBanner({
   textClassName,
 }: DisclaimerBannerProps) {
   const [isDismissed, setIsDismissed] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return window.sessionStorage.getItem(DISMISS_KEY) === "true";
+    return safeSessionStorage.getItem(DISMISS_KEY) === "true";
   });
 
   const handleDismiss = () => {
-    if (typeof window !== "undefined") {
-      window.sessionStorage.setItem(DISMISS_KEY, "true");
-    }
+    safeSessionStorage.setItem(DISMISS_KEY, "true");
     setIsDismissed(true);
   };
 

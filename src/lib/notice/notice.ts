@@ -35,7 +35,7 @@ function isWithinWindow(n: NoticeItem) {
 
 export function getDismissedSet(): Set<string> {
   try {
-    const arr = JSON.parse(localStorage.getItem(DISMISSED_KEY) || "[]");
+    const arr = JSON.parse(safeLocalStorage.getItem(DISMISSED_KEY) || "[]");
     return new Set<string>(Array.isArray(arr) ? arr : []);
   } catch {
     return new Set();
@@ -45,7 +45,7 @@ export function getDismissedSet(): Set<string> {
 export function dismissNotice(id: string) {
   const s = getDismissedSet();
   s.add(id);
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...s]));
+  safeLocalStorage.setItem(DISMISSED_KEY, JSON.stringify([...s]));
 }
 
 function todayKey() {
@@ -58,10 +58,10 @@ function todayKey() {
 
 export function dismissNoticeToday(id: string) {
   try {
-    const raw = localStorage.getItem(DISMISSED_TODAY_KEY);
+    const raw = safeLocalStorage.getItem(DISMISSED_TODAY_KEY);
     const parsed = raw ? (JSON.parse(raw) as Record<string, string>) : {};
     parsed[id] = todayKey();
-    localStorage.setItem(DISMISSED_TODAY_KEY, JSON.stringify(parsed));
+    safeLocalStorage.setItem(DISMISSED_TODAY_KEY, JSON.stringify(parsed));
   } catch {
     // ignore
   }
@@ -69,7 +69,7 @@ export function dismissNoticeToday(id: string) {
 
 function isDismissedToday(id: string) {
   try {
-    const raw = localStorage.getItem(DISMISSED_TODAY_KEY);
+    const raw = safeLocalStorage.getItem(DISMISSED_TODAY_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw) as Record<string, string>;
     return parsed[id] === todayKey();
@@ -109,3 +109,4 @@ export function pickActiveNotice(payload: NoticePayload | null): NoticeItem | nu
   );
   return notDismissed || null;
 }
+import { safeLocalStorage } from "@/lib/utils/safeStorage";

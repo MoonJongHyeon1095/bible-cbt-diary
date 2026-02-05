@@ -1,4 +1,5 @@
 import { clearAutoThoughtCache } from "./minimalAutoThoughtCache";
+import { safeSessionStorage } from "@/lib/utils/safeStorage";
 
 const CBT_SESSION_KEYS = [
   "cbt_saved_error_keys",
@@ -11,7 +12,7 @@ const CBT_SESSION_KEYS = [
 export function clearCbtSessionStorage() {
   try {
     clearAutoThoughtCache();
-    CBT_SESSION_KEYS.forEach((key) => sessionStorage.removeItem(key));
+    CBT_SESSION_KEYS.forEach((key) => safeSessionStorage.removeItem(key));
   } catch {
     /* ignore */
   }

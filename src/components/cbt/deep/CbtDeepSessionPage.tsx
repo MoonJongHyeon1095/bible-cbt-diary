@@ -18,6 +18,7 @@ import {
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -31,6 +32,10 @@ import { useCbtDeepInternalContext } from "./hooks/useCbtDeepInternalContext";
 import { CbtDeepCognitiveErrorSection } from "./left/CbtDeepCognitiveErrorSection";
 import { CbtDeepAlternativeThoughtSection } from "./right/CbtDeepAlternativeThoughtSection";
 import { useGate } from "@/components/gate/GateProvider";
+import {
+  useCbtDeepSessionFlow,
+  type DeepStep,
+} from "@/components/cbt/hooks/useCbtDeepSessionFlow";
 
 const parseIds = (value: string | null) => {
   if (!value) return [] as number[];
@@ -39,14 +44,6 @@ const parseIds = (value: string | null) => {
     .map((item) => Number(item))
     .filter((item) => Number.isFinite(item));
 };
-
-type DeepStep =
-  | "select"
-  | "incident"
-  | "emotion"
-  | "thought"
-  | "errors"
-  | "alternative";
 
 const TOUR_STORAGE_PREFIX = "deep-session-onboarding";
 
@@ -95,16 +92,9 @@ function CbtDeepSessionPageContent() {
   const requestIdRef = useRef(0);
   const lastLoadKeyRef = useRef("");
   const inFlightRef = useRef(false);
-  const [step, setStep] = useState<DeepStep>(() =>
-    shouldSelectSubNotes ? "select" : "incident"
+  const { state: flow, actions } = useCbtDeepSessionFlow(
+    shouldSelectSubNotes ? "select" : "incident",
   );
-  const [userInput, setUserInput] = useState("");
-  const [selectedEmotion, setSelectedEmotion] = useState("");
-  const [autoThought, setAutoThought] = useState("");
-  const [selectedCognitiveErrors, setSelectedCognitiveErrors] = useState<
-    SelectedCognitiveError[]
-  >([]);
-  const [alternativeSeed, setAlternativeSeed] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
@@ -115,10 +105,10 @@ function CbtDeepSessionPageContent() {
   const stepOrder: DeepStep[] = shouldSelectSubNotes
     ? ["select", "incident", "emotion", "thought", "errors", "alternative"]
     : ["incident", "emotion", "thought", "errors", "alternative"];
-  const currentStepIndex = stepOrder.indexOf(step);
+  const currentStepIndex = stepOrder.indexOf(flow.step);
 
   const tourSteps = useMemo(() => {
-    if (step === "select") {
+    if (flow.step === "select") {
       return [
         {
           selector: "[data-tour='deep-select-main']",
@@ -134,7 +124,7 @@ function CbtDeepSessionPageContent() {
         },
       ];
     }
-    if (step === "incident") {
+    if (flow.step === "incident") {
       return [
         {
           selector: "[data-tour='deep-incident-input']",
@@ -142,7 +132,7 @@ function CbtDeepSessionPageContent() {
         },
       ];
     }
-    if (step === "emotion") {
+    if (flow.step === "emotion") {
       return [
         {
           selector: "[data-tour='emotion-grid']",
@@ -151,12 +141,12 @@ function CbtDeepSessionPageContent() {
       ];
     }
     return [];
-  }, [step]);
+  }, [flow.step]);
 
   useEffect(() => {
     setSelectedSubIds([]);
-    setStep(shouldSelectSubNotes ? "select" : "incident");
-  }, [groupIdParam, mainIdParam, shouldSelectSubNotes]);
+    actions.setStep(shouldSelectSubNotes ? "select" : "incident");
+  }, [actions, groupIdParam, mainIdParam, shouldSelectSubNotes]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -176,14 +166,14 @@ function CbtDeepSessionPageContent() {
   }, [blocker, isTourOpen]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (!safeLocalStorage.isAvailable()) return;
     if (isAccessLoading) return;
     if (accessStateMode !== "auth") return;
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-    const stored = window.localStorage.getItem(storageKey);
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+    const stored = safeLocalStorage.getItem(storageKey);
     const maxStepIndex = tourSteps.length - 1;
     let progress: TourProgress | null = null;
     if (stored) {
@@ -213,7 +203,7 @@ function CbtDeepSessionPageContent() {
     accessStateMode,
     isTourOpen,
     canShowOnboarding,
-    step,
+    flow.step,
     tourSteps.length,
   ]);
 
@@ -350,14 +340,14 @@ function CbtDeepSessionPageContent() {
   }, [internalContextLoadError, pushToast]);
 
   const handleBack = () => {
-    if (step === "select") {
+    if (flow.step === "select") {
       if (groupId && mainNote) {
         router.push(`/graph?groupId=${groupId}&noteId=${mainNote.id}`);
       }
       return;
     }
     if (currentStepIndex <= 0) return;
-    setStep(stepOrder[currentStepIndex - 1]);
+    actions.setStep(stepOrder[currentStepIndex - 1]);
   };
 
   const handleGoHome = () => {
@@ -374,12 +364,11 @@ function CbtDeepSessionPageContent() {
         detail: item.detail,
       })),
     );
+    const seedBump = nextKey !== lastErrorsKeyRef.current;
     if (nextKey !== lastErrorsKeyRef.current) {
-      setAlternativeSeed((prev) => prev + 1);
       lastErrorsKeyRef.current = nextKey;
     }
-    setSelectedCognitiveErrors(errors);
-    setStep("alternative");
+    actions.setErrors(errors, seedBump);
   };
 
   const handleComplete = async (thought: string) => {
@@ -391,11 +380,11 @@ function CbtDeepSessionPageContent() {
 
     try {
       const result = await saveDeepSessionAPI(access, {
-        title: formatAutoTitle(new Date(), selectedEmotion),
-        trigger_text: userInput,
-        emotion: selectedEmotion,
-        automatic_thought: autoThought,
-        selected_cognitive_error: selectedCognitiveErrors[0] ?? null,
+        title: formatAutoTitle(new Date(), flow.selectedEmotion),
+        trigger_text: flow.userInput,
+        emotion: flow.selectedEmotion,
+        automatic_thought: flow.autoThought,
+        selected_cognitive_error: flow.selectedCognitiveErrors[0] ?? null,
         selected_alternative_thought: thought,
         main_id: mainNote.id,
         sub_ids: subNotes.map((note) => note.id),
@@ -438,9 +427,9 @@ function CbtDeepSessionPageContent() {
   };
 
   const persistTourProgress = (stepIndex: number) => {
-    if (typeof window === "undefined") return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${step}`;
-    window.localStorage.setItem(
+    if (!safeLocalStorage.isAvailable()) return;
+    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+    safeLocalStorage.setItem(
       storageKey,
       JSON.stringify({
         lastStep: stepIndex,
@@ -475,7 +464,7 @@ function CbtDeepSessionPageContent() {
       .filter((note) => selectedSubIds.includes(note.id))
       .sort((a, b) => b.id - a.id);
     setSubNotes(selectedNotes);
-    setStep("incident");
+    actions.setStep("incident");
   };
 
   if (notesLoading) {
@@ -503,7 +492,7 @@ function CbtDeepSessionPageContent() {
       <div className={styles.bgWaves} />
       <div className={styles.content}>
         <CbtMinimalSavingModal open={isSaving} />
-        {(currentStepIndex > 0 || step === "select") && (
+        {(currentStepIndex > 0 || flow.step === "select") && (
           <div className={`${styles.floatingNav} ${styles.left}`}>
             <CbtMinimalFloatingBackButton onClick={handleBack} />
           </div>
@@ -512,17 +501,17 @@ function CbtDeepSessionPageContent() {
           <CbtMinimalFloatingHomeButton onClick={handleGoHome} />
         </div>
 
-        {step === "incident" && (
+        {flow.step === "incident" && (
           <CbtDeepIncidentSection
-            userInput={userInput}
-            onInputChange={setUserInput}
-            onNext={() => setStep("emotion")}
+            userInput={flow.userInput}
+            onInputChange={actions.setUserInput}
+            onNext={() => actions.setStep("emotion")}
             mainNote={mainNote}
             subNotes={subNotes}
           />
         )}
 
-        {step === "select" && mainNote && (
+        {flow.step === "select" && mainNote && (
           <CbtDeepSelectSection
             mainNote={mainNote}
             selectableNotes={selectableNotes}
@@ -534,46 +523,45 @@ function CbtDeepSessionPageContent() {
           />
         )}
 
-        {step === "emotion" && (
+        {flow.step === "emotion" && (
           <CbtMinimalEmotionSection
-            selectedEmotion={selectedEmotion}
-            onSelectEmotion={setSelectedEmotion}
-            onNext={() => setStep("thought")}
+            selectedEmotion={flow.selectedEmotion}
+            onSelectEmotion={actions.setSelectedEmotion}
+            onNext={() => actions.setStep("thought")}
           />
         )}
 
-        {step === "thought" && (
+        {flow.step === "thought" && (
           <CbtDeepAutoThoughtSection
-            userInput={userInput}
-            emotion={selectedEmotion}
+            userInput={flow.userInput}
+            emotion={flow.selectedEmotion}
             mainNote={mainNote}
             subNotes={subNotes}
             internalContext={internalContext}
             onComplete={(nextThought) => {
-              setAutoThought(nextThought);
-              setStep("errors");
+              actions.setAutoThought(nextThought);
             }}
           />
         )}
 
-        {step === "errors" && (
+        {flow.step === "errors" && (
           <CbtDeepCognitiveErrorSection
-            userInput={userInput}
-            thought={autoThought}
+            userInput={flow.userInput}
+            thought={flow.autoThought}
             internalContext={internalContext}
             onSelect={handleSelectErrors}
           />
         )}
 
-        {step === "alternative" && (
+        {flow.step === "alternative" && (
           <CbtDeepAlternativeThoughtSection
-            userInput={userInput}
-            emotion={selectedEmotion}
-            autoThought={autoThought}
+            userInput={flow.userInput}
+            emotion={flow.selectedEmotion}
+            autoThought={flow.autoThought}
             internalContext={internalContext}
-            selectedCognitiveErrors={selectedCognitiveErrors}
+            selectedCognitiveErrors={flow.selectedCognitiveErrors}
             previousAlternatives={previousAlternatives}
-            seed={alternativeSeed}
+            seed={flow.alternativeSeed}
             onSelect={handleComplete}
           />
         )}

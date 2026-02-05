@@ -10,6 +10,7 @@ import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { getDeviceId } from "@/lib/utils/deviceId";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { getKstDayRange, getKstMonthRange } from "@/lib/utils/time";
 
 type GuestStore = {
@@ -40,15 +41,7 @@ const createEmptyStore = (): GuestStore => ({
 });
 
 const canUseLocalStorage = () => {
-  if (typeof window === "undefined") return false;
-  try {
-    const testKey = "__guest_test__";
-    window.localStorage.setItem(testKey, "1");
-    window.localStorage.removeItem(testKey);
-    return true;
-  } catch {
-    return false;
-  }
+  return safeLocalStorage.isAvailable();
 };
 
 export const isGuestStorageAvailable = () => {
@@ -73,7 +66,7 @@ const readStore = (): GuestStore => {
   if (!key) {
     return createEmptyStore();
   }
-  const raw = window.localStorage.getItem(key);
+  const raw = safeLocalStorage.getItem(key);
   if (!raw) {
     return createEmptyStore();
   }
@@ -91,7 +84,7 @@ const readStore = (): GuestStore => {
 const writeStore = (store: GuestStore) => {
   const key = getStorageKey();
   if (!key || !canUseLocalStorage()) return;
-  window.localStorage.setItem(key, JSON.stringify(store));
+  safeLocalStorage.setItem(key, JSON.stringify(store));
 };
 
 const updateStore = <T>(updater: (store: GuestStore) => [GuestStore, T]) => {
@@ -618,7 +611,7 @@ export const hasGuestData = () => {
 export const clearGuestData = () => {
   const key = getStorageKey();
   if (!key || !canUseLocalStorage()) return;
-  window.localStorage.removeItem(key);
+  safeLocalStorage.removeItem(key);
 };
 
 export const uploadGuestData = async (

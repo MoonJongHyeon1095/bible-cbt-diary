@@ -1,4 +1,5 @@
 import { syncTokenUsage } from "@/lib/utils/tokenUsage";
+import { safeSessionStorage } from "@/lib/utils/safeStorage";
 
 export const TOKEN_SESSION_KEY = "gpt_usage_total";
 
@@ -12,7 +13,7 @@ export type TokenUsage = {
 
 export const readTokenSessionUsage = (): TokenUsage | null => {
   try {
-    const raw = sessionStorage.getItem(TOKEN_SESSION_KEY);
+    const raw = safeSessionStorage.getItem(TOKEN_SESSION_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     return {
@@ -29,7 +30,7 @@ export const readTokenSessionUsage = (): TokenUsage | null => {
 
 export const writeTokenSessionUsage = (usage: TokenUsage) => {
   try {
-    sessionStorage.setItem(TOKEN_SESSION_KEY, JSON.stringify(usage));
+    safeSessionStorage.setItem(TOKEN_SESSION_KEY, JSON.stringify(usage));
   } catch {
     // ignore
   }
@@ -37,7 +38,7 @@ export const writeTokenSessionUsage = (usage: TokenUsage) => {
 
 export const clearTokenSessionStorage = () => {
   try {
-    sessionStorage.removeItem(TOKEN_SESSION_KEY);
+    safeSessionStorage.removeItem(TOKEN_SESSION_KEY);
   } catch {
     // ignore
   }

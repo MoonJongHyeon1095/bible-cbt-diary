@@ -10,6 +10,7 @@ import {
   TERMS_STORAGE_KEY,
   TERMS_VERSION,
 } from "@/lib/constants/legal";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -40,8 +41,7 @@ export default function LegalTermsConsentPage() {
   };
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(TERMS_STORAGE_KEY);
+    const raw = safeLocalStorage.getItem(TERMS_STORAGE_KEY);
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as StoredAgreement;
@@ -83,7 +83,7 @@ export default function LegalTermsConsentPage() {
       aiTransfer: agreeAi,
       marketing: agreeMarketing,
     };
-    window.localStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(payload));
+    safeLocalStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(payload));
     const secure = window.location.protocol === "https:" ? "; secure" : "";
     document.cookie = `${TERMS_COOKIE_KEY}=v${TERMS_VERSION}; path=/; max-age=31536000; samesite=lax${secure}`;
     router.replace("/today");

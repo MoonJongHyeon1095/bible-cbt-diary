@@ -6,55 +6,63 @@ import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { BookSearch, LayoutDashboard, Route } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
-import EmotionNoteGraphCanvas from "./EmotionNoteGraphCanvas";
-import EmotionNoteGraphDetailStack from "./EmotionNoteGraphDetailStack";
-import styles from "./EmotionNoteGraphSection.module.css";
-import { useEmotionNoteGraphData } from "./hooks/useEmotionNoteGraphData";
-import { useEmotionNoteGraphDisplay } from "./hooks/useEmotionNoteGraphDisplay";
-import { useEmotionNoteGraphLayout } from "./hooks/useEmotionNoteGraphLayout";
-import { useEmotionNoteGraphSelection } from "./hooks/useEmotionNoteGraphSelection";
-import { getFlowThemeColor } from "./utils/graphColors";
+import EmotionNoteFlowCanvas from "./EmotionNoteFlowCanvas";
+import EmotionNoteFlowDetailStack from "./EmotionNoteFlowDetailStack";
+import styles from "./EmotionNoteFlowSection.module.css";
+import { useEmotionNoteFlowData } from "./hooks/useEmotionNoteFlowData";
+import { useEmotionNoteFlowDisplay } from "./hooks/useEmotionNoteFlowDisplay";
+import { useEmotionNoteFlowLayout } from "./hooks/useEmotionNoteFlowLayout";
+import { useEmotionNoteFlowSelection } from "./hooks/useEmotionNoteFlowSelection";
+import { getFlowThemeColor } from "./utils/flowColors";
 
-type EmotionNoteGraphSectionProps = {
+// Props for the flow detail section.
+type EmotionNoteFlowSectionProps = {
   accessToken: string;
   noteId: number | null;
   flowId: number | null;
 };
 
-export default function EmotionNoteGraphSection({
+export default function EmotionNoteFlowSection({
   accessToken,
   noteId,
   flowId,
-}: EmotionNoteGraphSectionProps) {
+}: EmotionNoteFlowSectionProps) {
   const router = useRouter();
+  // Usage guard for deep-session entry.
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
-  const { notes, middles, isLoading } = useEmotionNoteGraphData({
+  // Load notes/middles either by flow or single note.
+  const { notes, middles, isLoading } = useEmotionNoteFlowData({
     accessToken,
     flowId,
     noteId,
   });
+  // Theme color derived from flow id (if present).
   const themeColor = useMemo(
     () => (flowId ? getFlowThemeColor(flowId).rgb : undefined),
     [flowId],
   );
-  const { elkNodes, elkEdges } = useEmotionNoteGraphLayout(
+  // Layout: compute positioned nodes/edges + axis data.
+  const { elkNodes, elkEdges, axisLabels, axisY } = useEmotionNoteFlowLayout(
     notes,
     middles,
     themeColor,
   );
+  // Selection state for active node.
   const {
     selectedNodeId,
     selectedNote,
     clearSelection,
     selectNode,
     toggleSelection,
-  } = useEmotionNoteGraphSelection(notes);
-  const { displayNodes, displayEdges } = useEmotionNoteGraphDisplay(
+  } = useEmotionNoteFlowSelection(notes);
+  // Derive display nodes/edges with selection styling.
+  const { displayNodes, displayEdges } = useEmotionNoteFlowDisplay(
     elkNodes,
     elkEdges,
     selectedNodeId,
   );
   const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
+  // Navigate into deep session with usage guard and optional flow context.
   const handleGoDeeper = async () => {
     if (!selectedNote) return;
     setIsGoDeeperLoading(true);
@@ -71,6 +79,7 @@ export default function EmotionNoteGraphSection({
       : `/session/deep?mainId=${selectedNote.id}`;
     router.push(query);
   };
+  // Stable key forces ReactFlow to re-mount when layout changes.
   const layoutKey = useMemo(() => {
     const nodeKey = elkNodes.map((node) => node.id).join("|");
     const edgeKey = elkEdges.map((edge) => edge.id).join("|");
@@ -81,10 +90,12 @@ export default function EmotionNoteGraphSection({
   const needsNote = !isLoading && !noteId && !flowId;
   const noteCount = notes.length;
 
+  // Toggle selection on node click.
   const handleNodeClick = (nodeId: string) => {
     toggleSelection(nodeId);
   };
 
+  // Auto-select node when a specific noteId is provided.
   useEffect(() => {
     if (!noteId) return;
     const nodeId = String(noteId);
@@ -97,9 +108,10 @@ export default function EmotionNoteGraphSection({
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
-          <p className={styles.label}>감정 노트 플로우</p>
+          {/* Header shows note count in the current flow. */}
           <h2 className={styles.title}>{noteCount}개의 감정 기록이 있습니다</h2>
         </div>
+        {/* Back to flow overview. */}
         <SafeButton
           type="button"
           variant="ghost"
@@ -110,10 +122,13 @@ export default function EmotionNoteGraphSection({
         </SafeButton>
       </div>
 
-      <EmotionNoteGraphCanvas
-        graphKey={layoutKey}
+      {/* ReactFlow canvas + overlays. */}
+      <EmotionNoteFlowCanvas
+        flowKey={layoutKey}
         displayNodes={displayNodes}
         displayEdges={displayEdges}
+        axisLabels={axisLabels}
+        axisY={axisY}
         isLoading={isLoading}
         needsNote={needsNote}
         emptyState={emptyState}
@@ -123,12 +138,14 @@ export default function EmotionNoteGraphSection({
       >
         {selectedNote ? (
           <>
+            {/* Quick access to detail view. */}
             <FloatingActionButton
               label="상세조회"
               helperText="상세조회"
               icon={<BookSearch size={20} />}
               onClick={() => router.push(`/detail?id=${selectedNote.id}`)}
             />
+            {/* Enter deep session. */}
             <FloatingActionButton
               label="Go Deeper"
               helperText="Go Deeper"
@@ -141,10 +158,10 @@ export default function EmotionNoteGraphSection({
         ) : null}
         {selectedNote ? (
           <div className={styles.detailStackWrap}>
-            <EmotionNoteGraphDetailStack selectedNote={selectedNote} />
+            <EmotionNoteFlowDetailStack selectedNote={selectedNote} />
           </div>
         ) : null}
-      </EmotionNoteGraphCanvas>
+      </EmotionNoteFlowCanvas>
     </section>
   );
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import AppHeader from "@/components/header/AppHeader";
-import EmotionNoteGraphGroupList from "@/components/graph/EmotionNoteGraphGroupList";
-import EmotionNoteGraphSection from "@/components/graph/EmotionNoteGraphSection";
+import EmotionNoteFlowGroupList from "@/components/flow/EmotionNoteFlowGroupList";
+import EmotionNoteFlowSection from "@/components/flow/EmotionNoteFlowSection";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
@@ -13,7 +13,7 @@ type SessionUser = {
   email: string | null;
 };
 
-function EmotionNoteGraphPageContent() {
+function EmotionNoteFlowPageContent() {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -66,13 +66,13 @@ function EmotionNoteGraphPageContent() {
         <div className={styles.shell}>
           {user && accessToken ? (
             flowId || noteId ? (
-              <EmotionNoteGraphSection
+              <EmotionNoteFlowSection
                 accessToken={accessToken}
                 noteId={noteId}
                 flowId={flowId}
               />
             ) : (
-              <EmotionNoteGraphGroupList accessToken={accessToken} />
+              <EmotionNoteFlowGroupList accessToken={accessToken} />
             )
           ) : (
             <div className={styles.emptyAuth}>
@@ -85,7 +85,7 @@ function EmotionNoteGraphPageContent() {
   );
 }
 
-export default function EmotionNoteGraphPage() {
+export default function EmotionNoteFlowPage() {
   return (
     <Suspense
       fallback={
@@ -99,7 +99,7 @@ export default function EmotionNoteGraphPage() {
         </div>
       }
     >
-      <EmotionNoteGraphPageContent />
+      <EmotionNoteFlowPageContent />
     </Suspense>
   );
 }

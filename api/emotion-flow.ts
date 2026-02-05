@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleCors, getQueryParam, methodNotAllowed } from "./_utils.js";
-import { handleGetEmotionNoteGraph } from "../src/lib/vercel/graph/getEmotionNoteGraph.js";
-import { handleGetEmotionFlows } from "../src/lib/vercel/graph/getEmotionNoteGraphGroups.js";
+import { handleGetEmotionNoteFlow } from "../src/lib/vercel/flow/getEmotionNoteFlow.js";
+import { handleGetEmotionFlows } from "../src/lib/vercel/flow/getEmotionNoteFlowGroups.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCors(req, res)) return;
@@ -15,5 +15,5 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return handleGetEmotionFlows(req, res);
   }
 
-  return handleGetEmotionNoteGraph(req, res);
+  return handleGetEmotionNoteFlow(req, res);
 }

@@ -2,11 +2,11 @@
 
 import { useMemo } from "react";
 import type { Edge, Node } from "reactflow";
-import type { EmotionNoteGraphNodeData } from "../nodes/EmotionNoteGraphNode";
+import type { EmotionNoteFlowNodeData } from "../nodes/EmotionNoteFlowNode";
 
-type TimelineNode = Node<EmotionNoteGraphNodeData & { note: { id: number } }>;
+type TimelineNode = Node<EmotionNoteFlowNodeData & { note: { id: number } }>;
 
-export const useEmotionNoteGraphDisplay = (
+export const useEmotionNoteFlowDisplay = (
   timelineNodes: TimelineNode[],
   timelineEdges: Edge[],
   selectedNodeId: string | null,

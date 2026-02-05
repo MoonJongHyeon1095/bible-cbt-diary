@@ -6,14 +6,14 @@ import ELK from "elkjs/lib/elk.bundled.js";
 import { useEffect, useState } from "react";
 import type { Edge, Node } from "reactflow";
 import { MarkerType } from "reactflow";
-import styles from "../EmotionNoteGraphSection.module.css";
+import styles from "../EmotionNoteFlowSection.module.css";
 
 const BASE_NODE_SIZE = 130;
 const NODE_SIZE_STEP = 14;
 const NODE_SIZE_MAX_EXTRA = 120;
 const SPREAD_STEP = 140;
 const SLOPE_STEP = 90;
-const GRAPH_PADDING = 12;
+const FLOW_PADDING = 12;
 const EDGE_OFFSET_STEP = 32;
 const EDGE_WIDTH = 2.2;
 const INDIGO: [number, number, number] = [79, 70, 229];
@@ -51,6 +51,15 @@ const mixColor = (
   return `rgb(${r}, ${g}, ${b})`;
 };
 
+const formatFlowDate = (value: string) => {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const yy = String(date.getFullYear()).slice(-2);
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const dd = String(date.getDate()).padStart(2, "0");
+  return `${yy}.${mm}.${dd}`;
+};
+
 const toRgba = (rgb: string, alpha: number) =>
   rgb.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 
@@ -81,13 +90,17 @@ type PositionedElkNode = ElkNode & { x: number; y: number };
 const isPositionedElkNode = (node: ElkNode): node is PositionedElkNode =>
   typeof node.x === "number" && typeof node.y === "number";
 
-export const useEmotionNoteGraphLayout = (
+export const useEmotionNoteFlowLayout = (
   notes: EmotionNote[],
   middles: EmotionNoteMiddle[],
   themeColor?: [number, number, number],
 ) => {
   const [elkNodes, setElkNodes] = useState<Node[]>([]);
   const [elkEdges, setElkEdges] = useState<Edge[]>([]);
+  const [axisLabels, setAxisLabels] = useState<
+    { id: string; x: number; label: string }[]
+  >([]);
+  const [axisY, setAxisY] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -95,6 +108,8 @@ export const useEmotionNoteGraphLayout = (
       if (notes.length === 0) {
         setElkNodes([]);
         setElkEdges([]);
+        setAxisLabels([]);
+        setAxisY(null);
         return;
       }
       const outDegreeMap = buildOutDegreeMap(middles);
@@ -121,7 +136,7 @@ export const useEmotionNoteGraphLayout = (
           targets: [String(middle.to_note_id)],
         }));
       const elk = new ELK();
-      const graph = {
+      const flowLayoutSpec = {
         id: "root",
         layoutOptions: {
           "elk.algorithm": "mrtree",
@@ -133,7 +148,7 @@ export const useEmotionNoteGraphLayout = (
         children: elkNodesInput,
         edges: elkEdgesInput,
       };
-      const result = await elk.layout(graph);
+      const result = await elk.layout(flowLayoutSpec);
       if (cancelled) {
         return;
       }
@@ -152,7 +167,7 @@ export const useEmotionNoteGraphLayout = (
       });
       const offsetX = Number.isFinite(minX) ? minX : 0;
       const offsetY = Number.isFinite(minY) ? minY : 0;
-      const padding = GRAPH_PADDING;
+      const padding = FLOW_PADDING;
       const activeTheme = themeColor ?? INDIGO;
       const edgeColor = `rgb(${activeTheme[0]}, ${activeTheme[1]}, ${activeTheme[2]})`;
       const nextNodes =
@@ -175,21 +190,25 @@ export const useEmotionNoteGraphLayout = (
             const titleText = note.title?.trim() || "감정 노트";
             const triggerText = note.trigger_text?.trim() || "트리거가 없습니다.";
             const labelText = note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
+            const dateText = formatFlowDate(note.created_at);
             const label = (
               <div className={styles.nodeLabel}>
                 <span className={styles.nodeTitle}>{labelText}</span>
-                <span className={styles.nodeMeta}>#{note.id}</span>
+                <span className={styles.nodeMeta}>
+                  #{note.id} {dateText ? `· ${dateText}` : ""}
+                </span>
               </div>
             );
             const spreadY = spreadOffsets.get(child.id) ?? 0;
             const timeOffset = (timeIndex.get(child.id) ?? 0) * SLOPE_STEP;
+            const position = {
+              x: child.x - offsetX + padding,
+              y: child.y - offsetY + padding + spreadY + timeOffset,
+            };
             return {
               id: String(note.id),
               type: "emotion",
-              position: {
-                x: child.x - offsetX + padding,
-                y: child.y - offsetY + padding + spreadY + timeOffset,
-              },
+              position,
               data: { note, label, size, chips: [], titleText, triggerText },
               className: styles.node,
               style: {
@@ -204,6 +223,32 @@ export const useEmotionNoteGraphLayout = (
             } as Node;
           })
           .filter((node): node is Node => node !== null) ?? [];
+
+      const nextAxisLabels = nextNodes
+        .map((node) => {
+          const note = notesById.get(node.id);
+          if (!note) return null;
+          const dateText = formatFlowDate(note.created_at);
+          if (!dateText) return null;
+          const width = Number(node.style?.width ?? 0) || 0;
+          return {
+            id: node.id,
+            x: node.position.x + width / 2,
+            label: dateText,
+          };
+        })
+        .filter(
+          (item): item is { id: string; x: number; label: string } =>
+            item !== null,
+        );
+      const maxY = nextNodes.reduce((acc, node) => {
+        const height = Number(node.style?.height ?? 0) || 0;
+        return Math.max(acc, node.position.y + height);
+      }, 0);
+      const nextAxisY =
+        Number.isFinite(maxY) && Number.isFinite(minY) && nextNodes.length > 0
+          ? Math.max(minY + 24, maxY - 12)
+          : null;
 
       const filteredMiddles = middles.filter(
         (middle) =>
@@ -241,6 +286,8 @@ export const useEmotionNoteGraphLayout = (
 
       setElkNodes(nextNodes);
       setElkEdges(nextEdges);
+      setAxisLabels(nextAxisLabels);
+      setAxisY(nextAxisY);
     };
     layout();
     return () => {
@@ -248,5 +295,5 @@ export const useEmotionNoteGraphLayout = (
     };
   }, [middles, notes, themeColor]);
 
-  return { elkNodes, elkEdges };
+  return { elkNodes, elkEdges, axisLabels, axisY };
 };

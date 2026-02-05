@@ -3,29 +3,29 @@
 import { useMemo } from "react";
 import {
   fetchEmotionNoteById,
-  fetchEmotionNoteGraph,
-} from "@/lib/api/graph/getEmotionNoteGraph";
+  fetchEmotionNoteFlow,
+} from "@/lib/api/flow/getEmotionNoteFlow";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 
-type UseEmotionNoteGraphDataParams = {
+type UseEmotionNoteFlowDataParams = {
   accessToken: string;
   flowId: number | null;
   noteId: number | null;
 };
 
-export const useEmotionNoteGraphData = ({
+export const useEmotionNoteFlowData = ({
   accessToken,
   flowId,
   noteId,
-}: UseEmotionNoteGraphDataParams) => {
+}: UseEmotionNoteFlowDataParams) => {
   const flowQuery = useQuery({
-    queryKey: queryKeys.graph.flow(accessToken, flowId ?? 0, true),
+    queryKey: queryKeys.flow.flow(accessToken, flowId ?? 0, true),
     queryFn: async () => {
       if (!flowId) {
         return { notes: [], middles: [] };
       }
-      const { response, data } = await fetchEmotionNoteGraph(
+      const { response, data } = await fetchEmotionNoteFlow(
         accessToken,
         flowId,
       );
@@ -38,7 +38,7 @@ export const useEmotionNoteGraphData = ({
   });
 
   const noteQuery = useQuery({
-    queryKey: queryKeys.graph.note(accessToken, noteId ?? 0),
+    queryKey: queryKeys.flow.note(accessToken, noteId ?? 0),
     queryFn: async () => {
       if (!noteId) {
         return { notes: [], middles: [] };
@@ -48,7 +48,7 @@ export const useEmotionNoteGraphData = ({
         noteId,
       );
       if (!response.ok || !data.note) {
-        throw new Error("emotion_note_graph_note fetch failed");
+        throw new Error("emotion_note_flow_note fetch failed");
       }
       return { notes: [data.note], middles: [] };
     },

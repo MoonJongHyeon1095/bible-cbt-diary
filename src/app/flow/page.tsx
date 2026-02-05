@@ -1,5 +1,5 @@
-import EmotionNoteGraphPage from "@/components/graph/EmotionNoteGraphPage";
+import EmotionNoteFlowPage from "@/components/flow/EmotionNoteFlowPage";
 
 export default function EmotionFlowRoutePage() {
-  return <EmotionNoteGraphPage />;
+  return <EmotionNoteFlowPage />;
 }

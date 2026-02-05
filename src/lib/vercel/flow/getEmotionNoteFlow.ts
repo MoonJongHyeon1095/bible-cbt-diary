@@ -3,7 +3,7 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { json, getQueryParam } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 
-export const handleGetEmotionNoteGraph = async (
+export const handleGetEmotionNoteFlow = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {

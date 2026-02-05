@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
-import styles from "../EmotionNoteGraphSection.module.css";
+import styles from "../EmotionNoteFlowSection.module.css";
 
 export type EmotionNoteDetailSection =
   | "emotion"
@@ -17,7 +17,7 @@ export type EmotionNoteChip = {
   section: EmotionNoteDetailSection;
 };
 
-export type EmotionNoteGraphNodeData = {
+export type EmotionNoteFlowNodeData = {
   label: ReactNode;
   size: number;
   chips: EmotionNoteChip[];
@@ -25,23 +25,23 @@ export type EmotionNoteGraphNodeData = {
   triggerText: string;
 };
 
-export default function EmotionNoteGraphNode({
+export default function EmotionNoteFlowNode({
   data,
   selected,
-}: NodeProps<EmotionNoteGraphNodeData>) {
+}: NodeProps<EmotionNoteFlowNodeData>) {
   return (
     <div className={styles.nodeContent}>
       <Handle
         type="target"
         position={Position.Left}
         id="left"
-        className={styles.graphHandle}
+        className={styles.flowHandle}
       />
       <Handle
         type="source"
         position={Position.Right}
         id="right"
-        className={styles.graphHandle}
+        className={styles.flowHandle}
       />
       {data.label}
       {selected ? (

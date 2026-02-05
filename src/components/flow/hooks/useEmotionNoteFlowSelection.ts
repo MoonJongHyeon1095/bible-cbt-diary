@@ -3,7 +3,7 @@
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export const useEmotionNoteGraphSelection = (notes: EmotionNote[]) => {
+export const useEmotionNoteFlowSelection = (notes: EmotionNote[]) => {
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
 
   useEffect(() => {

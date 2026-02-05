@@ -1,11 +1,11 @@
 "use client";
 
+import { useAuthModal } from "@/components/header/AuthModalProvider";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { CalendarDays, Home, Sun, Waypoints } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
-import { useAuthModal } from "@/components/header/AuthModalProvider";
-import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import styles from "./AppTabs.module.css";
 
 export default function AppTabs() {
@@ -16,7 +16,7 @@ export default function AppTabs() {
     { href: "/", label: "홈", icon: Home },
     { href: "/today", label: "오늘", icon: Sun },
     { href: "/month", label: "월별", icon: CalendarDays },
-    { href: "/flow", label: "플로우", icon: Waypoints },
+    { href: "/flow", label: "Flow", icon: Waypoints },
   ];
   const handleTabClick = (href: string) => (event: MouseEvent) => {
     if (href !== "/flow") return;

@@ -9,14 +9,14 @@ import {
 import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import styles from "./EmotionNoteGraphGroupList.module.css";
-import { fetchEmotionFlows } from "@/lib/api/graph/getEmotionNoteGraph";
-import { getFlowThemeColor } from "./utils/graphColors";
+import styles from "./EmotionNoteFlowGroupList.module.css";
+import { fetchEmotionFlows } from "@/lib/api/flow/getEmotionNoteFlow";
+import { getFlowThemeColor } from "./utils/flowColors";
 import SafeButton from "@/components/ui/SafeButton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 
-type EmotionNoteGraphGroupListProps = {
+type EmotionNoteFlowGroupListProps = {
   accessToken: string;
 };
 
@@ -45,9 +45,9 @@ const buildNodes = (flows: { id: number; note_count: number }[]) =>
     };
   });
 
-export default function EmotionNoteGraphGroupList({
+export default function EmotionNoteFlowGroupList({
   accessToken,
-}: EmotionNoteGraphGroupListProps) {
+}: EmotionNoteFlowGroupListProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const nodesRef = useRef<GroupNode[]>([]);
@@ -74,7 +74,7 @@ export default function EmotionNoteGraphGroupList({
   }, []);
 
   const flowsQuery = useQuery({
-    queryKey: queryKeys.graph.flows(accessToken),
+    queryKey: queryKeys.flow.flows(accessToken),
     queryFn: async () => {
       const { response, data } = await fetchEmotionFlows(accessToken);
       if (!response.ok) {

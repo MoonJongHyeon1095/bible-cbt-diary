@@ -12,9 +12,9 @@ import { saveDeepSessionAPI } from "@/lib/api/cbt/postDeepSession";
 import { formatAutoTitle } from "@/components/cbt/utils/formatAutoTitle";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import {
-  fetchEmotionNoteGraph,
+  fetchEmotionNoteFlow,
   fetchEmotionNoteById,
-} from "@/lib/api/graph/getEmotionNoteGraph";
+} from "@/lib/api/flow/getEmotionNoteFlow";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
@@ -238,13 +238,13 @@ function CbtDeepSessionPageContent() {
     flowId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
   );
 
-  const graphQuery = useQuery({
+  const flowQuery = useQuery({
     queryKey:
       flowId && accessMode === "auth" && accessToken
-        ? queryKeys.graph.flow(accessToken, flowId, false)
+        ? queryKeys.flow.flow(accessToken, flowId, false)
         : ["noop"],
     queryFn: async () => {
-      const { response, data } = await fetchEmotionNoteGraph(
+      const { response, data } = await fetchEmotionNoteFlow(
         accessToken!,
         flowId as number,
         { includeMiddles: false },
@@ -266,7 +266,7 @@ function CbtDeepSessionPageContent() {
   const noteQuery = useQuery({
     queryKey:
       !flowId && accessMode === "auth" && accessToken && hasValidMainId
-        ? queryKeys.graph.note(accessToken, mainId)
+        ? queryKeys.flow.note(accessToken, mainId)
         : ["noop"],
     queryFn: async () => {
       const { response, data } = await fetchEmotionNoteById(
@@ -310,14 +310,14 @@ function CbtDeepSessionPageContent() {
     }
 
     if (flowId) {
-      setNotesLoading(graphQuery.isPending || graphQuery.isFetching);
-      if (graphQuery.isError) {
+      setNotesLoading(flowQuery.isPending || flowQuery.isFetching);
+      if (flowQuery.isError) {
         setNotesError("노트를 불러오지 못했습니다.");
         return;
       }
-      if (!graphQuery.data) return;
+      if (!flowQuery.data) return;
       const allNotes =
-        graphQuery.data?.slice().sort((a, b) => {
+        flowQuery.data?.slice().sort((a, b) => {
           const aTime = new Date(a.created_at).getTime();
           const bTime = new Date(b.created_at).getTime();
           return bTime - aTime;
@@ -356,10 +356,10 @@ function CbtDeepSessionPageContent() {
   }, [
     accessMode,
     accessToken,
-    graphQuery.data,
-    graphQuery.isError,
-    graphQuery.isFetching,
-    graphQuery.isPending,
+    flowQuery.data,
+    flowQuery.isError,
+    flowQuery.isFetching,
+    flowQuery.isPending,
     flowId,
     hasValidMainId,
     invalidFlowId,
@@ -457,7 +457,7 @@ function CbtDeepSessionPageContent() {
       pushToast("세션 기록이 저장되었습니다.", "success");
       void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.graph.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.flow.all });
       window.setTimeout(() => {
         try {
           void flushTokenSessionUsage({ sessionCount: 1 });

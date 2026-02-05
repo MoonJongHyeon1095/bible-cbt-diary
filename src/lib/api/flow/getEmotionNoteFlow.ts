@@ -10,7 +10,7 @@ export type EmotionFlowSummary = {
   note_count: number;
 };
 
-export const fetchEmotionNoteGraph = async (
+export const fetchEmotionNoteFlow = async (
   accessToken: string,
   flowId: number,
   options?: { includeMiddles?: boolean },

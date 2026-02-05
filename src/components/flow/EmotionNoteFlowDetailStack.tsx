@@ -6,7 +6,7 @@ import { formatKoreanDateTime } from "@/lib/utils/time";
 import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import styles from "./EmotionNoteGraphSection.module.css";
+import styles from "./EmotionNoteFlowSection.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
 type ModalContent = {
@@ -19,13 +19,13 @@ type ModalContent = {
 
 type SectionKey = "thought" | "error" | "alternative" | "behavior";
 
-type EmotionNoteGraphDetailStackProps = {
+type EmotionNoteFlowDetailStackProps = {
   selectedNote: EmotionNote | null;
 };
 
-export default function EmotionNoteGraphDetailStack({
+export default function EmotionNoteFlowDetailStack({
   selectedNote,
-}: EmotionNoteGraphDetailStackProps) {
+}: EmotionNoteFlowDetailStackProps) {
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 

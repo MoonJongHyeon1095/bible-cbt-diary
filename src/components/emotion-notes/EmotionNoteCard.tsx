@@ -46,7 +46,7 @@ export default function EmotionNoteCard({
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
   const behaviorTags = note.behavior_labels ?? [];
-  const graphHref = `/flow?noteId=${note.id}`;
+  const flowHref = `/flow?noteId=${note.id}`;
 
   useEffect(() => {
     return () => {
@@ -141,7 +141,7 @@ export default function EmotionNoteCard({
           setIsPressing(false);
           return;
         }
-        router.push(graphHref);
+        router.push(flowHref);
       };
       void go();
     }, longPressDuration);

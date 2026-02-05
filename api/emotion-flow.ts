@@ -11,7 +11,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   const action = getQueryParam(req, "action");
-  if (action === "groups" || action === "flows") {
+  if (action === "flows") {
     return handleGetEmotionFlows(req, res);
   }
 

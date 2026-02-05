@@ -6,11 +6,8 @@ create table public.emotion_notes (
   frequency integer not null default 1,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
-  group_id bigint null,
   device_id text null,
   constraint emotion_notes_pkey primary key (id),
-  constraint emotion_notes_id_group_id_key unique (id, group_id),
-  constraint emotion_notes_group_id_fkey foreign KEY (group_id) references emotion_note_groups (id) on delete CASCADE,
   constraint emotion_notes_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
   constraint emotion_notes_owner_check check (
     (
@@ -19,8 +16,6 @@ create table public.emotion_notes (
     )
   )
 ) TABLESPACE pg_default;
-
-create index IF not exists emotion_notes_group_id_idx on public.emotion_notes using btree (group_id) TABLESPACE pg_default;
 
 create index IF not exists emotion_notes_device_id_idx on public.emotion_notes using btree (device_id) TABLESPACE pg_default;
 

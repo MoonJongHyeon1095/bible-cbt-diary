@@ -69,32 +69,33 @@ function CbtDeepSessionPageContent() {
   const queryClient = useQueryClient();
 
   const mainIdParam = searchParams.get("mainId") ?? "";
-  const groupIdParam = searchParams.get("groupId") ?? "";
+  const flowIdParam = searchParams.get("flowId") ?? "";
   const subIdsParam = searchParams.get("subIds") ?? "";
 
   const mainId = useMemo(
     () => (mainIdParam ? Number(mainIdParam) : Number.NaN),
     [mainIdParam],
   );
-  const groupId = useMemo(() => {
-    const parsed = groupIdParam ? Number(groupIdParam) : null;
+  const flowId = useMemo(() => {
+    const parsed = flowIdParam ? Number(flowIdParam) : null;
     return parsed !== null && Number.isFinite(parsed) ? parsed : null;
-  }, [groupIdParam]);
+  }, [flowIdParam]);
   const subIds = useMemo(() => parseIds(subIdsParam), [subIdsParam]);
   const subIdSet = useMemo(() => new Set(subIds), [subIds]);
   const hasSubIdsParam = Boolean(subIdsParam);
-  const shouldSelectSubNotes = Boolean(groupId) && subIds.length === 0;
+  const shouldSelectSubNotes = Boolean(flowId) && subIds.length === 0;
 
   const [notesLoading, setNotesLoading] = useState(true);
   const [notesError, setNotesError] = useState<string | null>(null);
   const [mainNote, setMainNote] = useState<EmotionNote | null>(null);
   const [subNotes, setSubNotes] = useState<EmotionNote[]>([]);
-  const [groupNotes, setGroupNotes] = useState<EmotionNote[]>([]);
+  const [flowNotes, setFlowNotes] = useState<EmotionNote[]>([]);
   const [selectedSubIds, setSelectedSubIds] = useState<number[]>([]);
   const { state: flow, actions } = useCbtDeepSessionFlow(
     shouldSelectSubNotes ? "select" : "incident",
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(true);
   const [isTourOpen, setIsTourOpen] = useState(false);
   const [tourStep, setTourStep] = useState(0);
   const [disabledActions, setDisabledActions] = useState(false);
@@ -118,7 +119,7 @@ function CbtDeepSessionPageContent() {
         selected_alternative_thought: string;
         main_id: number;
         sub_ids: number[];
-        group_id: number | null;
+        flow_id: number | null;
       };
     }) => saveDeepSessionAPI(args.access, args.payload),
   });
@@ -162,7 +163,7 @@ function CbtDeepSessionPageContent() {
   useEffect(() => {
     setSelectedSubIds([]);
     actions.setStep(shouldSelectSubNotes ? "select" : "incident");
-  }, [actions, groupIdParam, mainIdParam, shouldSelectSubNotes]);
+  }, [actions, flowIdParam, mainIdParam, shouldSelectSubNotes]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -232,39 +233,39 @@ function CbtDeepSessionPageContent() {
   }, [mainNote, subNotes]);
 
   const hasValidMainId = Number.isFinite(mainId) && !Number.isNaN(mainId);
-  const invalidGroupId = Boolean(groupIdParam && groupId === null);
+  const invalidFlowId = Boolean(flowIdParam && flowId === null);
   const invalidSubIds = Boolean(
-    groupId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
+    flowId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
   );
 
   const graphQuery = useQuery({
     queryKey:
-      groupId && accessMode === "auth" && accessToken
-        ? queryKeys.graph.group(accessToken, groupId, false)
+      flowId && accessMode === "auth" && accessToken
+        ? queryKeys.graph.flow(accessToken, flowId, false)
         : ["noop"],
     queryFn: async () => {
       const { response, data } = await fetchEmotionNoteGraph(
         accessToken!,
-        groupId as number,
+        flowId as number,
         { includeMiddles: false },
       );
       if (!response.ok) {
-        throw new Error("emotion_note_graph fetch failed");
+        throw new Error("emotion_flow fetch failed");
       }
       return data.notes ?? [];
     },
     enabled:
-      Boolean(groupId) &&
+      Boolean(flowId) &&
       accessMode === "auth" &&
       Boolean(accessToken) &&
       hasValidMainId &&
-      !invalidGroupId &&
+      !invalidFlowId &&
       !invalidSubIds,
   });
 
   const noteQuery = useQuery({
     queryKey:
-      !groupId && accessMode === "auth" && accessToken && hasValidMainId
+      !flowId && accessMode === "auth" && accessToken && hasValidMainId
         ? queryKeys.graph.note(accessToken, mainId)
         : ["noop"],
     queryFn: async () => {
@@ -278,11 +279,11 @@ function CbtDeepSessionPageContent() {
       return data.note;
     },
     enabled:
-      !groupId &&
+      !flowId &&
       accessMode === "auth" &&
       Boolean(accessToken) &&
       hasValidMainId &&
-      !invalidGroupId,
+      !invalidFlowId,
   });
 
   useEffect(() => {
@@ -292,8 +293,8 @@ function CbtDeepSessionPageContent() {
       return;
     }
 
-    if (invalidGroupId) {
-      setNotesError("groupId가 올바르지 않습니다.");
+    if (invalidFlowId) {
+      setNotesError("flowId가 올바르지 않습니다.");
       setNotesLoading(false);
       return;
     }
@@ -308,7 +309,7 @@ function CbtDeepSessionPageContent() {
       return;
     }
 
-    if (groupId) {
+    if (flowId) {
       setNotesLoading(graphQuery.isPending || graphQuery.isFetching);
       if (graphQuery.isError) {
         setNotesError("노트를 불러오지 못했습니다.");
@@ -335,7 +336,7 @@ function CbtDeepSessionPageContent() {
       setNotesError(null);
       setMainNote(main);
       setSubNotes(subs);
-      setGroupNotes(allNotes);
+      setFlowNotes(allNotes);
       setNotesLoading(false);
       return;
     }
@@ -350,7 +351,7 @@ function CbtDeepSessionPageContent() {
     setNotesError(null);
     setMainNote(noteQuery.data);
     setSubNotes([]);
-    setGroupNotes([]);
+    setFlowNotes([]);
     setNotesLoading(false);
   }, [
     accessMode,
@@ -359,9 +360,9 @@ function CbtDeepSessionPageContent() {
     graphQuery.isError,
     graphQuery.isFetching,
     graphQuery.isPending,
-    groupId,
+    flowId,
     hasValidMainId,
-    invalidGroupId,
+    invalidFlowId,
     invalidSubIds,
     mainId,
     noteQuery.data,
@@ -374,7 +375,13 @@ function CbtDeepSessionPageContent() {
   const {
     context: internalContext,
     error: internalContextLoadError,
-  } = useCbtDeepInternalContext(mainNote, subNotes);
+  } = useCbtDeepInternalContext(mainNote, subNotes, {
+    enabled:
+      aiEnabled &&
+      Boolean(mainNote) &&
+      !notesLoading &&
+      (!shouldSelectSubNotes || flow.step !== "select"),
+  });
 
   useEffect(() => {
     if (!internalContextLoadError) return;
@@ -383,8 +390,8 @@ function CbtDeepSessionPageContent() {
 
   const handleBack = () => {
     if (flow.step === "select") {
-      if (groupId && mainNote) {
-        router.push(`/graph?groupId=${groupId}&noteId=${mainNote.id}`);
+      if (flowId && mainNote) {
+        router.push(`/flow?flowId=${flowId}&noteId=${mainNote.id}`);
       }
       return;
     }
@@ -419,6 +426,7 @@ function CbtDeepSessionPageContent() {
     if (!access) return;
 
     setIsSaving(true);
+    setAiEnabled(false);
 
     try {
       const result = await saveDeepMutation.mutateAsync({
@@ -432,7 +440,7 @@ function CbtDeepSessionPageContent() {
           selected_alternative_thought: thought,
           main_id: mainNote.id,
           sub_ids: subNotes.map((note) => note.id),
-          group_id: groupId ?? null,
+          flow_id: flowId ?? null,
         },
       });
 
@@ -444,7 +452,7 @@ function CbtDeepSessionPageContent() {
       if (!noteId) {
         throw new Error("note_id_missing");
       }
-      const resolvedGroupId = result.payload?.groupId ?? groupId;
+      const resolvedFlowId = result.payload?.flowId ?? flowId;
 
       pushToast("세션 기록이 저장되었습니다.", "success");
       void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
@@ -454,8 +462,8 @@ function CbtDeepSessionPageContent() {
         try {
           void flushTokenSessionUsage({ sessionCount: 1 });
           clearCbtSessionStorage();
-          if (resolvedGroupId) {
-            router.push(`/graph?groupId=${resolvedGroupId}&noteId=${noteId}`);
+          if (resolvedFlowId) {
+            router.push(`/flow?flowId=${resolvedFlowId}&noteId=${noteId}`);
           } else {
             router.push(`/detail?id=${noteId}`);
           }
@@ -486,9 +494,9 @@ function CbtDeepSessionPageContent() {
   };
 
   const selectableNotes = useMemo(() => {
-    if (!groupId) return [];
-    return groupNotes.filter((note) => note.id !== mainNote?.id);
-  }, [groupNotes, groupId, mainNote]);
+    if (!flowId) return [];
+    return flowNotes.filter((note) => note.id !== mainNote?.id);
+  }, [flowNotes, flowId, mainNote]);
 
   const toggleSelectSub = (id: number) => {
     setSelectedSubIds((prev) => {
@@ -507,7 +515,7 @@ function CbtDeepSessionPageContent() {
 
   const handleConfirmSelection = () => {
     if (!canConfirmSelection) return;
-    const selectedNotes = groupNotes
+    const selectedNotes = flowNotes
       .filter((note) => selectedSubIds.includes(note.id))
       .sort((a, b) => b.id - a.id);
     setSubNotes(selectedNotes);

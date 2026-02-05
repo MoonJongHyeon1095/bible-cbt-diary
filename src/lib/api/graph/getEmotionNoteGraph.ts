@@ -4,7 +4,7 @@ import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteType
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
-export type EmotionNoteGraphGroupSummary = {
+export type EmotionFlowSummary = {
   id: number;
   created_at: string;
   note_count: number;
@@ -12,13 +12,13 @@ export type EmotionNoteGraphGroupSummary = {
 
 export const fetchEmotionNoteGraph = async (
   accessToken: string,
-  groupId: number,
+  flowId: number,
   options?: { includeMiddles?: boolean },
 ) => {
   const includeMiddles =
     options?.includeMiddles === undefined ? true : options.includeMiddles;
   const url = buildApiUrl(
-    `/api/emotion-note-graph?groupId=${groupId}&includeMiddles=${
+    `/api/emotion-flow?flowId=${flowId}&includeMiddles=${
       includeMiddles ? "1" : "0"
     }`,
   );
@@ -36,17 +36,17 @@ export const fetchEmotionNoteGraph = async (
   return { response, data };
 };
 
-export const fetchEmotionNoteGraphGroups = async (accessToken: string) => {
+export const fetchEmotionFlows = async (accessToken: string) => {
   const response = await fetch(
-    buildApiUrl("/api/emotion-note-graph?action=groups"),
+    buildApiUrl("/api/emotion-flow?action=flows"),
     {
       headers: buildAuthHeaders(accessToken),
     },
   );
 
   const data = response.ok
-    ? ((await response.json()) as { groups: EmotionNoteGraphGroupSummary[] })
-    : { groups: [] };
+    ? ((await response.json()) as { flows: EmotionFlowSummary[] })
+    : { flows: [] };
 
   return { response, data };
 };

@@ -511,11 +511,7 @@ export default function EmotionNoteDetailPage({
                 setIsGoDeeperLoading(false);
                 return;
               }
-              if (note.group_id) {
-                router.push(`/graph?groupId=${note.group_id}&noteId=${note.id}`);
-                return;
-              }
-              router.push(`/session/deep?mainId=${note.id}`);
+              router.push(`/flow?noteId=${note.id}`);
             }}
             loadingRing={isGoDeeperLoading}
             className={styles.fab}

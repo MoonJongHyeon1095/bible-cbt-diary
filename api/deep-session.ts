@@ -14,7 +14,7 @@ type DeepPayload = {
   selected_alternative_thought?: string;
   main_id?: number;
   sub_ids?: number[];
-  group_id?: number | null;
+  flow_id?: number | null;
 };
 
 type MinimalPayload = {

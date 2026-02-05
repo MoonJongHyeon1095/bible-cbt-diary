@@ -18,10 +18,10 @@ function EmotionNoteGraphPageContent() {
   const [accessToken, setAccessToken] = useState<string | null>(null);
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const searchParams = useSearchParams();
-  const groupId = useMemo(() => {
-    const groupIdParam = searchParams.get("groupId");
-    const parsed = Number(groupIdParam);
-    if (!groupIdParam || Number.isNaN(parsed)) {
+  const flowId = useMemo(() => {
+    const flowIdParam = searchParams.get("flowId");
+    const parsed = Number(flowIdParam);
+    if (!flowIdParam || Number.isNaN(parsed)) {
       return null;
     }
     return parsed;
@@ -65,18 +65,18 @@ function EmotionNoteGraphPageContent() {
       <main className={styles.main}>
         <div className={styles.shell}>
           {user && accessToken ? (
-            groupId || noteId ? (
+            flowId || noteId ? (
               <EmotionNoteGraphSection
                 accessToken={accessToken}
                 noteId={noteId}
-                groupId={groupId}
+                flowId={flowId}
               />
             ) : (
               <EmotionNoteGraphGroupList accessToken={accessToken} />
             )
           ) : (
             <div className={styles.emptyAuth}>
-              로그인 후 그래프를 확인할 수 있어요.
+              로그인 후 플로우를 확인할 수 있어요.
             </div>
           )}
         </div>
@@ -93,7 +93,7 @@ export default function EmotionNoteGraphPage() {
           <AppHeader />
           <main className={styles.main}>
             <div className={styles.shell}>
-              <div className={styles.emptyAuth}>그래프를 불러오는 중...</div>
+              <div className={styles.emptyAuth}>플로우를 불러오는 중...</div>
             </div>
           </main>
         </div>

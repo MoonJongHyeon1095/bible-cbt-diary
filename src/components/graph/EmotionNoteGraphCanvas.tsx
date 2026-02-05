@@ -70,7 +70,7 @@ export default function EmotionNoteGraphCanvas({
   if (isLoading) {
     return (
       <div className={styles.graphCanvas}>
-        <div className={styles.placeholder}>그래프를 불러오는 중...</div>
+        <div className={styles.placeholder}>플로우를 불러오는 중...</div>
       </div>
     );
   }
@@ -78,7 +78,7 @@ export default function EmotionNoteGraphCanvas({
   if (needsNote) {
     return (
       <div className={styles.graphCanvas}>
-        <div className={styles.placeholder}>그래프로 볼 기록을 선택하세요.</div>
+        <div className={styles.placeholder}>플로우로 볼 기록을 선택하세요.</div>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export default function EmotionNoteGraphCanvas({
   if (emptyState) {
     return (
       <div className={styles.graphCanvas}>
-        <div className={styles.placeholder}>그래프로 묶을 기록이 없습니다.</div>
+        <div className={styles.placeholder}>플로우로 묶을 기록이 없습니다.</div>
       </div>
     );
   }

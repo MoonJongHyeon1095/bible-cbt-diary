@@ -10,31 +10,31 @@ import { queryKeys } from "@/lib/queryKeys";
 
 type UseEmotionNoteGraphDataParams = {
   accessToken: string;
-  groupId: number | null;
+  flowId: number | null;
   noteId: number | null;
 };
 
 export const useEmotionNoteGraphData = ({
   accessToken,
-  groupId,
+  flowId,
   noteId,
 }: UseEmotionNoteGraphDataParams) => {
-  const groupQuery = useQuery({
-    queryKey: queryKeys.graph.group(accessToken, groupId ?? 0, true),
+  const flowQuery = useQuery({
+    queryKey: queryKeys.graph.flow(accessToken, flowId ?? 0, true),
     queryFn: async () => {
-      if (!groupId) {
+      if (!flowId) {
         return { notes: [], middles: [] };
       }
       const { response, data } = await fetchEmotionNoteGraph(
         accessToken,
-        groupId,
+        flowId,
       );
       if (!response.ok) {
-        throw new Error("emotion_note_graph fetch failed");
+        throw new Error("emotion_flow fetch failed");
       }
       return { notes: data.notes ?? [], middles: data.middles ?? [] };
     },
-    enabled: Boolean(accessToken && groupId),
+    enabled: Boolean(accessToken && flowId),
   });
 
   const noteQuery = useQuery({
@@ -52,15 +52,15 @@ export const useEmotionNoteGraphData = ({
       }
       return { notes: [data.note], middles: [] };
     },
-    enabled: Boolean(accessToken && noteId && !groupId),
+    enabled: Boolean(accessToken && noteId && !flowId),
   });
 
   const result = useMemo(() => {
-    if (groupId) {
+    if (flowId) {
       return {
-        notes: groupQuery.data?.notes ?? [],
-        middles: groupQuery.data?.middles ?? [],
-        isLoading: groupQuery.isPending || groupQuery.isFetching,
+        notes: flowQuery.data?.notes ?? [],
+        middles: flowQuery.data?.middles ?? [],
+        isLoading: flowQuery.isPending || flowQuery.isFetching,
       };
     }
     if (noteId) {
@@ -72,11 +72,11 @@ export const useEmotionNoteGraphData = ({
     }
     return { notes: [], middles: [], isLoading: false };
   }, [
-    groupId,
+    flowId,
     noteId,
-    groupQuery.data,
-    groupQuery.isPending,
-    groupQuery.isFetching,
+    flowQuery.data,
+    flowQuery.isPending,
+    flowQuery.isFetching,
     noteQuery.data,
     noteQuery.isPending,
     noteQuery.isFetching,

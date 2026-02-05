@@ -16,12 +16,12 @@ export async function saveDeepSessionAPI(
     selected_alternative_thought: string;
     main_id: number;
     sub_ids: number[];
-    group_id: number | null;
+    flow_id: number | null;
   },
 ) {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
-    return { ok: false, payload: {} as { noteId?: number; groupId?: number } };
+    return { ok: false, payload: {} as { noteId?: number; flowId?: number } };
   }
 
   const body = {
@@ -42,6 +42,6 @@ export async function saveDeepSessionAPI(
   const response = await res.json().catch(() => ({}));
   return { ok: res.ok, payload: response } as {
     ok: boolean;
-    payload: { noteId?: number; groupId?: number };
+    payload: { noteId?: number; flowId?: number };
   };
 }

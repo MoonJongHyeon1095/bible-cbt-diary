@@ -16,10 +16,10 @@ export default function AppTabs() {
     { href: "/", label: "홈", icon: Home },
     { href: "/today", label: "오늘", icon: Sun },
     { href: "/month", label: "월별", icon: CalendarDays },
-    { href: "/graph", label: "그래프", icon: Waypoints },
+    { href: "/flow", label: "플로우", icon: Waypoints },
   ];
   const handleTabClick = (href: string) => (event: MouseEvent) => {
-    if (href !== "/graph") return;
+    if (href !== "/flow") return;
     if (isAuthenticated) return;
     event.preventDefault();
     openAuthModal();

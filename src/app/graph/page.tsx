@@ -1,5 +1,5 @@
-import EmotionNoteGraphPage from "@/components/graph/EmotionNoteGraphPage";
+import { redirect } from "next/navigation";
 
 export default function EmotionNoteGraphRoutePage() {
-  return <EmotionNoteGraphPage />;
+  redirect("/flow");
 }

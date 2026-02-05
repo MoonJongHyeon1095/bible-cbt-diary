@@ -10,14 +10,17 @@ import { startPerf } from "@/lib/utils/perf";
 const buildKey = (mainNote: EmotionNote | null, subNotes: EmotionNote[]) => {
   if (!mainNote) return "";
   const ids = [mainNote.id, ...subNotes.map((note) => note.id)];
-  return ids.join("|");
+  const uniqueSorted = Array.from(new Set(ids)).sort((a, b) => a - b);
+  return uniqueSorted.join("|");
 };
 
 export function useCbtDeepInternalContext(
   mainNote: EmotionNote | null,
   subNotes: EmotionNote[],
+  options?: { enabled?: boolean },
 ) {
   const key = useMemo(() => buildKey(mainNote, subNotes), [mainNote, subNotes]);
+  const enabled = options?.enabled ?? true;
 
   const query = useQuery({
     queryKey: queryKeys.ai.deepInternalContext(key),
@@ -34,7 +37,9 @@ export function useCbtDeepInternalContext(
         endPerf();
       }
     },
-    enabled: Boolean(key && mainNote),
+    enabled: Boolean(enabled && key && mainNote),
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   return {

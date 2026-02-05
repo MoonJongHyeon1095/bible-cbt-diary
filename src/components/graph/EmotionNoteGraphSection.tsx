@@ -13,29 +13,29 @@ import { useEmotionNoteGraphData } from "./hooks/useEmotionNoteGraphData";
 import { useEmotionNoteGraphDisplay } from "./hooks/useEmotionNoteGraphDisplay";
 import { useEmotionNoteGraphLayout } from "./hooks/useEmotionNoteGraphLayout";
 import { useEmotionNoteGraphSelection } from "./hooks/useEmotionNoteGraphSelection";
-import { getGroupThemeColor } from "./utils/graphColors";
+import { getFlowThemeColor } from "./utils/graphColors";
 
 type EmotionNoteGraphSectionProps = {
   accessToken: string;
   noteId: number | null;
-  groupId: number | null;
+  flowId: number | null;
 };
 
 export default function EmotionNoteGraphSection({
   accessToken,
   noteId,
-  groupId,
+  flowId,
 }: EmotionNoteGraphSectionProps) {
   const router = useRouter();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const { notes, middles, isLoading } = useEmotionNoteGraphData({
     accessToken,
-    groupId,
+    flowId,
     noteId,
   });
   const themeColor = useMemo(
-    () => (groupId ? getGroupThemeColor(groupId).rgb : undefined),
-    [groupId],
+    () => (flowId ? getFlowThemeColor(flowId).rgb : undefined),
+    [flowId],
   );
   const { elkNodes, elkEdges } = useEmotionNoteGraphLayout(
     notes,
@@ -66,8 +66,8 @@ export default function EmotionNoteGraphSection({
       setIsGoDeeperLoading(false);
       return;
     }
-    const query = groupId
-      ? `/session/deep?mainId=${selectedNote.id}&groupId=${groupId}`
+    const query = flowId
+      ? `/session/deep?mainId=${selectedNote.id}&flowId=${flowId}`
       : `/session/deep?mainId=${selectedNote.id}`;
     router.push(query);
   };
@@ -78,7 +78,7 @@ export default function EmotionNoteGraphSection({
   }, [elkEdges, elkNodes]);
 
   const emptyState = !isLoading && notes.length === 0;
-  const needsNote = !isLoading && !noteId && !groupId;
+  const needsNote = !isLoading && !noteId && !flowId;
   const noteCount = notes.length;
 
   const handleNodeClick = (nodeId: string) => {
@@ -97,16 +97,16 @@ export default function EmotionNoteGraphSection({
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
-          <p className={styles.label}>감정 노트 그래프</p>
+          <p className={styles.label}>감정 노트 플로우</p>
           <h2 className={styles.title}>{noteCount}개의 감정 기록이 있습니다</h2>
         </div>
         <SafeButton
           type="button"
           variant="ghost"
-          onClick={() => router.push("/graph")}
+          onClick={() => router.push("/flow")}
         >
           <LayoutDashboard size={18} />
-          노트 그룹 목록보기
+          노트 플로우 목록보기
         </SafeButton>
       </div>
 

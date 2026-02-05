@@ -10,8 +10,8 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteGraphGroupList.module.css";
-import { fetchEmotionNoteGraphGroups } from "@/lib/api/graph/getEmotionNoteGraph";
-import { getGroupThemeColor } from "./utils/graphColors";
+import { fetchEmotionFlows } from "@/lib/api/graph/getEmotionNoteGraph";
+import { getFlowThemeColor } from "./utils/graphColors";
 import SafeButton from "@/components/ui/SafeButton";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
@@ -30,13 +30,13 @@ type GroupNode = {
   y: number;
 };
 
-const buildNodes = (groups: { id: number; note_count: number }[]) =>
-  groups.map((group) => {
-    const radius = 36 + Math.min(90, group.note_count * 6);
-    const theme = getGroupThemeColor(group.id);
+const buildNodes = (flows: { id: number; note_count: number }[]) =>
+  flows.map((flow) => {
+    const radius = 36 + Math.min(90, flow.note_count * 6);
+    const theme = getFlowThemeColor(flow.id);
     return {
-      id: group.id,
-      noteCount: group.note_count,
+      id: flow.id,
+      noteCount: flow.note_count,
       radius,
       color: theme.rgbString,
       rgb: theme.rgb,
@@ -73,28 +73,28 @@ export default function EmotionNoteGraphGroupList({
     return () => observer.disconnect();
   }, []);
 
-  const groupsQuery = useQuery({
-    queryKey: queryKeys.graph.groups(accessToken),
+  const flowsQuery = useQuery({
+    queryKey: queryKeys.graph.flows(accessToken),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionNoteGraphGroups(accessToken);
+      const { response, data } = await fetchEmotionFlows(accessToken);
       if (!response.ok) {
-        throw new Error("emotion_note_graph_groups fetch failed");
+        throw new Error("emotion_flow fetch failed");
       }
-      return data.groups ?? [];
+      return data.flows ?? [];
     },
     enabled: Boolean(accessToken),
   });
 
-  const isLoading = groupsQuery.isPending || groupsQuery.isFetching;
-  const groups = useMemo(() => groupsQuery.data ?? [], [groupsQuery.data]);
+  const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
+  const flows = useMemo(() => flowsQuery.data ?? [], [flowsQuery.data]);
 
   useEffect(() => {
-    if (groupsQuery.isError) {
+    if (flowsQuery.isError) {
       setNodes([]);
       return;
     }
-    setNodes(buildNodes(groups));
-  }, [groups, groupsQuery.isError]);
+    setNodes(buildNodes(flows));
+  }, [flows, flowsQuery.isError]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -171,9 +171,9 @@ export default function EmotionNoteGraphGroupList({
     <section className={styles.section}>
       <header className={styles.header}>
         <div>
-          <p className={styles.label}>감정 노트 그래프</p>
+          <p className={styles.label}>감정 노트 플로우</p>
           <h2 className={styles.title}>
-            {nodes.length}개의 그룹, {totalCount}개의 기록
+            {nodes.length}개의 플로우, {totalCount}개의 기록
           </h2>
         </div>
       </header>
@@ -187,9 +187,9 @@ export default function EmotionNoteGraphGroupList({
         onPointerLeave={handlePointerUp}
       >
         {isLoading ? (
-          <div className={styles.placeholder}>그룹을 불러오는 중...</div>
+          <div className={styles.placeholder}>플로우를 불러오는 중...</div>
         ) : nodes.length === 0 ? (
-          <div className={styles.placeholder}>아직 그룹이 없습니다.</div>
+          <div className={styles.placeholder}>아직 플로우가 없습니다.</div>
         ) : (
           <div
             className={styles.canvasLayer}
@@ -217,9 +217,9 @@ export default function EmotionNoteGraphGroupList({
                     "--node-b": node.rgb[2],
                   } as CSSProperties
                 }
-                onClick={() => router.push(`/graph?groupId=${node.id}`)}
+                onClick={() => router.push(`/flow?flowId=${node.id}`)}
               >
-                <span className={styles.nodeGroup}>그룹 {node.id}</span>
+                <span className={styles.nodeGroup}>플로우 {node.id}</span>
                 <span className={styles.nodeText}>
                   <span className={styles.nodeCount}>{node.noteCount}</span>
                   <span className={styles.nodeUnit}>개의</span>

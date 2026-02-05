@@ -3,7 +3,6 @@ export type EmotionNote = {
   title: string;
   trigger_text: string;
   created_at: string;
-  group_id?: number | null;
   emotion_labels?: string[];
   error_labels?: string[];
   behavior_labels?: string[];

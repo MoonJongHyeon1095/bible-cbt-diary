@@ -12,24 +12,64 @@ export const handleGetEmotionNoteGraph = async (
     return json(res, 401, { notes: [], middles: [] });
   }
 
-  const groupIdParam = getQueryParam(req, "groupId");
+  const flowIdParam = getQueryParam(req, "flowId");
   const includeMiddlesParam = getQueryParam(req, "includeMiddles");
-  const groupId = Number(groupIdParam);
+  const flowId = Number(flowIdParam);
   const includeMiddles =
     includeMiddlesParam === null ||
     includeMiddlesParam === "" ||
     includeMiddlesParam === "1" ||
     includeMiddlesParam === "true";
 
-  if (!groupIdParam || Number.isNaN(groupId)) {
+  if (!flowIdParam || Number.isNaN(flowId)) {
     return json(res, 400, {
       notes: [],
       middles: [],
-      message: "groupId가 필요합니다.",
+      message: "flowId가 필요합니다.",
     });
   }
 
   const supabase = createSupabaseAdminClient();
+  const flowBaseQuery = supabase.from("emotion_flows").select("id");
+  const flowQuery = user
+    ? flowBaseQuery.eq("user_id", user.id)
+    : flowBaseQuery.eq("device_id", deviceId).is("user_id", null);
+
+  const { data: flow, error: flowError } = await flowQuery
+    .eq("id", flowId)
+    .maybeSingle();
+
+  if (flowError) {
+    return json(res, 500, {
+      notes: [],
+      middles: [],
+      message: "플로우를 불러오지 못했습니다.",
+    });
+  }
+
+  if (!flow) {
+    return json(res, 200, { notes: [], middles: [] });
+  }
+
+  const { data: flowNotes, error: flowNotesError } = await supabase
+    .from("emotion_flow_note_middles")
+    .select("note_id")
+    .eq("flow_id", flowId);
+
+  if (flowNotesError) {
+    return json(res, 500, {
+      notes: [],
+      middles: [],
+      message: "플로우 노트를 불러오지 못했습니다.",
+    });
+  }
+
+  const noteIds = (flowNotes ?? []).map((row) => row.note_id);
+  const uniqueNoteIds = Array.from(new Set(noteIds));
+  if (uniqueNoteIds.length === 0) {
+    return json(res, 200, { notes: [], middles: [] });
+  }
+
   const baseNotesQuery = supabase
     .from("emotion_notes")
     .select(
@@ -38,7 +78,6 @@ export const handleGetEmotionNoteGraph = async (
       title,
       trigger_text,
       created_at,
-      group_id,
       emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
       emotion_error_details(id,note_id,error_label,error_description,created_at),
       emotion_alternative_details(id,note_id,alternative,created_at),
@@ -58,7 +97,7 @@ export const handleGetEmotionNoteGraph = async (
     : baseNotesQuery.eq("device_id", deviceId).is("user_id", null);
 
   const { data: notes, error: notesError } = await scopedNotesQuery
-    .eq("group_id", groupId)
+    .in("id", uniqueNoteIds)
     .order("created_at", { ascending: true });
 
   if (notesError) {
@@ -79,7 +118,7 @@ export const handleGetEmotionNoteGraph = async (
     const { data: middleRows, error: middleError } = await supabase
       .from("emotion_note_middles")
       .select("id,from_note_id,to_note_id,created_at")
-      .eq("group_id", groupId)
+      .eq("flow_id", flowId)
       .order("created_at", { ascending: true });
 
     if (middleError) {
@@ -122,7 +161,6 @@ export const handleGetEmotionNoteGraph = async (
         title: note.title,
         trigger_text: note.trigger_text,
         created_at: note.created_at,
-        group_id: note.group_id ?? null,
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
         behavior_labels: behaviorLabels,

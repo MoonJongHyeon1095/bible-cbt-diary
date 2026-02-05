@@ -49,8 +49,8 @@ const hslToRgb = (h: number, s: number, l: number) => {
   ] as [number, number, number];
 };
 
-export const getGroupThemeColor = (groupId: number) => {
-  const hue = (groupId * 137.508) % 360;
+export const getFlowThemeColor = (flowId: number) => {
+  const hue = (flowId * 137.508) % 360;
   const rgb = hslToRgb(hue, 68, 56);
   return {
     rgb,

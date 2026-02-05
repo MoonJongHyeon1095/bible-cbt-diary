@@ -29,19 +29,19 @@ export const queryKeys = {
       ["session-history", "list", accessKey(access)] as const,
   },
   graph: {
-    all: ["emotion-note-graph"] as const,
-    groups: (accessToken: string) =>
-      ["emotion-note-graph", "groups", accessToken] as const,
-    group: (accessToken: string, groupId: number, includeMiddles: boolean) =>
+    all: ["emotion-flow"] as const,
+    flows: (accessToken: string) =>
+      ["emotion-flow", "flows", accessToken] as const,
+    flow: (accessToken: string, flowId: number, includeMiddles: boolean) =>
       [
-        "emotion-note-graph",
-        "group",
+        "emotion-flow",
+        "flow",
         accessToken,
-        groupId,
+        flowId,
         includeMiddles,
       ] as const,
     note: (accessToken: string, noteId: number) =>
-      ["emotion-note-graph", "note", accessToken, noteId] as const,
+      ["emotion-flow", "note", accessToken, noteId] as const,
   },
   share: {
     all: ["share-snapshot"] as const,

@@ -11,10 +11,7 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { saveDeepSessionAPI } from "@/lib/api/cbt/postDeepSession";
 import { formatAutoTitle } from "@/components/cbt/utils/formatAutoTitle";
 import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
-import {
-  fetchEmotionNoteFlow,
-  fetchEmotionNoteById,
-} from "@/lib/api/flow/getEmotionNoteFlow";
+import { fetchEmotionNoteFlow } from "@/lib/api/flow/getEmotionNoteFlow";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
@@ -35,7 +32,7 @@ import {
   type DeepStep,
 } from "@/components/cbt/hooks/useCbtDeepSessionFlow";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import OnboardingTour from "@/components/ui/OnboardingTour";
+import OnboardingTour, { type OnboardingStep } from "@/components/ui/OnboardingTour";
 import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
 
 const parseIds = (value: string | null) => {
@@ -79,7 +76,6 @@ function CbtDeepSessionPageContent() {
   const subIds = useMemo(() => parseIds(subIdsParam), [subIdsParam]);
   const subIdSet = useMemo(() => new Set(subIds), [subIds]);
   const hasSubIdsParam = Boolean(subIdsParam);
-  const shouldSelectSubNotes = Boolean(flowId) && subIds.length === 0;
 
   const [notesLoading, setNotesLoading] = useState(true);
   const [notesError, setNotesError] = useState<string | null>(null);
@@ -87,6 +83,7 @@ function CbtDeepSessionPageContent() {
   const [subNotes, setSubNotes] = useState<EmotionNote[]>([]);
   const [flowNotes, setFlowNotes] = useState<EmotionNote[]>([]);
   const [selectedSubIds, setSelectedSubIds] = useState<number[]>([]);
+  const [shouldSelectSubNotes, setShouldSelectSubNotes] = useState(false);
   const { state: flow, actions } = useCbtDeepSessionFlow(
     shouldSelectSubNotes ? "select" : "incident",
   );
@@ -117,7 +114,7 @@ function CbtDeepSessionPageContent() {
     }) => saveDeepSessionAPI(args.access, args.payload),
   });
 
-  const tourSteps = useMemo(() => {
+  const tourSteps = useMemo<OnboardingStep[]>(() => {
     if (flow.step === "select") {
       return [
         {
@@ -203,7 +200,7 @@ function CbtDeepSessionPageContent() {
     if (blocker && isTourOpen) {
       setIsTourOpen(false);
     }
-  }, [blocker, isTourOpen]);
+  }, [blocker, isTourOpen, setIsTourOpen]);
 
   useEffect(() => {
     if (!safeLocalStorage.isAvailable()) return;
@@ -245,6 +242,8 @@ function CbtDeepSessionPageContent() {
     canShowOnboarding,
     flow.step,
     tourSteps.length,
+    setIsTourOpen,
+    setTourStep,
   ]);
 
   const previousAlternatives = useMemo(() => {
@@ -257,6 +256,7 @@ function CbtDeepSessionPageContent() {
 
   const hasValidMainId = Number.isFinite(mainId) && !Number.isNaN(mainId);
   const invalidFlowId = Boolean(flowIdParam && flowId === null);
+  const missingFlowId = !flowId;
   const invalidSubIds = Boolean(
     flowId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
   );
@@ -286,29 +286,6 @@ function CbtDeepSessionPageContent() {
       !invalidSubIds,
   });
 
-  const noteQuery = useQuery({
-    queryKey:
-      !flowId && accessMode === "auth" && accessToken && hasValidMainId
-        ? queryKeys.flow.note(accessToken, mainId)
-        : ["noop"],
-    queryFn: async () => {
-      const { response, data } = await fetchEmotionNoteById(
-        accessToken!,
-        mainId,
-      );
-      if (!response.ok || !data.note) {
-        throw new Error("emotion_note fetch failed");
-      }
-      return data.note;
-    },
-    enabled:
-      !flowId &&
-      accessMode === "auth" &&
-      Boolean(accessToken) &&
-      hasValidMainId &&
-      !invalidFlowId,
-  });
-
   useEffect(() => {
     if (!hasValidMainId) {
       setNotesError("mainId가 필요합니다.");
@@ -318,6 +295,12 @@ function CbtDeepSessionPageContent() {
 
     if (invalidFlowId) {
       setNotesError("flowId가 올바르지 않습니다.");
+      setNotesLoading(false);
+      return;
+    }
+
+    if (missingFlowId) {
+      setNotesError("flowId가 필요합니다.");
       setNotesLoading(false);
       return;
     }
@@ -332,49 +315,33 @@ function CbtDeepSessionPageContent() {
       return;
     }
 
-    if (flowId) {
-      setNotesLoading(flowQuery.isPending || flowQuery.isFetching);
-      if (flowQuery.isError) {
-        setNotesError("노트를 불러오지 못했습니다.");
-        return;
-      }
-      if (!flowQuery.data) return;
-      const allNotes =
-        flowQuery.data?.slice().sort((a, b) => {
-          const aTime = new Date(a.created_at).getTime();
-          const bTime = new Date(b.created_at).getTime();
-          return bTime - aTime;
-        }) ?? [];
-      const main = allNotes.find((note) => note.id === mainId) ?? null;
-      const subs = allNotes
-        .filter((note) => subIdSet.has(note.id))
-        .sort((a, b) => b.id - a.id);
-
-      if (!main) {
-        setNotesError("메인 노트를 찾지 못했습니다.");
-        setNotesLoading(false);
-        return;
-      }
-
-      setNotesError(null);
-      setMainNote(main);
-      setSubNotes(subs);
-      setFlowNotes(allNotes);
-      setNotesLoading(false);
-      return;
-    }
-
-    setNotesLoading(noteQuery.isPending || noteQuery.isFetching);
-    if (noteQuery.isError) {
+    setNotesLoading(flowQuery.isPending || flowQuery.isFetching);
+    if (flowQuery.isError) {
       setNotesError("노트를 불러오지 못했습니다.");
+      return;
+    }
+    if (!flowQuery.data) return;
+    const allNotes =
+      flowQuery.data?.slice().sort((a, b) => {
+        const aTime = new Date(a.created_at).getTime();
+        const bTime = new Date(b.created_at).getTime();
+        return bTime - aTime;
+      }) ?? [];
+    const main = allNotes.find((note) => note.id === mainId) ?? null;
+    const subs = allNotes
+      .filter((note) => subIdSet.has(note.id))
+      .sort((a, b) => b.id - a.id);
+
+    if (!main) {
+      setNotesError("메인 노트를 찾지 못했습니다.");
       setNotesLoading(false);
       return;
     }
-    if (!noteQuery.data) return;
+
     setNotesError(null);
-    setMainNote(noteQuery.data);
-    setSubNotes([]);
-    setFlowNotes([]);
+    setMainNote(main);
+    setSubNotes(subs);
+    setFlowNotes(allNotes);
     setNotesLoading(false);
   }, [
     accessMode,
@@ -386,14 +353,22 @@ function CbtDeepSessionPageContent() {
     flowId,
     hasValidMainId,
     invalidFlowId,
+    missingFlowId,
     invalidSubIds,
     mainId,
-    noteQuery.data,
-    noteQuery.isError,
-    noteQuery.isFetching,
-    noteQuery.isPending,
     subIdSet,
   ]);
+
+  useEffect(() => {
+    if (!flowId) {
+      setShouldSelectSubNotes(false);
+      return;
+    }
+    if (notesLoading) return;
+    if (!mainNote) return;
+    const hasSelectable = flowNotes.some((note) => note.id !== mainNote.id);
+    setShouldSelectSubNotes(!hasSubIdsParam && hasSelectable);
+  }, [flowId, flowNotes, hasSubIdsParam, mainNote, notesLoading]);
 
   const {
     context: internalContext,
@@ -505,8 +480,8 @@ function CbtDeepSessionPageContent() {
   };
 
   const selectableNotes = useMemo(() => {
-    if (!flowId) return [];
-    return flowNotes.filter((note) => note.id !== mainNote?.id);
+    if (!flowId || !mainNote) return [];
+    return flowNotes.filter((note) => note.id !== mainNote.id);
   }, [flowNotes, flowId, mainNote]);
 
   const toggleSelectSub = (id: number) => {

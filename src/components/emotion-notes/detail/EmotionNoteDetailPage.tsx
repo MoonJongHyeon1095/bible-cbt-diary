@@ -8,6 +8,8 @@ import AppHeader from "@/components/header/AppHeader";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
+import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import {
   AlertCircle,
@@ -84,6 +86,7 @@ export default function EmotionNoteDetailPage({
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { accessToken } = useAccessContext();
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(
     null,
   );
@@ -511,7 +514,22 @@ export default function EmotionNoteDetailPage({
                 setIsGoDeeperLoading(false);
                 return;
               }
-              router.push(`/flow?noteId=${note.id}`);
+              if (!accessToken) {
+                pushToast("플로우를 준비할 수 없습니다.", "error");
+                setIsGoDeeperLoading(false);
+                return;
+              }
+              const ok = await goToFlowForNote({
+                noteId: note.id,
+                flowIds: note.flow_ids,
+                accessToken,
+                router,
+                onError: (message) => pushToast(message, "error"),
+              });
+              if (!ok) {
+                setIsGoDeeperLoading(false);
+                return;
+              }
             }}
             loadingRing={isGoDeeperLoading}
             className={styles.fab}

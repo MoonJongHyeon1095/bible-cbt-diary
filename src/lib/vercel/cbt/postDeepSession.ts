@@ -62,44 +62,30 @@ export const handlePostDeepSession = async (
 
   try {
     const supabase = createSupabaseAdminClient();
-    let flowId =
+    if (rawFlowId === null || rawFlowId === undefined) {
+      return json(res, 400, { ok: false, message: "flow_id가 필요합니다." });
+    }
+
+    const flowId =
       parsedFlowId !== null && Number.isFinite(parsedFlowId)
         ? parsedFlowId
         : null;
 
-    if (rawFlowId !== null && rawFlowId !== undefined && flowId === null) {
+    if (flowId === null) {
       return json(res, 400, { ok: false, message: "flow_id가 올바르지 않습니다." });
     }
 
-    if (flowId) {
-      const flowQuery = supabase.from("emotion_flows").select("id");
-      const { data: flow, error: flowError } = user
-        ? await flowQuery.eq("user_id", user.id).eq("id", flowId).maybeSingle()
-        : await flowQuery
-            .eq("device_id", deviceId)
-            .is("user_id", null)
-            .eq("id", flowId)
-            .maybeSingle();
+    const flowQuery = supabase.from("emotion_flows").select("id");
+    const { data: flow, error: flowError } = user
+      ? await flowQuery.eq("user_id", user.id).eq("id", flowId).maybeSingle()
+      : await flowQuery
+          .eq("device_id", deviceId)
+          .is("user_id", null)
+          .eq("id", flowId)
+          .maybeSingle();
 
-      if (flowError || !flow) {
-        return json(res, 404, { ok: false, message: "플로우를 찾을 수 없습니다." });
-      }
-    } else {
-      const { data: flow, error: flowError } = await supabase
-        .from("emotion_flows")
-        .insert({
-          ...owner,
-          title,
-          description: triggerText,
-        })
-        .select("id")
-        .single();
-
-      if (flowError || !flow) {
-        return json(res, 500, { ok: false, message: "플로우 생성에 실패했습니다." });
-      }
-
-      flowId = flow.id;
+    if (flowError || !flow) {
+      return json(res, 404, { ok: false, message: "플로우를 찾을 수 없습니다." });
     }
 
     const noteQuery = supabase.from("emotion_notes").select("id").in("id", uniqueIds);
@@ -109,10 +95,6 @@ export const handlePostDeepSession = async (
 
     if (noteError || !notes || notes.length !== uniqueIds.length) {
       return json(res, 400, { ok: false, message: "노트 정보를 확인할 수 없습니다." });
-    }
-
-    if (!flowId) {
-      return json(res, 500, { ok: false, message: "플로우 정보가 누락되었습니다." });
     }
 
     const { data: note, error: insertError } = await supabase

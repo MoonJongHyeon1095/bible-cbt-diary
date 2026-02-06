@@ -110,7 +110,7 @@ export default function EmotionNoteTodayPage() {
     if (blocker && isTourOpen) {
       setIsTourOpen(false);
     }
-  }, [blocker, isTourOpen]);
+  }, [blocker, isTourOpen, setIsTourOpen]);
 
   useEffect(() => {
     if (!safeLocalStorage.isAvailable()) return;
@@ -149,6 +149,8 @@ export default function EmotionNoteTodayPage() {
     isAccessLoading,
     canShowOnboarding,
     tourSteps.length,
+    setCurrentStep,
+    setIsTourOpen,
   ]);
 
   return (

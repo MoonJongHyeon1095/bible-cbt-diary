@@ -28,6 +28,7 @@ export const handleGetEmotionNote = async (
         title,
         trigger_text,
         created_at,
+        emotion_flow_note_middles(flow_id),
         emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
         emotion_error_details(id,note_id,error_label,error_description,created_at),
         emotion_alternative_details(id,note_id,alternative,created_at),
@@ -85,6 +86,13 @@ export const handleGetEmotionNote = async (
         title: data.title,
         trigger_text: data.trigger_text,
         created_at: data.created_at,
+        flow_ids: Array.from(
+          new Set(
+            (data.emotion_flow_note_middles ?? [])
+              .map((detail) => Number(detail.flow_id))
+              .filter((id) => Number.isFinite(id)),
+          ),
+        ),
         thought_details: data.emotion_note_details ?? [],
         error_details: data.emotion_error_details ?? [],
         alternative_details: data.emotion_alternative_details ?? [],

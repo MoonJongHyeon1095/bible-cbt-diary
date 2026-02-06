@@ -31,7 +31,7 @@ import {
 } from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import OnboardingTour from "@/components/ui/OnboardingTour";
+import OnboardingTour, { type OnboardingStep } from "@/components/ui/OnboardingTour";
 import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
 
 const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
@@ -93,7 +93,7 @@ function CbtSessionPageContent() {
     }) => saveSessionHistoryAPI(args.access, args.payload),
   });
 
-  const tourSteps = useMemo(() => {
+  const tourSteps = useMemo<OnboardingStep[]>(() => {
     if (flow.step === "incident") {
       return [
         {
@@ -184,7 +184,7 @@ function CbtSessionPageContent() {
     if (blocker && isTourOpen) {
       setIsTourOpen(false);
     }
-  }, [blocker, isTourOpen]);
+  }, [blocker, isTourOpen, setIsTourOpen]);
 
   useEffect(() => {
     if (accessMode === "blocked" || isAccessLoading) return;
@@ -224,6 +224,8 @@ function CbtSessionPageContent() {
     canShowOnboarding,
     flow.step,
     tourSteps.length,
+    setIsTourOpen,
+    setTourStep,
   ]);
 
   const handleBack = () => {

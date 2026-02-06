@@ -46,11 +46,16 @@ const AxisLayer = ({ axisLabels, axisY, viewport }: AxisLayerProps) => {
   }
   const axisPadding = 36;
   const { x, y, zoom } = viewport;
-  const screenPoints = axisLabels.map((item) => ({
-    id: item.id,
-    label: item.label,
-    x: item.x * zoom + x,
-  }));
+  const screenPoints = axisLabels
+    .map((item) => ({
+      id: item.id,
+      label: item.label,
+      x: item.x * zoom + x,
+    }))
+    .filter((item) => Number.isFinite(item.x));
+  if (screenPoints.length === 0) {
+    return null;
+  }
   const positions = screenPoints.map((item) => item.x);
   const minX = Math.min(...positions);
   const maxX = Math.max(...positions);

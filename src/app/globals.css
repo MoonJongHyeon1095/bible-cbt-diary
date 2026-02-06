@@ -94,6 +94,8 @@ select {
   border-radius: 999px !important;
   padding: 6px 12px !important;
   border: 1px solid rgba(143, 167, 200, 0.25) !important;
+  font-size: 16px !important;
+  line-height: 1 !important;
 }
 
 .onboarding-popover .driver-popover-close-btn {

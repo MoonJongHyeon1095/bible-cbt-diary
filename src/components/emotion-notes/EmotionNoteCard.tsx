@@ -10,6 +10,9 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
+import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -36,6 +39,8 @@ export default function EmotionNoteCard({
   const [isTriggered, setIsTriggered] = useState(false);
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const { openAuthModal } = useAuthModal();
+  const { pushToast } = useCbtToast();
+  const { accessToken } = useAccessContext();
 
   const longPressDuration = 500;
   const longPressOverlayDelay = 120;
@@ -46,7 +51,12 @@ export default function EmotionNoteCard({
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
   const behaviorTags = note.behavior_labels ?? [];
-  const flowHref = `/flow?noteId=${note.id}`;
+  const flowIds = note.flow_ids ?? [];
+  const sortedFlowIds = [...flowIds].sort((a, b) => b - a);
+  const primaryFlowId = sortedFlowIds[0] ?? null;
+  const extraFlowCount = Math.max(0, flowIds.length - (primaryFlowId ? 1 : 0));
+  const flowTitle =
+    flowIds.length > 0 ? `Flow: ${sortedFlowIds.join(", ")}` : undefined;
 
   useEffect(() => {
     return () => {
@@ -141,7 +151,28 @@ export default function EmotionNoteCard({
           setIsPressing(false);
           return;
         }
-        router.push(flowHref);
+        if (!accessToken) {
+          pushToast("플로우를 준비할 수 없습니다.", "error");
+          longPressTriggeredRef.current = false;
+          setIsTriggered(false);
+          setPressProgress(0);
+          setIsPressing(false);
+          return;
+        }
+        const ok = await goToFlowForNote({
+          noteId: note.id,
+          flowIds: note.flow_ids,
+          accessToken,
+          router,
+          onError: (message) => pushToast(message, "error"),
+        });
+        if (!ok) {
+          longPressTriggeredRef.current = false;
+          setIsTriggered(false);
+          setPressProgress(0);
+          setIsPressing(false);
+          return;
+        }
       };
       void go();
     }, longPressDuration);
@@ -173,6 +204,14 @@ export default function EmotionNoteCard({
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
         <div className={styles.noteMeta}>
+          {primaryFlowId ? (
+            <span className={styles.flowBadge} title={flowTitle}>
+              <Waypoints size={12} className={styles.flowBadgeIcon} />
+              {`Flow #${primaryFlowId}${
+                extraFlowCount > 0 ? ` +${extraFlowCount} more` : ""
+              }`}
+            </span>
+          ) : null}
           <span className={styles.noteTime}>{timeLabel}</span>
         </div>
       </div>

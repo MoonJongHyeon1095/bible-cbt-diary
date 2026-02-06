@@ -18,6 +18,7 @@ import { queryKeys } from "@/lib/queryKeys";
 
 type EmotionNoteFlowGroupListProps = {
   accessToken: string;
+  noteId?: number | null;
 };
 
 type GroupNode = {
@@ -47,6 +48,7 @@ const buildNodes = (flows: { id: number; note_count: number }[]) =>
 
 export default function EmotionNoteFlowGroupList({
   accessToken,
+  noteId = null,
 }: EmotionNoteFlowGroupListProps) {
   const router = useRouter();
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -55,6 +57,9 @@ export default function EmotionNoteFlowGroupList({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [noteFilterInput, setNoteFilterInput] = useState(
+    noteId ? String(noteId) : "",
+  );
   const panStateRef = useRef({
     isPanning: false,
     startX: 0,
@@ -74,9 +79,9 @@ export default function EmotionNoteFlowGroupList({
   }, []);
 
   const flowsQuery = useQuery({
-    queryKey: queryKeys.flow.flows(accessToken),
+    queryKey: queryKeys.flow.flows(accessToken, noteId),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionFlows(accessToken);
+      const { response, data } = await fetchEmotionFlows(accessToken, noteId);
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
@@ -137,6 +142,23 @@ export default function EmotionNoteFlowGroupList({
     [nodes],
   );
 
+  useEffect(() => {
+    setNoteFilterInput(noteId ? String(noteId) : "");
+  }, [noteId]);
+
+  const applyNoteFilter = () => {
+    const trimmed = noteFilterInput.trim();
+    if (!trimmed) {
+      router.push("/flow");
+      return;
+    }
+    const parsed = Number(trimmed);
+    if (Number.isNaN(parsed)) {
+      return;
+    }
+    router.push(`/flow?noteId=${parsed}`);
+  };
+
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest(`.${styles.node}`)) {
       return;
@@ -175,6 +197,36 @@ export default function EmotionNoteFlowGroupList({
           <h2 className={styles.title}>
             {nodes.length}개의 플로우, {totalCount}개의 기록
           </h2>
+          <div className={styles.noteFilter}>
+            <label className={styles.noteFilterLabel} htmlFor="flow-note-filter">
+              임시 노트 필터
+            </label>
+            <div className={styles.noteFilterField}>
+              <input
+                id="flow-note-filter"
+                type="number"
+                inputMode="numeric"
+                placeholder="noteId 입력"
+                value={noteFilterInput}
+                onChange={(event) => setNoteFilterInput(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    applyNoteFilter();
+                  }
+                }}
+                className={styles.noteFilterInput}
+              />
+              <SafeButton
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={styles.noteFilterButton}
+                onClick={applyNoteFilter}
+              >
+                적용
+              </SafeButton>
+            </div>
+          </div>
         </div>
       </header>
 

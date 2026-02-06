@@ -1,13 +1,14 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
-import { getQueryParam, json } from "../_utils.js";
 import { getKstDayRange } from "../../utils/time.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
+import { getQueryParam, json } from "../_utils.js";
 
 const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date());
 };
 
+// today, month 노트 목록 조회
 export const handleGetEmotionNotes = async (
   req: VercelRequest,
   res: VercelResponse,
@@ -29,19 +30,18 @@ export const handleGetEmotionNotes = async (
       : getDateRange(getQueryParam(req, "date"));
 
   const supabase = createSupabaseAdminClient();
-  const baseQuery = supabase
-    .from("emotion_notes")
-    .select(
-      `
+  const baseQuery = supabase.from("emotion_notes").select(
+    `
       id,
       title,
       trigger_text,
       created_at,
+      emotion_flow_note_middles(flow_id),
       emotion_note_details(emotion),
       emotion_error_details(error_label),
       emotion_behavior_details(behavior_label)
     `,
-    );
+  );
 
   const scopedQuery = user
     ? baseQuery.eq("user_id", user.id)
@@ -89,6 +89,13 @@ export const handleGetEmotionNotes = async (
             .filter(Boolean),
         ),
       );
+      const flowIds = Array.from(
+        new Set(
+          (note.emotion_flow_note_middles ?? [])
+            .map((detail) => Number(detail.flow_id))
+            .filter((id) => Number.isFinite(id)),
+        ),
+      );
 
       return {
         id: note.id,
@@ -98,6 +105,7 @@ export const handleGetEmotionNotes = async (
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
         behavior_labels: behaviorLabels,
+        flow_ids: flowIds,
       };
     }) ?? [];
 

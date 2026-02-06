@@ -88,7 +88,7 @@ const buildSpreadOffsets = (children: { id: string }[]) => {
 type PositionedElkNode = ElkNode & { x: number; y: number };
 
 const isPositionedElkNode = (node: ElkNode): node is PositionedElkNode =>
-  typeof node.x === "number" && typeof node.y === "number";
+  Number.isFinite(node.x) && Number.isFinite(node.y);
 
 export const useEmotionNoteFlowLayout = (
   notes: EmotionNote[],

@@ -12,6 +12,44 @@
   padding: 4px 4px 0;
 }
 
+.noteFilter {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.noteFilterLabel {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.noteFilterField {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.noteFilterInput {
+  width: 140px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.45);
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.noteFilterInput:focus {
+  outline: none;
+  border-color: rgba(148, 163, 184, 0.7);
+  box-shadow: 0 0 0 2px rgba(148, 163, 184, 0.2);
+}
+
+.noteFilterButton {
+  padding: 6px 10px;
+  border-radius: 10px;
+}
+
 .label {
   margin: 0 0 6px;
   color: var(--muted);

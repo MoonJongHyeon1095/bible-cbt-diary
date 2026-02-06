@@ -14,6 +14,7 @@ import { useEmotionNoteFlowDisplay } from "./hooks/useEmotionNoteFlowDisplay";
 import { useEmotionNoteFlowLayout } from "./hooks/useEmotionNoteFlowLayout";
 import { useEmotionNoteFlowSelection } from "./hooks/useEmotionNoteFlowSelection";
 import { getFlowThemeColor } from "./utils/flowColors";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
 
 // Props for the flow detail section.
 type EmotionNoteFlowSectionProps = {
@@ -28,6 +29,7 @@ export default function EmotionNoteFlowSection({
   flowId,
 }: EmotionNoteFlowSectionProps) {
   const router = useRouter();
+  const { pushToast } = useCbtToast();
   // Usage guard for deep-session entry.
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   // Load notes/middles either by flow or single note.
@@ -74,10 +76,12 @@ export default function EmotionNoteFlowSection({
       setIsGoDeeperLoading(false);
       return;
     }
-    const query = flowId
-      ? `/session/deep?mainId=${selectedNote.id}&flowId=${flowId}`
-      : `/session/deep?mainId=${selectedNote.id}`;
-    router.push(query);
+    if (!flowId) {
+      pushToast("플로우 정보를 찾을 수 없습니다.", "error");
+      setIsGoDeeperLoading(false);
+      return;
+    }
+    router.push(`/session/deep?mainId=${selectedNote.id}&flowId=${flowId}`);
   };
   // Stable key forces ReactFlow to re-mount when layout changes.
   const layoutKey = useMemo(() => {

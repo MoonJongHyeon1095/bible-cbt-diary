@@ -65,14 +65,17 @@ function EmotionNoteFlowPageContent() {
       <main className={styles.main}>
         <div className={styles.shell}>
           {user && accessToken ? (
-            flowId || noteId ? (
+            flowId ? (
               <EmotionNoteFlowSection
                 accessToken={accessToken}
                 noteId={noteId}
                 flowId={flowId}
               />
             ) : (
-              <EmotionNoteFlowGroupList accessToken={accessToken} />
+              <EmotionNoteFlowGroupList
+                accessToken={accessToken}
+                noteId={noteId}
+              />
             )
           ) : (
             <div className={styles.emptyAuth}>

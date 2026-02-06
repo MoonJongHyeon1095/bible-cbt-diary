@@ -1,6 +1,12 @@
 "use client";
 
-import { driver, type Driver, type DriveStep, type Side, type Alignment } from "driver.js";
+import {
+  driver,
+  type Driver,
+  type DriveStep,
+  type Side,
+  type Alignment,
+} from "driver.js";
 import { useEffect, useMemo, useRef } from "react";
 
 export type OnboardingStep = {
@@ -32,6 +38,7 @@ export default function OnboardingTour({
   onFinish,
 }: OnboardingTourProps) {
   const driverRef = useRef<Driver | null>(null);
+  const lastActionRef = useRef<"close" | "mask" | "finish" | null>(null);
 
   const driveSteps = useMemo<DriveStep[]>(
     () =>
@@ -65,9 +72,18 @@ export default function OnboardingTour({
         popoverClass: "onboarding-popover",
         showProgress: true,
         progressText: "{{current}} / {{total}}",
+        showButtons: ["previous", "next", "close"],
         nextBtnText: "다음",
         prevBtnText: "이전",
         doneBtnText: "완료",
+        onPopoverRender: (popover, opts) => {
+          const isLast = opts.state.activeIndex === (opts.config.steps?.length ?? 0) - 1;
+          popover.nextButton.innerHTML = isLast ? "✓" : "→";
+          popover.previousButton.innerHTML = "←";
+          popover.nextButton.setAttribute("aria-label", isLast ? "완료" : "다음");
+          popover.previousButton.setAttribute("aria-label", "이전");
+          popover.closeButton.setAttribute("aria-label", "닫기");
+        },
         onHighlightStarted: () => {
           const index = driverRef.current?.getActiveIndex();
           if (typeof index === "number") {
@@ -78,9 +94,7 @@ export default function OnboardingTour({
           const instance = driverRef.current;
           if (!instance) return;
           if (instance.isLastStep()) {
-            const index = instance.getActiveIndex() ?? currentStep;
-            onFinish?.(index);
-            setIsOpen(false);
+            lastActionRef.current = "finish";
             instance.destroy();
             return;
           }
@@ -90,22 +104,29 @@ export default function OnboardingTour({
           driverRef.current?.movePrevious();
         },
         onCloseClick: () => {
-          const instance = driverRef.current;
-          if (!instance) return;
-          const index = instance.getActiveIndex() ?? currentStep;
-          onClose?.(index);
-          setIsOpen(false);
-          instance.destroy();
+          lastActionRef.current = "close";
+          driverRef.current?.destroy();
         },
         overlayClickBehavior: () => {
-          const instance = driverRef.current;
-          if (!instance) return;
-          const index = instance.getActiveIndex() ?? currentStep;
-          onMaskClick?.(index);
-          setIsOpen(false);
-          instance.destroy();
+          lastActionRef.current = "mask";
+          driverRef.current?.destroy();
+        },
+        onDestroyStarted: () => {
+          if (!lastActionRef.current && driverRef.current?.isLastStep()) {
+            lastActionRef.current = "finish";
+          }
         },
         onDestroyed: () => {
+          const index = driverRef.current?.getActiveIndex() ?? currentStep;
+          const action = lastActionRef.current;
+          lastActionRef.current = null;
+          if (action === "finish") {
+            onFinish?.(index);
+          } else if (action === "mask") {
+            onMaskClick?.(index);
+          } else if (action === "close") {
+            onClose?.(index);
+          }
           setIsOpen(false);
         },
       });

@@ -3,16 +3,30 @@
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAccess } from "@/components/cbt/hooks/useCbtAccess";
 import {
+  useCbtMinimalSessionFlow,
+  type MinimalStep,
+} from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
+import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
+import { useGate } from "@/components/gate/GateProvider";
+import OnboardingTour, {
+  type OnboardingStep,
+} from "@/components/ui/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
+import {
   saveMinimalPatternAPI,
   type MinimalSavePayload,
 } from "@/lib/api/cbt/postMinimalSession";
 import { saveSessionHistoryAPI } from "@/lib/api/session-history/postSessionHistory";
-import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessionStorage";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import type { SelectedCognitiveError, SessionHistory } from "@/lib/types/cbtTypes";
+import { queryKeys } from "@/lib/queryKeys";
+import type {
+  SelectedCognitiveError,
+  SessionHistory,
+} from "@/lib/types/cbtTypes";
 import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CbtMinimalAutoThoughtSection } from "./minimal/center/CbtMinimalAutoThoughtSection";
@@ -24,15 +38,6 @@ import { CbtMinimalSavingModal } from "./minimal/common/CbtMinimalSavingModal";
 import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognitiveErrorSection";
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
-import { useGate } from "@/components/gate/GateProvider";
-import {
-  useCbtMinimalSessionFlow,
-  type MinimalStep,
-} from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
-import OnboardingTour, { type OnboardingStep } from "@/components/ui/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
 
 const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
 
@@ -81,21 +86,27 @@ function CbtSessionPageContent() {
 
   const saveMinimalMutation = useMutation({
     mutationFn: async (args: {
-      access: { mode: "auth" | "guest" | "blocked"; accessToken: string | null };
+      access: {
+        mode: "auth" | "guest" | "blocked";
+        accessToken: string | null;
+      };
       payload: MinimalSavePayload;
     }) => saveMinimalPatternAPI(args.access, args.payload),
   });
 
   const saveHistoryMutation = useMutation({
     mutationFn: async (args: {
-      access: { mode: "auth" | "guest" | "blocked"; accessToken: string | null };
+      access: {
+        mode: "auth" | "guest" | "blocked";
+        accessToken: string | null;
+      };
       payload: SessionHistory;
     }) => saveSessionHistoryAPI(args.access, args.payload),
   });
 
   const tourSteps = useMemo<OnboardingStep[]>(() => {
     if (flow.step === "incident") {
-      return [
+      const steps: OnboardingStep[] = [
         {
           selector: "[data-tour='minimal-incident-input']",
           side: "bottom",
@@ -104,7 +115,7 @@ function CbtSessionPageContent() {
         {
           selector: "[data-tour='minimal-incident-example']",
           side: "bottom",
-          content: "막막하면 예시로 시작해도 좋아요.",
+          content: "직접 쓰시거나 예시를 살짝 보실 수도 있어요.",
         },
         {
           selector: "[data-tour='minimal-incident-next']",
@@ -112,18 +123,20 @@ function CbtSessionPageContent() {
           content: "다 썼다면 다음으로 이동해요.",
         },
       ];
+      return steps;
     }
     if (flow.step === "emotion") {
-      return [
+      const steps: OnboardingStep[] = [
         {
           selector: "[data-tour='emotion-grid']",
           side: "top",
           content: "지금 가장 가까운 감정을 골라주세요.",
         },
       ];
+      return steps;
     }
     if (flow.step === "thought") {
-      return [
+      const steps: OnboardingStep[] = [
         {
           selector: "[data-tour='minimal-thought-carousel']",
           side: "bottom",
@@ -135,6 +148,7 @@ function CbtSessionPageContent() {
           content: "지금 보고 있는 생각으로 진행합니다.",
         },
       ];
+      return steps;
     }
     if (flow.step === "errors") {
       return [];
@@ -143,7 +157,7 @@ function CbtSessionPageContent() {
       return [];
     }
     return [];
-  }, [flow.step]);
+  }, [flow.step, flow.selectedEmotion]);
 
   const persistTourProgress = useCallback(
     (stepIndex: number) => {
@@ -246,6 +260,14 @@ function CbtSessionPageContent() {
     actions.setThoughtPair(thought, flow.selectedEmotion);
   };
 
+  const handleSelectEmotion = (emotion: string) => {
+    actions.setSelectedEmotion(emotion);
+    if (isTourOpen && flow.step === "emotion") {
+      handleTourFinish(tourStep);
+      setIsTourOpen(false);
+    }
+  };
+
   const handleSelectErrors = (errors: SelectedCognitiveError[]) => {
     const nextKey = JSON.stringify(
       errors.map((item) => ({
@@ -316,8 +338,12 @@ function CbtSessionPageContent() {
       }
 
       pushToast("세션 기록이 저장되었습니다.", "success");
-      void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.emotionNotes.all,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.sessionHistory.all,
+      });
       window.setTimeout(() => {
         try {
           void flushTokenSessionUsage({ sessionCount: 1 });
@@ -363,7 +389,7 @@ function CbtSessionPageContent() {
         {flow.step === "emotion" && (
           <CbtMinimalEmotionSection
             selectedEmotion={flow.selectedEmotion}
-            onSelectEmotion={actions.setSelectedEmotion}
+            onSelectEmotion={handleSelectEmotion}
             onNext={() => {
               actions.setWantsCustom(false);
               actions.setStep("thought");

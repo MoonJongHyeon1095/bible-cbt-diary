@@ -14,7 +14,7 @@ export function buildTodayTourSteps(noteCount: number): OnboardingStep[] {
     {
       selector: "[data-tour='notes-list']",
       side: "top",
-      content: "오늘 쓴 일기를 여기서 볼 수 있어요.",
+      content: "오늘 작성한 일기를 여기서 볼 수 있어요.",
     },
   ];
 

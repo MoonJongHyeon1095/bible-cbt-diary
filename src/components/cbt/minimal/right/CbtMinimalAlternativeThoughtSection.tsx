@@ -1,4 +1,8 @@
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtAlternativeThoughts } from "@/components/cbt/hooks/useCbtAlternativeThoughts";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
@@ -10,10 +14,6 @@ import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSecti
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "./components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "./components/CbtMinimalAlternativeThoughtErrorState";
-import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtMinimalAlternativeThoughtSectionProps {
   userInput: string;
@@ -24,7 +24,18 @@ interface CbtMinimalAlternativeThoughtSectionProps {
 }
 
 const TITLE = "어떤 생각이 마음에\u00a0와닿나요?";
-const DESCRIPTION = "가장 힘이 되는 생각을 골라주세요.";
+const DESCRIPTION = (
+  <div>
+    <p>
+      <strong>속삭이는 목소리를 바꿀 수 있다면?</strong>
+    </p>
+    <p>
+      조금만 들여다 보아도 목소리는 잦아듭니다.
+      <br />
+      그리고 어쩌면 우리는 이곳에 더 나은 목소리를 새길 수 있을지도 모릅니다.
+    </p>
+  </div>
+);
 
 export function CbtMinimalAlternativeThoughtSection({
   userInput,
@@ -90,10 +101,15 @@ export function CbtMinimalAlternativeThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <CbtMinimalStepHeaderSection title={TITLE} description={DESCRIPTION} />
+          <CbtMinimalStepHeaderSection
+            title={TITLE}
+            description={DESCRIPTION}
+          />
         </div>
         {isFallback && (
-          <AiFallbackNotice onRetry={() => void generateAlternatives({ force: true })} />
+          <AiFallbackNotice
+            onRetry={() => void generateAlternatives({ force: true })}
+          />
         )}
 
         <CbtCarousel emblaRef={emblaRef}>

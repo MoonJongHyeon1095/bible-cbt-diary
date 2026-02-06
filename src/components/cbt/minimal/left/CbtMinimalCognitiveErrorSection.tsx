@@ -1,5 +1,10 @@
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtCognitiveErrorRanking } from "@/components/cbt/hooks/useCbtCognitiveErrorRanking";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
@@ -7,11 +12,6 @@ import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSecti
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalCognitiveErrorCard } from "./components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "./components/CbtMinimalCognitiveErrorErrorState";
-import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
-import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtMinimalCognitiveErrorSectionProps {
   userInput: string;
@@ -20,6 +20,20 @@ interface CbtMinimalCognitiveErrorSectionProps {
 }
 
 const HEADER_TEXT = "혹시 이런 경향이\u00a0있지 않을까요?";
+const HEADER_DESCRIPTION = (
+  <div>
+    <p>
+      <strong>생각은 우리를 어디론가 데려가지만...</strong>
+    </p>
+    <p>
+      어떤 장소에 도착했습니다.
+      <br />
+      속삭이는 목소리들이 들립니다.
+      <br />
+      하지만 진실만 말하는 것 같지는 않습니다.
+    </p>
+  </div>
+);
 
 export function CbtMinimalCognitiveErrorSection({
   userInput,
@@ -75,6 +89,7 @@ export function CbtMinimalCognitiveErrorSection({
     return (
       <CbtMinimalLoadingState
         title={HEADER_TEXT}
+        description={HEADER_DESCRIPTION}
         message="생각을 살펴보고 있어요."
         variant="page"
       />
@@ -82,18 +97,21 @@ export function CbtMinimalCognitiveErrorSection({
   }
 
   if (error) {
-    return <CbtMinimalCognitiveErrorErrorState error={error} onRetry={reload} />;
+    return (
+      <CbtMinimalCognitiveErrorErrorState error={error} onRetry={reload} />
+    );
   }
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <CbtMinimalStepHeaderSection title={HEADER_TEXT} />
+          <CbtMinimalStepHeaderSection
+            title={HEADER_TEXT}
+            description={HEADER_DESCRIPTION}
+          />
         </div>
-        {isFallback && (
-          <AiFallbackNotice onRetry={() => void reload()} />
-        )}
+        {isFallback && <AiFallbackNotice onRetry={() => void reload()} />}
 
         {currentRankItem && (
           <CbtCarousel emblaRef={emblaRef}>

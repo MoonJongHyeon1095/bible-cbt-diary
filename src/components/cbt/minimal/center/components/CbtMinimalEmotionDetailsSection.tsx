@@ -56,7 +56,9 @@ export function CbtMinimalEmotionDetailsSection({
             ))}
           </div>
 
-          <CbtMinimalFloatingNextButton onClick={onNext} />
+          <CbtMinimalFloatingNextButton
+            onClick={onNext}
+          />
         </div>
       )}
     </div>

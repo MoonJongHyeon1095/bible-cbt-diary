@@ -40,6 +40,8 @@ export function CbtMinimalAutoThoughtSection({
       생각을 찾아볼게요.
     </>
   );
+  const description =
+    "어떤 생각은 종종 우리가 눈치채기 전에 자동으로 작동하고, 우리를 어딘가로 데려갑니다.";
 
   const resetSelection = () => {
     if (wantsCustom) return;
@@ -99,7 +101,7 @@ export function CbtMinimalAutoThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <CbtMinimalStepHeaderSection title={title}>
+          <CbtMinimalStepHeaderSection title={title} description={description}>
             {error && (
               <div className={styles.helperText}>
                 {error}{" "}
@@ -119,11 +121,7 @@ export function CbtMinimalAutoThoughtSection({
           <AiFallbackNotice onRetry={() => void reloadThoughts()} />
         )}
 
-        <div
-          data-tour={
-            !wantsCustom && !loading ? "minimal-thought-carousel" : undefined
-          }
-        >
+        <div data-tour="minimal-thought-carousel">
           {wantsCustom ? (
             <div className={styles.inlineCard}>
               <CbtMinimalAutoThoughtInputForm

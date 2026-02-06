@@ -1,10 +1,11 @@
+import type { ReactNode } from "react";
 import { CbtMinimalStepHeaderSection } from "./CbtMinimalStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 
 type CbtMinimalLoadingStateProps = {
   message: string;
   title?: string;
-  description?: string;
+  description?: ReactNode;
   variant?: "inline" | "page";
 };
 

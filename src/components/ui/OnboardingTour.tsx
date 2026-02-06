@@ -40,7 +40,6 @@ export default function OnboardingTour({
   onFinish,
 }: OnboardingTourProps) {
   const driverRef = useRef<Driver | null>(null);
-  const highlightRef = useRef<HTMLDivElement | null>(null);
 
   const cleanupDriver = () => {
     driverRef.current?.destroy();
@@ -65,53 +64,9 @@ export default function OnboardingTour({
     }
   };
 
-  const ensureHighlightBox = () => {
-    if (highlightRef.current) return highlightRef.current;
-    const box = document.createElement("div");
-    box.className = "onboarding-highlight-box";
-    Object.assign(box.style, {
-      position: "fixed",
-      outline: "2px solid rgba(242, 201, 109, 0.95)",
-      outlineOffset: "1px",
-      background: "transparent",
-      borderRadius: "16px",
-      boxShadow: "none",
-      pointerEvents: "none",
-      zIndex: "10001",
-      transition: "none",
-    });
-    document.body.appendChild(box);
-    highlightRef.current = box;
-    return box;
-  };
-
-  const removeHighlightBox = () => {
-    highlightRef.current?.remove();
-    highlightRef.current = null;
-  };
-
-  const updateHighlightBox = (element?: Element) => {
-    const target = element instanceof Element ? element : null;
-    if (!target) {
-      removeHighlightBox();
-      return;
-    }
-    const rect = target.getBoundingClientRect();
-    const padding = 10;
-    const box = ensureHighlightBox();
-    Object.assign(box.style, {
-      left: `${Math.max(0, rect.left - padding)}px`,
-      top: `${Math.max(0, rect.top - padding)}px`,
-      width: `${Math.max(0, rect.width + padding * 2)}px`,
-      height: `${Math.max(0, rect.height + padding * 2)}px`,
-      display: "block",
-    });
-  };
-
   useEffect(() => {
     return () => {
       cleanupDriver();
-      removeHighlightBox();
     };
   }, []);
 
@@ -131,14 +86,13 @@ export default function OnboardingTour({
   useEffect(() => {
     if (!isOpen) {
       cleanupDriver();
-      removeHighlightBox();
       return;
     }
 
     if (!driverRef.current) {
       driverRef.current = driver({
         animate: false,
-        overlayOpacity: 0.4,
+        overlayOpacity: 0.75,
         overlayColor: "#05070a",
         smoothScroll: false,
         allowClose: true,
@@ -171,11 +125,7 @@ export default function OnboardingTour({
           }
         },
         onHighlighted: (element) => {
-          updateHighlightBox(element);
           pruneDriverDom();
-        },
-        onDeselected: () => {
-          removeHighlightBox();
         },
         onNextClick: () => {
           const instance = driverRef.current;
@@ -185,7 +135,6 @@ export default function OnboardingTour({
             onFinish?.(index);
             setIsOpen(false);
             cleanupDriver();
-            removeHighlightBox();
             return;
           }
           instance.moveNext();
@@ -199,18 +148,15 @@ export default function OnboardingTour({
           onClose?.(index);
           setIsOpen(false);
           cleanupDriver();
-          removeHighlightBox();
         },
         overlayClickBehavior: () => {
           const index = driverRef.current?.getActiveIndex() ?? currentStep;
           onMaskClick?.(index);
           setIsOpen(false);
           cleanupDriver();
-          removeHighlightBox();
         },
         onDestroyed: () => {
           driverRef.current = null;
-          removeHighlightBox();
           setIsOpen(false);
         },
       });

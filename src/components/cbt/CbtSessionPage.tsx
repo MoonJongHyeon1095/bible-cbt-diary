@@ -13,10 +13,8 @@ import type { SelectedCognitiveError, SessionHistory } from "@/lib/types/cbtType
 import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
-import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CbtMinimalAutoThoughtSection } from "./minimal/center/CbtMinimalAutoThoughtSection";
 import { CbtMinimalEmotionSection } from "./minimal/center/CbtMinimalEmotionSection";
 import { CbtMinimalIncidentSection } from "./minimal/center/CbtMinimalIncidentSection";
@@ -33,6 +31,8 @@ import {
 } from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import OnboardingTour from "@/components/ui/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
 
 const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
 
@@ -41,10 +41,6 @@ type TourProgress = {
   lastTotal: number;
 };
 
-const Tour = dynamic(() => import("@reactour/tour").then((mod) => mod.Tour), {
-  ssr: false,
-});
-
 function CbtSessionPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,9 +48,6 @@ function CbtSessionPageContent() {
   const { accessMode, isLoading: isAccessLoading } = useAccessContext();
   const { state: flow, actions } = useCbtMinimalSessionFlow();
   const [isSaving, setIsSaving] = useState(false);
-  const [isTourOpen, setIsTourOpen] = useState(false);
-  const [tourStep, setTourStep] = useState(0);
-  const [disabledActions, setDisabledActions] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
   const lastErrorsKeyRef = useRef<string>("");
   const { requireAccessContext } = useCbtAccess({
@@ -105,14 +98,17 @@ function CbtSessionPageContent() {
       return [
         {
           selector: "[data-tour='minimal-incident-input']",
+          side: "bottom",
           content: "오늘 있었던 일을 간단히 적어주세요.",
         },
         {
           selector: "[data-tour='minimal-incident-example']",
+          side: "bottom",
           content: "막막하면 예시로 시작해도 좋아요.",
         },
         {
           selector: "[data-tour='minimal-incident-next']",
+          side: "top",
           content: "다 썼다면 다음으로 이동해요.",
         },
       ];
@@ -121,6 +117,7 @@ function CbtSessionPageContent() {
       return [
         {
           selector: "[data-tour='emotion-grid']",
+          side: "top",
           content: "지금 가장 가까운 감정을 골라주세요.",
         },
       ];
@@ -129,10 +126,12 @@ function CbtSessionPageContent() {
       return [
         {
           selector: "[data-tour='minimal-thought-carousel']",
+          side: "bottom",
           content: "감정 뒤에 있는 생각을 확인해요.",
         },
         {
           selector: "[data-tour='minimal-thought-next']",
+          side: "top",
           content: "지금 보고 있는 생각으로 진행합니다.",
         },
       ];
@@ -145,6 +144,30 @@ function CbtSessionPageContent() {
     }
     return [];
   }, [flow.step]);
+
+  const persistTourProgress = useCallback(
+    (stepIndex: number) => {
+      const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+      safeLocalStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          lastStep: stepIndex,
+          lastTotal: tourSteps.length,
+        }),
+      );
+    },
+    [flow.step, tourSteps.length],
+  );
+
+  const {
+    isOpen: isTourOpen,
+    setIsOpen: setIsTourOpen,
+    currentStep: tourStep,
+    setCurrentStep: setTourStep,
+    onFinish: handleTourFinish,
+    onClose: handleTourClose,
+    onMaskClick: handleTourMaskClick,
+  } = useOnboardingTourControls({ onPersist: persistTourProgress });
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -312,17 +335,6 @@ function CbtSessionPageContent() {
     }
   };
 
-  const persistTourProgress = (stepIndex: number) => {
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
-    safeLocalStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        lastStep: stepIndex,
-        lastTotal: tourSteps.length,
-      }),
-    );
-  };
-
   return (
     <div className={styles.page}>
       <div className={styles.bgWaves} />
@@ -385,107 +397,16 @@ function CbtSessionPageContent() {
           />
         )}
       </div>
-      {isTourOpen ? (
-        <Tour
-          steps={tourSteps}
-          isOpen={isTourOpen}
-          setIsOpen={setIsTourOpen}
-          currentStep={tourStep}
-          setCurrentStep={setTourStep}
-          disabledActions={disabledActions}
-          setDisabledActions={setDisabledActions}
-          showCloseButton={false}
-          nextButton={({
-            Button,
-            currentStep,
-            setCurrentStep,
-            setIsOpen,
-            stepsLength,
-          }) => {
-            const lastStepIndex = Math.max(0, stepsLength - 1);
-            const isLastStep = currentStep >= lastStepIndex;
-            return (
-              <Button
-                kind="next"
-                hideArrow={isLastStep}
-                onClick={() => {
-                  if (isLastStep) {
-                    persistTourProgress(lastStepIndex);
-                    setIsOpen(false);
-                    return;
-                  }
-                  setCurrentStep(currentStep + 1);
-                }}
-              >
-                {isLastStep ? <Check size={16} strokeWidth={2.4} /> : null}
-              </Button>
-            );
-          }}
-          onClickClose={({ currentStep: stepIndex, setIsOpen }) => {
-            persistTourProgress(stepIndex);
-            setIsOpen(false);
-          }}
-          onClickMask={({ currentStep: stepIndex, setIsOpen }) => {
-            persistTourProgress(stepIndex);
-            setIsOpen(false);
-          }}
-          styles={{
-            popover: (base) => ({
-              ...base,
-              borderRadius: 16,
-              background: "rgba(22, 26, 33, 0.96)",
-              color: "#e6e7ea",
-              border: "1px solid rgba(143, 167, 200, 0.24)",
-              boxShadow:
-                "0 18px 40px rgba(8, 9, 12, 0.65), 0 0 0 1px rgba(255,255,255,0.04) inset",
-              padding: "28px 18px 16px",
-              overflow: "visible",
-            }),
-            badge: (base) => ({
-              ...base,
-              background: "#f2c96d",
-              color: "#0f1114",
-              fontWeight: 700,
-              boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
-            }),
-            dot: (base, state) => ({
-              ...base,
-              width: 6,
-              height: 6,
-              margin: "0 4px",
-              background: state?.current ? "#f2c96d" : "rgba(255,255,255,0.25)",
-            }),
-            arrow: (base) => ({
-              ...base,
-              color: "rgba(22, 26, 33, 0.96)",
-            }),
-            maskArea: (base) => ({
-              ...base,
-              rx: 16,
-              ry: 16,
-            }),
-            highlightedArea: (base) => ({
-              ...base,
-              boxShadow: "0 0 0 9999px rgba(5, 7, 10, 0.7)",
-              borderRadius: 16,
-              border: "1px solid rgba(242, 201, 109, 0.55)",
-            }),
-            navigation: (base) => ({
-              ...base,
-              marginTop: 16,
-            }),
-            button: (base) => ({
-              ...base,
-              background: "rgba(143, 167, 200, 0.18)",
-              color: "#e6e7ea",
-              borderRadius: 999,
-              padding: "6px 12px",
-              fontWeight: 600,
-              border: "1px solid rgba(143, 167, 200, 0.25)",
-            }),
-          }}
-        />
-      ) : null}
+      <OnboardingTour
+        steps={tourSteps}
+        isOpen={isTourOpen}
+        setIsOpen={setIsTourOpen}
+        currentStep={tourStep}
+        setCurrentStep={setTourStep}
+        onFinish={handleTourFinish}
+        onClose={handleTourClose}
+        onMaskClick={handleTourMaskClick}
+      />
     </div>
   );
 }

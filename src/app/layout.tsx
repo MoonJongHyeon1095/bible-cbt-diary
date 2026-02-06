@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import localFont from "next/font/local";
 import Providers from "./Providers";
 import "./globals.css";
+import "driver.js/dist/driver.css";
 
 const notoSansKr = localFont({
   variable: "--font-noto-sans-kr",

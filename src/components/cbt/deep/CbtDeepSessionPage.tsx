@@ -21,9 +21,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { flushTokenSessionUsage } from "@/lib/utils/tokenSessionStorage";
 import { useRouter, useSearchParams } from "next/navigation";
-import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Check } from "lucide-react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { queryKeys } from "@/lib/queryKeys";
 import { CbtDeepAutoThoughtSection } from "./center/CbtDeepAutoThoughtSection";
 import { CbtDeepIncidentSection } from "./center/CbtDeepIncidentSection";
@@ -37,6 +35,8 @@ import {
   type DeepStep,
 } from "@/components/cbt/hooks/useCbtDeepSessionFlow";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import OnboardingTour from "@/components/ui/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
 
 const parseIds = (value: string | null) => {
   if (!value) return [] as number[];
@@ -52,10 +52,6 @@ type TourProgress = {
   lastStep: number;
   lastTotal: number;
 };
-
-const Tour = dynamic(() => import("@reactour/tour").then((mod) => mod.Tour), {
-  ssr: false,
-});
 
 function CbtDeepSessionPageContent() {
   const router = useRouter();
@@ -96,9 +92,6 @@ function CbtDeepSessionPageContent() {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
-  const [isTourOpen, setIsTourOpen] = useState(false);
-  const [tourStep, setTourStep] = useState(0);
-  const [disabledActions, setDisabledActions] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
   const lastErrorsKeyRef = useRef<string>("");
 
@@ -129,14 +122,17 @@ function CbtDeepSessionPageContent() {
       return [
         {
           selector: "[data-tour='deep-select-main']",
+          side: "bottom",
           content: "핵심이 되는 메인 기록이에요.",
         },
         {
           selector: "[data-tour='deep-select-list']",
+          side: "top",
           content: "연결할 기록을 1~2개 골라주세요.",
         },
         {
           selector: "[data-tour='deep-select-next']",
+          side: "top",
           content: "이 조합으로 심화 세션을 시작해요.",
         },
       ];
@@ -145,6 +141,7 @@ function CbtDeepSessionPageContent() {
       return [
         {
           selector: "[data-tour='deep-incident-input']",
+          side: "bottom",
           content: "이번엔 더 차분히 상황을 다시 적어봐요.",
         },
       ];
@@ -153,12 +150,38 @@ function CbtDeepSessionPageContent() {
       return [
         {
           selector: "[data-tour='emotion-grid']",
+          side: "top",
           content: "지금 가장 가까운 감정을 골라주세요.",
         },
       ];
     }
     return [];
   }, [flow.step]);
+
+  const persistTourProgress = useCallback(
+    (stepIndex: number) => {
+      if (!safeLocalStorage.isAvailable()) return;
+      const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+      safeLocalStorage.setItem(
+        storageKey,
+        JSON.stringify({
+          lastStep: stepIndex,
+          lastTotal: tourSteps.length,
+        }),
+      );
+    },
+    [flow.step, tourSteps.length],
+  );
+
+  const {
+    isOpen: isTourOpen,
+    setIsOpen: setIsTourOpen,
+    currentStep: tourStep,
+    setCurrentStep: setTourStep,
+    onFinish: handleTourFinish,
+    onClose: handleTourClose,
+    onMaskClick: handleTourMaskClick,
+  } = useOnboardingTourControls({ onPersist: persistTourProgress });
 
   useEffect(() => {
     setSelectedSubIds([]);
@@ -481,18 +504,6 @@ function CbtDeepSessionPageContent() {
     }
   };
 
-  const persistTourProgress = (stepIndex: number) => {
-    if (!safeLocalStorage.isAvailable()) return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
-    safeLocalStorage.setItem(
-      storageKey,
-      JSON.stringify({
-        lastStep: stepIndex,
-        lastTotal: tourSteps.length,
-      }),
-    );
-  };
-
   const selectableNotes = useMemo(() => {
     if (!flowId) return [];
     return flowNotes.filter((note) => note.id !== mainNote?.id);
@@ -621,107 +632,16 @@ function CbtDeepSessionPageContent() {
           />
         )}
       </div>
-      {isTourOpen ? (
-        <Tour
-          steps={tourSteps}
-          isOpen={isTourOpen}
-          setIsOpen={setIsTourOpen}
-          currentStep={tourStep}
-          setCurrentStep={setTourStep}
-          disabledActions={disabledActions}
-          setDisabledActions={setDisabledActions}
-          showCloseButton={false}
-          nextButton={({
-            Button,
-            currentStep,
-            setCurrentStep,
-            setIsOpen,
-            stepsLength,
-          }) => {
-            const lastStepIndex = Math.max(0, stepsLength - 1);
-            const isLastStep = currentStep >= lastStepIndex;
-            return (
-              <Button
-                kind="next"
-                hideArrow={isLastStep}
-                onClick={() => {
-                  if (isLastStep) {
-                    persistTourProgress(lastStepIndex);
-                    setIsOpen(false);
-                    return;
-                  }
-                  setCurrentStep(currentStep + 1);
-                }}
-              >
-                {isLastStep ? <Check size={16} strokeWidth={2.4} /> : null}
-              </Button>
-            );
-          }}
-          onClickClose={({ currentStep: stepIndex, setIsOpen }) => {
-            persistTourProgress(stepIndex);
-            setIsOpen(false);
-          }}
-          onClickMask={({ currentStep: stepIndex, setIsOpen }) => {
-            persistTourProgress(stepIndex);
-            setIsOpen(false);
-          }}
-          styles={{
-            popover: (base) => ({
-              ...base,
-              borderRadius: 16,
-              background: "rgba(22, 26, 33, 0.96)",
-              color: "#e6e7ea",
-              border: "1px solid rgba(143, 167, 200, 0.24)",
-              boxShadow:
-                "0 18px 40px rgba(8, 9, 12, 0.65), 0 0 0 1px rgba(255,255,255,0.04) inset",
-              padding: "28px 18px 16px",
-              overflow: "visible",
-            }),
-            badge: (base) => ({
-              ...base,
-              background: "#f2c96d",
-              color: "#0f1114",
-              fontWeight: 700,
-              boxShadow: "0 6px 16px rgba(0,0,0,0.35)",
-            }),
-            dot: (base, state) => ({
-              ...base,
-              width: 6,
-              height: 6,
-              margin: "0 4px",
-              background: state?.current ? "#f2c96d" : "rgba(255,255,255,0.25)",
-            }),
-            arrow: (base) => ({
-              ...base,
-              color: "rgba(22, 26, 33, 0.96)",
-            }),
-            maskArea: (base) => ({
-              ...base,
-              rx: 16,
-              ry: 16,
-            }),
-            highlightedArea: (base) => ({
-              ...base,
-              boxShadow: "0 0 0 9999px rgba(5, 7, 10, 0.7)",
-              borderRadius: 16,
-              border: "1px solid rgba(242, 201, 109, 0.55)",
-            }),
-            navigation: (base) => ({
-              ...base,
-              marginTop: 16,
-            }),
-            button: (base) => ({
-              ...base,
-              background: "rgba(143, 167, 200, 0.18)",
-              color: "#e6e7ea",
-              borderRadius: 999,
-              padding: "6px 12px",
-              fontWeight: 600,
-              border: "1px solid rgba(143, 167, 200, 0.25)",
-            }),
-          }}
-        />
-      ) : null}
+      <OnboardingTour
+        steps={tourSteps}
+        isOpen={isTourOpen}
+        setIsOpen={setIsTourOpen}
+        currentStep={tourStep}
+        setCurrentStep={setTourStep}
+        onFinish={handleTourFinish}
+        onClose={handleTourClose}
+        onMaskClick={handleTourMaskClick}
+      />
     </div>
   );
 }

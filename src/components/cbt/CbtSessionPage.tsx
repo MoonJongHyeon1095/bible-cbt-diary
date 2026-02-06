@@ -120,7 +120,7 @@ function CbtSessionPageContent() {
         {
           selector: "[data-tour='minimal-incident-next']",
           side: "top",
-          content: "다 썼다면 다음으로 이동해요.",
+          content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
         },
       ];
       return steps;
@@ -140,12 +140,12 @@ function CbtSessionPageContent() {
         {
           selector: "[data-tour='minimal-thought-carousel']",
           side: "bottom",
-          content: "감정 뒤에 있는 생각을 확인해요.",
+          content: "감정을 불러일으킨 생각을 찾아볼까요?",
         },
         {
           selector: "[data-tour='minimal-thought-next']",
           side: "top",
-          content: "지금 보고 있는 생각으로 진행합니다.",
+          content: "지금 고른 생각을 같이 탐구해봐요.",
         },
       ];
       return steps;

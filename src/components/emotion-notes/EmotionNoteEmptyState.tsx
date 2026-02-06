@@ -6,7 +6,7 @@ type EmotionNoteEmptyStateProps = {
 };
 
 export default function EmotionNoteEmptyState({
-  title = "이아기를 남기고 하루를 기록해볼까요?",
+  title = "이야기를 남기고 하루를 기록해볼까요?",
   hint = "마음이 훨씬 편해질 거예요.",
 }: EmotionNoteEmptyStateProps) {
   return (

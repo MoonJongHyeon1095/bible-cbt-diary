@@ -1,3 +1,5 @@
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
@@ -6,13 +8,12 @@ import { CbtMinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/comp
 import { CbtMinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorErrorState";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { useCbtDeepCognitiveErrorRanking } from "../hooks/useCbtDeepCognitiveErrorRanking";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtDeepCognitiveErrorSectionProps {
   userInput: string;
@@ -81,6 +82,7 @@ export function CbtDeepCognitiveErrorSection({
   if (loading) {
     return (
       <CbtMinimalLoadingState
+        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={HEADER_TEXT}
         message="생각을 살펴보고 있어요."
         variant="page"
@@ -89,18 +91,21 @@ export function CbtDeepCognitiveErrorSection({
   }
 
   if (error) {
-    return <CbtMinimalCognitiveErrorErrorState error={error} onRetry={reload} />;
+    return (
+      <CbtMinimalCognitiveErrorErrorState error={error} onRetry={reload} />
+    );
   }
 
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
           <CbtMinimalStepHeaderSection title={HEADER_TEXT} />
         </div>
-        {isFallback && (
-          <AiFallbackNotice onRetry={() => void reload()} />
-        )}
+        {isFallback && <AiFallbackNotice onRetry={() => void reload()} />}
 
         {currentRankItem && (
           <CbtCarousel emblaRef={emblaRef}>

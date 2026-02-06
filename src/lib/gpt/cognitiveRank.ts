@@ -1,9 +1,9 @@
 // src/lib/gpt/cognitiveRank.ts
-import { callGptText } from "./client";
-import { cleanText } from "./utils/text";
-import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
-import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
 import { markAiFallback } from "@/lib/utils/aiFallback";
+import { callGptText } from "./client";
+import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
+import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
+import { cleanText } from "./utils/text";
 
 /**
  * ✅ 기존 단일 분석 결과(호환용)
@@ -102,7 +102,6 @@ Important rules:
 6) DO NOT include the evidenceQuote text inside "reason". "reason" must be a paraphrased explanation why you consider the distortion plausible.
 7) DO NOT output indices in ascending numeric order (1,2,3,...,10). Sort them based on your evaluation in order from most likely to least likely.
 8) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
-   (e.g., “…로 보입니다.” / “…로 의심됩니다.” / “…에 해당합니다.”). Do NOT forcibly append a fixed phrase.
 
 Output schema:
 {

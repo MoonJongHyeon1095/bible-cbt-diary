@@ -2,6 +2,7 @@ import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtAlternativeThoughts } from "@/components/cbt/hooks/useCbtAlternativeThoughts";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type {
   EmotionThoughtPair,
@@ -23,7 +24,7 @@ interface CbtMinimalAlternativeThoughtSectionProps {
   onSelect: (thought: string) => void;
 }
 
-const TITLE = "어떤 생각이 마음에\u00a0와닿나요?";
+const TITLE = "힘이 되는 새로운 생각을 골라 볼까요?";
 const DESCRIPTION = (
   <div>
     <p>
@@ -80,6 +81,7 @@ export function CbtMinimalAlternativeThoughtSection({
   if (thoughtsLoading) {
     return (
       <CbtMinimalLoadingState
+        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
         message="대안사고를 정리하고 있어요."
@@ -101,6 +103,9 @@ export function CbtMinimalAlternativeThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
           <CbtMinimalStepHeaderSection
             title={TITLE}
             description={DESCRIPTION}

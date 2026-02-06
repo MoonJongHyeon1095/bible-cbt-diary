@@ -10,6 +10,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { History } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 
 interface CbtDeepIncidentSectionProps {
   userInput: string;
@@ -144,6 +145,18 @@ export function CbtDeepIncidentSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset} ref={headerRef}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt
+              name="EDi"
+              greeting={
+                <>
+                  반가워요.
+                  <br />
+                  당신의 이야기를 들려주세요.
+                </>
+              }
+            />
+          </div>
           <CbtMinimalStepHeaderSection
             title={title}
             description={description}

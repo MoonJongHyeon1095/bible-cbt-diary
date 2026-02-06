@@ -1,14 +1,15 @@
-import { validateUserText } from "@/components/cbt/utils/validation";
-import { ALL_EXAMPLES } from "@/lib/constants/examples";
+import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { validateUserText } from "@/components/cbt/utils/validation";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
+import { ALL_EXAMPLES } from "@/lib/constants/examples";
+import { Sparkles } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
-import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 import styles from "../MinimalStyles.module.css";
-import { useEffect, useRef, useState } from "react";
-import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
-import { Sparkles } from "lucide-react";
-import SafeButton from "@/components/ui/SafeButton";
+import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 
 interface CbtMinimalIncidentSectionProps {
   userInput: string;
@@ -24,8 +25,7 @@ export function CbtMinimalIncidentSection({
   title = "오늘 무슨 일이 있었나요?",
 }: CbtMinimalIncidentSectionProps) {
   const { pushToast } = useCbtToast();
-  const description =
-    "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
+  const description = "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
   const headerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isExampleOpen, setIsExampleOpen] = useState(false);
@@ -72,7 +72,8 @@ export function CbtMinimalIncidentSection({
     const node = headerRef.current;
     if (!node || typeof window === "undefined") return;
     const rect = node.getBoundingClientRect();
-    const target = window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
+    const target =
+      window.scrollY + rect.top - (window.innerHeight / 2 - rect.height / 2);
     const top = Math.max(0, target);
     window.scrollTo({ top, behavior: "auto" });
   }, []);
@@ -85,12 +86,26 @@ export function CbtMinimalIncidentSection({
     return () => window.clearTimeout(timer);
   }, [highlightInput]);
 
-
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset} ref={headerRef}>
-          <CbtMinimalStepHeaderSection title={title} description={description} />
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt
+              name="EDi"
+              greeting={
+                <>
+                  반가워요.
+                  <br />
+                  당신의 이야기를 들려주세요.
+                </>
+              }
+            />
+          </div>
+          <CbtMinimalStepHeaderSection
+            title={title}
+            description={description}
+          />
         </div>
 
         <CbtMinimalIncidentForm

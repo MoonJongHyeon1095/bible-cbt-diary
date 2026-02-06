@@ -23,13 +23,13 @@ export function buildTodayTourSteps(noteCount: number): OnboardingStep[] {
       {
         selector: "[data-tour='note-card']",
         side: "top",
-        content: "카드를 누르면 상세 페이지로 이동합니다.",
+        content: "카드를 누르면 기억의 방으로 갈 수 있어요.",
       },
       {
         selector: "[data-tour='note-card']",
         side: "top",
         content:
-          "카드를 길게 눌러보십시오. 이 기록에 대해 더 많은 작업을 할 수 있습니다.",
+          "또는 카드를 길게 눌러 주세요.  \n감정과 생각을 더 깊이 살펴볼 수 있어요.",
       },
     );
   }

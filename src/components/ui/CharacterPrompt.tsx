@@ -5,7 +5,7 @@ import styles from "./CharacterPrompt.module.css";
 
 type CharacterPromptProps = {
   name: string;
-  greeting: string;
+  greeting: React.ReactNode;
   className?: string;
 };
 

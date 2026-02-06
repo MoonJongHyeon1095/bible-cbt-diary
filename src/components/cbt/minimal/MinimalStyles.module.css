@@ -707,6 +707,11 @@
   padding: 0;
 }
 
+.headerPrompt {
+  display: flex;
+  margin-bottom: 10px;
+}
+
 .controlRow {
   display: flex;
   align-items: center;

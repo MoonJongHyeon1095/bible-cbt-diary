@@ -7,6 +7,7 @@ type CbtMinimalLoadingStateProps = {
   title?: string;
   description?: ReactNode;
   variant?: "inline" | "page";
+  prompt?: ReactNode;
 };
 
 export function CbtMinimalLoadingState({
@@ -14,6 +15,7 @@ export function CbtMinimalLoadingState({
   title,
   description,
   variant = "inline",
+  prompt,
 }: CbtMinimalLoadingStateProps) {
   const skeleton = (
     <div className={styles.loadingCard}>
@@ -31,8 +33,12 @@ export function CbtMinimalLoadingState({
     return (
       <div className={styles.section}>
         <div className={styles.sectionInner}>
+          {prompt ? <div className={styles.headerPrompt}>{prompt}</div> : null}
           {(title || description) && (
-            <CbtMinimalStepHeaderSection title={title} description={description} />
+            <CbtMinimalStepHeaderSection
+              title={title}
+              description={description}
+            />
           )}
           {skeleton}
         </div>

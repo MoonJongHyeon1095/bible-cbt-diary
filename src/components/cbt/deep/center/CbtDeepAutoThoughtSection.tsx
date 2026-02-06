@@ -1,19 +1,20 @@
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import { validateUserText } from "@/components/cbt/utils/validation";
 import { CbtMinimalAutoThoughtHintSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtHintSection";
 import { CbtMinimalAutoThoughtInputForm } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtInputForm";
 import { CbtMinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtTextSection";
-import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
+import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
-import SafeButton from "@/components/ui/SafeButton";
+import { validateUserText } from "@/components/cbt/utils/validation";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useEffect, useState } from "react";
 import { useCbtDeepAutoThought } from "../hooks/useCbtDeepAutoThought";
@@ -85,6 +86,7 @@ export function CbtDeepAutoThoughtSection({
   if (loading) {
     return (
       <CbtMinimalLoadingState
+        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         message="생각을 정리하고 있어요."
         variant="page"
@@ -97,6 +99,9 @@ export function CbtDeepAutoThoughtSection({
       <div className={styles.section}>
         <div className={styles.sectionInner}>
           <div className={styles.headerInset}>
+            <div className={styles.headerPrompt}>
+              <CharacterPrompt name="EDi" greeting="" />
+            </div>
             <CbtMinimalStepHeaderSection title={TITLE} />
           </div>
           <div className={styles.inlineCard}>
@@ -119,11 +124,12 @@ export function CbtDeepAutoThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
           <CbtMinimalStepHeaderSection title={TITLE} />
         </div>
-        {isFallback && (
-          <AiFallbackNotice onRetry={() => void reload()} />
-        )}
+        {isFallback && <AiFallbackNotice onRetry={() => void reload()} />}
 
         {wantsCustom ? (
           <div className={styles.inlineCard}>

@@ -3,6 +3,7 @@ import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtCognitiveErrorRanking } from "@/components/cbt/hooks/useCbtCognitiveErrorRanking";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
@@ -19,7 +20,7 @@ interface CbtMinimalCognitiveErrorSectionProps {
   onSelect: (errors: SelectedCognitiveError[]) => void;
 }
 
-const HEADER_TEXT = "혹시 이런 경향이\u00a0있지 않을까요?";
+const HEADER_TEXT = "혹시 이런 생각의 습관이 있지 않을까요?";
 const HEADER_DESCRIPTION = (
   <div>
     <p>
@@ -88,6 +89,7 @@ export function CbtMinimalCognitiveErrorSection({
   if (loading) {
     return (
       <CbtMinimalLoadingState
+        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={HEADER_TEXT}
         description={HEADER_DESCRIPTION}
         message="생각을 살펴보고 있어요."
@@ -106,6 +108,9 @@ export function CbtMinimalCognitiveErrorSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
           <CbtMinimalStepHeaderSection
             title={HEADER_TEXT}
             description={HEADER_DESCRIPTION}

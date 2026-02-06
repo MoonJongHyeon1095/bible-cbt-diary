@@ -1,3 +1,5 @@
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
+import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
@@ -5,13 +7,12 @@ import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "@/components/cbt/minimal/right/components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/CbtMinimalAlternativeThoughtErrorState";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { useEffect, useState } from "react";
 import { useCbtDeepAlternativeThoughts } from "../hooks/useCbtDeepAlternativeThoughts";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 
 interface CbtDeepAlternativeThoughtSectionProps {
   userInput: string;
@@ -76,6 +77,7 @@ export function CbtDeepAlternativeThoughtSection({
   if (thoughtsLoading) {
     return (
       <CbtMinimalLoadingState
+        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
         message="대안사고를 정리하고 있어요."
@@ -97,10 +99,18 @@ export function CbtDeepAlternativeThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <CbtMinimalStepHeaderSection title={TITLE} description={DESCRIPTION} />
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
+          <CbtMinimalStepHeaderSection
+            title={TITLE}
+            description={DESCRIPTION}
+          />
         </div>
         {isFallback && (
-          <AiFallbackNotice onRetry={() => void generateAlternatives({ force: true })} />
+          <AiFallbackNotice
+            onRetry={() => void generateAlternatives({ force: true })}
+          />
         )}
 
         <CbtCarousel emblaRef={emblaRef}>

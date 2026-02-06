@@ -1,20 +1,21 @@
-import { useState } from "react";
-import { validateUserText } from "@/components/cbt/utils/validation";
+import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoThoughtSuggestions } from "@/components/cbt/hooks/useCbtAutoThoughtSuggestions";
-import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
+import { validateUserText } from "@/components/cbt/utils/validation";
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
+import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
+import { useState } from "react";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
+import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
 import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAutoThoughtControlSection } from "./components/CbtMinimalAutoThoughtControlSection";
 import { CbtMinimalAutoThoughtHintSection } from "./components/CbtMinimalAutoThoughtHintSection";
 import { CbtMinimalAutoThoughtInputForm } from "./components/CbtMinimalAutoThoughtInputForm";
 import { CbtMinimalAutoThoughtTextSection } from "./components/CbtMinimalAutoThoughtTextSection";
-import styles from "../MinimalStyles.module.css";
-import SafeButton from "@/components/ui/SafeButton";
-import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 
 interface CbtMinimalAutoThoughtSectionProps {
   userInput: string;
@@ -101,20 +102,23 @@ export function CbtMinimalAutoThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.headerPrompt}>
+            <CharacterPrompt name="EDi" greeting="" />
+          </div>
           <CbtMinimalStepHeaderSection title={title} description={description}>
             {error && (
               <div className={styles.helperText}>
                 {error}{" "}
-              <SafeButton
-                type="button"
-                variant="unstyled"
-                onClick={() => void reloadThoughts()}
-                className={styles.exampleButton}
-              >
-                다시 불러오기
-              </SafeButton>
-            </div>
-          )}
+                <SafeButton
+                  type="button"
+                  variant="unstyled"
+                  onClick={() => void reloadThoughts()}
+                  className={styles.exampleButton}
+                >
+                  다시 불러오기
+                </SafeButton>
+              </div>
+            )}
           </CbtMinimalStepHeaderSection>
         </div>
         {isFallback && !loading && (

@@ -5,7 +5,7 @@ import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 import styles from "../MinimalStyles.module.css";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { Sparkles } from "lucide-react";
 import SafeButton from "@/components/ui/SafeButton";
@@ -31,8 +31,28 @@ export function CbtMinimalIncidentSection({
   const [isExampleOpen, setIsExampleOpen] = useState(false);
   const [highlightInput, setHighlightInput] = useState(false);
 
+  const buildExampleItems = (examples: typeof ALL_EXAMPLES) =>
+    examples.map((example, index) => ({
+      id: `example-${index}`,
+      title: `예시 ${index + 1}`,
+      body: example.text,
+      applyText: example.text,
+    }));
+
+  const shuffleExampleItems = () => {
+    const shuffled = [...ALL_EXAMPLES];
+    for (let i = shuffled.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return buildExampleItems(shuffled);
+  };
+
+  const [exampleItems, setExampleItems] = useState(() => shuffleExampleItems());
+
   const handleShowExample = () => {
     if (!ALL_EXAMPLES.length) return;
+    setExampleItems(shuffleExampleItems());
     setIsExampleOpen(true);
   };
 
@@ -65,16 +85,6 @@ export function CbtMinimalIncidentSection({
     return () => window.clearTimeout(timer);
   }, [highlightInput]);
 
-  const exampleItems = useMemo(
-    () =>
-      ALL_EXAMPLES.map((example, index) => ({
-        id: `example-${index}`,
-        title: `예시 ${index + 1}`,
-        body: example.text,
-        applyText: example.text,
-      })),
-    [],
-  );
 
   return (
     <div className={styles.section}>

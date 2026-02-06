@@ -33,7 +33,11 @@ export default function AppUpdateGate() {
           "@capawesome/capacitor-app-update"
         );
         const platform = Capacitor.getPlatform();
-        const info = await AppUpdate.getAppUpdateInfo();
+        const storeCountry = process.env.NEXT_PUBLIC_APP_STORE_COUNTRY;
+        const info =
+          platform === "ios" && storeCountry
+            ? await AppUpdate.getAppUpdateInfo({ country: storeCountry })
+            : await AppUpdate.getAppUpdateInfo();
         if (!active) return;
 
         const updateAvailable =
@@ -56,7 +60,12 @@ export default function AppUpdateGate() {
         setUpdateStatus({ ready: true, blocking: true, failed: false });
       } catch (error) {
         console.log("[app-update] check failed:", error);
-        setUpdateStatus({ ready: true, blocking: false, failed: true });
+        const platform = Capacitor.getPlatform();
+        if (platform === "ios") {
+          setUpdateStatus({ ready: true, blocking: false, failed: false });
+        } else {
+          setUpdateStatus({ ready: true, blocking: false, failed: true });
+        }
       }
     };
 

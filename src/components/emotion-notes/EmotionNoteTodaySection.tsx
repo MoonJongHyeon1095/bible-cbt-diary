@@ -1,11 +1,12 @@
 "use client";
 
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
+import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useState } from "react";
-import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
-import SafeButton from "@/components/ui/SafeButton";
 import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNoteSection.module.css";
 
@@ -57,8 +58,16 @@ export default function EmotionNoteTodaySection({
   return (
     <>
       <div className={styles.todayCard}>
-        <p className={styles.todayLabel}>{todayLabel}</p>
-        <h2 className={styles.todayTitle}>오늘의 감정 기록</h2>
+        <h2 className={styles.todayTitle}>
+          <CharacterPrompt
+            name="EDi"
+            greeting="안녕하세요."
+            className={styles.todayPrompt}
+          />
+          <span className={styles.todayTitleQuestion}>
+            오늘 기분은 어떠셨어요?
+          </span>
+        </h2>
         <SafeButton
           type="button"
           variant="unstyled"
@@ -79,7 +88,7 @@ export default function EmotionNoteTodaySection({
           </span>
           <span className={styles.plusText}>새 기록 추가</span>
         </SafeButton>
-        <p className={styles.todayHint}>오늘 무슨 일이 있었나요?</p>
+        <p className={styles.todayHint}>{todayLabel}</p>
       </div>
 
       <EmotionNoteListSection

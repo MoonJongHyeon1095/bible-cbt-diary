@@ -1,0 +1,39 @@
+.root {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: #efe6db;
+  border: 1px solid #e3d6c6;
+  color: #6a5239;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+
+.icon {
+  width: 18px;
+  height: 18px;
+  color: #8a735c;
+  flex: 0 0 auto;
+}
+
+.badgeText {
+  font-weight: 700;
+}
+
+.greeting {
+  font-weight: 500;
+  font-size: 1.1rem;
+  margin-left: 12px;
+}

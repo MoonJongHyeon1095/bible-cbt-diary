@@ -16,6 +16,16 @@
 
 .todayTitle {
   margin: 0;
+  text-align: center;
+}
+
+.todayPrompt {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.todayTitleQuestion {
+  display: block;
   font-size: 1.5rem;
   letter-spacing: -0.02em;
 }
@@ -130,9 +140,7 @@
   text-align: left;
   font: inherit;
   appearance: none;
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease;
   cursor: pointer;
   position: relative;
   overflow: hidden;
@@ -182,10 +190,13 @@
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #dbe8ff;
-  background: linear-gradient(135deg, rgba(78, 104, 176, 0.55), rgba(34, 42, 66, 0.9));
+  background: linear-gradient(
+    135deg,
+    rgba(78, 104, 176, 0.55),
+    rgba(34, 42, 66, 0.9)
+  );
   border: 1px solid rgba(140, 176, 240, 0.45);
-  box-shadow:
-    0 6px 14px rgba(10, 14, 22, 0.35),
+  box-shadow: 0 6px 14px rgba(10, 14, 22, 0.35),
     0 0 0 1px rgba(120, 160, 230, 0.12) inset;
   white-space: nowrap;
 }
@@ -215,9 +226,7 @@
   gap: 10px;
   opacity: 0;
   transform: scale(0.98);
-  transition:
-    opacity 0.16s ease,
-    transform 0.16s ease;
+  transition: opacity 0.16s ease, transform 0.16s ease;
   pointer-events: none;
   color: #111318;
 }

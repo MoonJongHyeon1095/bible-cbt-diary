@@ -6,8 +6,8 @@ type EmotionNoteEmptyStateProps = {
 };
 
 export default function EmotionNoteEmptyState({
-  title = "아직 오늘 기록이 없습니다",
-  hint = "중앙의 + 버튼으로 오늘의 감정을 남겨보세요.",
+  title = "이아기를 남기고 하루를 기록해볼까요?",
+  hint = "마음이 훨씬 편해질 거예요.",
 }: EmotionNoteEmptyStateProps) {
   return (
     <div className={styles.emptyState}>

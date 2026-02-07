@@ -323,7 +323,6 @@ export default function EmotionNoteFlowGroupList({
           >
             {nodes.map((node) => {
               const displayTitle = node.title.trim() || `플로우 ${node.id}`;
-              const displayDescription = node.description?.trim() ?? "";
               return (
                 <SafeButton
                   mode="native"

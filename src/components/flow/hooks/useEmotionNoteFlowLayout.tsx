@@ -1,6 +1,9 @@
 "use client";
 
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteTypes";
+import type {
+  EmotionNote,
+  EmotionNoteMiddle,
+} from "@/lib/types/emotionNoteTypes";
 import type { ElkNode } from "elkjs/lib/elk-api";
 import ELK from "elkjs/lib/elk.bundled.js";
 import { useEffect, useState } from "react";
@@ -17,6 +20,7 @@ const TIME_AXIS_STEP = 320;
 const FLOW_PADDING = 12;
 const EDGE_OFFSET_STEP = 32;
 const EDGE_WIDTH = 2.2;
+const DATE_JITTER_STEP = 160;
 const INDIGO: [number, number, number] = [79, 70, 229];
 const BASE_BLUE: [number, number, number] = [230, 232, 246];
 const BORDER_BASE: [number, number, number] = [150, 160, 214];
@@ -194,8 +198,10 @@ export const useEmotionNoteFlowLayout = (
             const fill = toRgba(fillRgb, 0.45);
             const border = toRgba(borderRgb, 0.75);
             const titleText = note.title?.trim() || "감정 노트";
-            const triggerText = note.trigger_text?.trim() || "트리거가 없습니다.";
-            const labelText = note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
+            const triggerText =
+              note.trigger_text?.trim() || "트리거가 없습니다.";
+            const labelText =
+              note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
             const dateText = formatFlowDate(note.created_at);
             const label = (
               <div className={styles.nodeLabel}>
@@ -232,7 +238,111 @@ export const useEmotionNoteFlowLayout = (
           })
           .filter((node): node is Node => node !== null) ?? [];
 
-      const nextAxisLabels = nextNodes
+      const filteredMiddles = middles.filter(
+        (middle) =>
+          nodeIds.has(String(middle.from_note_id)) &&
+          nodeIds.has(String(middle.to_note_id)),
+      );
+      const adjacency = new Map<string, Set<string>>();
+      filteredMiddles.forEach((middle) => {
+        const fromId = String(middle.from_note_id);
+        const toId = String(middle.to_note_id);
+        if (!adjacency.has(fromId)) adjacency.set(fromId, new Set());
+        if (!adjacency.has(toId)) adjacency.set(toId, new Set());
+        adjacency.get(fromId)?.add(toId);
+        adjacency.get(toId)?.add(fromId);
+      });
+      nextNodes.forEach((node) => {
+        if (!adjacency.has(node.id)) {
+          adjacency.set(node.id, new Set());
+        }
+      });
+
+      const componentMap = new Map<string, string>();
+      let componentIndex = 0;
+      const stack: string[] = [];
+      const visit = (startId: string) => {
+        const componentId = `component-${componentIndex++}`;
+        stack.push(startId);
+        componentMap.set(startId, componentId);
+        while (stack.length > 0) {
+          const current = stack.pop()!;
+          const neighbors = adjacency.get(current);
+          if (!neighbors) continue;
+          neighbors.forEach((neighbor) => {
+            if (!componentMap.has(neighbor)) {
+              componentMap.set(neighbor, componentId);
+              stack.push(neighbor);
+            }
+          });
+        }
+      };
+      nextNodes.forEach((node) => {
+        if (!componentMap.has(node.id)) {
+          visit(node.id);
+        }
+      });
+
+      const nextNodesByComponent = new Map<string, Node[]>();
+      nextNodes.forEach((node) => {
+        const componentId = componentMap.get(node.id) ?? "component-unknown";
+        const group = nextNodesByComponent.get(componentId) ?? [];
+        group.push(node);
+        nextNodesByComponent.set(componentId, group);
+      });
+      const nextNodesWithAlignedX = nextNodes.map((node) => ({ ...node }));
+      const nodeIndexById = new Map(
+        nextNodesWithAlignedX.map((node, index) => [node.id, index]),
+      );
+      nextNodesByComponent.forEach((group) => {
+        if (group.length < 2) return;
+        const createdBuckets = new Map<string, string[]>();
+        const createdOrder = group
+          .slice()
+          .sort((a, b) => {
+            const aNote = notesById.get(a.id);
+            const bNote = notesById.get(b.id);
+            if (!aNote || !bNote) return 0;
+            return (
+              aNote.created_at.localeCompare(bNote.created_at) ||
+              aNote.id - bNote.id
+            );
+          })
+          .map((node) => {
+            const note = notesById.get(node.id);
+            const dateKey = note?.created_at?.slice(0, 10) ?? "unknown";
+            const bucket = createdBuckets.get(dateKey) ?? [];
+            bucket.push(node.id);
+            createdBuckets.set(dateKey, bucket);
+            return node.id;
+          });
+        const xPositions = group
+          .slice()
+          .sort((a, b) => a.position.x - b.position.x)
+          .map((node) => node.position.x);
+        createdOrder.forEach((id, index) => {
+          const nodeIndex = nodeIndexById.get(id);
+          if (nodeIndex === undefined) return;
+          const targetX = xPositions[index];
+          if (!Number.isFinite(targetX)) return;
+          const note = notesById.get(id);
+          const dateKey = note?.created_at?.slice(0, 10) ?? "unknown";
+          const bucket = createdBuckets.get(dateKey) ?? [];
+          const bucketIndex = bucket.indexOf(id);
+          const bucketOffset =
+            bucketIndex >= 0 ? bucketIndex - (bucket.length - 1) / 2 : 0;
+          const jitterX = bucketOffset * DATE_JITTER_STEP;
+          nextNodesWithAlignedX[nodeIndex] = {
+            ...nextNodesWithAlignedX[nodeIndex],
+            position: {
+              ...nextNodesWithAlignedX[nodeIndex].position,
+              x: targetX + jitterX,
+            },
+          };
+        });
+      });
+
+      const nextAxisLabels = nextNodesWithAlignedX
         .map((node) => {
           const note = notesById.get(node.id);
           if (!note) return null;
@@ -249,7 +359,7 @@ export const useEmotionNoteFlowLayout = (
           (item): item is { id: string; x: number; label: string } =>
             item !== null,
         );
-      const maxY = nextNodes.reduce((acc, node) => {
+      const maxY = nextNodesWithAlignedX.reduce((acc, node) => {
         const height = Number(node.style?.height ?? 0) || 0;
         return Math.max(acc, node.position.y + height);
       }, 0);
@@ -258,11 +368,6 @@ export const useEmotionNoteFlowLayout = (
           ? Math.max(minY + 24, maxY + 32)
           : null;
 
-      const filteredMiddles = middles.filter(
-        (middle) =>
-          nodeIds.has(String(middle.from_note_id)) &&
-          nodeIds.has(String(middle.to_note_id)),
-      );
       const edgesBySource = new Map<string, EmotionNoteMiddle[]>();
       filteredMiddles.forEach((middle) => {
         const sourceId = String(middle.from_note_id);
@@ -292,7 +397,7 @@ export const useEmotionNoteFlowLayout = (
         };
       }) as Edge[];
 
-      setElkNodes(nextNodes);
+      setElkNodes(nextNodesWithAlignedX);
       setElkEdges(nextEdges);
       setAxisLabels(nextAxisLabels);
       setAxisY(nextAxisY);

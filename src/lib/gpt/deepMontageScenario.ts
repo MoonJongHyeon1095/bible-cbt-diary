@@ -36,20 +36,23 @@ export type DeepMontageSequenceItem = {
 /**
  * 
 emotion→thought 
+(emotional) body/meaning/interpretation → (automatic cognitive patterns) interpretation/meaning/rule
 amplifies: “감정이 생각을 증폭시킨다.”
 triggers: “감정이 이 생각을 호출한다.”
 masks: “감정이 다른 생각을 가린다.”
 justifies: “감정이 생각을 정당화하는 장치가 된다.”
 
 thought→error
+(automatic cognitive patterns) interpretation/meaning/rule → (error) meaning/rule
 expressed_as: “이 생각은 이런 오류의 형태로 드러난다.”
 solidifies_into: “이 생각이 굳어져 오류가 된다.”
 hides_within: “오류가 이 생각 안에 숨어 있다.”
 
 alternative→thought
-fails_to_touch: “대안이 핵심 생각을 건드리지 못한다. 대안이 핵심 믿음을 건드리지 못함”
-weakens: “대안이 생각의 힘을 약화시킨다. 사고를 약화시키지만 무너뜨리진 못함”
-bypasses: “대안이 핵심을 비켜간다. 논리적으로는 맞지만 감정을 우회”
+(alternative) dialogue/interpretation → (automatic cognitive patterns) interpretation/rule
+fails_to_touch: “대안이 핵심 생각을 건드리지 못한다.”
+weakens: “대안이 생각의 힘을 약화시킨다. 그러나 완전히 무너뜨리지는 못한다.”
+bypasses: “대안이 핵심을 비켜간다. 논리적으로는 맞더라도 감정을 우회한다.”
  */
 export type DeepMontageFreezeFrameRelation = {
   direction:
@@ -187,7 +190,7 @@ STRICT OUTPUT RULES
 - This is an analytic montage, not therapy. Think like an editor, not a counselor.
 - All string values must be single-line with no unescaped line breaks.
 - Keep each string under 200 characters.
-- If you are unsure, output the empty schema with empty arrays and empty strings.
+- Output language: ALL strings must be in English only. Do NOT output Korean.
 
 Output schema (exactly):
 {

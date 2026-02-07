@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  --app-bottom-tab-offset: 0px;
 }
 
 .header {
@@ -110,6 +111,129 @@
   gap: 4px;
   padding: 10px;
   text-align: center;
+}
+
+.nodeSelected {
+  transform: translate(var(--tx), var(--ty)) scale(1.05);
+  box-shadow:
+    inset 0 0 0 3px rgba(var(--node-r), var(--node-g), var(--node-b), 0.7),
+    0 18px 40px rgba(0, 0, 0, 0.32);
+  z-index: 2;
+}
+
+.nodeSelected::after {
+  content: "";
+  position: absolute;
+  inset: -7px;
+  border-radius: 999px;
+  border: 2px solid rgba(var(--node-r), var(--node-g), var(--node-b), 0.65);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.4),
+    0 0 18px rgba(var(--node-r), var(--node-g), var(--node-b), 0.45);
+  pointer-events: none;
+  animation: flowGlow 1.6s ease-in-out infinite;
+}
+
+.nodeSelected::before {
+  content: "";
+  position: absolute;
+  inset: -12px;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(var(--node-r), var(--node-g), var(--node-b), 0.2),
+    rgba(255, 255, 255, 0.65),
+    rgba(var(--node-r), var(--node-g), var(--node-b), 0.2)
+  );
+  filter: blur(6px);
+  opacity: 0.6;
+  animation: flowSpin 3.8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes flowGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes flowSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 18, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 90;
+}
+
+.confirmCard {
+  width: min(420px, 100%);
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 22px 48px rgba(12, 15, 24, 0.28);
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.confirmBody {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.confirmActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
+}
+
+.fabPrimary {
+  --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabSecondary {
+  --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
+}
+
+@media (max-width: 900px) {
+  .section {
+    --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
+@media (max-width: 720px) {
+  .confirmOverlay {
+    padding: 16px;
+  }
 }
 
 .nodeGroup {

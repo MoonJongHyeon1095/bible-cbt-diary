@@ -7,6 +7,7 @@ export const postEmotionNoteFlow = async (
   accessToken: string,
   payload: {
     note_id: number;
+    flow_id?: number;
   },
 ) => {
   const response = await fetch(buildApiUrl("/api/emotion-flow"), {
@@ -16,8 +17,12 @@ export const postEmotionNoteFlow = async (
   });
 
   const data = response.ok
-    ? ((await response.json()) as { ok: boolean; flowId?: number })
-    : ({ ok: false } as { ok: boolean; flowId?: number });
+    ? ((await response.json()) as {
+        ok: boolean;
+        flowId?: number;
+        message?: string;
+      })
+    : ({ ok: false } as { ok: boolean; flowId?: number; message?: string });
 
   return { response, data };
 };

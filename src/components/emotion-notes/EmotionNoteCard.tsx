@@ -3,9 +3,9 @@
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
-import { Lock, Waypoints } from "lucide-react";
+import { Waypoints } from "lucide-react";
 import { useRouter } from "next/navigation";
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
@@ -13,12 +13,15 @@ import SafeButton from "@/components/ui/SafeButton";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
+import EmotionNoteCardOverlay from "./EmotionNoteCardOverlay";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
   isTourTarget?: boolean;
   canGoDeeper?: boolean;
   detailHref?: string;
+  onImport?: (note: EmotionNote) => void;
+  isImporting?: boolean;
 };
 
 export default function EmotionNoteCard({
@@ -26,6 +29,8 @@ export default function EmotionNoteCard({
   isTourTarget = false,
   canGoDeeper = true,
   detailHref,
+  onImport,
+  isImporting = false,
 }: EmotionNoteCardProps) {
   const router = useRouter();
   const longPressTimeoutRef = useRef<number | null>(null);
@@ -41,6 +46,7 @@ export default function EmotionNoteCard({
   const { openAuthModal } = useAuthModal();
   const { pushToast } = useCbtToast();
   const { accessToken } = useAccessContext();
+  const isImportMode = Boolean(onImport);
 
   const longPressDuration = 500;
   const longPressOverlayDelay = 120;
@@ -111,6 +117,7 @@ export default function EmotionNoteCard({
   };
 
   const handlePointerDown = () => {
+    if (isImportMode) return;
     clearLongPress(false);
     longPressTriggeredRef.current = false;
     setIsTriggered(false);
@@ -179,6 +186,14 @@ export default function EmotionNoteCard({
   };
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
+    if (isImportMode) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!isImporting) {
+        onImport?.(note);
+      }
+      return;
+    }
     if (longPressTriggeredRef.current) {
       event.preventDefault();
       event.stopPropagation();
@@ -190,7 +205,8 @@ export default function EmotionNoteCard({
   const resolvedDetailHref = detailHref ?? `/detail?id=${note.id}`;
 
   return (
-    <SafeButton mode="native"
+    <SafeButton
+      mode="native"
       type="button"
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
@@ -237,44 +253,21 @@ export default function EmotionNoteCard({
         </div>
       )}
       <p className={styles.noteTrigger}>{note.trigger_text}</p>
-      <div
-        className={`${styles.longPressOverlay} ${
-          isPressing ? styles.longPressOverlayActive : ""
-        }`}
-        style={
-          {
-            "--press-progress": pressProgress,
-            "--press-fill": 0.35 + pressProgress * 0.35,
-          } as CSSProperties
-        }
-        aria-hidden="true"
-      >
-        {canGoDeeper ? (
-          <>
-            <span className={styles.longPressIconWrap}>
-              <span
-                className={`${styles.longPressSpinner} ${
-                  isTriggered ? styles.longPressSpinnerActive : ""
-                }`}
-              />
-              <Waypoints size={22} className={styles.longPressIcon} />
-            </span>
-            <span className={styles.longPressText}>Go Deeper</span>
-          </>
-        ) : (
-          <>
-            <span className={styles.longPressIconWrap}>
-              <span
-                className={`${styles.longPressSpinner} ${
-                  isTriggered ? styles.longPressSpinnerActive : ""
-                }`}
-              />
-              <Lock size={20} className={styles.longPressIcon} />
-            </span>
-            <span className={styles.longPressText}>로그인이 필요합니다</span>
-          </>
-        )}
-      </div>
+      {isImportMode ? (
+        <EmotionNoteCardOverlay
+          mode="import"
+          isActive={isImporting}
+          isLoading={isImporting}
+        />
+      ) : (
+        <EmotionNoteCardOverlay
+          mode="longPress"
+          isPressing={isPressing}
+          pressProgress={pressProgress}
+          isTriggered={isTriggered}
+          canGoDeeper={canGoDeeper}
+        />
+      )}
     </SafeButton>
   );
 }

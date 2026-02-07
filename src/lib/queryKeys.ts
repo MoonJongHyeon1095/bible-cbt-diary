@@ -12,6 +12,22 @@ export const queryKeys = {
       ["emotion-notes", "list", accessKey(access)] as const,
     range: (access: AccessContext, start: string, end: string) =>
       ["emotion-notes", "range", accessKey(access), start, end] as const,
+    search: (
+      access: AccessContext,
+      query: string,
+      start: string,
+      end: string,
+      excludeFlowId?: number | null,
+    ) =>
+      [
+        "emotion-notes",
+        "search",
+        accessKey(access),
+        query,
+        start,
+        end,
+        excludeFlowId ?? null,
+      ] as const,
     detail: (access: AccessContext, noteId: number) =>
       ["emotion-notes", "detail", accessKey(access), noteId] as const,
   },

@@ -495,9 +495,9 @@ export default function EmotionNoteDetailPage({
             }}
           />
           <FloatingActionButton
-            label="Go Deeper"
+            label="Flow"
             icon={<Route size={22} />}
-            helperText="Go Deeper"
+            helperText="Flow"
             onClick={async () => {
               if (!note?.id) return;
               setIsGoDeeperLoading(true);

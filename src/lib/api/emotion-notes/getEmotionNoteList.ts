@@ -6,7 +6,7 @@ import { buildApiUrl } from "@/lib/utils/apiBase";
 import { getKstDayRange } from "@/lib/utils/time";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-// GET /api/emotion-notes?start=...&end=...
+// GET /api/emotion-notes?action=list&start=...&end=...
 // emotion-notes 목록 조회 (today)
 export const fetchEmotionNoteList = async (
   access: AccessContext,
@@ -22,6 +22,7 @@ export const fetchEmotionNoteList = async (
 
   const { startIso, endIso } = getKstDayRange(date);
   const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
+    action: "list",
     start: startIso,
     end: endIso,
     ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),

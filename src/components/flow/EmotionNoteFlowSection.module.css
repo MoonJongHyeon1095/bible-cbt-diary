@@ -2,6 +2,7 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  --app-bottom-tab-offset: 0px;
 }
 
 .header {
@@ -42,6 +43,51 @@
   max-height: calc(100% - 32px);
   overflow: auto;
   z-index: 3;
+}
+
+.confirmOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 12, 18, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 90;
+}
+
+.confirmCard {
+  width: min(420px, 100%);
+  border-radius: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: 0 22px 48px rgba(12, 15, 24, 0.28);
+  padding: 18px 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.confirmTitle {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.confirmBody {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.confirmActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 4px;
 }
 
 .detailStack {
@@ -119,7 +165,6 @@
 }
 
 .deepFab {
-  --fab-right: calc(24px + 78px);
   background: #121417;
   color: #fff;
   border-color: rgba(255, 255, 255, 0.35);
@@ -624,5 +669,30 @@
 
   .flowCanvas {
     height: 70vh;
+  }
+
+  .section {
+    --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
+  }
+}
+
+.fabPrimary {
+  --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabSecondary {
+  --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabTertiary {
+  --fab-bottom: calc(312px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(312px + var(--app-bottom-tab-offset, 0px));
+}
+
+@media (max-width: 720px) {
+  .confirmOverlay {
+    padding: 16px;
   }
 }

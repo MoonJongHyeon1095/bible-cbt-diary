@@ -6,7 +6,7 @@ import { buildApiUrl } from "@/lib/utils/apiBase";
 import { getKstMonthRange } from "@/lib/utils/time";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-// GET /api/emotion-notes?start=...&end=...
+// GET /api/emotion-notes?action=list&start=...&end=...
 // emotion-notes 목록 조회 (month)
 export const fetchEmotionNoteListByRange = async (
   start: Date,
@@ -23,6 +23,7 @@ export const fetchEmotionNoteListByRange = async (
 
   const { startIso, endIso } = getKstMonthRange(start);
   const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
+    action: "list",
     start: startIso,
     end: endIso,
     ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),

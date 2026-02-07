@@ -5,12 +5,12 @@ import { resolveIdentityFromQuery } from "../_identity.js";
 import { getQueryParam, json } from "../_utils.js";
 
 const getDateRange = (dateParam?: string | null) => {
-  return getKstDayRange(dateParam ?? new Date());
+  return getKstDayRange(dateParam ?? new Date().toISOString());
 };
 
-// GET /api/emotion-notes?action=list&start=...&end=...
-// emotion-notes 목록 조회 (today, month)
-export const handleGetEmotionNoteList = async (
+// GET /api/emotion-notes?action=search&query=...&start=...&end=...&excludeFlowId=...
+// emotion-notes 검색 목록 조회
+export const handleSearchEmotionNoteList = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {
@@ -20,15 +20,34 @@ export const handleGetEmotionNoteList = async (
     return json(res, 401, { notes: [] });
   }
 
+  const queryParam = (getQueryParam(req, "query") ?? "").trim();
+  const excludeFlowIdParam = getQueryParam(req, "excludeFlowId");
+  const excludeFlowId = excludeFlowIdParam
+    ? Number(excludeFlowIdParam)
+    : null;
+
   const startParam = getQueryParam(req, "start");
   const endParam = getQueryParam(req, "end");
-  const { startIso, endIso } =
-    startParam && endParam
-      ? {
+  const hasRange = Boolean(startParam || endParam);
+  const hasQuery = Boolean(queryParam);
+  if (!hasRange && !hasQuery) {
+    return json(res, 400, {
+      notes: [],
+      message: "검색어 또는 기간이 필요합니다.",
+    });
+  }
+  const { startIso, endIso } = hasRange
+    ? (() => {
+        const fallback = startParam ?? endParam ?? "";
+        if (!startParam || !endParam) {
+          return getDateRange(fallback || new Date().toISOString());
+        }
+        return {
           startIso: new Date(startParam).toISOString(),
           endIso: new Date(endParam).toISOString(),
-        }
-      : getDateRange(getQueryParam(req, "date"));
+        };
+      })()
+    : { startIso: "", endIso: "" };
 
   const supabase = createSupabaseAdminClient();
   const baseQuery = supabase.from("emotion_notes").select(
@@ -48,17 +67,40 @@ export const handleGetEmotionNoteList = async (
     ? baseQuery.eq("user_id", user.id)
     : baseQuery.eq("device_id", deviceId).is("user_id", null);
 
-  const { data, error } = await scopedQuery
-    .gte("created_at", startIso)
-    .lt("created_at", endIso)
-    .order("created_at", { ascending: false });
+  let searchQuery = scopedQuery;
+  if (hasQuery) {
+    const safeQuery = queryParam.replace(/,/g, " ");
+    const likePattern = `%${safeQuery}%`;
+    searchQuery = searchQuery.or(
+      `title.ilike.${likePattern},trigger_text.ilike.${likePattern}`,
+    );
+  }
+
+  if (hasRange) {
+    searchQuery = searchQuery
+      .gte("created_at", startIso)
+      .lt("created_at", endIso);
+  }
+
+  if (excludeFlowId && Number.isFinite(excludeFlowId)) {
+    searchQuery = searchQuery.not(
+      "emotion_flow_note_middles.flow_id",
+      "eq",
+      excludeFlowId,
+    );
+  }
+
+  const { data, error } = await searchQuery.order("created_at", {
+    ascending: false,
+  });
 
   if (error) {
-    console.error("[emotion-notes] list query failed", {
+    console.error("[emotion-notes] search query failed", {
       requestId,
       userId: user?.id ?? null,
       startIso,
       endIso,
+      query: queryParam,
       error,
     });
     return json(res, 500, {
@@ -67,7 +109,7 @@ export const handleGetEmotionNoteList = async (
     });
   }
 
-  const notes =
+  let notes =
     data?.map((note) => {
       const emotionLabels = Array.from(
         new Set(
@@ -109,6 +151,10 @@ export const handleGetEmotionNoteList = async (
         flow_ids: flowIds,
       };
     }) ?? [];
+
+  if (excludeFlowId && Number.isFinite(excludeFlowId)) {
+    notes = notes.filter((note) => !note.flow_ids.includes(excludeFlowId));
+  }
 
   return json(res, 200, { notes });
 };

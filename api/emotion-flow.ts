@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleGetEmotionNoteFlow } from "../src/lib/vercel/flow/getEmotionNoteFlow.js";
 import { handleGetEmotionFlowList } from "../src/lib/vercel/flow/getEmotionNoteFlowList.js";
 import { handlePostEmotionNoteFlow } from "../src/lib/vercel/flow/postEmotionNoteFlow.js";
+import { handleDeleteEmotionNoteFlow } from "../src/lib/vercel/flow/deleteEmotionNoteFlow.js";
 import {
   getQueryParam,
   handleCors,
@@ -26,6 +27,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (action === "detail") {
       return handleGetEmotionNoteFlow(req, res);
     }
+  }
+
+  if (req.method === "DELETE") {
+    return handleDeleteEmotionNoteFlow(req, res);
   }
 
   return methodNotAllowed(res);

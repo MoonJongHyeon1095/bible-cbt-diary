@@ -1,20 +1,25 @@
 "use client";
 
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import FloatingActionButton from "@/components/common/FloatingActionButton";
+import { useModalOpen } from "@/components/common/useModalOpen";
+import SafeButton from "@/components/ui/SafeButton";
+import { deleteEmotionFlow } from "@/lib/api/flow/deleteEmotionFlow";
+import { fetchEmotionFlowList } from "@/lib/api/flow/getEmotionNoteFlow";
+import { queryKeys } from "@/lib/queryKeys";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forceCenter,
   forceCollide,
   forceManyBody,
   forceSimulation,
 } from "d3-force";
+import { Route, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteFlowGroupList.module.css";
-import { fetchEmotionFlowList } from "@/lib/api/flow/getEmotionNoteFlow";
 import { getFlowThemeColor } from "./utils/flowColors";
-import SafeButton from "@/components/ui/SafeButton";
-import { useQuery } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
 
 type EmotionNoteFlowGroupListProps = {
   accessToken: string;
@@ -54,12 +59,18 @@ export default function EmotionNoteFlowGroupList({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const nodesRef = useRef<GroupNode[]>([]);
   const [nodes, setNodes] = useState<GroupNode[]>([]);
+  const [selectedFlowId, setSelectedFlowId] = useState<number | null>(null);
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [noteFilterInput, setNoteFilterInput] = useState(
     noteId ? String(noteId) : "",
   );
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const queryClient = useQueryClient();
+  const { pushToast } = useCbtToast();
+  useModalOpen(confirmDelete);
   const panStateRef = useRef({
     isPanning: false,
     startX: 0,
@@ -81,7 +92,10 @@ export default function EmotionNoteFlowGroupList({
   const flowsQuery = useQuery({
     queryKey: queryKeys.flow.flows(accessToken, noteId),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionFlowList(accessToken, noteId);
+      const { response, data } = await fetchEmotionFlowList(
+        accessToken,
+        noteId,
+      );
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
@@ -92,6 +106,10 @@ export default function EmotionNoteFlowGroupList({
 
   const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
   const flows = useMemo(() => flowsQuery.data ?? [], [flowsQuery.data]);
+  const selectedFlow = useMemo(
+    () => flows.find((flow) => flow.id === selectedFlowId) ?? null,
+    [flows, selectedFlowId],
+  );
 
   useEffect(() => {
     if (flowsQuery.isError) {
@@ -100,6 +118,18 @@ export default function EmotionNoteFlowGroupList({
     }
     setNodes(buildNodes(flows));
   }, [flows, flowsQuery.isError]);
+
+  useEffect(() => {
+    if (selectedFlowId && !flows.some((flow) => flow.id === selectedFlowId)) {
+      setSelectedFlowId(null);
+    }
+  }, [flows, selectedFlowId]);
+
+  useEffect(() => {
+    if (!selectedFlowId) {
+      setConfirmDelete(false);
+    }
+  }, [selectedFlowId]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -163,6 +193,7 @@ export default function EmotionNoteFlowGroupList({
     if ((event.target as HTMLElement).closest(`.${styles.node}`)) {
       return;
     }
+    setSelectedFlowId(null);
     panStateRef.current.isPanning = true;
     setIsPanning(true);
     panStateRef.current.startX = event.clientX;
@@ -189,6 +220,27 @@ export default function EmotionNoteFlowGroupList({
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
+  const handleDeleteFlow = async () => {
+    if (!selectedFlowId) return;
+    setIsDeleting(true);
+    const { response, data } = await deleteEmotionFlow(
+      { mode: "auth", accessToken },
+      { flow_id: selectedFlowId },
+    );
+    if (!response.ok || !data.ok) {
+      setIsDeleting(false);
+      pushToast(data.message ?? "플로우를 삭제하지 못했습니다.", "error");
+      return;
+    }
+    await queryClient.invalidateQueries({
+      queryKey: queryKeys.flow.flows(accessToken, noteId),
+    });
+    setConfirmDelete(false);
+    setSelectedFlowId(null);
+    setIsDeleting(false);
+    pushToast("플로우를 삭제했습니다.", "success");
+  };
+
   return (
     <section className={styles.section}>
       <header className={styles.header}>
@@ -198,7 +250,10 @@ export default function EmotionNoteFlowGroupList({
             {nodes.length}개의 플로우, {totalCount}개의 기록
           </h2>
           <div className={styles.noteFilter}>
-            <label className={styles.noteFilterLabel} htmlFor="flow-note-filter">
+            <label
+              className={styles.noteFilterLabel}
+              htmlFor="flow-note-filter"
+            >
               임시 노트 필터
             </label>
             <div className={styles.noteFilterField}>
@@ -253,10 +308,13 @@ export default function EmotionNoteFlowGroupList({
             }
           >
             {nodes.map((node) => (
-              <SafeButton mode="native"
+              <SafeButton
+                mode="native"
                 key={node.id}
                 type="button"
-                className={styles.node}
+                className={`${styles.node} ${
+                  selectedFlowId === node.id ? styles.nodeSelected : ""
+                }`}
                 style={
                   {
                     width: node.radius * 2,
@@ -269,7 +327,7 @@ export default function EmotionNoteFlowGroupList({
                     "--node-b": node.rgb[2],
                   } as CSSProperties
                 }
-                onClick={() => router.push(`/flow?flowId=${node.id}`)}
+                onClick={() => setSelectedFlowId(node.id)}
               >
                 <span className={styles.nodeGroup}>플로우 {node.id}</span>
                 <span className={styles.nodeText}>
@@ -282,6 +340,70 @@ export default function EmotionNoteFlowGroupList({
           </div>
         )}
       </div>
+      {selectedFlow ? (
+        <>
+          <FloatingActionButton
+            label="삭제"
+            helperText="삭제"
+            icon={<Trash2 size={20} />}
+            className={styles.fabPrimary}
+            onClick={() => setConfirmDelete(true)}
+            style={{
+              backgroundColor: "#e14a4a",
+              color: "#fff",
+              borderColor: "#b93333",
+            }}
+          />
+          <FloatingActionButton
+            label="Flow"
+            helperText="flow로 이동"
+            icon={<Route size={20} />}
+            className={styles.fabSecondary}
+            onClick={() => router.push(`/flow?flowId=${selectedFlow.id}`)}
+            style={{
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
+            }}
+          />
+        </>
+      ) : null}
+      {confirmDelete && selectedFlow ? (
+        <div
+          className={styles.confirmOverlay}
+          role="dialog"
+          aria-modal="true"
+          onClick={() => setConfirmDelete(false)}
+        >
+          <div
+            className={styles.confirmCard}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <p className={styles.confirmTitle}>이 플로우를 삭제할까요?</p>
+            <p className={styles.confirmBody}>
+              플로우의 연결 기록은 제거되지만, 노트 자체는 삭제되지 않습니다.
+            </p>
+            <div className={styles.confirmActions}>
+              <SafeButton
+                variant="danger"
+                onClick={handleDeleteFlow}
+                loading={isDeleting}
+                loadingText="삭제 중..."
+                disabled={isDeleting}
+              >
+                삭제
+              </SafeButton>
+              <SafeButton
+                variant="outline"
+                onClick={() => setConfirmDelete(false)}
+                disabled={isDeleting}
+              >
+                취소
+              </SafeButton>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </section>
   );
 }

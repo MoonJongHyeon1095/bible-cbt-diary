@@ -5,7 +5,7 @@ import type { EmotionNoteWithDetails } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-// GET /api/emotion-notes?id=...
+// GET /api/emotion-notes?action=detail&id=...
 // emotion-notes 상세 조회
 export const fetchEmotionNote = async (
   noteId: number,
@@ -19,7 +19,8 @@ export const fetchEmotionNote = async (
     };
   }
 
-  const url = appendQuery(buildApiUrl(`/api/emotion-notes?id=${noteId}`),
+  const url = appendQuery(
+    buildApiUrl(`/api/emotion-notes?action=detail&id=${noteId}`),
     resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {},
   );
 

@@ -13,6 +13,7 @@ const NODE_SIZE_STEP = 14;
 const NODE_SIZE_MAX_EXTRA = 120;
 const SPREAD_STEP = 140;
 const SLOPE_STEP = 90;
+const TIME_AXIS_STEP = 320;
 const FLOW_PADDING = 12;
 const EDGE_OFFSET_STEP = 32;
 const EDGE_WIDTH = 2.2;
@@ -115,6 +116,11 @@ export const useEmotionNoteFlowLayout = (
       const outDegreeMap = buildOutDegreeMap(middles);
       const maxOutDegree = Math.max(1, ...outDegreeMap.values());
       const nodeIds = new Set(notes.map((note) => String(note.id)));
+      const connectedNodeIds = new Set<string>();
+      middles.forEach((middle) => {
+        connectedNodeIds.add(String(middle.from_note_id));
+        connectedNodeIds.add(String(middle.to_note_id));
+      });
       const notesById = new Map(notes.map((note) => [String(note.id), note]));
       const elkNodesInput = notes.map((note) => {
         const size = getNodeSize(note.id, outDegreeMap);
@@ -201,8 +207,10 @@ export const useEmotionNoteFlowLayout = (
             );
             const spreadY = spreadOffsets.get(child.id) ?? 0;
             const timeOffset = (timeIndex.get(child.id) ?? 0) * SLOPE_STEP;
+            const isIsolated = !connectedNodeIds.has(child.id);
+            const timeX = (timeIndex.get(child.id) ?? 0) * TIME_AXIS_STEP;
             const position = {
-              x: child.x - offsetX + padding,
+              x: (isIsolated ? timeX : child.x - offsetX) + padding,
               y: child.y - offsetY + padding + spreadY + timeOffset,
             };
             return {
@@ -247,7 +255,7 @@ export const useEmotionNoteFlowLayout = (
       }, 0);
       const nextAxisY =
         Number.isFinite(maxY) && Number.isFinite(minY) && nextNodes.length > 0
-          ? Math.max(minY + 24, maxY - 12)
+          ? Math.max(minY + 24, maxY + 32)
           : null;
 
       const filteredMiddles = middles.filter(

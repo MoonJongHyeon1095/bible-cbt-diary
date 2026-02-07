@@ -28,6 +28,8 @@ type EmotionNoteFlowCanvasProps = {
   needsNote: boolean;
   emptyState: boolean;
   selectedNodeId: string | null;
+  focusNodeId?: string | null;
+  focusToken?: number;
   onClearSelection: () => void;
   onSelectNode: (nodeId: string) => void;
 };
@@ -95,17 +97,52 @@ export default function EmotionNoteFlowCanvas({
   needsNote,
   emptyState,
   selectedNodeId,
+  focusNodeId,
+  focusToken,
   onClearSelection,
   onSelectNode,
 }: EmotionNoteFlowCanvasProps) {
   const instanceRef = useRef<ReactFlowInstance | null>(null);
+  const pendingFocusRef = useRef<string | null>(null);
   // Viewport state is the single source of truth for pan/zoom.
   const [viewport, setViewport] = useState({ x: 0, y: 0, zoom: 1 });
+  const centerOnNode = useCallback(
+    (nodeId: string) => {
+      const instance = instanceRef.current;
+      if (!instance) {
+        pendingFocusRef.current = nodeId;
+        return;
+      }
+      const node = displayNodes.find((item) => item.id === nodeId);
+      if (!node) {
+        pendingFocusRef.current = nodeId;
+        return;
+      }
+      const rawWidth =
+        typeof node.style?.width === "number"
+          ? node.style.width
+          : Number(node.style?.width);
+      const rawHeight =
+        typeof node.style?.height === "number"
+          ? node.style.height
+          : Number(node.style?.height);
+      const width = Number.isFinite(rawWidth) ? rawWidth : 0;
+      const height = Number.isFinite(rawHeight) ? rawHeight : 0;
+      const centerX = node.position.x + width / 2;
+      const centerY = node.position.y + height / 2;
+      instance.setCenter(centerX, centerY, { zoom: 1, duration: 600 });
+      pendingFocusRef.current = null;
+    },
+    [displayNodes],
+  );
   // Capture the ReactFlow instance and initialize a known viewport.
   const handleInit = (instance: ReactFlowInstance) => {
     instanceRef.current = instance;
     instance.setViewport({ x: 0, y: 0, zoom: 1 }, { duration: 0 });
     setViewport(instance.getViewport());
+    if (pendingFocusRef.current) {
+      centerOnNode(pendingFocusRef.current);
+    }
   };
   // Keep viewport state in sync while the user pans/zooms.
   const handleMove = useCallback(
@@ -117,25 +154,10 @@ export default function EmotionNoteFlowCanvas({
 
   // If a node is selected, center it to keep focus.
   useEffect(() => {
-    if (!selectedNodeId) return;
-    const instance = instanceRef.current;
-    if (!instance) return;
-    const node = displayNodes.find((item) => item.id === selectedNodeId);
-    if (!node) return;
-    const rawWidth =
-      typeof node.style?.width === "number"
-        ? node.style.width
-        : Number(node.style?.width);
-    const rawHeight =
-      typeof node.style?.height === "number"
-        ? node.style.height
-        : Number(node.style?.height);
-    const width = Number.isFinite(rawWidth) ? rawWidth : 0;
-    const height = Number.isFinite(rawHeight) ? rawHeight : 0;
-    const centerX = node.position.x + width / 2;
-    const centerY = node.position.y + height / 2;
-    instance.setCenter(centerX, centerY, { zoom: 1, duration: 600 });
-  }, [displayNodes, selectedNodeId]);
+    const targetId = focusNodeId ?? selectedNodeId;
+    if (!targetId) return;
+    centerOnNode(targetId);
+  }, [centerOnNode, focusNodeId, focusToken, selectedNodeId]);
 
   // Loading/empty UI branches render outside ReactFlow.
   if (isLoading) {

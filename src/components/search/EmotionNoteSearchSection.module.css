@@ -1,0 +1,255 @@
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+}
+
+.header {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.label {
+  margin: 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.title {
+  margin: 4px 0 0;
+  font-size: 1.4rem;
+}
+
+.filterToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.filterLabel {
+  flex: 0 0 auto;
+}
+
+.appliedRange {
+  font-size: 0.85rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.searchField {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-width: 240px;
+}
+
+.searchInput {
+  flex: 1;
+  width: 100%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 10px 92px 10px 36px;
+  font-size: 0.95rem;
+  color: var(--text);
+}
+
+.searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+}
+
+.searchSubmit {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border-strong);
+  background: var(--text);
+  color: var(--surface);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.filterPopover {
+  position: absolute;
+  top: 56px;
+  left: 0;
+  z-index: 20;
+  width: 360px;
+  max-width: min(360px, calc(100vw - 24px));
+  box-sizing: border-box;
+}
+
+.filterPanel {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: color-mix(in srgb, var(--surface) 92%, var(--text));
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 18px 40px rgba(12, 17, 24, 0.16);
+  box-sizing: border-box;
+}
+
+.rangeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.rangeLabel {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.rangeValue {
+  color: var(--muted);
+}
+
+.dayPickerWrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.dayPicker {
+  width: 100%;
+}
+
+.dayPicker :global(.rdp) {
+  margin: 0;
+  width: 100%;
+}
+
+.dayPicker :global(.rdp-root) {
+  --rdp-accent-color: var(--accent);
+  --rdp-accent-background-color: var(--accent-soft);
+  --rdp-background-color: transparent;
+}
+
+.dayPicker :global(.rdp-caption_label) {
+  font-weight: 600;
+}
+
+.dayPicker :global(.rdp-months) {
+  justify-content: center;
+}
+
+.dayPicker :global(.rdp-month) {
+  width: 100%;
+}
+
+.dayPicker :global(.rdp-table) {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.dayPicker :global(.rdp-day_button) {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 75%, transparent);
+}
+
+.dayPicker :global(.rdp-button_previous),
+.dayPicker :global(.rdp-button_next) {
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-radius: 999px;
+}
+
+.dayPicker :global(.rdp-chevron) {
+  fill: currentColor;
+}
+
+.dayPicker :global(.rdp-day_today .rdp-day_button) {
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.dayPicker :global(.rdp-day_outside),
+.dayPicker :global(.rdp-day_disabled) {
+  color: color-mix(in srgb, var(--text) 35%, transparent);
+}
+
+.dayPicker :global(.rdp-range_middle),
+.dayPicker :global(.rdp-range_start),
+.dayPicker :global(.rdp-range_end) {
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+  border-radius: 999px;
+}
+
+.dayPicker :global(.rdp-range_middle .rdp-day_button) {
+  background: transparent;
+  color: color-mix(in srgb, var(--text) 70%, transparent);
+}
+
+.dayPicker :global(.rdp-day_selected .rdp-day_button),
+.dayPicker :global(.rdp-range_start .rdp-day_button),
+.dayPicker :global(.rdp-range_end .rdp-day_button) {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.filterActions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .searchSubmit {
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 370px) {
+  .filterPanel {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .dayPicker :global(.rdp-caption_label) {
+    font-size: 0.95rem;
+  }
+
+  .dayPicker :global(.rdp-day_button) {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+}

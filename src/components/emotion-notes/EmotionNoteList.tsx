@@ -6,9 +6,11 @@ import styles from "./EmotionNoteSection.module.css";
 type EmotionNoteListProps = {
   notes: EmotionNote[];
   emptyTitle?: string;
-  emptyHint?: string;
+  emptyHint?: string | null;
   canGoDeeper?: boolean;
   getDetailHref?: (note: EmotionNote) => string;
+  onImportNote?: (note: EmotionNote) => void;
+  importingNoteId?: number | null;
 };
 
 export default function EmotionNoteList({
@@ -17,6 +19,8 @@ export default function EmotionNoteList({
   emptyHint,
   canGoDeeper = true,
   getDetailHref,
+  onImportNote,
+  importingNoteId,
 }: EmotionNoteListProps) {
   if (notes.length === 0) {
     return <EmotionNoteEmptyState title={emptyTitle} hint={emptyHint} />;
@@ -31,6 +35,8 @@ export default function EmotionNoteList({
           isTourTarget={index === 0}
           canGoDeeper={canGoDeeper}
           detailHref={getDetailHref?.(note)}
+          onImport={onImportNote}
+          isImporting={importingNoteId === note.id}
         />
       ))}
     </div>

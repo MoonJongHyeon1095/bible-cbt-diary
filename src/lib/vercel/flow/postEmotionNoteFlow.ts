@@ -116,8 +116,8 @@ const handleFlowCreate = async (
     return json(res, 404, { ok: false, message: "노트를 찾을 수 없습니다." });
   }
 
-  const title = String(note.title ?? "").trim() || "감정 기록";
-  const description = String(note.trigger_text ?? "").trim();
+  const title = "제목을 입력해주세요";
+  const description = "설명을 입력해주세요";
 
   const { data: flow, error: flowCreateError } = await supabase
     .from("emotion_flows")

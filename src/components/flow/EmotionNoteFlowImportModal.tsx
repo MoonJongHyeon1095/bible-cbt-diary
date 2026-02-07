@@ -11,7 +11,6 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import styles from "./EmotionNoteFlowImportModal.module.css";
 
 type EmotionNoteFlowImportModalProps = {
@@ -84,9 +83,6 @@ export default function EmotionNoteFlowImportModal({
         queryKey: ["emotion-flow", "flows"],
       }),
     ]);
-    if (safeLocalStorage.isAvailable()) {
-      safeLocalStorage.setItem(`flow-focus:${flowId}`, String(note.id));
-    }
     setImportingNoteId(null);
     onImported?.(note.id);
     onClose();

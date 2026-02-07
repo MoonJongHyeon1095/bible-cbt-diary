@@ -48,7 +48,8 @@ const buildNodes = (
   }[],
 ) =>
   flows.map((flow) => {
-    const radius = 36 + Math.min(90, flow.note_count * 6);
+    const minRadius = 36 + Math.min(90, 2 * 6);
+    const radius = Math.max(minRadius, 36 + Math.min(90, flow.note_count * 6));
     const theme = getFlowThemeColor(flow.id);
     return {
       id: flow.id,

@@ -13,6 +13,7 @@ type GoToFlowForNoteOptions = {
   access: AccessContext;
   router: FlowNavigator;
   onError?: (message: string) => void;
+  onCreated?: (flowId: number) => void;
 };
 
 export const goToFlowForNote = async ({
@@ -21,6 +22,7 @@ export const goToFlowForNote = async ({
   access,
   router,
   onError,
+  onCreated,
 }: GoToFlowForNoteOptions) => {
   const ids = flowIds ?? [];
 
@@ -47,6 +49,7 @@ export const goToFlowForNote = async ({
     return false;
   }
 
+  onCreated?.(data.flowId);
   router.push(`/flow?flowId=${data.flowId}&noteId=${noteId}`);
   return true;
 };

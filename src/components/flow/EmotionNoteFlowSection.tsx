@@ -27,7 +27,6 @@ import { useEmotionNoteFlowDisplay } from "./hooks/useEmotionNoteFlowDisplay";
 import { useEmotionNoteFlowLayout } from "./hooks/useEmotionNoteFlowLayout";
 import { useEmotionNoteFlowSelection } from "./hooks/useEmotionNoteFlowSelection";
 import { getFlowThemeColor } from "./utils/flowColors";
-import { safeLocalStorage } from "@/lib/utils/safeStorage";
 
 // Props for the flow detail section.
 type EmotionNoteFlowSectionProps = {
@@ -165,17 +164,6 @@ export default function EmotionNoteFlowSection({
     selectNode(nodeId);
     setAutoCenterNodeId(nodeId);
   }, [noteId, notes, selectNode]);
-
-  useEffect(() => {
-    if (noteId || !flowId) return;
-    if (!safeLocalStorage.isAvailable()) return;
-    const stored = safeLocalStorage.getItem(`flow-focus:${flowId}`);
-    if (!stored) return;
-    const parsed = Number(stored);
-    if (!Number.isFinite(parsed)) return;
-    setAutoCenterNodeId(String(parsed));
-    safeLocalStorage.removeItem(`flow-focus:${flowId}`);
-  }, [flowId, noteId, notes]);
 
   useEffect(() => {
     if (!selectedNote) {

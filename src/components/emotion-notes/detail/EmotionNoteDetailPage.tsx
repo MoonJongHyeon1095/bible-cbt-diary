@@ -10,6 +10,8 @@ import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
+import { queryKeys } from "@/lib/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import {
   AlertCircle,
@@ -62,6 +64,7 @@ export default function EmotionNoteDetailPage({
   noteId,
 }: EmotionNoteDetailPageProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const {
     accessMode: detailAccessMode,
     note,
@@ -525,6 +528,11 @@ export default function EmotionNoteDetailPage({
                 access,
                 router,
                 onError: (message) => pushToast(message, "error"),
+                onCreated: () => {
+                  void queryClient.invalidateQueries({
+                    queryKey: queryKeys.flow.all,
+                  });
+                },
               });
               if (!ok) {
                 setIsGoDeeperLoading(false);

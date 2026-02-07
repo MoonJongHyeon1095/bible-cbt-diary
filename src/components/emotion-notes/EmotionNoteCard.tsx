@@ -14,6 +14,8 @@ import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
 import EmotionNoteCardOverlay from "./EmotionNoteCardOverlay";
+import { queryKeys } from "@/lib/queryKeys";
+import { useQueryClient } from "@tanstack/react-query";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -33,6 +35,7 @@ export default function EmotionNoteCard({
   isImporting = false,
 }: EmotionNoteCardProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const longPressTimeoutRef = useRef<number | null>(null);
   const longPressTriggeredRef = useRef(false);
   const longPressStartRef = useRef<number | null>(null);
@@ -173,6 +176,11 @@ export default function EmotionNoteCard({
           access,
           router,
           onError: (message) => pushToast(message, "error"),
+          onCreated: () => {
+            void queryClient.invalidateQueries({
+              queryKey: queryKeys.flow.all,
+            });
+          },
         });
         if (!ok) {
           longPressTriggeredRef.current = false;

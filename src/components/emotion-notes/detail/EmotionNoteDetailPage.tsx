@@ -63,7 +63,7 @@ export default function EmotionNoteDetailPage({
 }: EmotionNoteDetailPageProps) {
   const router = useRouter();
   const {
-    accessMode,
+    accessMode: detailAccessMode,
     note,
     isNew,
     isLoading,
@@ -86,7 +86,11 @@ export default function EmotionNoteDetailPage({
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
-  const { accessToken } = useAccessContext();
+  const {
+    accessMode: accessStateMode,
+    accessToken,
+    isBlocked,
+  } = useAccessContext();
   const [selectedSection, setSelectedSection] = useState<SectionKey | null>(
     null,
   );
@@ -345,7 +349,7 @@ export default function EmotionNoteDetailPage({
     clearEditing();
   }, [clearEditing, hasEditing, selectedItem]);
 
-  if (accessMode === "blocked" && !isLoading) {
+  if (detailAccessMode === "blocked" && !isLoading) {
     return (
       <div className={pageStyles.page}>
         <AppHeader />
@@ -504,25 +508,21 @@ export default function EmotionNoteDetailPage({
               await new Promise<void>((resolve) =>
                 requestAnimationFrame(() => resolve()),
               );
-              if (accessMode !== "auth") {
-                setIsGoDeeperLoading(false);
-                openAuthModal();
-                return;
-              }
               const allowed = await checkUsage();
               if (!allowed) {
                 setIsGoDeeperLoading(false);
                 return;
               }
-              if (!accessToken) {
-                pushToast("플로우를 준비할 수 없습니다.", "error");
+              if (isBlocked) {
+                openAuthModal();
                 setIsGoDeeperLoading(false);
                 return;
               }
+              const access = { mode: accessStateMode, accessToken };
               const ok = await goToFlowForNote({
                 noteId: note.id,
                 flowIds: note.flow_ids,
-                accessToken,
+                access,
                 router,
                 onError: (message) => pushToast(message, "error"),
               });

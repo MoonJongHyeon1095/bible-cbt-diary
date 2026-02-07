@@ -7,6 +7,7 @@ import SafeButton from "@/components/ui/SafeButton";
 import { deleteEmotionNoteFlowNote } from "@/lib/api/flow/deleteEmotionNoteFlowNote";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   BookSearch,
@@ -26,16 +27,17 @@ import { useEmotionNoteFlowDisplay } from "./hooks/useEmotionNoteFlowDisplay";
 import { useEmotionNoteFlowLayout } from "./hooks/useEmotionNoteFlowLayout";
 import { useEmotionNoteFlowSelection } from "./hooks/useEmotionNoteFlowSelection";
 import { getFlowThemeColor } from "./utils/flowColors";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 
 // Props for the flow detail section.
 type EmotionNoteFlowSectionProps = {
-  accessToken: string;
+  access: AccessContext;
   noteId: number | null;
   flowId: number | null;
 };
 
 export default function EmotionNoteFlowSection({
-  accessToken,
+  access,
   noteId,
   flowId,
 }: EmotionNoteFlowSectionProps) {
@@ -46,7 +48,7 @@ export default function EmotionNoteFlowSection({
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   // Load notes/middles either by flow or single note.
   const { notes, middles, isLoading } = useEmotionNoteFlowData({
-    accessToken,
+    access,
     flowId,
   });
   // Theme color derived from flow id (if present).
@@ -71,9 +73,7 @@ export default function EmotionNoteFlowSection({
   );
   const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [pendingSelectId, setPendingSelectId] = useState<number | null>(null);
-  const [focusNodeId, setFocusNodeId] = useState<string | null>(null);
-  const [focusToken, setFocusToken] = useState(0);
+  const [autoCenterNodeId, setAutoCenterNodeId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   useModalOpen(confirmDelete);
@@ -106,14 +106,9 @@ export default function EmotionNoteFlowSection({
   const emptyState = !isLoading && notes.length === 0;
   const needsNote = !isLoading && !noteId && !flowId;
   const noteCount = notes.length;
-  const access = useMemo(
-    () => ({ mode: "auth" as const, accessToken }),
-    [accessToken],
-  );
-
   const handleDeleteNote = async () => {
     if (!selectedNote || !flowId) return false;
-    if (!access.accessToken) {
+    if (access.mode === "blocked") {
       pushToast("플로우를 삭제할 수 없습니다.", "error");
       return false;
     }
@@ -130,8 +125,22 @@ export default function EmotionNoteFlowSection({
       );
       return false;
     }
+    queryClient.setQueriesData(
+      { queryKey: ["emotion-flow", "flows"], type: "all" },
+      (prev) => {
+        if (!Array.isArray(prev)) return prev;
+        return prev.map((flow) =>
+          flow.id === flowId
+            ? { ...flow, note_count: Math.max(0, (flow.note_count ?? 0) - 1) }
+            : flow,
+        );
+      },
+    );
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.flow.flow(access.accessToken, flowId, true),
+      queryKey: queryKeys.flow.flow(access, flowId, true),
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ["emotion-flow", "flows"],
     });
     pushToast("플로우에서 기록을 삭제했습니다.", "success");
     clearSelection();
@@ -147,20 +156,26 @@ export default function EmotionNoteFlowSection({
       return;
     }
     selectNode(nodeId);
-    setFocusNodeId(nodeId);
-    setFocusToken((prev) => prev + 1);
   };
 
-  // Auto-select node when a specific noteId is provided.
   useEffect(() => {
     if (!noteId) return;
     const nodeId = String(noteId);
-    if (notes.some((note) => String(note.id) === nodeId)) {
-      selectNode(nodeId);
-      setFocusNodeId(nodeId);
-      setFocusToken((prev) => prev + 1);
-    }
+    if (!notes.some((note) => String(note.id) === nodeId)) return;
+    selectNode(nodeId);
+    setAutoCenterNodeId(nodeId);
   }, [noteId, notes, selectNode]);
+
+  useEffect(() => {
+    if (noteId || !flowId) return;
+    if (!safeLocalStorage.isAvailable()) return;
+    const stored = safeLocalStorage.getItem(`flow-focus:${flowId}`);
+    if (!stored) return;
+    const parsed = Number(stored);
+    if (!Number.isFinite(parsed)) return;
+    setAutoCenterNodeId(String(parsed));
+    safeLocalStorage.removeItem(`flow-focus:${flowId}`);
+  }, [flowId, noteId, notes]);
 
   useEffect(() => {
     if (!selectedNote) {
@@ -169,22 +184,10 @@ export default function EmotionNoteFlowSection({
   }, [selectedNote]);
 
   useEffect(() => {
-    if (!pendingSelectId) return;
-    const pendingId = String(pendingSelectId);
-    if (notes.some((note) => String(note.id) === pendingId)) {
-      selectNode(pendingId);
-      setPendingSelectId(null);
-      setFocusNodeId(pendingId);
-      setFocusToken((prev) => prev + 1);
-    }
-  }, [notes, pendingSelectId, selectNode]);
-
-  useEffect(() => {
-    if (!focusNodeId || !selectedNodeId) return;
-    if (focusNodeId !== selectedNodeId) {
-      setFocusNodeId(null);
-    }
-  }, [focusNodeId, selectedNodeId]);
+    if (!autoCenterNodeId) return;
+    if (!notes.some((note) => String(note.id) === autoCenterNodeId)) return;
+    selectNode(autoCenterNodeId);
+  }, [autoCenterNodeId, notes, selectNode]);
 
   return (
     <section className={styles.section}>
@@ -214,8 +217,7 @@ export default function EmotionNoteFlowSection({
         needsNote={needsNote}
         emptyState={emptyState}
         selectedNodeId={selectedNodeId}
-        focusNodeId={focusNodeId}
-        focusToken={focusToken}
+        autoCenterNodeId={autoCenterNodeId}
         onClearSelection={clearSelection}
         onSelectNode={handleNodeClick}
       >
@@ -247,8 +249,19 @@ export default function EmotionNoteFlowSection({
               helperText="Go Deeper"
               icon={<Route size={20} />}
               className={`${styles.deepFab} ${styles.fabTertiary}`}
-              onClick={handleGoDeeper}
+              onClick={async () => {
+                if (access.mode === "blocked") {
+                  pushToast("플로우를 시작할 수 없습니다.", "error");
+                  return;
+                }
+                await handleGoDeeper();
+              }}
               loadingRing={isGoDeeperLoading}
+              style={{
+                backgroundColor: "#121417",
+                color: "#fff",
+                borderColor: "rgba(255, 255, 255, 0.35)",
+              }}
             />
           </>
         ) : flowId ? (
@@ -310,7 +323,7 @@ export default function EmotionNoteFlowSection({
           access={access}
           flowId={flowId}
           onClose={() => setIsImportOpen(false)}
-          onImported={(noteId) => setPendingSelectId(noteId)}
+          onImported={(noteId) => setAutoCenterNodeId(String(noteId))}
         />
       ) : null}
     </section>

@@ -7,6 +7,7 @@ import SafeButton from "@/components/ui/SafeButton";
 import { deleteEmotionFlow } from "@/lib/api/flow/deleteEmotionFlow";
 import { fetchEmotionFlowList } from "@/lib/api/flow/getEmotionNoteFlow";
 import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forceCenter,
@@ -22,7 +23,7 @@ import styles from "./EmotionNoteFlowGroupList.module.css";
 import { getFlowThemeColor } from "./utils/flowColors";
 
 type EmotionNoteFlowGroupListProps = {
-  accessToken: string;
+  access: AccessContext;
   noteId?: number | null;
 };
 
@@ -52,7 +53,7 @@ const buildNodes = (flows: { id: number; note_count: number }[]) =>
   });
 
 export default function EmotionNoteFlowGroupList({
-  accessToken,
+  access,
   noteId = null,
 }: EmotionNoteFlowGroupListProps) {
   const router = useRouter();
@@ -90,18 +91,15 @@ export default function EmotionNoteFlowGroupList({
   }, []);
 
   const flowsQuery = useQuery({
-    queryKey: queryKeys.flow.flows(accessToken, noteId),
+    queryKey: queryKeys.flow.flows(access, noteId),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionFlowList(
-        accessToken,
-        noteId,
-      );
+      const { response, data } = await fetchEmotionFlowList(access, noteId);
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
       return data.flows ?? [];
     },
-    enabled: Boolean(accessToken),
+    enabled: access.mode !== "blocked",
   });
 
   const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
@@ -224,7 +222,7 @@ export default function EmotionNoteFlowGroupList({
     if (!selectedFlowId) return;
     setIsDeleting(true);
     const { response, data } = await deleteEmotionFlow(
-      { mode: "auth", accessToken },
+      access,
       { flow_id: selectedFlowId },
     );
     if (!response.ok || !data.ok) {
@@ -233,7 +231,7 @@ export default function EmotionNoteFlowGroupList({
       return;
     }
     await queryClient.invalidateQueries({
-      queryKey: queryKeys.flow.flows(accessToken, noteId),
+      queryKey: queryKeys.flow.flows(access, noteId),
     });
     setConfirmDelete(false);
     setSelectedFlowId(null);

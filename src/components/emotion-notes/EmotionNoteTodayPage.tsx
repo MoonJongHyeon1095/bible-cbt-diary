@@ -39,6 +39,7 @@ export default function EmotionNoteTodayPage() {
     accessMode,
     accessToken,
     isLoading: isAccessLoading,
+    isBlocked,
   } = useAccessContext();
   const [notes, setNotes] = useState<EmotionNote[]>([]);
   const { blocker, canShowOnboarding } = useGate();
@@ -163,7 +164,7 @@ export default function EmotionNoteTodayPage() {
               notes={notes}
               todayLabel={todayLabel}
               isLoading={isLoading}
-              canGoDeeper={accessMode === "auth"}
+              canGoDeeper={!isBlocked}
               getDetailHref={(note) => `/detail?id=${note.id}&from=today`}
             />
           )}

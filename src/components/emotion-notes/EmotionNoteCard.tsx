@@ -45,7 +45,7 @@ export default function EmotionNoteCard({
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const { openAuthModal } = useAuthModal();
   const { pushToast } = useCbtToast();
-  const { accessToken } = useAccessContext();
+  const { accessMode, accessToken } = useAccessContext();
   const isImportMode = Boolean(onImport);
 
   const longPressDuration = 500;
@@ -158,7 +158,8 @@ export default function EmotionNoteCard({
           setIsPressing(false);
           return;
         }
-        if (!accessToken) {
+        const access = { mode: accessMode, accessToken };
+        if (access.mode === "blocked") {
           pushToast("플로우를 준비할 수 없습니다.", "error");
           longPressTriggeredRef.current = false;
           setIsTriggered(false);
@@ -169,7 +170,7 @@ export default function EmotionNoteCard({
         const ok = await goToFlowForNote({
           noteId: note.id,
           flowIds: note.flow_ids,
-          accessToken,
+          access,
           router,
           onError: (message) => pushToast(message, "error"),
         });

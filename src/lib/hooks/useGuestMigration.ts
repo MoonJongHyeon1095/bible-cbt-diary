@@ -2,8 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { queryKeys } from "@/lib/queryKeys";
 import { mergeDeviceData } from "@/lib/api/device-merge/postDeviceMerge";
 import { checkDeviceData } from "@/lib/api/device-merge/checkDeviceData";
 
@@ -16,6 +18,7 @@ type GuestMigrationState = {
 export const useGuestMigration = () => {
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { pushToast } = useCbtToast();
   const [state, setState] = useState<GuestMigrationState>({
     isPromptOpen: false,
@@ -26,6 +29,7 @@ export const useGuestMigration = () => {
   const mergingRef = useRef(false);
   const mergedRef = useRef(false);
   const declinedRef = useRef(false);
+  const checkSeqRef = useRef(0);
 
   const runCheck = useCallback(async () => {
     if (mergingRef.current || mergedRef.current || declinedRef.current) {
@@ -34,7 +38,12 @@ export const useGuestMigration = () => {
     const accessToken = accessTokenRef.current;
     if (!accessToken) return;
 
+    const seq = ++checkSeqRef.current;
     const result = await checkDeviceData(accessToken);
+    if (seq !== checkSeqRef.current) return;
+    if (mergingRef.current || mergedRef.current || declinedRef.current) {
+      return;
+    }
     if (!result.response.ok || !result.data?.hasData) {
       return;
     }
@@ -54,6 +63,17 @@ export const useGuestMigration = () => {
     if (result.response.ok) {
       mergedRef.current = true;
       setState((prev) => ({ ...prev, isUploading: false, error: null }));
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all }),
+        queryClient.invalidateQueries({ queryKey: ["emotion-note-details"] }),
+        queryClient.invalidateQueries({ queryKey: ["emotion-error-details"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["emotion-alternative-details"],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["emotion-behavior-details"] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.flow.all }),
+      ]);
       pushToast("기기 기록을 회원 기록으로 이전했습니다.", "success");
       router.refresh();
       mergingRef.current = false;
@@ -64,7 +84,7 @@ export const useGuestMigration = () => {
     mergedRef.current = false;
     setState((prev) => ({ ...prev, isUploading: false, error: null }));
     pushToast("이전에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
-  }, [pushToast, router]);
+  }, [pushToast, queryClient, router]);
 
   useEffect(() => {
     const resolveSession = async () => {

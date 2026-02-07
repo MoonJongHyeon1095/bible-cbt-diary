@@ -11,13 +11,13 @@ export default function CbtDeepSessionRouteClient() {
   const { openAuthModal } = useAuthModal();
   const hasPromptedRef = useRef(false);
   const { gateReady } = useAiUsageGuard({
-    enabled: !isLoading && accessMode === "auth",
+    enabled: !isLoading && accessMode !== "blocked",
     cache: true,
   });
 
   useEffect(() => {
     if (isLoading) return;
-    if (accessMode === "auth") return;
+    if (accessMode !== "blocked") return;
     if (hasPromptedRef.current) return;
     hasPromptedRef.current = true;
     openAuthModal();
@@ -27,7 +27,7 @@ export default function CbtDeepSessionRouteClient() {
     return null;
   }
 
-  if (accessMode !== "auth") {
+  if (accessMode === "blocked") {
     return null;
   }
 

@@ -11,6 +11,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useQueryClient } from "@tanstack/react-query";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import styles from "./EmotionNoteFlowImportModal.module.css";
 
 type EmotionNoteFlowImportModalProps = {
@@ -42,12 +43,12 @@ export default function EmotionNoteFlowImportModal({
   if (!open) return null;
 
   const handleImport = async (note: EmotionNote) => {
-    if (!access.accessToken) {
+    if (access.mode === "blocked") {
       pushToast("플로우에 가져오기 위해 로그인 해주세요.", "error");
       return;
     }
     setImportingNoteId(note.id);
-    const { response, data } = await postEmotionNoteFlow(access.accessToken, {
+    const { response, data } = await postEmotionNoteFlow(access, {
       note_id: note.id,
       flow_id: flowId,
     });
@@ -61,9 +62,31 @@ export default function EmotionNoteFlowImportModal({
       return;
     }
 
-    await queryClient.invalidateQueries({
-      queryKey: queryKeys.flow.flow(access.accessToken, flowId, true),
-    });
+    queryClient.setQueriesData(
+      { queryKey: ["emotion-flow", "flows"], type: "all" },
+      (prev) => {
+        if (!Array.isArray(prev)) return prev;
+        return prev.map((flow) =>
+          flow.id === flowId
+            ? { ...flow, note_count: (flow.note_count ?? 0) + 1 }
+            : flow,
+        );
+      },
+    );
+    await Promise.all([
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.flow.flow(access, flowId, true),
+      }),
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.flow.all,
+      }),
+      queryClient.invalidateQueries({
+        queryKey: ["emotion-flow", "flows"],
+      }),
+    ]);
+    if (safeLocalStorage.isAvailable()) {
+      safeLocalStorage.setItem(`flow-focus:${flowId}`, String(note.id));
+    }
     setImportingNoteId(null);
     onImported?.(note.id);
     onClose();

@@ -11,7 +11,7 @@ import styles from "./AppTabs.module.css";
 export default function AppTabs() {
   const pathname = usePathname();
   const { openAuthModal } = useAuthModal();
-  const { isAuthenticated } = useAccessContext();
+  const { isBlocked } = useAccessContext();
   const tabs = [
     { href: "/", label: "홈", icon: Home },
     { href: "/today", label: "오늘", icon: Sun },
@@ -21,7 +21,7 @@ export default function AppTabs() {
   ];
   const handleTabClick = (href: string) => (event: MouseEvent) => {
     if (href !== "/flow") return;
-    if (isAuthenticated) return;
+    if (!isBlocked) return;
     event.preventDefault();
     openAuthModal();
   };

@@ -4,32 +4,30 @@ import { useMemo } from "react";
 import { fetchEmotionNoteFlow } from "@/lib/api/flow/getEmotionNoteFlow";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
+import type { AccessContext } from "@/lib/types/access";
 
 type UseEmotionNoteFlowDataParams = {
-  accessToken: string;
+  access: AccessContext;
   flowId: number | null;
 };
 
 export const useEmotionNoteFlowData = ({
-  accessToken,
+  access,
   flowId,
 }: UseEmotionNoteFlowDataParams) => {
   const flowQuery = useQuery({
-    queryKey: queryKeys.flow.flow(accessToken, flowId ?? 0, true),
+    queryKey: queryKeys.flow.flow(access, flowId ?? 0, true),
     queryFn: async () => {
       if (!flowId) {
         return { notes: [], middles: [] };
       }
-      const { response, data } = await fetchEmotionNoteFlow(
-        accessToken,
-        flowId,
-      );
+      const { response, data } = await fetchEmotionNoteFlow(access, flowId);
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
       return { notes: data.notes ?? [], middles: data.middles ?? [] };
     },
-    enabled: Boolean(accessToken && flowId),
+    enabled: access.mode !== "blocked" && Boolean(flowId),
   });
 
   const result = useMemo(() => {

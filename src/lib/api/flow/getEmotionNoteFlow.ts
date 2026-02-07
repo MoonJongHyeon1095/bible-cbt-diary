@@ -1,8 +1,9 @@
 "use client";
 
+import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteTypes";
+import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 import { buildApiUrl } from "@/lib/utils/apiBase";
-import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 export type EmotionFlowSummary = {
   id: number;
@@ -13,19 +14,28 @@ export type EmotionFlowSummary = {
 // GET /api/emotion-flow?action=detail&flowId=...&includeMiddles=...
 // flow 상세 조회
 export const fetchEmotionNoteFlow = async (
-  accessToken: string,
+  access: AccessContext,
   flowId: number,
   options?: { includeMiddles?: boolean },
 ) => {
+  const resolved = resolveAccess(access);
+  if (resolved.kind === "blocked") {
+    return {
+      response: new Response(null, { status: 401 }),
+      data: { notes: [] as EmotionNote[], middles: [] as EmotionNoteMiddle[] },
+    };
+  }
+
   const includeMiddles =
     options?.includeMiddles === undefined ? true : options.includeMiddles;
-  const url = buildApiUrl(
-    `/api/emotion-flow?action=detail&flowId=${flowId}&includeMiddles=${
-      includeMiddles ? "1" : "0"
-    }`,
-  );
+  const url = appendQuery(buildApiUrl("/api/emotion-flow"), {
+    action: "detail",
+    flowId: String(flowId),
+    includeMiddles: includeMiddles ? "1" : "0",
+    ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),
+  });
   const response = await fetch(url, {
-    headers: buildAuthHeaders(accessToken),
+    headers: resolved.kind === "auth" ? resolved.headers : undefined,
   });
 
   const data = response.ok
@@ -41,12 +51,24 @@ export const fetchEmotionNoteFlow = async (
 // GET /api/emotion-flow?action=list&noteId=...
 // flow 목록 조회
 export const fetchEmotionFlowList = async (
-  accessToken: string,
+  access: AccessContext,
   noteId?: number | null,
 ) => {
-  const query = noteId ? `?action=list&noteId=${noteId}` : "?action=list";
-  const response = await fetch(buildApiUrl(`/api/emotion-flow${query}`), {
-    headers: buildAuthHeaders(accessToken),
+  const resolved = resolveAccess(access);
+  if (resolved.kind === "blocked") {
+    return {
+      response: new Response(null, { status: 401 }),
+      data: { flows: [] as EmotionFlowSummary[] },
+    };
+  }
+
+  const url = appendQuery(buildApiUrl("/api/emotion-flow"), {
+    action: "list",
+    ...(noteId ? { noteId: String(noteId) } : {}),
+    ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),
+  });
+  const response = await fetch(url, {
+    headers: resolved.kind === "auth" ? resolved.headers : undefined,
   });
 
   const data = response.ok

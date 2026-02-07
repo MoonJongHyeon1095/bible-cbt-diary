@@ -1,6 +1,7 @@
 "use client";
 
 import { postEmotionNoteFlow } from "@/lib/api/flow/postEmotionNoteFlow";
+import type { AccessContext } from "@/lib/types/access";
 
 type FlowNavigator = {
   push: (href: string) => void;
@@ -9,7 +10,7 @@ type FlowNavigator = {
 type GoToFlowForNoteOptions = {
   noteId: number;
   flowIds?: number[];
-  accessToken?: string | null;
+  access: AccessContext;
   router: FlowNavigator;
   onError?: (message: string) => void;
 };
@@ -17,7 +18,7 @@ type GoToFlowForNoteOptions = {
 export const goToFlowForNote = async ({
   noteId,
   flowIds,
-  accessToken,
+  access,
   router,
   onError,
 }: GoToFlowForNoteOptions) => {
@@ -33,12 +34,12 @@ export const goToFlowForNote = async ({
     return true;
   }
 
-  if (!accessToken) {
+  if (access.mode === "blocked") {
     onError?.("플로우를 준비할 수 없습니다.");
     return false;
   }
 
-  const { response, data } = await postEmotionNoteFlow(accessToken, {
+  const { response, data } = await postEmotionNoteFlow(access, {
     note_id: noteId,
   });
   if (!response.ok || !data.flowId) {

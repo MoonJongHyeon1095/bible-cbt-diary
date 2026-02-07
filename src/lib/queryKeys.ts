@@ -46,13 +46,13 @@ export const queryKeys = {
   },
   flow: {
     all: ["emotion-flow"] as const,
-    flows: (accessToken: string, noteId?: number | null) =>
-      ["emotion-flow", "flows", accessToken, noteId ?? null] as const,
-    flow: (accessToken: string, flowId: number, includeMiddles: boolean) =>
+    flows: (access: AccessContext, noteId?: number | null) =>
+      ["emotion-flow", "flows", accessKey(access), noteId ?? null] as const,
+    flow: (access: AccessContext, flowId: number, includeMiddles: boolean) =>
       [
         "emotion-flow",
         "flow",
-        accessToken,
+        accessKey(access),
         flowId,
         includeMiddles,
       ] as const,

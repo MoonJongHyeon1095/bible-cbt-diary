@@ -261,17 +261,20 @@ function CbtDeepSessionPageContent() {
     flowId && hasSubIdsParam && (subIds.length < 1 || subIds.length > 2),
   );
 
+  const access = useMemo(
+    () => ({ mode: accessMode, accessToken }),
+    [accessMode, accessToken],
+  );
+
   const flowQuery = useQuery({
     queryKey:
-      flowId && accessMode === "auth" && accessToken
-        ? queryKeys.flow.flow(accessToken, flowId, false)
+      flowId && accessMode !== "blocked"
+        ? queryKeys.flow.flow(access, flowId, false)
         : ["noop"],
     queryFn: async () => {
-      const { response, data } = await fetchEmotionNoteFlow(
-        accessToken!,
-        flowId as number,
-        { includeMiddles: false },
-      );
+      const { response, data } = await fetchEmotionNoteFlow(access, flowId as number, {
+        includeMiddles: false,
+      });
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
@@ -279,8 +282,7 @@ function CbtDeepSessionPageContent() {
     },
     enabled:
       Boolean(flowId) &&
-      accessMode === "auth" &&
-      Boolean(accessToken) &&
+      accessMode !== "blocked" &&
       hasValidMainId &&
       !invalidFlowId &&
       !invalidSubIds,
@@ -311,7 +313,7 @@ function CbtDeepSessionPageContent() {
       return;
     }
 
-    if (accessMode !== "auth" || !accessToken) {
+    if (accessMode === "blocked") {
       return;
     }
 
@@ -461,6 +463,12 @@ function CbtDeepSessionPageContent() {
           void flushTokenSessionUsage({ sessionCount: 1 });
           clearCbtSessionStorage();
           if (resolvedFlowId) {
+            if (safeLocalStorage.isAvailable()) {
+              safeLocalStorage.setItem(
+                `flow-focus:${resolvedFlowId}`,
+                String(noteId),
+              );
+            }
             router.push(`/flow?flowId=${resolvedFlowId}&noteId=${noteId}`);
           } else {
             router.push(`/detail?id=${noteId}`);

@@ -82,14 +82,6 @@ export const handleSearchEmotionNoteList = async (
       .lt("created_at", endIso);
   }
 
-  if (excludeFlowId && Number.isFinite(excludeFlowId)) {
-    searchQuery = searchQuery.not(
-      "emotion_flow_note_middles.flow_id",
-      "eq",
-      excludeFlowId,
-    );
-  }
-
   const { data, error } = await searchQuery.order("created_at", {
     ascending: false,
   });

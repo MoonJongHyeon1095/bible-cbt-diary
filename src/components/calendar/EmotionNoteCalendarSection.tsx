@@ -389,7 +389,7 @@ export default function EmotionNoteCalendarSection({
               : "날짜를 바꿔 다른 기록을 확인해보세요."
           }
           headerRef={listHeaderRef}
-          canGoDeeper={access.mode === "auth"}
+          canGoDeeper={access.mode !== "blocked"}
           getDetailHref={getDetailHref}
         />
       </div>

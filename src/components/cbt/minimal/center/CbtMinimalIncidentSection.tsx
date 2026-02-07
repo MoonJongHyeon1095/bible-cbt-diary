@@ -7,7 +7,7 @@ import { ALL_EXAMPLES } from "@/lib/constants/examples";
 import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
-import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 
@@ -102,7 +102,7 @@ export function CbtMinimalIncidentSection({
               }
             />
           </div>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title={title}
             description={description}
           />

@@ -1,4 +1,4 @@
-import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import minimalStyles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { Check } from "lucide-react";
@@ -62,7 +62,7 @@ export function CbtDeepSelectSection({
     <div className={minimalStyles.section}>
       <div className={minimalStyles.sectionInner}>
         <div className={minimalStyles.headerInset}>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title="이 기록과 연결할 기록을 선택하세요"
             description="최대 2개까지 선택할 수 있습니다."
           />

@@ -1,11 +1,11 @@
 import { useModalOpen } from "@/components/common/useModalOpen";
-import styles from "../MinimalStyles.module.css";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 
-type CbtMinimalSavingModalProps = {
+type CbtSavingModalProps = {
   open: boolean;
 };
 
-export function CbtMinimalSavingModal({ open }: CbtMinimalSavingModalProps) {
+export function CbtSavingModal({ open }: CbtSavingModalProps) {
   useModalOpen(open);
 
   if (!open) return null;

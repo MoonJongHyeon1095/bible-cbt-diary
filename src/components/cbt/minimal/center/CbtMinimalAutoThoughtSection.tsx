@@ -9,8 +9,8 @@ import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import { useState } from "react";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAutoThoughtControlSection } from "./components/CbtMinimalAutoThoughtControlSection";
 import { CbtMinimalAutoThoughtHintSection } from "./components/CbtMinimalAutoThoughtHintSection";
@@ -105,7 +105,7 @@ export function CbtMinimalAutoThoughtSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection title={title} description={description}>
+          <CbtStepHeaderSection title={title} description={description}>
             {error && (
               <div className={styles.helperText}>
                 {error}{" "}
@@ -119,7 +119,7 @@ export function CbtMinimalAutoThoughtSection({
                 </SafeButton>
               </div>
             )}
-          </CbtMinimalStepHeaderSection>
+          </CbtStepHeaderSection>
         </div>
         {isFallback && !loading && (
           <AiFallbackNotice onRetry={() => void reloadThoughts()} />
@@ -140,7 +140,7 @@ export function CbtMinimalAutoThoughtSection({
               />
             </div>
           ) : loading ? (
-            <CbtMinimalLoadingState message="생각을 정리하고 있어요." />
+            <CbtLoadingState message="생각을 정리하고 있어요." />
           ) : (
             <CbtCarousel emblaRef={emblaRef}>
               {thoughts.map((thought, index) => (

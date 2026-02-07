@@ -1,5 +1,5 @@
 import { EMOTIONS } from "@/lib/constants/emotions";
-import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { CbtMinimalEmotionDetailsSection } from "./components/CbtMinimalEmotionDetailsSection";
 import { CbtMinimalEmotionList } from "./components/CbtMinimalEmotionList";
 import styles from "../MinimalStyles.module.css";
@@ -22,7 +22,7 @@ export function CbtMinimalEmotionSection({
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
-        <CbtMinimalStepHeaderSection
+        <CbtStepHeaderSection
           title="감정을 선택해주세요."
           center
         />

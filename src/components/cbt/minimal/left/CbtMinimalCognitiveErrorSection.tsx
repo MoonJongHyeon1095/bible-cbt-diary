@@ -8,8 +8,8 @@ import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalCognitiveErrorCard } from "./components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "./components/CbtMinimalCognitiveErrorErrorState";
@@ -88,7 +88,7 @@ export function CbtMinimalCognitiveErrorSection({
 
   if (loading) {
     return (
-      <CbtMinimalLoadingState
+      <CbtLoadingState
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={HEADER_TEXT}
         description={HEADER_DESCRIPTION}
@@ -111,7 +111,7 @@ export function CbtMinimalCognitiveErrorSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title={HEADER_TEXT}
             description={HEADER_DESCRIPTION}
           />

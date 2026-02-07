@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { CbtMinimalStepHeaderSection } from "./CbtMinimalStepHeaderSection";
-import styles from "../MinimalStyles.module.css";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 
-type CbtMinimalLoadingStateProps = {
+type CbtLoadingStateProps = {
   message: string;
   title?: string;
   description?: ReactNode;
@@ -10,13 +10,13 @@ type CbtMinimalLoadingStateProps = {
   prompt?: ReactNode;
 };
 
-export function CbtMinimalLoadingState({
+export function CbtLoadingState({
   message,
   title,
   description,
   variant = "inline",
   prompt,
-}: CbtMinimalLoadingStateProps) {
+}: CbtLoadingStateProps) {
   const skeleton = (
     <div className={styles.loadingCard}>
       <div className={styles.skeletonLine} />
@@ -35,7 +35,7 @@ export function CbtMinimalLoadingState({
         <div className={styles.sectionInner}>
           {prompt ? <div className={styles.headerPrompt}>{prompt}</div> : null}
           {(title || description) && (
-            <CbtMinimalStepHeaderSection
+            <CbtStepHeaderSection
               title={title}
               description={description}
             />

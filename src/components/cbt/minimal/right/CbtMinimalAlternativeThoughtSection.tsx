@@ -10,8 +10,8 @@ import type {
 } from "@/lib/types/cbtTypes";
 import { useEffect, useState } from "react";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "../common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "../common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "./components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "./components/CbtMinimalAlternativeThoughtErrorState";
@@ -80,7 +80,7 @@ export function CbtMinimalAlternativeThoughtSection({
 
   if (thoughtsLoading) {
     return (
-      <CbtMinimalLoadingState
+      <CbtLoadingState
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
@@ -106,7 +106,7 @@ export function CbtMinimalAlternativeThoughtSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title={TITLE}
             description={DESCRIPTION}
           />

@@ -2,7 +2,7 @@ import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
 import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
-import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import SafeButton from "@/components/ui/SafeButton";
@@ -157,7 +157,7 @@ export function CbtDeepIncidentSection({
               }
             />
           </div>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title={title}
             description={description}
           />

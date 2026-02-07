@@ -6,8 +6,8 @@ import { CbtMinimalAutoThoughtInputForm } from "@/components/cbt/minimal/center/
 import { CbtMinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtTextSection";
 import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
@@ -85,7 +85,7 @@ export function CbtDeepAutoThoughtSection({
 
   if (loading) {
     return (
-      <CbtMinimalLoadingState
+      <CbtLoadingState
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         message="생각을 정리하고 있어요."
@@ -102,7 +102,7 @@ export function CbtDeepAutoThoughtSection({
             <div className={styles.headerPrompt}>
               <CharacterPrompt name="EDi" greeting="" />
             </div>
-            <CbtMinimalStepHeaderSection title={TITLE} />
+            <CbtStepHeaderSection title={TITLE} />
           </div>
           <div className={styles.inlineCard}>
             <p className={styles.textBlock}>{error}</p>
@@ -127,7 +127,7 @@ export function CbtDeepAutoThoughtSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection title={TITLE} />
+          <CbtStepHeaderSection title={TITLE} />
         </div>
         {isFallback && <AiFallbackNotice onRetry={() => void reload()} />}
 

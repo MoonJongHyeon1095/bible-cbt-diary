@@ -1,8 +1,8 @@
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "@/components/cbt/minimal/right/components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/CbtMinimalAlternativeThoughtErrorState";
@@ -76,7 +76,7 @@ export function CbtDeepAlternativeThoughtSection({
 
   if (thoughtsLoading) {
     return (
-      <CbtMinimalLoadingState
+      <CbtLoadingState
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
@@ -102,7 +102,7 @@ export function CbtDeepAlternativeThoughtSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection
+          <CbtStepHeaderSection
             title={TITLE}
             description={DESCRIPTION}
           />

@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
-import styles from "../MinimalStyles.module.css";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 
-interface CbtMinimalStepHeaderSectionProps {
+interface CbtStepHeaderSectionProps {
   title?: ReactNode;
   description?: ReactNode;
   titleClassName?: string;
@@ -9,13 +9,13 @@ interface CbtMinimalStepHeaderSectionProps {
   children?: ReactNode;
 }
 
-export function CbtMinimalStepHeaderSection({
+export function CbtStepHeaderSection({
   title,
   description,
   titleClassName,
   center,
   children,
-}: CbtMinimalStepHeaderSectionProps) {
+}: CbtStepHeaderSectionProps) {
   return (
     <div className={`${styles.header} ${center ? styles.center : ""}`}>
       {title && (

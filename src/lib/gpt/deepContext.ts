@@ -1,9 +1,9 @@
 // src/lib/gpt/deepInternalContext.ts
+import { markAiFallback } from "@/lib/utils/aiFallback";
 import { callGptText } from "./client";
 import type { DeepNoteContext } from "./deepThought.types";
-import { cleanText } from "./utils/text";
 import { parseDeepContextResponse } from "./utils/llm/deepContext";
-import { markAiFallback } from "@/lib/utils/aiFallback";
+import { cleanText } from "./utils/text";
 
 export type DeepInternalContext = {
   salient: {
@@ -17,6 +17,14 @@ export type DeepInternalContext = {
     topDistortions: string[];
     coreBeliefsHypothesis: string[];
   };
+  deep: {
+    repeatingPatterns: string[]; // 2–4: 반복되는 해석/패턴
+    tensions: string[]; // 1–3: 노트들 간 충돌/불일치
+    invariants: string[]; // 1–3: 거의 항상 유지되는 규칙/전제
+    conditionalRules: string[]; // 1–2: "If ... then ..." 형태 규칙
+    leveragePoints: string[]; // 1–2: 가장 작은 개입 지점
+    bridgeHypothesis: string[]; // 1–2: 과거→현재 연결 가설
+  };
   openQuestions: [string, string];
   nextStepHint: string;
 };
@@ -27,6 +35,15 @@ type LlmSalient = {
   needs?: unknown;
   threats?: unknown;
   emotions?: unknown;
+};
+
+type LlmDeep = {
+  repeatingPatterns?: unknown;
+  tensions?: unknown;
+  invariants?: unknown;
+  conditionalRules?: unknown;
+  leveragePoints?: unknown;
+  bridgeHypothesis?: unknown;
 };
 
 type LlmCbt = {
@@ -43,14 +60,15 @@ You will receive:
 - [Sub Notes] (supporting contexts, latest first, max 2)
 
 Goal:
-Create a compact structured keyword context object for downstream AI steps.
+Create a compact structured context object optimized for a DEEP SESSION (graph operation).
+Deep session means the user is re-processing the main note through 1–2 related past notes.
+Therefore, you must extract cross-note patterns, tensions, and a small set of actionable leverage points.
 
 Hard rules:
 - Output language: ALL strings must be in English only. Do NOT output Korean.
 - Do NOT quote note text. Use short phrases/keywords only.
+- Use only information grounded in the notes. Do NOT add new facts/assumptions.
 - Sub notes are latest-first and at most 2.
-
-Use only information grounded in the notes. Do NOT add new assumptions.
 
 salient:
 - actors/events/needs/threats/emotions: 2–4 short keywords each when possible.
@@ -59,11 +77,21 @@ cbt:
 - topDistortions: 1–2 standard CBT distortion names when possible.
 - coreBeliefsHypothesis: 1–2 brief hypotheses.
 
+deep (MOST IMPORTANT):
+- repeatingPatterns: 2–4 short phrases describing repeating interpretation patterns across notes.
+- tensions: 1–3 short phrases describing mismatches or contradictions across notes
+  (e.g., same trigger → different emotion, or same fear expressed differently).
+- invariants: 1–3 short phrases describing what stays constant (core theme).
+- conditionalRules: 1–2 "If ... then ..." rules capturing the feared meaning.
+- leveragePoints: 1–2 smallest change points (what to test/shift first).
+- bridgeHypothesis: 1–2 hypotheses linking past notes to the current main note.
+
 openQuestions:
 - Exactly 2 brief, non-judgmental English questions.
+- Questions should target tensions or conditional rules.
 
 nextStepHint:
-- One short English sentence for the next module.
+- One short English sentence for the next module (tie to leveragePoints).
 
 Strict format:
 - Output JSON only. No extra text.
@@ -81,6 +109,14 @@ Output schema (exactly):
     "topDistortions": ["..."],
     "coreBeliefsHypothesis": ["..."]
   },
+  "deep": {
+    "repeatingPatterns": ["..."],
+    "tensions": ["..."],
+    "invariants": ["..."],
+    "conditionalRules": ["If ... then ..."],
+    "leveragePoints": ["..."],
+    "bridgeHypothesis": ["..."]
+  },
   "openQuestions": ["...", "..."],
   "nextStepHint": "..."
 }
@@ -97,6 +133,43 @@ function normalizeStringArray(v: unknown, max: number): string[] {
   if (!Array.isArray(v)) return [];
   const arr = v.map(cleanText).filter(Boolean);
   return arr.slice(0, max);
+}
+
+function normalizeDeep(v: unknown): DeepInternalContext["deep"] {
+  const obj = v && typeof v === "object" ? (v as LlmDeep) : ({} as LlmDeep);
+
+  const repeatingPatterns = normalizeStringArray(obj.repeatingPatterns, 4);
+  const tensions = normalizeStringArray(obj.tensions, 3);
+  const invariants = normalizeStringArray(obj.invariants, 3);
+  const conditionalRules = normalizeStringArray(obj.conditionalRules, 2);
+  const leveragePoints = normalizeStringArray(obj.leveragePoints, 2);
+  const bridgeHypothesis = normalizeStringArray(obj.bridgeHypothesis, 2);
+
+  const fb = {
+    repeatingPatterns: ["repeat negative interpretation"],
+    tensions: ["past vs present fear mismatch"],
+    invariants: ["need for validation"],
+    conditionalRules: ["If I fail, then I will be rejected"],
+    leveragePoints: ["separate facts from interpretation"],
+    bridgeHypothesis: ["current trigger reactivates an older fear pattern"],
+  } as const;
+
+  return {
+    repeatingPatterns: repeatingPatterns.length
+      ? repeatingPatterns
+      : [...fb.repeatingPatterns],
+    tensions: tensions.length ? tensions : [...fb.tensions],
+    invariants: invariants.length ? invariants : [...fb.invariants],
+    conditionalRules: conditionalRules.length
+      ? conditionalRules
+      : [...fb.conditionalRules],
+    leveragePoints: leveragePoints.length
+      ? leveragePoints
+      : [...fb.leveragePoints],
+    bridgeHypothesis: bridgeHypothesis.length
+      ? bridgeHypothesis
+      : [...fb.bridgeHypothesis],
+  };
 }
 
 function formatNote(note: DeepNoteContext) {
@@ -118,8 +191,8 @@ function formatNote(note: DeepNoteContext) {
 }
 
 export function formatDeepInternalContext(ctx: DeepInternalContext) {
-  const salient = ctx.salient;
-  const cbt = ctx.cbt;
+  const { salient, cbt, deep } = ctx;
+
   return `salient:
 - actors: ${salient.actors.join(" | ")}
 - events: ${salient.events.join(" | ")}
@@ -130,6 +203,14 @@ export function formatDeepInternalContext(ctx: DeepInternalContext) {
 cbt:
 - topDistortions: ${cbt.topDistortions.join(" | ")}
 - coreBeliefsHypothesis: ${cbt.coreBeliefsHypothesis.join(" | ")}
+
+deep:
+- repeatingPatterns: ${deep.repeatingPatterns.join(" | ")}
+- tensions: ${deep.tensions.join(" | ")}
+- invariants: ${deep.invariants.join(" | ")}
+- conditionalRules: ${deep.conditionalRules.join(" | ")}
+- leveragePoints: ${deep.leveragePoints.join(" | ")}
+- bridgeHypothesis: ${deep.bridgeHypothesis.join(" | ")}
 
 openQuestions:
 - ${ctx.openQuestions[0]}
@@ -202,9 +283,10 @@ export function getFallbackDeepInternalContext(): DeepInternalContext {
   return {
     salient: normalizeSalient({}),
     cbt: normalizeCbt({}),
+    deep: normalizeDeep({}),
     openQuestions: normalizeOpenQuestions([]),
     nextStepHint:
-      "Rank likely distortions, then generate alternatives and a small behavioral experiment.",
+      "Identify tensions and conditional rules, then generate alternatives and a small behavioral experiment.",
   };
 }
 
@@ -218,10 +300,10 @@ export async function generateDeepInternalContext(
   const subs2 = subs.slice(0, 2);
 
   const prompt = `
-[Main Note]
+[Main Note] (current focus)
 ${formatNote(main)}
 
-[Sub Notes] (latest first, max 2)
+[Sub Notes] (past contexts to compare against, latest first, max 2)
 ${subs2.map(formatNote).join("\n\n") || "(none)"}
 `.trim();
 
@@ -236,12 +318,13 @@ ${subs2.map(formatNote).join("\n\n") || "(none)"}
 
     const salient = normalizeSalient(parsed.salient);
     const cbt = normalizeCbt(parsed.cbt);
+    const deep = normalizeDeep(parsed.deep);
     const openQuestions = normalizeOpenQuestions(parsed.openQuestions);
     const nextStepHint =
       normalizeTextValue(parsed.nextStepHint) ||
       "Rank likely distortions, then generate alternatives and a small behavioral experiment.";
 
-    return { salient, cbt, openQuestions, nextStepHint };
+    return { salient, cbt, deep, openQuestions, nextStepHint };
   } catch (error) {
     console.error("deep internal context error:", error);
     return markAiFallback(getFallbackDeepInternalContext());

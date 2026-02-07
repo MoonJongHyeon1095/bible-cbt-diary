@@ -1,18 +1,18 @@
-import { Undo2 } from "lucide-react";
-import styles from "../MinimalStyles.module.css";
+import { House } from "lucide-react";
+import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
-interface CbtMinimalFloatingBackButtonProps {
+interface CbtFloatingHomeButtonProps {
   onClick: () => void;
   ariaLabel?: string;
   disabled?: boolean;
 }
 
-export function CbtMinimalFloatingBackButton({
+export function CbtFloatingHomeButton({
   onClick,
-  ariaLabel = "이전으로",
+  ariaLabel = "홈으로",
   disabled = false,
-}: CbtMinimalFloatingBackButtonProps) {
+}: CbtFloatingHomeButtonProps) {
   return (
     <SafeButton
       type="button"
@@ -22,7 +22,7 @@ export function CbtMinimalFloatingBackButton({
       disabled={disabled}
       className={styles.floatingMiniButton}
     >
-      <Undo2 className={styles.floatingMiniIcon} />
+      <House className={styles.floatingMiniIcon} />
     </SafeButton>
   );
 }

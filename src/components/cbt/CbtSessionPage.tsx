@@ -32,9 +32,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CbtMinimalAutoThoughtSection } from "./minimal/center/CbtMinimalAutoThoughtSection";
 import { CbtMinimalEmotionSection } from "./minimal/center/CbtMinimalEmotionSection";
 import { CbtMinimalIncidentSection } from "./minimal/center/CbtMinimalIncidentSection";
-import { CbtMinimalFloatingBackButton } from "./minimal/common/CbtMinimalFloatingBackButton";
-import { CbtMinimalFloatingHomeButton } from "./minimal/common/CbtMinimalFloatingHomeButton";
-import { CbtMinimalSavingModal } from "./minimal/common/CbtMinimalSavingModal";
+import { CbtFloatingBackButton } from "@/components/cbt/common/CbtFloatingBackButton";
+import { CbtFloatingHomeButton } from "@/components/cbt/common/CbtFloatingHomeButton";
+import { CbtSavingModal } from "@/components/cbt/common/CbtSavingModal";
 import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognitiveErrorSection";
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
@@ -367,14 +367,14 @@ function CbtSessionPageContent() {
     <div className={styles.page}>
       <div className={styles.bgWaves} />
       <div className={styles.content}>
-        <CbtMinimalSavingModal open={isSaving} />
+        <CbtSavingModal open={isSaving} />
         {currentStepIndex > 0 && (
           <div className={`${styles.floatingNav} ${styles.left}`}>
-            <CbtMinimalFloatingBackButton onClick={handleBack} />
+            <CbtFloatingBackButton onClick={handleBack} />
           </div>
         )}
         <div className={`${styles.floatingNav} ${styles.right}`}>
-          <CbtMinimalFloatingHomeButton onClick={handleGoHome} />
+          <CbtFloatingHomeButton onClick={handleGoHome} />
         </div>
 
         {flow.step === "incident" && (

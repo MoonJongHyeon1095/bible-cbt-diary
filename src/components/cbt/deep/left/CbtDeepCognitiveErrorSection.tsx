@@ -2,8 +2,8 @@ import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
-import { CbtMinimalLoadingState } from "@/components/cbt/minimal/common/CbtMinimalLoadingState";
-import { CbtMinimalStepHeaderSection } from "@/components/cbt/minimal/common/CbtMinimalStepHeaderSection";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { CbtMinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorErrorState";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
@@ -81,7 +81,7 @@ export function CbtDeepCognitiveErrorSection({
 
   if (loading) {
     return (
-      <CbtMinimalLoadingState
+      <CbtLoadingState
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={HEADER_TEXT}
         message="생각을 살펴보고 있어요."
@@ -103,7 +103,7 @@ export function CbtDeepCognitiveErrorSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtMinimalStepHeaderSection title={HEADER_TEXT} />
+          <CbtStepHeaderSection title={HEADER_TEXT} />
         </div>
         {isFallback && <AiFallbackNotice onRetry={() => void reload()} />}
 

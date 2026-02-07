@@ -1,11 +1,11 @@
 // src/lib/gpt/deepThought.ts
+import { markAiFallback } from "@/lib/utils/aiFallback";
 import { callGptText } from "./client";
-import { DeepInternalContext, formatDeepInternalContext } from "./deepContext";
+import { DeepInternalContext } from "./deepContext";
 import type { DeepNoteContext, SDTKey } from "./deepThought.types";
 import { normalizeStringArray } from "./utils/array";
-import { normalizeTextValue } from "./utils/text";
 import { parseSdtResponse } from "./utils/llm/sdtThoughts";
-import { markAiFallback } from "@/lib/utils/aiFallback";
+import { normalizeTextValue } from "./utils/text";
 
 export type DeepAutoThoughtResult = {
   sdt: Record<
@@ -48,7 +48,22 @@ Important rules:
 - Use Internal Context as the PRIMARY anchor. Use note text as SECONDARY support.
 - Do NOT introduce new assumptions beyond Internal Context + Notes.
 
-Writing style (same spirit as the minimal session):
+Deep-session constraints (MUST):
+- You MUST explicitly reflect at least:
+  (a) one item from internal.deep.conditionalRules OR internal.deep.invariants
+  AND
+  (b) one item from internal.deep.tensions OR internal.deep.bridgeHypothesis
+  in EACH SDT belief set (relatedness/competence/autonomy).
+- The 3rd sentence of each belief MUST express the feared consequence,
+  and it MUST be consistent with internal.deep.conditionalRules.
+- Do NOT produce generic encouragement. Keep it as a negative automatic thought.
+
+Diversity constraint (MUST):
+- relatedness/competence/autonomy must NOT repeat the same core claim.
+- relatedness focuses on acceptance/connection, competence on worth/performance, autonomy on control/choice.
+- Each item must use different evidence from internal.deep (different tension/bridge/invariant/rule when possible).
+
+Writing style:
 - Write in natural Korean, first-person automatic-thought voice.
 - Do not narrate events; write the interpretation / belief / rule inferred from them.
 - Not surface-level: make the negative meaning / feared outcome explicit.
@@ -182,6 +197,24 @@ export async function generateDeepSdtAutomaticThoughts(
   internal: DeepInternalContext,
 ): Promise<DeepAutoThoughtResult> {
   const subs2 = subs.slice(0, 2);
+  const internalDeepFirst = `
+deep (PRIMARY):
+- repeatingPatterns: ${internal.deep.repeatingPatterns.join(" | ")}
+- tensions: ${internal.deep.tensions.join(" | ")}
+- invariants: ${internal.deep.invariants.join(" | ")}
+- conditionalRules: ${internal.deep.conditionalRules.join(" | ")}
+- leveragePoints: ${internal.deep.leveragePoints.join(" | ")}
+- bridgeHypothesis: ${internal.deep.bridgeHypothesis.join(" | ")}
+
+secondary:
+- salient.actors: ${internal.salient.actors.join(" | ")}
+- salient.events: ${internal.salient.events.join(" | ")}
+- salient.needs: ${internal.salient.needs.join(" | ")}
+- salient.threats: ${internal.salient.threats.join(" | ")}
+- salient.emotions: ${internal.salient.emotions.join(" | ")}
+- cbt.topDistortions: ${internal.cbt.topDistortions.join(" | ")}
+- cbt.coreBeliefsHypothesis: ${internal.cbt.coreBeliefsHypothesis.join(" | ")}
+`.trim();
 
   const prompt = `
 [User Input]
@@ -193,11 +226,11 @@ ${emotion}
 [Main Note]
 ${formatNote(main)}
 
-[Sub Notes] (latest first, max 2)
+[Sub Notes] (past contexts to compare against, latest first, max 2)
 ${subs2.map(formatNote).join("\n\n") || "(none)"}
 
-[Internal Context - English]
-${formatDeepInternalContext(internal)}
+[Internal Context - English] (DO NOT IGNORE)
+${internalDeepFirst}
 `.trim();
 
   let usedFallback = false;

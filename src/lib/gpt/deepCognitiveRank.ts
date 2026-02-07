@@ -1,13 +1,10 @@
 // src/lib/gpt/deepCognitiveRank.ts
-import { callGptText } from "./client";
-import {
-  defaultRank,
-  isValidIndex,
-  type CognitiveErrorRankResult,
-} from "./cognitiveRank";
-import { cleanText } from "./utils/text";
-import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
-import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
+import { defaultRank, type CognitiveErrorRankResult } from "./cognitiveRank";
+import { parseCognitiveRankResponse } from "./utils/cognitive/parseRank";
+import { formatCognitiveErrorsReference } from "./utils/cognitive/prompt";
+import { normalizeCognitiveRank } from "./utils/cognitive/rankNormalize";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
 
 const COGNITIVE_ERRORS_REFERENCE = formatCognitiveErrorsReference();
 
@@ -30,7 +27,6 @@ Important rules:
 6) DO NOT include the evidenceQuote text inside "reason". "reason" must be a paraphrased explanation why you consider the distortion plausible.
 7) DO NOT output indices in ascending numeric order (1,2,3,...,10). Sort them based on your evaluation in order from most likely to least likely.
 8) Write the "reason" as 1–2 complete Korean sentences that naturally end with a polite judgment tone
-   (e.g., “…로 보입니다.” / “…로 의심됩니다.” / “…에 해당합니다.”).
 
 Output schema:
 {
@@ -47,47 +43,21 @@ export async function rankDeepCognitiveErrors(
   situation: string,
   thought: string,
 ): Promise<CognitiveErrorRankResult> {
-  const prompt = `
-[Situation]
-${situation}
-
-[Automatic Thought]
-${thought}
-`.trim();
+  const prompt = buildPrompt([
+    { title: "Situation", body: situation },
+    { title: "Automatic Thought", body: thought },
+  ]);
 
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: RANK_SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      parse: parseCognitiveRankResponse,
+      tag: "deepCognitiveRank",
     });
-
-    const arr = parseCognitiveRankResponse(raw);
-    if (!arr) throw new Error("No JSON object in LLM output (rank)");
-
-    const seen = new Set<number>();
-    const ranked: CognitiveErrorRankResult["ranked"] = [];
-
-    for (const item of arr) {
-      const idx = item?.index;
-      if (!isValidIndex(idx)) continue;
-      if (seen.has(idx)) continue;
-
-      seen.add(idx);
-
-      const reason =
-        cleanText(item?.reason) || "가능성을 평가했지만 근거가 제한적입니다.";
-      const evidenceQuote = cleanText(item?.evidenceQuote);
-
-      ranked.push({
-        index: idx,
-        reason,
-        ...(evidenceQuote ? { evidenceQuote } : {}),
-      });
-    }
-
-    if (ranked.length !== 10) return defaultRank();
-
-    return { ranked };
+    const arr = parsed;
+    return normalizeCognitiveRank(arr);
   } catch (e) {
     console.error("deep 인지오류 랭킹 실패(JSON):", e);
     return defaultRank();

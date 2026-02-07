@@ -1,7 +1,7 @@
 import {
   COGNITIVE_ERRORS_EN,
   type CognitiveErrorIndex,
-} from "../../constants/errors";
+} from "@/lib/constants/errors";
 
 export function formatCognitiveErrorsReference(): string {
   return COGNITIVE_ERRORS_EN

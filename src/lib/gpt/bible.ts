@@ -1,9 +1,10 @@
 
 
 // src/lib/gpt/bible.ts
-import { callGptText } from "./client";
-import { parseBibleResponse, type BibleResultFields } from "./utils/llm/bible";
+import { parseBibleResponse, type BibleResultFields } from "./utils/bible/parse";
 import { markAiFallback } from "@/lib/utils/aiFallback";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
 
 export type BibleResult = BibleResultFields;
 
@@ -65,25 +66,27 @@ export async function generateBibleVerse(
   situation: string,
   emotion: string
 ): Promise<BibleResult> {
-  const prompt = `
-[상황]
-${situation}
-
-[감정]
-${emotion}
-
-위 상황과 감정에 맞는 성경 구절 1개와 짧은 기도문을 JSON 스키마로만 출력하라.
-`.trim();
+  const prompt = buildPrompt(
+    [
+      { title: "상황", body: situation },
+      { title: "감정", body: emotion },
+    ],
+    {
+      suffix:
+        "위 상황과 감정에 맞는 성경 구절 1개와 짧은 기도문을 JSON 스키마로만 출력하라.",
+    },
+  );
 
   let usedFallback = false;
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      parse: parseBibleResponse,
+      tag: "bible",
     });
-
-    const result = parseBibleResponse(raw);
-    if (!result) throw new Error("No JSON object in LLM output");
+    const result = parsed;
 
     const fb = FALLBACK(emotion);
     usedFallback = !result.verse ||

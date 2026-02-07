@@ -6,7 +6,7 @@ import {
   getUtcDateParts,
   parseUsageCounts,
   isZeroUsage,
-  getLatestTokenUsageRow,
+  getTokenUsageRowForMonth,
   insertTokenUsageRow,
   updateTokenUsageRow,
   logMissingIdentity,
@@ -81,14 +81,16 @@ export const handlePostTokenUsage = async (
   }
 
   const resolvedDeviceId = userId ? null : deviceId;
-  const { data: latest, error: latestError } = await getLatestTokenUsageRow(
+  const { data: current, error: currentError } = await getTokenUsageRowForMonth(
     supabase,
     userId,
     resolvedDeviceId,
+    year,
+    month,
   );
 
-  if (latestError) {
-    console.error("[token-usage] latest query failed", {
+  if (currentError) {
+    console.error("[token-usage] month query failed", {
       action: "usage",
       requestId,
       userId,
@@ -96,12 +98,12 @@ export const handlePostTokenUsage = async (
       year,
       month,
       day,
-      error: latestError,
+      error: currentError,
     });
-    return json(res, 500, { error: "Failed to read usage", details: latestError });
+    return json(res, 500, { error: "Failed to read usage", details: currentError });
   }
 
-  if (!latest || latest.year !== year || latest.month !== month) {
+  if (!current) {
     const { error: insertError } = await insertTokenUsageRow(supabase, {
       userId,
       deviceId: resolvedDeviceId,
@@ -133,7 +135,7 @@ export const handlePostTokenUsage = async (
     return json(res, 200, { ok: true });
   }
 
-  const latestDay = Number(latest.day || 0);
+  const latestDay = Number(current.day || 0);
   if (day < latestDay) {
     return json(res, 200, { ok: true });
   }
@@ -141,18 +143,18 @@ export const handlePostTokenUsage = async (
   const shouldResetDaily = day > latestDay;
   const nextDailyUsage = shouldResetDaily
     ? counts.totalTokens
-    : Number(latest.daily_usage || 0) + counts.totalTokens;
+    : Number(current.daily_usage || 0) + counts.totalTokens;
 
-  const { error: updateError } = await updateTokenUsageRow(supabase, latest.id, {
+  const { error: updateError } = await updateTokenUsageRow(supabase, current.id, {
     day,
-    monthly_usage: Number(latest.monthly_usage || 0) + counts.totalTokens,
+    monthly_usage: Number(current.monthly_usage || 0) + counts.totalTokens,
     daily_usage: nextDailyUsage,
-    input_tokens: Number(latest.input_tokens || 0) + counts.inputTokens,
-    output_tokens: Number(latest.output_tokens || 0) + counts.outputTokens,
-    request_count: Number(latest.request_count || 0) + counts.requestCount,
-    session_count: Number(latest.session_count || 0) + counts.sessionCount,
+    input_tokens: Number(current.input_tokens || 0) + counts.inputTokens,
+    output_tokens: Number(current.output_tokens || 0) + counts.outputTokens,
+    request_count: Number(current.request_count || 0) + counts.requestCount,
+    session_count: Number(current.session_count || 0) + counts.sessionCount,
     note_proposal_count:
-      Number(latest.note_proposal_count || 0) + counts.noteProposalCount,
+      Number(current.note_proposal_count || 0) + counts.noteProposalCount,
   });
 
   if (updateError) {

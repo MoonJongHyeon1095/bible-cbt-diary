@@ -1,10 +1,11 @@
 // src/lib/gpt/burns.ts
-import { callGptText } from "./client";
 import {
   parseBurnsEmpathyResponse,
   type BurnsEmpathyFields,
-} from "./utils/llm/burns";
+} from "./utils/burns/parse";
 import { markAiFallback } from "@/lib/utils/aiFallback";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
 
 export type BurnsEmpathyResult = BurnsEmpathyFields;
 
@@ -110,26 +111,24 @@ export async function generateBurnsEmpathy(
 ): Promise<BurnsEmpathyResult> {
   const intensityLine =
     typeof intensity === "number" ? `${emotion} : (${intensity}/100)` : emotion;
-  const prompt = `
-[Situation]
-${situation}
-
-[Emotion${typeof intensity === "number" ? " : Intensity(0~100)" : ""}]
-${intensityLine}
-
-[Automatic Thought]
-${thought}
-`.trim();
+  const prompt = buildPrompt([
+    { title: "Situation", body: situation },
+    {
+      title: `Emotion${typeof intensity === "number" ? " : Intensity(0~100)" : ""}`,
+      body: intensityLine,
+    },
+    { title: "Automatic Thought", body: thought },
+  ]);
 
   let usedFallback = false;
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      parse: parseBurnsEmpathyResponse,
+      tag: "burns",
     });
-
-    const parsed = parseBurnsEmpathyResponse(raw);
-    if (!parsed) throw new Error("No JSON object in LLM output");
 
     const result: BurnsEmpathyResult = {
       thoughtEmpathy: parsed.thoughtEmpathy ?? "",

@@ -1,11 +1,11 @@
-import { useMemo } from "react";
 import { createDeepInternalContext } from "@/lib/ai";
-import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
-import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
-import { useQuery } from "@tanstack/react-query";
+import { buildDeepNoteContext } from "@/lib/gpt/deepThought.types";
 import { queryKeys } from "@/lib/queryKeys";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { startPerf } from "@/lib/utils/perf";
+import { useQuery } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 const buildKey = (mainNote: EmotionNote | null, subNotes: EmotionNote[]) => {
   if (!mainNote) return "";
@@ -32,6 +32,8 @@ export function useCbtDeepInternalContext(
       try {
         const mainContext = buildDeepNoteContext(mainNote);
         const subContexts = subNotes.map(buildDeepNoteContext);
+        console.log("mainContext", mainContext);
+        console.log("subContexts", subContexts);
         return createDeepInternalContext(mainContext, subContexts);
       } finally {
         endPerf();

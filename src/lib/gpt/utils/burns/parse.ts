@@ -1,5 +1,5 @@
-import { parseJsonObject } from "../json";
-import { cleanText } from "../text";
+import { parseJsonObject } from "../core/json";
+import { cleanText } from "../core/text";
 
 export type BurnsEmpathyFields = {
   thoughtEmpathy: string;

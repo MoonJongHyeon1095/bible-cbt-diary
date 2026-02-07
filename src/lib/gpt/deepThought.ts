@@ -1,11 +1,12 @@
 // src/lib/gpt/deepThought.ts
 import { markAiFallback } from "@/lib/utils/aiFallback";
-import { callGptText } from "./client";
 import { DeepInternalContext } from "./deepContext";
 import type { DeepNoteContext, SDTKey } from "./deepThought.types";
-import { normalizeStringArray } from "./utils/array";
-import { parseSdtResponse } from "./utils/llm/sdtThoughts";
-import { normalizeTextValue } from "./utils/text";
+import { parseSdtResponse } from "./utils/sdt/parse";
+import { runGptJson } from "./utils/core/run";
+import { buildDeepThoughtPrompt } from "./utils/deep/thoughtPrompt";
+import { FALLBACK } from "./utils/deep/thoughtFallback";
+import { normalizeThoughtItem, pickFirstItem } from "./utils/deep/thoughtNormalize";
 
 export type DeepAutoThoughtResult = {
   sdt: Record<
@@ -15,11 +16,6 @@ export type DeepAutoThoughtResult = {
       emotion_reason: string; // EXACTLY 1 Korean sentence
     }
   >;
-};
-
-type LlmThoughtItem = {
-  belief?: unknown;
-  emotion_reason?: unknown;
 };
 
 /**
@@ -105,86 +101,7 @@ Output schema (exactly):
 }
 `.trim();
 
-// ----------------------
-// helpers
-// ----------------------
-function toThreeSentencesArray(v: unknown): [string, string, string] | null {
-  const arr = normalizeStringArray(v);
-  if (arr.length >= 3) return [arr[0], arr[1], arr[2]];
-  if (arr.length === 2)
-    return [arr[0], arr[1], "그래서 결국 더 불안해질 것 같다고 느낀다."];
-  if (arr.length === 1)
-    return [
-      arr[0],
-      "그래서 상황이 더 나빠질 것 같다고 생각한다.",
-      "그래서 결국 더 불안해질 것 같다고 느낀다.",
-    ];
-  return null;
-}
-
-function normalizeThoughtItem(
-  v: unknown,
-): { belief: [string, string, string]; emotion_reason: string } | null {
-  if (!v || typeof v !== "object") return null;
-  const obj = v as LlmThoughtItem;
-
-  const belief = toThreeSentencesArray(obj.belief);
-  const emotion_reason = normalizeTextValue(obj.emotion_reason);
-
-  if (!belief || !emotion_reason) return null;
-  return { belief, emotion_reason };
-}
-
-function formatNote(note: DeepNoteContext) {
-  const emotions = note.emotions.filter(Boolean).join(", ");
-  const thoughts = note.automaticThoughts.filter(Boolean).join(" / ");
-  const errors = note.cognitiveErrors
-    .map((err) => (err.detail ? `${err.title}: ${err.detail}` : err.title))
-    .filter(Boolean)
-    .join(" / ");
-  const alternatives = note.alternatives.filter(Boolean).join(" / ");
-
-  return `- id: ${note.id}
-- trigger: ${note.triggerText}
-- emotions: ${emotions}
-- automatic_thoughts: ${thoughts}
-- cognitive_errors: ${errors}
-- alternatives: ${alternatives}`.trim();
-}
-
-const FALLBACK: Record<
-  SDTKey,
-  { belief: [string, string, string]; emotion_reason: string }
-> = {
-  relatedness: {
-    belief: [
-      "나는 내 마음을 드러내면 상대가 나를 부담스러워할 거라고 느낀다.",
-      "그래서 상대가 나를 멀리할 거라고 믿는다.",
-      "그러면 결국 나는 이해받지 못하고 더 멀어질 것 같아 두렵다.",
-    ],
-    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
-  },
-  competence: {
-    belief: [
-      "나는 기대를 충족하지 못하면 곧바로 무가치해질 것 같다고 믿는다.",
-      "내 가치는 내가 성취하는 것으로만 결정된다고 생각한다.",
-      "그래서 작은 흔들림도 실패로 이어질 것 같아 불안해진다.",
-    ],
-    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
-  },
-  autonomy: {
-    belief: [
-      "나는 상황이 내 의지와 상관없이 흘러가고 있다고 느낀다.",
-      "그래서 내가 선택할 여지가 거의 없다고 생각한다.",
-      "그래서 결국 나는 끌려다니며 더 나빠질 것 같아 답답하다.",
-    ],
-    emotion_reason: "그래서 지금 감정이 더 크게 느껴진다.",
-  },
-};
-
-function pickFirstItem(arr: unknown): unknown {
-  return Array.isArray(arr) ? arr[0] : null;
-}
+// helpers moved to utils/deep/*
 
 // ----------------------
 // main API
@@ -197,51 +114,23 @@ export async function generateDeepSdtAutomaticThoughts(
   internal: DeepInternalContext,
 ): Promise<DeepAutoThoughtResult> {
   const subs2 = subs.slice(0, 2);
-  const internalDeepFirst = `
-deep (PRIMARY):
-- repeatingPatterns: ${internal.deep.repeatingPatterns.join(" | ")}
-- tensions: ${internal.deep.tensions.join(" | ")}
-- invariants: ${internal.deep.invariants.join(" | ")}
-- conditionalRules: ${internal.deep.conditionalRules.join(" | ")}
-- leveragePoints: ${internal.deep.leveragePoints.join(" | ")}
-- bridgeHypothesis: ${internal.deep.bridgeHypothesis.join(" | ")}
-
-secondary:
-- salient.actors: ${internal.salient.actors.join(" | ")}
-- salient.events: ${internal.salient.events.join(" | ")}
-- salient.needs: ${internal.salient.needs.join(" | ")}
-- salient.threats: ${internal.salient.threats.join(" | ")}
-- salient.emotions: ${internal.salient.emotions.join(" | ")}
-- cbt.topDistortions: ${internal.cbt.topDistortions.join(" | ")}
-- cbt.coreBeliefsHypothesis: ${internal.cbt.coreBeliefsHypothesis.join(" | ")}
-`.trim();
-
-  const prompt = `
-[User Input]
-${userInput}
-
-[Emotion]
-${emotion}
-
-[Main Note]
-${formatNote(main)}
-
-[Sub Notes] (past contexts to compare against, latest first, max 2)
-${subs2.map(formatNote).join("\n\n") || "(none)"}
-
-[Internal Context - English] (DO NOT IGNORE)
-${internalDeepFirst}
-`.trim();
+  const prompt = buildDeepThoughtPrompt(
+    userInput,
+    emotion,
+    main,
+    subs2,
+    internal,
+  );
 
   let usedFallback = false;
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      parse: parseSdtResponse,
+      tag: "deepThought",
     });
-
-    const parsed = parseSdtResponse(raw);
-    if (!parsed) throw new Error("No JSON object in LLM output");
 
     const sdt = (parsed ?? {}) as Partial<Record<SDTKey, unknown>>;
 

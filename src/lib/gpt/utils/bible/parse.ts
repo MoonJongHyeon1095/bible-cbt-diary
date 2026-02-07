@@ -1,6 +1,6 @@
-import { parseJsonObject } from "../json";
-import { parseInteger } from "../number";
-import { cleanText } from "../text";
+import { parseJsonObject } from "../core/json";
+import { parseInteger } from "../core/number";
+import { cleanText } from "../core/text";
 
 export type BibleResultFields = {
   book: string;

@@ -1,4 +1,4 @@
-import { parseJsonObject } from "../json";
+import { parseJsonObject } from "../core/json";
 
 export type CognitiveRankItem = {
   index?: number;

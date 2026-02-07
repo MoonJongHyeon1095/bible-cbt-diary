@@ -1,9 +1,10 @@
 // src/lib/gpt/thoughts.ts
-import { callGptText } from "./client";
-import { normalizeStringArray } from "./utils/array";
-import { normalizeTextValue } from "./utils/text";
-import { parseSdtResponse } from "./utils/llm/sdtThoughts";
+import { normalizeStringArray } from "./utils/core/array";
+import { normalizeTextValue } from "./utils/core/text";
+import { parseSdtResponse } from "./utils/sdt/parse";
 import { markAiFallback } from "@/lib/utils/aiFallback";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
 
 type SDTKey = "relatedness" | "competence" | "autonomy";
 type SDTLabel = "관계성" | "유능감" | "자율성";
@@ -160,22 +161,21 @@ export async function generateExtendedAutomaticThoughts(
   emotion: string,
   options?: { noteProposal?: boolean },
 ): Promise<ExtendedThoughtsResult> {
-const prompt = `[Situation]
-${situation}
-
-[Emotion]
-${emotion}
-`.trim();
+  const prompt = buildPrompt([
+    { title: "Situation", body: situation },
+    { title: "Emotion", body: emotion },
+  ]);
 
   let usedFallback = false;
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: SYSTEM_PROMPT,
       model: "gpt-4o-mini",
       noteProposal: options?.noteProposal,
+      parse: parseSdtResponse,
+      tag: "thoughts",
     });
-    const parsed = parseSdtResponse(raw);
-    if (!parsed) throw new Error("No JSON object in LLM output");
 
     const sdt = (parsed ?? {}) as Partial<Record<SDTKey, unknown>>;
 

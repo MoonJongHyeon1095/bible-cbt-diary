@@ -113,19 +113,21 @@ export function applyIdentityFilter<T extends { eq: (col: string, val: unknown) 
 }
 
 // INTERNAL (no api route)
-// token-usage 최신 행 조회
-export async function getLatestTokenUsageRow(
+// token-usage 월간 행 조회 (해당 월 중 최신 day 기준)
+export async function getTokenUsageRowForMonth(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   userId: string | null,
   deviceId: string | null,
+  year: number,
+  month: number,
 ) {
   let query = supabase
     .from("token_usages")
     .select(
       "id, year, month, day, monthly_usage, daily_usage, input_tokens, output_tokens, request_count, session_count, note_proposal_count",
     )
-    .order("year", { ascending: false })
-    .order("month", { ascending: false })
+    .eq("year", year)
+    .eq("month", month)
     .order("day", { ascending: false })
     .limit(1);
 

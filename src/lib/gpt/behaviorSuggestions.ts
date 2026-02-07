@@ -1,9 +1,10 @@
 // src/lib/gpt/behaviorSuggestions.ts
 import type { CognitiveBehaviorId } from "../constants/behaviors";
-import { callGptText } from "./client";
-import { cleanText } from "./utils/text";
-import { parseBehaviorSuggestionsResponse } from "./utils/llm/behaviorSuggestions";
+import { cleanText } from "./utils/core/text";
+import { parseBehaviorSuggestionsResponse } from "./utils/behavior/parse";
 import { markAiFallback } from "@/lib/utils/aiFallback";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
 
 type BehaviorMeta = {
   id: CognitiveBehaviorId;
@@ -174,35 +175,39 @@ How to Use: ${b.usage_description}
     )
     .join("\n\n");
 
-  const prompt = `
-[Situation]
-${situation}
-
-[Emotions/Automatic Thoughts]
-${emotionThoughtText || "- (없음)"}
-
-[Selected Alternative Thought]
-${selectedAlternativeThought || "(없음)"}
-
-[Cognitive Distortions]
-${cognitiveErrorText || "(없음)"}
-
-[Behavior Techniques]
-${behaviorsText}
-`.trim();
+  const prompt = buildPrompt([
+    { title: "Situation", body: situation },
+    {
+      title: "Emotions/Automatic Thoughts",
+      body: emotionThoughtText,
+      emptyFallback: "- (없음)",
+    },
+    {
+      title: "Selected Alternative Thought",
+      body: selectedAlternativeThought,
+      emptyFallback: "(없음)",
+    },
+    {
+      title: "Cognitive Distortions",
+      body: cognitiveErrorText,
+      emptyFallback: "(없음)",
+    },
+    { title: "Behavior Techniques", body: behaviorsText },
+  ]);
 
   let usedFallback = false;
   try {
     const systemPrompt =
       behaviors.length === 1 ? SYSTEM_PROMPT_SINGLE : SYSTEM_PROMPT;
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt,
       model: "gpt-4o-mini",
       noteProposal: options?.noteProposal,
+      parse: (raw) => parseBehaviorSuggestionsResponse<CognitiveBehaviorId>(raw),
+      tag: "behaviorSuggestions",
     });
-
-    const arr = parseBehaviorSuggestionsResponse<CognitiveBehaviorId>(raw);
-    if (!arr) throw new Error("No JSON object in LLM output (behavior)");
+    const arr = parsed;
 
     const byId = new Map<CognitiveBehaviorId, string>();
     for (const item of arr) {

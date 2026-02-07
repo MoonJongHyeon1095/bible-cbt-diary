@@ -1,11 +1,9 @@
-import { parseJsonObject } from "../json";
+import { parseJsonObject } from "../core/json";
 
 export type DeepContextResponseShape = {
   salient?: unknown;
   cbt?: unknown;
   deep?: unknown;
-  openQuestions?: unknown;
-  nextStepHint?: unknown;
 };
 
 export function parseDeepContextResponse(

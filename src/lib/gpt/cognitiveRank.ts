@@ -1,9 +1,10 @@
 // src/lib/gpt/cognitiveRank.ts
-import { markAiFallback } from "@/lib/utils/aiFallback";
-import { callGptText } from "./client";
-import { formatCognitiveErrorsReference } from "./utils/cognitiveErrorsPrompt";
-import { parseCognitiveRankResponse } from "./utils/llm/cognitiveRank";
-import { cleanText } from "./utils/text";
+import { formatCognitiveErrorsReference } from "./utils/cognitive/prompt";
+import { parseCognitiveRankResponse } from "./utils/cognitive/parseRank";
+import { buildPrompt } from "./utils/core/prompt";
+import { runGptJson } from "./utils/core/run";
+import { type CognitiveErrorRankResult, defaultRank } from "./utils/cognitive/rankMeta";
+import { normalizeCognitiveRank } from "./utils/cognitive/rankNormalize";
 
 /**
  * ✅ 기존 단일 분석 결과(호환용)
@@ -17,34 +18,8 @@ export type CognitiveErrorAnalysisResult = {
   }>;
 };
 
-export type ErrorIndex = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
-
-/**
- * ✅ 2.a: 랭킹 결과(10개 유력순)
- */
-export type CognitiveErrorRankResult = {
-  ranked: Array<{
-    index: ErrorIndex; // 1..10
-    reason: string; // 1~2문장
-    evidenceQuote?: string; // 원문 그대로 인용(가능하면)
-  }>;
-};
-
-export const FALLBACK_INDICES: ErrorIndex[] = [1, 5, 7];
-
-export function isValidIndex(n: unknown): n is ErrorIndex {
-  return Number.isInteger(n) && typeof n === "number" && n >= 1 && n <= 10;
-}
-
-export function defaultRank(): CognitiveErrorRankResult {
-  return markAiFallback({
-    ranked: ([1, 2, 3, 4, 5, 6, 7, 8, 9, 10] as ErrorIndex[]).map((idx) => ({
-      index: idx,
-      reason:
-        "입력 정보가 제한적이라 우선순위 판단이 어려워 기본 순서로 정리했습니다.",
-    })),
-  });
-}
+export { defaultRank, isValidIndex, type ErrorIndex, type CognitiveErrorRankResult } from "./utils/cognitive/rankMeta";
+export const FALLBACK_INDICES: import("./utils/cognitive/rankMeta").ErrorIndex[] = [1, 5, 7];
 
 // const RANK_SYSTEM_PROMPT = `
 // 너는 인지행동치료(CBT) 관점에서 "인지오류(생각의 왜곡)" 가능성을 우선순위로 정렬하는 전문가다.
@@ -120,48 +95,21 @@ export async function rankCognitiveErrors(
   situation: string,
   thought: string,
 ): Promise<CognitiveErrorRankResult> {
-  const prompt = `
-[Situation]
-${situation}
-
-[Automatic Thought]
-${thought}
-`.trim();
+  const prompt = buildPrompt([
+    { title: "Situation", body: situation },
+    { title: "Automatic Thought", body: thought },
+  ]);
 
   try {
-    const raw = await callGptText(prompt, {
+    const { parsed } = await runGptJson({
+      prompt,
       systemPrompt: RANK_SYSTEM_PROMPT,
       model: "gpt-4o-mini",
+      parse: parseCognitiveRankResponse,
+      tag: "cognitiveRank",
     });
-
-    const arr = parseCognitiveRankResponse(raw);
-    if (!arr) throw new Error("No JSON object in LLM output (rank)");
-
-    const seen = new Set<number>();
-    const ranked: CognitiveErrorRankResult["ranked"] = [];
-
-    for (const item of arr) {
-      const idx = item?.index;
-      if (!isValidIndex(idx)) continue;
-      if (seen.has(idx)) continue;
-
-      seen.add(idx);
-
-      const reason =
-        cleanText(item?.reason) || "가능성을 평가했지만 근거가 제한적입니다.";
-      const evidenceQuote = cleanText(item?.evidenceQuote);
-
-      ranked.push({
-        index: idx,
-        reason,
-        ...(evidenceQuote ? { evidenceQuote } : {}),
-      });
-    }
-
-    // 반드시 10개(1..10)여야 함
-    if (ranked.length !== 10) return defaultRank();
-
-    return { ranked };
+    const arr = parsed;
+    return normalizeCognitiveRank(arr);
   } catch (e) {
     console.error("인지오류 랭킹 실패(JSON):", e);
     return defaultRank();

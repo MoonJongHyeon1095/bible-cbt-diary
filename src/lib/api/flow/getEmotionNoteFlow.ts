@@ -9,6 +9,8 @@ export type EmotionFlowSummary = {
   id: number;
   created_at: string;
   note_count: number;
+  title: string;
+  description: string | null;
 };
 
 // GET /api/emotion-flow?action=detail&flowId=...&includeMiddles=...

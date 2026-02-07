@@ -15,7 +15,7 @@ import {
   forceManyBody,
   forceSimulation,
 } from "d3-force";
-import { Route, Trash2 } from "lucide-react";
+import { Route, Trash2, Waypoints } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -30,6 +30,8 @@ type EmotionNoteFlowGroupListProps = {
 type GroupNode = {
   id: number;
   noteCount: number;
+  title: string;
+  description: string | null;
   radius: number;
   color: string;
   rgb: [number, number, number];
@@ -37,13 +39,22 @@ type GroupNode = {
   y: number;
 };
 
-const buildNodes = (flows: { id: number; note_count: number }[]) =>
+const buildNodes = (
+  flows: {
+    id: number;
+    note_count: number;
+    title: string;
+    description: string | null;
+  }[],
+) =>
   flows.map((flow) => {
     const radius = 36 + Math.min(90, flow.note_count * 6);
     const theme = getFlowThemeColor(flow.id);
     return {
       id: flow.id,
       noteCount: flow.note_count,
+      title: flow.title ?? "",
+      description: flow.description ?? null,
       radius,
       color: theme.rgbString,
       rgb: theme.rgb,
@@ -107,6 +118,10 @@ export default function EmotionNoteFlowGroupList({
   const selectedFlow = useMemo(
     () => flows.find((flow) => flow.id === selectedFlowId) ?? null,
     [flows, selectedFlowId],
+  );
+  const selectedNode = useMemo(
+    () => nodes.find((node) => node.id === selectedFlowId) ?? null,
+    [nodes, selectedFlowId],
   );
 
   useEffect(() => {
@@ -305,36 +320,62 @@ export default function EmotionNoteFlowGroupList({
               } as CSSProperties
             }
           >
-            {nodes.map((node) => (
-              <SafeButton
-                mode="native"
-                key={node.id}
-                type="button"
-                className={`${styles.node} ${
-                  selectedFlowId === node.id ? styles.nodeSelected : ""
-                }`}
+            {nodes.map((node) => {
+              const displayTitle = node.title.trim() || `플로우 ${node.id}`;
+              const displayDescription = node.description?.trim() ?? "";
+              return (
+                <SafeButton
+                  mode="native"
+                  key={node.id}
+                  type="button"
+                  className={`${styles.node} ${
+                    selectedFlowId === node.id ? styles.nodeSelected : ""
+                  }`}
+                  style={
+                    {
+                      width: node.radius * 2,
+                      height: node.radius * 2,
+                      backgroundColor: node.color,
+                      "--tx": `${node.x - node.radius}px`,
+                      "--ty": `${node.y - node.radius}px`,
+                      "--node-r": node.rgb[0],
+                      "--node-g": node.rgb[1],
+                      "--node-b": node.rgb[2],
+                    } as CSSProperties
+                  }
+                  onClick={() => setSelectedFlowId(node.id)}
+                >
+                  <span className={styles.nodeGroup}>
+                    <Waypoints size={12} className={styles.nodeGroupIcon} />
+                    #{node.id}
+                  </span>
+                  <span className={styles.nodeTitle}>{displayTitle}</span>
+                  <span className={styles.nodeCountLine}>
+                    <span className={styles.nodeCount}>{node.noteCount}</span>{" "}
+                    개의 기록
+                  </span>
+                </SafeButton>
+              );
+            })}
+            {selectedNode && (selectedNode.description?.trim() ?? "") ? (
+              <div
+                className={styles.nodeTooltip}
+                role="status"
                 style={
                   {
-                    width: node.radius * 2,
-                    height: node.radius * 2,
-                    backgroundColor: node.color,
-                    "--tx": `${node.x - node.radius}px`,
-                    "--ty": `${node.y - node.radius}px`,
-                    "--node-r": node.rgb[0],
-                    "--node-g": node.rgb[1],
-                    "--node-b": node.rgb[2],
+                    left: `${selectedNode.x}px`,
+                    top: `${selectedNode.y - selectedNode.radius - 18}px`,
                   } as CSSProperties
                 }
-                onClick={() => setSelectedFlowId(node.id)}
               >
-                <span className={styles.nodeGroup}>플로우 {node.id}</span>
-                <span className={styles.nodeText}>
-                  <span className={styles.nodeCount}>{node.noteCount}</span>
-                  <span className={styles.nodeUnit}>개의</span>
-                </span>
-                <span className={styles.nodeLabel}>기록이 있습니다</span>
-              </SafeButton>
-            ))}
+                <div className={styles.nodeTooltipTitle}>
+                  {selectedNode.title.trim() || `플로우 ${selectedNode.id}`}
+                </div>
+                <div className={styles.nodeTooltipBody}>
+                  {selectedNode.description}
+                </div>
+              </div>
+            ) : null}
           </div>
         )}
       </div>

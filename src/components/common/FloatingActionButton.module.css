@@ -37,14 +37,14 @@
 .helperText {
   position: absolute;
   top: calc(100% + 10px);
-  right: var(--fab-helper-right, 0);
+  left: 50%;
   background: rgba(18, 20, 24, 0.92);
   color: #fff;
   font-size: 0.8rem;
   padding: 6px 10px;
   border-radius: 999px;
   white-space: nowrap;
-  transform: translateX(var(--fab-helper-translate-x, 0));
+  transform: translateX(-50%);
 }
 
 .button:disabled {

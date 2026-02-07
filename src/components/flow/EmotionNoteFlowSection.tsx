@@ -216,7 +216,6 @@ export default function EmotionNoteFlowSection({
         isLoading={isLoading}
         needsNote={needsNote}
         emptyState={emptyState}
-        selectedNodeId={selectedNodeId}
         autoCenterNodeId={autoCenterNodeId}
         onClearSelection={clearSelection}
         onSelectNode={handleNodeClick}

@@ -17,7 +17,7 @@ export const handleGetEmotionFlowList = async (
   const supabase = createSupabaseAdminClient();
   const baseQuery = supabase
     .from("emotion_flows")
-    .select("id, created_at, emotion_flow_note_middles(count)")
+    .select("id, created_at, title, description, emotion_flow_note_middles(count)")
     .order("created_at", { ascending: false });
 
   const scopedQuery = user
@@ -72,6 +72,8 @@ export const handleGetEmotionFlowList = async (
       id: flow.id,
       created_at: flow.created_at,
       note_count: flow.emotion_flow_note_middles?.[0]?.count ?? 0,
+      title: flow.title ?? "",
+      description: flow.description ?? null,
     })) ?? [];
 
   return json(res, 200, { flows: mappedFlows });

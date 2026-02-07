@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import ReactFlow, {
   Background,
   type Edge,
@@ -28,7 +28,6 @@ type EmotionNoteFlowCanvasProps = {
   isLoading: boolean;
   needsNote: boolean;
   emptyState: boolean;
-  selectedNodeId: string | null;
   autoCenterNodeId?: string | null;
   onClearSelection: () => void;
   onSelectNode: (nodeId: string) => void;
@@ -96,7 +95,6 @@ export default function EmotionNoteFlowCanvas({
   isLoading,
   needsNote,
   emptyState,
-  selectedNodeId,
   autoCenterNodeId,
   onClearSelection,
   onSelectNode,
@@ -110,10 +108,13 @@ export default function EmotionNoteFlowCanvas({
   const handledAutoCenterRef = useRef<string | null>(null);
   const pendingCenterRef = useRef<string | null>(null);
 
-  const selectAndCenter = (nodeId: string) => {
-    onSelectNode(nodeId);
-    centerOnNode(nodeId);
-  };
+  const selectAndCenter = useCallback(
+    (nodeId: string) => {
+      onSelectNode(nodeId);
+      centerOnNode(nodeId);
+    },
+    [centerOnNode, onSelectNode],
+  );
 
   useEffect(() => {
     if (!autoCenterNodeId) return;
@@ -122,7 +123,7 @@ export default function EmotionNoteFlowCanvas({
     pendingCenterRef.current = autoCenterNodeId;
     selectAndCenter(autoCenterNodeId);
     handledAutoCenterRef.current = autoCenterNodeId;
-  }, [autoCenterNodeId, displayNodes, centerOnNode, onSelectNode]);
+  }, [autoCenterNodeId, displayNodes, selectAndCenter]);
 
   // Loading/empty UI branches render outside ReactFlow.
   if (isLoading) {

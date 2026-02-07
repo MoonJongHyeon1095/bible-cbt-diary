@@ -18,6 +18,8 @@ import { CbtDeepAutoThoughtSection } from "./center/CbtDeepAutoThoughtSection";
 import { CbtDeepIncidentSection } from "./center/CbtDeepIncidentSection";
 import { CbtDeepSelectSection } from "./center/CbtDeepSelectSection";
 import { useCbtDeepInternalContext } from "./hooks/useCbtDeepInternalContext";
+import { useCbtDeepMontageScenario } from "./hooks/useCbtDeepMontageScenario";
+import { useCbtDeepMontagePicture } from "./hooks/useCbtDeepMontagePicture";
 import { useDeepSessionNotes } from "./hooks/useDeepSessionNotes";
 import { useDeepSessionOnboarding } from "./hooks/useDeepSessionOnboarding";
 import { useDeepSessionNavigationHandlers } from "./handlers/useDeepSessionNavigationHandlers";
@@ -149,11 +151,40 @@ function CbtDeepSessionPageContent() {
       (!selectionRequired ||
         (flow.step !== "select" && subNotes.length > 0)),
   });
+  const {
+    key: montageScenarioKey,
+    scenario: montageScenario,
+    error: montageScenarioError,
+  } = useCbtDeepMontageScenario(mainNote, subNotes, {
+    enabled:
+      aiEnabled &&
+      Boolean(mainNote) &&
+      !notesLoading &&
+      (!selectionRequired ||
+        (flow.step !== "select" && subNotes.length > 0)),
+  });
+  const { error: montagePictureError } = useCbtDeepMontagePicture(
+    montageScenario,
+    {
+      enabled: Boolean(montageScenario),
+      key: montageScenarioKey,
+    },
+  );
 
   useEffect(() => {
     if (!internalContextLoadError) return;
     pushToast(internalContextLoadError, "error");
   }, [internalContextLoadError, pushToast]);
+
+  useEffect(() => {
+    if (!montageScenarioError) return;
+    pushToast(montageScenarioError, "error");
+  }, [montageScenarioError, pushToast]);
+
+  useEffect(() => {
+    if (!montagePictureError) return;
+    pushToast(montagePictureError, "error");
+  }, [montagePictureError, pushToast]);
 
   const { handleBack, handleGoHome } = useDeepSessionNavigationHandlers({
     flowStep: flow.step,

@@ -22,6 +22,10 @@ import {
 } from "./gpt";
 import type { DeepInternalContext } from "./gpt/deepContext";
 import { generateDeepInternalContext } from "./gpt/deepContext";
+import type { DeepMontagePicture } from "./gpt/deepMontagePicture";
+import { generateDeepMontagePicture } from "./gpt/deepMontagePicture";
+import type { DeepMontageScenario } from "./gpt/deepMontageScenario";
+import { generateDeepMontageScenario } from "./gpt/deepMontageScenario";
 import type { DeepAutoThoughtResult } from "./gpt/deepThought";
 
 export type ExtendedAutomaticThought = {
@@ -115,6 +119,33 @@ export async function createDeepInternalContext(
   }>,
 ): Promise<DeepInternalContext> {
   return generateDeepInternalContext(main, subs);
+}
+
+export async function createDeepMontageScenario(
+  main: {
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  },
+  subs: Array<{
+    id: number;
+    triggerText: string;
+    emotions: string[];
+    automaticThoughts: string[];
+    cognitiveErrors: Array<{ title: string; detail: string }>;
+    alternatives: string[];
+  }>,
+): Promise<DeepMontageScenario> {
+  return generateDeepMontageScenario(main, subs);
+}
+
+export async function createDeepMontagePicture(
+  scenario: DeepMontageScenario,
+): Promise<DeepMontagePicture> {
+  return generateDeepMontagePicture(scenario);
 }
 
 // 1) 확장 자동사고

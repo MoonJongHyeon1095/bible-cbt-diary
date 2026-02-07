@@ -85,6 +85,10 @@ export const queryKeys = {
       ["ai", "deep-alternative-thoughts", key] as const,
     deepInternalContext: (key: string) =>
       ["ai", "deep-internal-context", key] as const,
+    deepMontageScenario: (key: string) =>
+      ["ai", "deep-montage-scenario", key] as const,
+    deepMontagePicture: (key: string) =>
+      ["ai", "deep-montage-picture", key] as const,
     deepCognitiveErrorRank: (key: string) =>
       ["ai", "deep-cognitive-errors", "rank", key] as const,
     deepCognitiveErrorDetail: (key: string, indicesKey: string) =>

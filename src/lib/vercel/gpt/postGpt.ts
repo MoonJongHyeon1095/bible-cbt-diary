@@ -21,6 +21,8 @@ function extractTextFromResponsesPayload(payload: unknown): string | null {
   }
 }
 
+// POST /api/gpt
+// gpt 등록
 export const handlePostGpt = async (req: VercelRequest, res: VercelResponse) => {
   if (req.method !== "POST") {
     return methodNotAllowed(res);

@@ -16,6 +16,8 @@ type DeepPayload = {
   flow_id?: number | null;
 };
 
+// POST /api/deep-session
+// deep-session 등록
 export const handlePostDeepSession = async (
   req: VercelRequest,
   res: VercelResponse,

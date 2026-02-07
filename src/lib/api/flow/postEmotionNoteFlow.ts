@@ -1,6 +1,8 @@
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
+// POST /api/emotion-flow
+// emotion-flow 등록
 export const postEmotionNoteFlow = async (
   accessToken: string,
   payload: {

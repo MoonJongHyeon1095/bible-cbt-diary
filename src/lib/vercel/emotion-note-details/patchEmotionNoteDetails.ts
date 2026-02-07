@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId } from "../_utils.js";
 
+// PATCH /api/emotion-note-details
+// emotion-note-details 수정
 export const handlePatchEmotionNoteDetails = async (
   req: VercelRequest,
   res: VercelResponse,

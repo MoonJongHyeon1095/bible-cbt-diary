@@ -8,8 +8,9 @@ const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date());
 };
 
-// today, month 노트 목록 조회
-export const handleGetEmotionNotes = async (
+// GET /api/emotion-notes?start=...&end=...
+// emotion-notes 목록 조회 (today, month)
+export const handleGetEmotionNoteList = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {

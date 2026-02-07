@@ -3,13 +3,14 @@
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
-import { getKstMonthRange } from "@/lib/utils/time";
+import { getKstDayRange } from "@/lib/utils/time";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-export const fetchEmotionNotesByRange = async (
-  start: Date,
-  _end: Date,
+// GET /api/emotion-notes?start=...&end=...
+// emotion-notes 목록 조회 (today)
+export const fetchEmotionNoteList = async (
   access: AccessContext,
+  date: Date = new Date(),
 ) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
@@ -19,7 +20,7 @@ export const fetchEmotionNotesByRange = async (
     };
   }
 
-  const { startIso, endIso } = getKstMonthRange(start);
+  const { startIso, endIso } = getKstDayRange(date);
   const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
     start: startIso,
     end: endIso,

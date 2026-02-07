@@ -2,6 +2,8 @@
 
 import { buildApiUrl } from "@/lib/utils/apiBase";
 
+// GET /api/share-snap-shots
+// share-snap-shots 조회
 export const fetchShareSnapshot = async (shareId: string) => {
   const response = await fetch(
     buildApiUrl(`/api/share-snap-shots?sid=${shareId}`),

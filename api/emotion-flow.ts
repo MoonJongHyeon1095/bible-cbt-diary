@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleGetEmotionNoteFlow } from "../src/lib/vercel/flow/getEmotionNoteFlow.js";
-import { handleGetEmotionFlows } from "../src/lib/vercel/flow/getEmotionNoteFlowGroups.js";
+import { handleGetEmotionFlowList } from "../src/lib/vercel/flow/getEmotionNoteFlowList.js";
 import { handlePostEmotionNoteFlow } from "../src/lib/vercel/flow/postEmotionNoteFlow.js";
 import {
   getQueryParam,
@@ -20,7 +20,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "GET") {
     const action = getQueryParam(req, "action");
     if (action === "list") {
-      return handleGetEmotionFlows(req, res);
+      return handleGetEmotionFlowList(req, res);
     }
 
     if (action === "detail") {

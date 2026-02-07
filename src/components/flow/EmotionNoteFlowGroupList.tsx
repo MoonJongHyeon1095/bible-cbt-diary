@@ -10,7 +10,7 @@ import { useRouter } from "next/navigation";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteFlowGroupList.module.css";
-import { fetchEmotionFlows } from "@/lib/api/flow/getEmotionNoteFlow";
+import { fetchEmotionFlowList } from "@/lib/api/flow/getEmotionNoteFlow";
 import { getFlowThemeColor } from "./utils/flowColors";
 import SafeButton from "@/components/ui/SafeButton";
 import { useQuery } from "@tanstack/react-query";
@@ -81,7 +81,7 @@ export default function EmotionNoteFlowGroupList({
   const flowsQuery = useQuery({
     queryKey: queryKeys.flow.flows(accessToken, noteId),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionFlows(accessToken, noteId);
+      const { response, data } = await fetchEmotionFlowList(accessToken, noteId);
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }

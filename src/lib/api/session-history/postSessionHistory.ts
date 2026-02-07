@@ -5,6 +5,8 @@ import type { SessionHistory } from "@/lib/types/cbtTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// POST /api/session-history
+// session-history 등록
 export async function saveSessionHistoryAPI(
   access: AccessContext,
   history: SessionHistory,

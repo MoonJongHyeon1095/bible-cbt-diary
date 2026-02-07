@@ -5,6 +5,8 @@ import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// POST /api/deep-session
+// deep-session 등록
 export async function saveDeepSessionAPI(
   access: AccessContext,
   payload: {

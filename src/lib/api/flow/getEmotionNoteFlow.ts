@@ -1,9 +1,6 @@
 "use client";
 
-import type {
-  EmotionNote,
-  EmotionNoteMiddle,
-} from "@/lib/types/emotionNoteTypes";
+import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
@@ -13,6 +10,8 @@ export type EmotionFlowSummary = {
   note_count: number;
 };
 
+// GET /api/emotion-flow?action=detail&flowId=...&includeMiddles=...
+// flow 상세 조회
 export const fetchEmotionNoteFlow = async (
   accessToken: string,
   flowId: number,
@@ -39,8 +38,9 @@ export const fetchEmotionNoteFlow = async (
   return { response, data };
 };
 
+// GET /api/emotion-flow?action=list&noteId=...
 // flow 목록 조회
-export const fetchEmotionFlows = async (
+export const fetchEmotionFlowList = async (
   accessToken: string,
   noteId?: number | null,
 ) => {
@@ -52,22 +52,6 @@ export const fetchEmotionFlows = async (
   const data = response.ok
     ? ((await response.json()) as { flows: EmotionFlowSummary[] })
     : { flows: [] };
-
-  return { response, data };
-};
-
-// 대체 어디서 왜 씀?
-export const fetchEmotionNoteById = async (
-  accessToken: string,
-  noteId: number,
-) => {
-  const response = await fetch(buildApiUrl(`/api/emotion-notes?id=${noteId}`), {
-    headers: buildAuthHeaders(accessToken),
-  });
-
-  const data = response.ok
-    ? ((await response.json()) as { note: EmotionNote | null })
-    : { note: null };
 
   return { response, data };
 };

@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// POST /api/emotion-alternative-details
+// emotion-alternative-details 등록
 export const createAlternativeDetail = async (
   payload: { note_id: number; alternative: string },
   access: AccessContext,

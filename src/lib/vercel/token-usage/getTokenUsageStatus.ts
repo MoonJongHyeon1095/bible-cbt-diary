@@ -4,6 +4,8 @@ import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { getQueryParam, json, normalizeDeviceId } from "../_utils.js";
 import { applyIdentityFilter, getUtcDateParts, logMissingIdentity } from "./_shared.js";
 
+// GET /api/token-usage
+// token-usage 상태 조회
 export const handleGetTokenUsageStatus = async (
   req: VercelRequest,
   res: VercelResponse,

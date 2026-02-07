@@ -2,6 +2,8 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getQueryParam, json } from "../_utils.js";
 
+// GET /api/share-snap-shots
+// share-snap-shots 조회
 export const handleGetShareSnapshot = async (
   req: VercelRequest,
   res: VercelResponse,

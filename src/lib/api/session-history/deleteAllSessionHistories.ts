@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// DELETE /api/session-history
+// session-history 삭제
 export const deleteAllSessionHistories = async (access: AccessContext) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {

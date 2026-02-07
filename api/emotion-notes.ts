@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleCors, getQueryParam, methodNotAllowed } from "./_utils.js";
-import { handleGetEmotionNotes } from "../src/lib/vercel/emotion-notes/getEmotionNotes.js";
+import { handleGetEmotionNoteList } from "../src/lib/vercel/emotion-notes/getEmotionNoteList.js";
 import { handleGetEmotionNote } from "../src/lib/vercel/emotion-notes/getEmotionNote.js";
 import { handlePostEmotionNote } from "../src/lib/vercel/emotion-notes/postEmotionNote.js";
 import { handlePatchEmotionNote } from "../src/lib/vercel/emotion-notes/patchEmotionNote.js";
@@ -14,7 +14,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (idParam) {
       return handleGetEmotionNote(req, res);
     }
-    return handleGetEmotionNotes(req, res);
+    return handleGetEmotionNoteList(req, res);
   }
 
   if (req.method === "POST") {

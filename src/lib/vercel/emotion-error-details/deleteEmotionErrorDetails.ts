@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId } from "../_utils.js";
 
+// DELETE /api/emotion-error-details
+// emotion-error-details 삭제
 export const handleDeleteEmotionErrorDetails = async (
   req: VercelRequest,
   res: VercelResponse,

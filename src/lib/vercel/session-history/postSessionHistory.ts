@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId } from "../_utils.js";
 
+// POST /api/session-history
+// session-history 등록
 export const handlePostSessionHistory = async (
   req: VercelRequest,
   res: VercelResponse,

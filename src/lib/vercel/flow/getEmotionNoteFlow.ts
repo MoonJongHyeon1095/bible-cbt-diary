@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { json, getQueryParam } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 
+// GET /api/emotion-flow?action=detail&flowId=...&includeMiddles=...
+// flow 상세 조회
 export const handleGetEmotionNoteFlow = async (
   req: VercelRequest,
   res: VercelResponse,

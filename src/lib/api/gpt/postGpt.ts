@@ -11,6 +11,8 @@ export type PostGptPayload = {
   deviceId?: string | null;
 };
 
+// POST /api/gpt
+// gpt 등록
 export const postGpt = async (payload: PostGptPayload) => {
   const body: Record<string, string> = { prompt: payload.prompt };
   if (payload.systemPrompt) body.systemPrompt = payload.systemPrompt;

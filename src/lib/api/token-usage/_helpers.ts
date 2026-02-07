@@ -5,6 +5,8 @@ import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
 const APP_API_KEY = process.env.NEXT_PUBLIC_APP_API_KEY ?? "";
 
+// INTERNAL (no api route)
+// token-usage 요청 헤더 생성
 export const buildUsageHeaders = async (
   options: { includeContentType?: boolean } = {},
 ) => {

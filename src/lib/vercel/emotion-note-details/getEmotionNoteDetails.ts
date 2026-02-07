@@ -9,6 +9,8 @@ const parseNoteId = (req: VercelRequest) => {
   return Number.isNaN(noteId) ? null : noteId;
 };
 
+// GET /api/emotion-note-details
+// emotion-note-details 상세 조회
 export const handleGetEmotionNoteDetails = async (
   req: VercelRequest,
   res: VercelResponse,

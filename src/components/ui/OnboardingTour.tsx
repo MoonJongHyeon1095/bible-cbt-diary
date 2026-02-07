@@ -185,7 +185,7 @@ export default function OnboardingTour({
             setCurrentStep(index);
           }
         },
-        onHighlighted: (element) => {
+        onHighlighted: () => {
           pruneDriverDom();
         },
         onNextClick: () => {

@@ -1,9 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
-import { getQueryParam, json } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
+import { getQueryParam, json } from "../_utils.js";
 
-export const handleGetEmotionFlows = async (
+// GET /api/emotion-flow?action=list
+// flow 목록 조회
+export const handleGetEmotionFlowList = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {
@@ -25,7 +27,10 @@ export const handleGetEmotionFlows = async (
   const noteIdParam = getQueryParam(req, "noteId");
   const noteId = noteIdParam ? Number(noteIdParam) : null;
   if (noteIdParam && (noteId === null || Number.isNaN(noteId))) {
-    return json(res, 400, { flows: [], message: "noteId가 올바르지 않습니다." });
+    return json(res, 400, {
+      flows: [],
+      message: "noteId가 올바르지 않습니다.",
+    });
   }
 
   let filteredQuery = scopedQuery;

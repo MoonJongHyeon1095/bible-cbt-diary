@@ -10,7 +10,9 @@ type FetchSessionHistoriesOptions = {
   offset?: number;
 };
 
-export const fetchSessionHistories = async (
+// GET /api/session-history?limit=...&offset=...
+// session-history 목록 조회
+export const fetchSessionHistoryList = async (
   access: AccessContext,
   options: FetchSessionHistoriesOptions = {},
 ) => {

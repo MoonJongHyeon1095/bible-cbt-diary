@@ -36,7 +36,6 @@ export default function EmotionNoteFlowSection({
   const { notes, middles, isLoading } = useEmotionNoteFlowData({
     accessToken,
     flowId,
-    noteId,
   });
   // Theme color derived from flow id (if present).
   const themeColor = useMemo(

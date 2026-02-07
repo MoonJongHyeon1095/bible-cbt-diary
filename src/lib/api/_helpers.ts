@@ -7,6 +7,8 @@ export type ResolvedAccess =
   | { kind: "guest"; deviceId: string }
   | { kind: "blocked" };
 
+// INTERNAL (no api route)
+// api 접근 컨텍스트 해석
 export const resolveAccess = (access: AccessContext): ResolvedAccess => {
   if (access.mode === "auth" && access.accessToken) {
     return { kind: "auth", headers: buildAuthHeaders(access.accessToken) };
@@ -19,6 +21,8 @@ export const resolveAccess = (access: AccessContext): ResolvedAccess => {
   return { kind: "blocked" };
 };
 
+// INTERNAL (no api route)
+// api 쿼리스트링 결합
 export const appendQuery = (url: string, params: Record<string, string>) => {
   const query = new URLSearchParams(params).toString();
   if (!query) return url;

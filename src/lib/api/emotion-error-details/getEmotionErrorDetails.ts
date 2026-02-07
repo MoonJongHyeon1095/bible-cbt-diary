@@ -5,6 +5,8 @@ import type { EmotionNoteErrorDetail } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
+// GET /api/emotion-error-details
+// emotion-error-details 상세 조회
 export const fetchErrorDetails = async (
   noteId: number,
   access: AccessContext,

@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// PATCH /api/emotion-behavior-details
+// emotion-behavior-details 수정
 export const updateBehaviorDetail = async (
   payload: {
     id: number;

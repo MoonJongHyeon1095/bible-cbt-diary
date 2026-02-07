@@ -5,6 +5,8 @@ import { getDeviceId } from "@/lib/utils/deviceId";
 import type { TokenUsage } from "@/lib/utils/tokenSessionStorage";
 import { buildUsageHeaders } from "@/lib/api/token-usage/_helpers";
 
+// POST /api/token-usage
+// token-usage 등록
 export const syncTokenUsage = async (
   usage: TokenUsage,
   counts?: { session_count?: number },

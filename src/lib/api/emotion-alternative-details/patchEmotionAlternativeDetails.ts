@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// PATCH /api/emotion-alternative-details
+// emotion-alternative-details 수정
 export const updateAlternativeDetail = async (
   payload: { id: number; alternative: string },
   access: AccessContext,

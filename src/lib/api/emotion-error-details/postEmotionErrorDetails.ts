@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// POST /api/emotion-error-details
+// emotion-error-details 등록
 export const createErrorDetail = async (
   payload: { note_id: number; error_label: string; error_description: string },
   access: AccessContext,

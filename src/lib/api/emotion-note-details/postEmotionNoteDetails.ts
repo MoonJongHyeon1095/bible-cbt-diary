@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// POST /api/emotion-note-details
+// emotion-note-details 등록
 export const createThoughtDetail = async (
   payload: { note_id: number; automatic_thought: string; emotion: string },
   access: AccessContext,

@@ -18,6 +18,8 @@ const normalizeIds = (value?: number[]) => {
   );
 };
 
+// POST /api/share-snap-shots
+// share-snap-shots 등록
 export const handlePostShareSnapshot = async (
   req: VercelRequest,
   res: VercelResponse,

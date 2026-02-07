@@ -14,6 +14,8 @@ export type MinimalSavePayload = {
   cognitiveError?: SelectedCognitiveError | null;
 };
 
+// POST /api/deep-session
+// deep-session 등록
 export async function saveMinimalPatternAPI(
   access: AccessContext,
   payload: MinimalSavePayload,

@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId } from "../_utils.js";
 
+// POST /api/device-merge
+// device-merge 등록
 export const handlePostDeviceMerge = async (
   req: VercelRequest,
   res: VercelResponse,

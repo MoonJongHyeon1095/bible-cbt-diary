@@ -40,8 +40,6 @@ export const queryKeys = {
         flowId,
         includeMiddles,
       ] as const,
-    note: (accessToken: string, noteId: number) =>
-      ["emotion-flow", "note", accessToken, noteId] as const,
   },
   share: {
     all: ["share-snapshot"] as const,

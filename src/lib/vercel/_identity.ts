@@ -2,6 +2,8 @@ import type { VercelRequest } from "@vercel/node";
 import { getUserFromAuthHeader } from "../auth/sessionNode.js";
 import { getQueryParam, normalizeDeviceId } from "./_utils.js";
 
+// INTERNAL (no api route)
+// api 요청 쿼리 기반 사용자 식별
 export const resolveIdentityFromQuery = async (
   req: VercelRequest,
   key = "deviceId",
@@ -11,6 +13,8 @@ export const resolveIdentityFromQuery = async (
   return { user, deviceId };
 };
 
+// INTERNAL (no api route)
+// api 요청 바디 기반 사용자 식별
 export const resolveIdentityFromBody = async (
   req: VercelRequest,
   deviceId?: string | null,

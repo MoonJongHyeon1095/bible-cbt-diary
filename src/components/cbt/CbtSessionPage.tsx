@@ -157,7 +157,7 @@ function CbtSessionPageContent() {
       return [];
     }
     return [];
-  }, [flow.step, flow.selectedEmotion]);
+  }, [flow.step]);
 
   const persistTourProgress = useCallback(
     (stepIndex: number) => {

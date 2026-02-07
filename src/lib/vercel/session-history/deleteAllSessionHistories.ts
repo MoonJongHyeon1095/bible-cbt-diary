@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId, getQueryParam } from "../_utils.js";
 
+// DELETE /api/session-history
+// session-history 삭제
 export const handleDeleteAllSessionHistories = async (
   req: VercelRequest,
   res: VercelResponse,

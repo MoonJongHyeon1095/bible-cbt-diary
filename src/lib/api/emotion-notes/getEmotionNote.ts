@@ -5,6 +5,8 @@ import type { EmotionNoteWithDetails } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
+// GET /api/emotion-notes?id=...
+// emotion-notes 상세 조회
 export const fetchEmotionNote = async (
   noteId: number,
   access: AccessContext,

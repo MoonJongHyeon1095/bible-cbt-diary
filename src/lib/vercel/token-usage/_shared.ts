@@ -40,6 +40,8 @@ type LatestTokenUsageRow = {
   note_proposal_count: number | null;
 };
 
+// INTERNAL (no api route)
+// token-usage 날짜 유틸
 export function getUtcDateParts(): UtcDateParts {
   const now = new Date();
   return {
@@ -49,6 +51,8 @@ export function getUtcDateParts(): UtcDateParts {
   };
 }
 
+// INTERNAL (no api route)
+// token-usage 카운트 파싱
 export function parseUsageCounts(usage: UsagePayload): UsageCounts | null {
   const totalTokensRaw = Number(usage?.total_tokens || 0);
   const inputTokens = Number(usage?.input_tokens || 0);
@@ -81,6 +85,8 @@ export function parseUsageCounts(usage: UsagePayload): UsageCounts | null {
   };
 }
 
+// INTERNAL (no api route)
+// token-usage 값 여부 확인
 export function isZeroUsage(counts: UsageCounts) {
   return (
     counts.totalTokens +
@@ -93,6 +99,8 @@ export function isZeroUsage(counts: UsageCounts) {
   );
 }
 
+// INTERNAL (no api route)
+// token-usage 식별자 필터 적용
 export function applyIdentityFilter<T extends { eq: (col: string, val: unknown) => T }>(
   query: T,
   userId: string | null,
@@ -104,6 +112,8 @@ export function applyIdentityFilter<T extends { eq: (col: string, val: unknown) 
   return query.eq("device_id", deviceId);
 }
 
+// INTERNAL (no api route)
+// token-usage 최신 행 조회
 export async function getLatestTokenUsageRow(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   userId: string | null,
@@ -128,6 +138,8 @@ export async function getLatestTokenUsageRow(
   return query.maybeSingle<LatestTokenUsageRow>();
 }
 
+// INTERNAL (no api route)
+// token-usage 행 생성
 export async function insertTokenUsageRow(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   params: {
@@ -160,6 +172,8 @@ export async function insertTokenUsageRow(
   });
 }
 
+// INTERNAL (no api route)
+// token-usage 행 갱신
 export async function updateTokenUsageRow(
   supabase: ReturnType<typeof createSupabaseAdminClient>,
   id: number,
@@ -177,6 +191,8 @@ export async function updateTokenUsageRow(
   return supabase.from("token_usages").update(values).eq("id", id);
 }
 
+// INTERNAL (no api route)
+// token-usage 식별자 누락 로그
 export function logMissingIdentity(
   res: VercelResponse,
   params: {

@@ -3,6 +3,8 @@
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 
+// POST /api/share-snap-shots
+// share-snap-shots 등록
 export const createShareSnapshot = async (params: {
   accessToken: string;
   noteId: number;

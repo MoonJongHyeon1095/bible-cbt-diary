@@ -4,6 +4,8 @@ import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
 import { getDeviceId } from "@/lib/utils/deviceId";
 
+// GET /api/device-merge
+// device-merge 조회
 export const checkDeviceData = async (accessToken: string) => {
   const deviceId = getDeviceId();
   const query = new URLSearchParams({ deviceId }).toString();

@@ -13,6 +13,8 @@ type MinimalPayload = {
   cognitiveError?: { title?: string; detail?: string } | null;
 };
 
+// POST /api/deep-session
+// deep-session 등록
 export const handlePostMinimalSession = async (
   req: VercelRequest,
   res: VercelResponse,

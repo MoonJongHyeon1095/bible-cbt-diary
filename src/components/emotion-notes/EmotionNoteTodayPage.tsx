@@ -10,7 +10,7 @@ import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
 import OnboardingTour from "@/components/ui/OnboardingTour";
 import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
-import { fetchEmotionNotes } from "@/lib/api/emotion-notes/getEmotionNotes";
+import { fetchEmotionNoteList } from "@/lib/api/emotion-notes/getEmotionNoteList";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import { queryKeys } from "@/lib/queryKeys";
@@ -79,7 +79,7 @@ export default function EmotionNoteTodayPage() {
   const notesQuery = useQuery({
     queryKey: queryKeys.emotionNotes.list(access),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionNotes(access);
+      const { response, data } = await fetchEmotionNoteList(access);
       if (!response.ok) {
         throw new Error("emotion_notes fetch failed");
       }

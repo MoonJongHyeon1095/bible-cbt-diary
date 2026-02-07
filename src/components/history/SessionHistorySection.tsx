@@ -16,7 +16,7 @@ import SessionHistorySectionCard, {
 } from "./SessionHistorySectionCard";
 import { deleteAllSessionHistories } from "@/lib/api/session-history/deleteAllSessionHistories";
 import { deleteSessionHistory } from "@/lib/api/session-history/deleteSessionHistory";
-import { fetchSessionHistories } from "@/lib/api/session-history/getSessionHistories";
+import { fetchSessionHistoryList } from "@/lib/api/session-history/getSessionHistoryList";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -60,7 +60,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
   const historiesQuery = useInfiniteQuery({
     queryKey: queryKeys.sessionHistory.list(access),
     queryFn: async ({ pageParam = 0 }) => {
-      const { response, data } = await fetchSessionHistories(access, {
+      const { response, data } = await fetchSessionHistoryList(access, {
         limit: pageSize,
         offset: pageParam as number,
       });

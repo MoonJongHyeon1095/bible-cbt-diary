@@ -4,6 +4,8 @@ import type { NoticePayload } from "@/lib/notice/notice";
 
 const NOTICE_URL = process.env.NEXT_PUBLIC_NOTICE_URL;
 
+// GET $NEXT_PUBLIC_NOTICE_URL
+// notice 조회
 export async function loadNotices(): Promise<NoticePayload | null> {
   if (!NOTICE_URL) return null;
 

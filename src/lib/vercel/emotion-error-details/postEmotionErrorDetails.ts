@@ -3,6 +3,8 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
 import { json, readJson, normalizeDeviceId } from "../_utils.js";
 
+// POST /api/emotion-error-details
+// emotion-error-details 등록
 export const handlePostEmotionErrorDetails = async (
   req: VercelRequest,
   res: VercelResponse,

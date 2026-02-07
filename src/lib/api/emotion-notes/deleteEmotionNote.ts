@@ -4,6 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 
+// DELETE /api/emotion-notes
+// emotion-notes 삭제
 export const deleteEmotionNote = async (
   noteId: number,
   access: AccessContext,

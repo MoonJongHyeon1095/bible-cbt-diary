@@ -17,7 +17,7 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteCalendarSection.module.css";
-import { fetchEmotionNotesByRange } from "@/lib/api/emotion-notes/getEmotionNotesByRange";
+import { fetchEmotionNoteListByRange } from "@/lib/api/emotion-notes/getEmotionNoteListByRange";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 
@@ -115,7 +115,7 @@ export default function EmotionNoteCalendarSection({
       rangeEnd.toISOString(),
     ),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionNotesByRange(
+      const { response, data } = await fetchEmotionNoteListByRange(
         rangeStart,
         rangeEnd,
         access,

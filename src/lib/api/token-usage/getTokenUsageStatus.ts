@@ -18,6 +18,8 @@ export type TokenUsageStatus = {
   is_member: boolean;
 };
 
+// GET /api/token-usage
+// token-usage 상태 조회
 export const fetchTokenUsageStatus = async (): Promise<TokenUsageStatus> => {
   const deviceId = getDeviceId();
   const headers = await buildUsageHeaders({ includeContentType: false });

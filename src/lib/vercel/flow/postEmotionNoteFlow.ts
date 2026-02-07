@@ -85,6 +85,8 @@ const handleFlowCreate = async (
   return json(res, 200, { ok: true, flowId: flow.id });
 };
 
+// POST /api/emotion-flow
+// emotion-flow 등록
 export const handlePostEmotionNoteFlow = async (
   req: VercelRequest,
   res: VercelResponse,

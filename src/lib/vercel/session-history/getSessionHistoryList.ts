@@ -3,7 +3,9 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getQueryParam, json } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 
-export const handleGetSessionHistories = async (
+// GET /api/session-history?limit=...&offset=...
+// session-history 목록 조회
+export const handleGetSessionHistoryList = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {

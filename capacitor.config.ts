@@ -2,7 +2,7 @@ import type { CapacitorConfig } from "@capacitor/cli";
 
 const config: CapacitorConfig = {
   appId: "com.alliance617.emotionaldiary",
-  appName: "Edi - 감정일기",
+  appName: "Flow : AI 일기 · 감정 그래프",
   webDir: "out",
   // server: {
   //   url: "http://10.0.2.2:3000", // Android 에뮬레이터에서 WSL/Windows 호스트 접근

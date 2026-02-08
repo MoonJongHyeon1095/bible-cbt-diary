@@ -143,6 +143,24 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
+  position: relative;
+  width: 100%;
+}
+
+.socialButton svg {
+  position: absolute;
+  left: 12px;
+}
+
+.googleButton {
+  background: #2b2f3a;
+  border-color: #3a3f4f;
+  color: #e7e7f4;
+}
+
+.googleButton .googleIcon {
+  color: #cfd3df;
 }
 
 .googleIcon {

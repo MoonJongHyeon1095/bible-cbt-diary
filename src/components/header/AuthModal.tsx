@@ -6,7 +6,7 @@ import SafeButton from "@/components/ui/SafeButton";
 import { useModalOpen } from "@/components/common/useModalOpen";
 import { Capacitor } from "@capacitor/core";
 import { Browser } from "@capacitor/browser";
-import { Lock, LogIn, Mail, User, UserPlus } from "lucide-react";
+import { LogIn } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styles from "./AuthModal.module.css";
 
@@ -63,10 +63,6 @@ export default function AuthModal({
 }: AuthModalProps) {
   useModalOpen(isOpen);
 
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -105,51 +101,6 @@ export default function AuthModal({
     const ua = window.navigator?.userAgent ?? "";
     setIsInAppBrowser(isBlockedInAppBrowser(ua, isNativePlatform));
   }, [isOpen, isNativePlatform]);
-
-  const handleAuthSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setMessage("");
-    setError("");
-
-    if (mode === "signin") {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      setIsSubmitting(false);
-
-      if (error || !data.user) {
-        setError("로그인에 실패했습니다.");
-        return;
-      }
-
-      onSignedIn({ id: data.user.id, email: data.user.email ?? null });
-      onClose();
-      return;
-    }
-
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: name ? { data: { name } } : undefined,
-    });
-    setIsSubmitting(false);
-
-    if (error) {
-      setError("회원가입에 실패했습니다.");
-      return;
-    }
-
-    if (data.user && data.session) {
-      onSignedIn({ id: data.user.id, email: data.user.email ?? null });
-      onClose();
-      return;
-    }
-
-    setMessage("회원가입이 완료되었습니다. 로그인해주세요.");
-    setMode("signin");
-  };
 
   const handleOAuth = async (provider: "google" | "apple" | "facebook") => {
     setIsSubmitting(true);
@@ -251,17 +202,10 @@ export default function AuthModal({
         <header className={styles.header}>
           <div>
             <div className={styles.headerTitle}>
-              {mode === "signin" ? (
-                <>
-                  <LogIn size={20} />
-                  로그인
-                </>
-              ) : (
-                <>
-                  <UserPlus size={20} />
-                  회원가입
-                </>
-              )}
+              <>
+                <LogIn size={20} />
+                로그인
+              </>
             </div>
           </div>
           <SafeButton
@@ -278,85 +222,18 @@ export default function AuthModal({
           (인앱 감지 시 자동 외부 브라우저 유도는 유지)
         */}
 
-        <form className={styles.form} onSubmit={handleAuthSubmit}>
-          {mode === "signup" ? (
-            <label className={styles.field}>
-              <span className={styles.fieldLabel}>
-                <User size={16} />
-                이름
-              </span>
-              <input
-                type="text"
-                name="name"
-                required
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                placeholder="홍길동"
-                className={styles.input}
-              />
-            </label>
-          ) : null}
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>
-              <Mail size={16} />
-              이메일
-            </span>
-            <input
-              type="email"
-              name="email"
-              required
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              placeholder="example@email.com"
-              className={styles.input}
-            />
-          </label>
-          <label className={styles.field}>
-            <span className={styles.fieldLabel}>
-              <Lock size={16} />
-              비밀번호
-            </span>
-            <input
-              type="password"
-              name="password"
-              required
-              minLength={6}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="••••••••"
-              className={styles.input}
-            />
-            {mode === "signup" ? (
-              <span className={styles.helperText}>최소 6자 이상</span>
-            ) : null}
-          </label>
+        <div className={styles.form}>
           {error ? (
             <div className={styles.errorBox}>
               <p className={styles.errorText}>{error}</p>
             </div>
           ) : null}
           {message ? <p className={styles.message}>{message}</p> : null}
-          <SafeButton
-            type="submit"
-            variant="unstyled"
-            className={styles.primaryButton}
-            loading={isSubmitting}
-            loadingText="처리 중..."
-            disabled={isSubmitting}
-          >
-            {mode === "signin" ? "로그인" : "회원가입"}
-          </SafeButton>
-
-          <div className={styles.dividerRow}>
-            <span className={styles.dividerLine} />
-            <span className={styles.dividerLabel}>또는</span>
-            <span className={styles.dividerLine} />
-          </div>
 
           <SafeButton
             type="button"
             variant="unstyled"
-            className={styles.socialButton}
+            className={`${styles.socialButton} ${styles.googleButton}`}
             onClick={() => handleOAuth("google")}
             loading={isSubmitting}
             loadingText="연결 중..."
@@ -399,6 +276,7 @@ export default function AuthModal({
             </svg>
             Apple로 계속하기
           </SafeButton>
+          {/*
           <SafeButton
             type="button"
             variant="unstyled"
@@ -416,35 +294,8 @@ export default function AuthModal({
             </svg>
             Facebook으로 계속하기
           </SafeButton>
-
-          <div className={styles.switchRow}>
-            {mode === "signin" ? (
-              <span>
-                계정이 없으신가요?{" "}
-                <SafeButton
-                  type="button"
-                  variant="unstyled"
-                  onClick={() => setMode("signup")}
-                  className={styles.switchButton}
-                >
-                  회원가입
-                </SafeButton>
-              </span>
-            ) : (
-              <span>
-                이미 계정이 있으신가요?{" "}
-                <SafeButton
-                  type="button"
-                  variant="unstyled"
-                  onClick={() => setMode("signin")}
-                  className={styles.switchButton}
-                >
-                  로그인
-                </SafeButton>
-              </span>
-            )}
-          </div>
-        </form>
+          */}
+        </div>
       </div>
     </div>
   );

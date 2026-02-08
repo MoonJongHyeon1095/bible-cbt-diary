@@ -163,13 +163,25 @@ function CbtDeepSessionPageContent() {
       (!selectionRequired ||
         (flow.step !== "select" && subNotes.length > 0)),
   });
-  const { error: montagePictureError } = useCbtDeepMontagePicture(
-    montageScenario,
-    {
+  const montageSaveAccess = useMemo(
+    () => ({ mode: accessMode, accessToken }),
+    [accessMode, accessToken],
+  );
+  const montageSaveConfig = useMemo(() => {
+    if (!mainNote || !Number.isFinite(flowId ?? NaN)) return undefined;
+    return {
+      access: montageSaveAccess,
+      flowId,
+      mainNoteId: mainNote.id,
+      subNoteIds: subNotes.map((note) => note.id),
+    };
+  }, [flowId, mainNote, montageSaveAccess, subNotes]);
+  const { error: montagePictureError, saveError: montageSaveError } =
+    useCbtDeepMontagePicture(montageScenario, {
       enabled: Boolean(montageScenario),
       key: montageScenarioKey,
-    },
-  );
+      save: montageSaveConfig,
+    });
 
   useEffect(() => {
     if (!internalContextLoadError) return;
@@ -185,6 +197,11 @@ function CbtDeepSessionPageContent() {
     if (!montagePictureError) return;
     pushToast(montagePictureError, "error");
   }, [montagePictureError, pushToast]);
+
+  useEffect(() => {
+    if (!montageSaveError) return;
+    pushToast(montageSaveError, "error");
+  }, [montageSaveError, pushToast]);
 
   const { handleBack, handleGoHome } = useDeepSessionNavigationHandlers({
     flowStep: flow.step,

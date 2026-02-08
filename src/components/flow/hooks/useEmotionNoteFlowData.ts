@@ -19,13 +19,17 @@ export const useEmotionNoteFlowData = ({
     queryKey: queryKeys.flow.flow(access, flowId ?? 0, true),
     queryFn: async () => {
       if (!flowId) {
-        return { notes: [], middles: [] };
+        return { notes: [], middles: [], montages: [] };
       }
       const { response, data } = await fetchEmotionNoteFlow(access, flowId);
       if (!response.ok) {
         throw new Error("emotion_flow fetch failed");
       }
-      return { notes: data.notes ?? [], middles: data.middles ?? [] };
+      return {
+        notes: data.notes ?? [],
+        middles: data.middles ?? [],
+        montages: data.montages ?? [],
+      };
     },
     enabled: access.mode !== "blocked" && Boolean(flowId),
   });
@@ -35,10 +39,11 @@ export const useEmotionNoteFlowData = ({
       return {
         notes: flowQuery.data?.notes ?? [],
         middles: flowQuery.data?.middles ?? [],
+        montages: flowQuery.data?.montages ?? [],
         isLoading: flowQuery.isPending || flowQuery.isFetching,
       };
     }
-    return { notes: [], middles: [], isLoading: false };
+    return { notes: [], middles: [], montages: [], isLoading: false };
   }, [flowId, flowQuery.data, flowQuery.isPending, flowQuery.isFetching]);
 
   return result;

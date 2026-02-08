@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { Handle, Position, type NodeProps } from "reactflow";
 import styles from "../EmotionNoteFlowSection.module.css";
+import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
+import { Video } from "lucide-react";
 
 export type EmotionNoteDetailSection =
   | "emotion"
@@ -23,6 +25,8 @@ export type EmotionNoteFlowNodeData = {
   chips: EmotionNoteChip[];
   titleText: string;
   triggerText: string;
+  montage?: EmotionMontage | null;
+  onOpenMontage?: (montage: EmotionMontage) => void;
 };
 
 export default function EmotionNoteFlowNode({
@@ -44,6 +48,19 @@ export default function EmotionNoteFlowNode({
         className={styles.flowHandle}
       />
       {data.label}
+      {data.montage ? (
+        <button
+          type="button"
+          className={styles.nodeMontageButton}
+          onClick={(event) => {
+            event.stopPropagation();
+            data.onOpenMontage?.(data.montage as EmotionMontage);
+          }}
+          aria-label="몽타주 보기"
+        >
+          <Video size={32} />
+        </button>
+      ) : null}
       {selected ? (
         <div className={styles.nodeTooltip} role="status" aria-live="polite">
           <div className={styles.nodeTooltipTitle}>{data.titleText}</div>

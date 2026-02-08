@@ -58,3 +58,18 @@ export type EmotionNoteMiddle = {
   to_note_id: number;
   created_at: string;
 };
+
+export type EmotionMontage = {
+  id: number;
+  flow_id: number;
+  main_note_id: number;
+  sub_note_ids: number[] | null;
+  montage_caption: string | null;
+  montage_jsonb: {
+    sequenceText?: unknown[];
+    cutLogicText?: unknown[];
+  } | null;
+  atoms_jsonb: unknown[] | null;
+  freeze_frames_jsonb: unknown[] | null;
+  created_at?: string;
+};

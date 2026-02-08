@@ -195,8 +195,8 @@ export const useEmotionNoteFlowLayout = (
             const inverted = 1 - intensity;
             const fillRgb = mixColor(BASE_BLUE, activeTheme, inverted * 0.75);
             const borderRgb = mixColor(BORDER_BASE, activeTheme, inverted);
-            const fill = toRgba(fillRgb, 0.45);
-            const border = toRgba(borderRgb, 0.75);
+            const fill = toRgba(fillRgb, 1);
+            const border = toRgba(borderRgb, 0.9);
             const titleText = note.title?.trim() || "감정 노트";
             const triggerText =
               note.trigger_text?.trim() || "트리거가 없습니다.";

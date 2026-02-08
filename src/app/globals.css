@@ -36,6 +36,10 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+body[data-modal-open="true"] {
+  overflow: hidden;
+}
+
 img {
   max-width: 100%;
   height: auto;

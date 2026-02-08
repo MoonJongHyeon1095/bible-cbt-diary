@@ -27,6 +27,8 @@ import { useEmotionNoteFlowDisplay } from "./hooks/useEmotionNoteFlowDisplay";
 import { useEmotionNoteFlowLayout } from "./hooks/useEmotionNoteFlowLayout";
 import { useEmotionNoteFlowSelection } from "./hooks/useEmotionNoteFlowSelection";
 import { getFlowThemeColor } from "./utils/flowColors";
+import EmotionNoteFlowMontageModal from "./EmotionNoteFlowMontageModal";
+import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
 
 // Props for the flow detail section.
 type EmotionNoteFlowSectionProps = {
@@ -46,7 +48,7 @@ export default function EmotionNoteFlowSection({
   // Usage guard for deep-session entry.
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   // Load notes/middles either by flow or single note.
-  const { notes, middles, isLoading } = useEmotionNoteFlowData({
+  const { notes, middles, montages, isLoading } = useEmotionNoteFlowData({
     access,
     flowId,
   });
@@ -65,17 +67,49 @@ export default function EmotionNoteFlowSection({
   const { selectedNodeId, selectedNote, clearSelection, selectNode } =
     useEmotionNoteFlowSelection(notes);
   // Derive display nodes/edges with selection styling.
+  const [activeMontage, setActiveMontage] = useState<EmotionMontage | null>(
+    null,
+  );
+  const montageByNoteId = useMemo(() => {
+    const map = new Map<string, EmotionMontage>();
+    montages.forEach((montage) => {
+      const rawIds = [montage.main_note_id, ...(montage.sub_note_ids ?? [])];
+      const ids = rawIds.filter((id) => Number.isFinite(id));
+      if (ids.length === 0) return;
+      const targetId = Math.max(...ids);
+      const key = String(targetId);
+      const existing = map.get(key);
+      if (!existing) {
+        map.set(key, montage);
+        return;
+      }
+      const existingStamp = existing.created_at ?? "";
+      const incomingStamp = montage.created_at ?? "";
+      if (incomingStamp && existingStamp && incomingStamp > existingStamp) {
+        map.set(key, montage);
+        return;
+      }
+      if (!incomingStamp && !existingStamp && montage.id > existing.id) {
+        map.set(key, montage);
+      }
+    });
+    return map;
+  }, [montages]);
   const { displayNodes, displayEdges } = useEmotionNoteFlowDisplay(
     elkNodes,
     elkEdges,
     selectedNodeId,
+    {
+      montageByNoteId,
+      onOpenMontage: setActiveMontage,
+    },
   );
   const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [autoCenterNodeId, setAutoCenterNodeId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  useModalOpen(confirmDelete);
+  useModalOpen(confirmDelete || Boolean(activeMontage));
   // Navigate into deep session with usage guard and optional flow context.
   const handleGoDeeper = async () => {
     if (!selectedNote) return;
@@ -170,6 +204,10 @@ export default function EmotionNoteFlowSection({
       setConfirmDelete(false);
     }
   }, [selectedNote]);
+
+  useEffect(() => {
+    setActiveMontage(null);
+  }, [flowId]);
 
   useEffect(() => {
     if (!autoCenterNodeId) return;
@@ -303,6 +341,12 @@ export default function EmotionNoteFlowSection({
             </div>
           </div>
         </div>
+      ) : null}
+      {activeMontage ? (
+        <EmotionNoteFlowMontageModal
+          montage={activeMontage}
+          onClose={() => setActiveMontage(null)}
+        />
       ) : null}
       {flowId ? (
         <EmotionNoteFlowImportModal

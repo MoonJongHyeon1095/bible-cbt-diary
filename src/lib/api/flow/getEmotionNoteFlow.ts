@@ -1,7 +1,11 @@
 "use client";
 
 import type { AccessContext } from "@/lib/types/access";
-import type { EmotionNote, EmotionNoteMiddle } from "@/lib/types/emotionNoteTypes";
+import type {
+  EmotionMontage,
+  EmotionNote,
+  EmotionNoteMiddle,
+} from "@/lib/types/emotionNoteTypes";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 
@@ -24,7 +28,11 @@ export const fetchEmotionNoteFlow = async (
   if (resolved.kind === "blocked") {
     return {
       response: new Response(null, { status: 401 }),
-      data: { notes: [] as EmotionNote[], middles: [] as EmotionNoteMiddle[] },
+      data: {
+        notes: [] as EmotionNote[],
+        middles: [] as EmotionNoteMiddle[],
+        montages: [] as EmotionMontage[],
+      },
     };
   }
 
@@ -44,8 +52,9 @@ export const fetchEmotionNoteFlow = async (
     ? ((await response.json()) as {
         notes: EmotionNote[];
         middles: EmotionNoteMiddle[];
+        montages: EmotionMontage[];
       })
-    : { notes: [], middles: [] };
+    : { notes: [], middles: [], montages: [] };
 
   return { response, data };
 };

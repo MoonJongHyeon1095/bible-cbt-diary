@@ -268,6 +268,58 @@
     opacity 0.18s ease;
 }
 
+.nodeSelected {
+  z-index: 4;
+}
+
+.nodeSelected::after {
+  content: "";
+  position: absolute;
+  inset: -8px;
+  border-radius: 999px;
+  border: 2px solid rgba(143, 167, 200, 0.65);
+  box-shadow:
+    0 0 0 3px rgba(255, 255, 255, 0.35),
+    0 0 18px rgba(143, 167, 200, 0.45);
+  pointer-events: none;
+  animation: flowDetailGlow 1.6s ease-in-out infinite;
+}
+
+.nodeSelected::before {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    rgba(143, 167, 200, 0.15),
+    rgba(255, 255, 255, 0.6),
+    rgba(143, 167, 200, 0.15)
+  );
+  filter: blur(7px);
+  opacity: 0.6;
+  animation: flowDetailSpin 3.8s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes flowDetailGlow {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.03);
+    opacity: 1;
+  }
+}
+
+@keyframes flowDetailSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .nodeContent {
   position: relative;
   width: 100%;
@@ -280,6 +332,46 @@
     rgba(255, 255, 255, 0.85),
     rgba(255, 255, 255, 0)
   );
+}
+
+.nodeMontageButton {
+  position: absolute;
+  right: -28px;
+  top: -22px;
+  width: 68px;
+  height: 68px;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, #ffffff 0%, #eef2f7 45%, #d7dde8 100%);
+  border: 1px solid rgba(8, 10, 16, 0.7);
+  color: #0b0f14;
+  backdrop-filter: blur(6px);
+  display: grid;
+  place-items: center;
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.35),
+    0 0 0 1px rgba(255, 255, 255, 0.35) inset,
+    inset 0 -6px 10px rgba(10, 12, 18, 0.12);
+  cursor: pointer;
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+  z-index: 3;
+}
+
+.nodeMontageButton:hover {
+  transform: translateY(-2px) scale(1.03);
+  border-color: rgba(8, 10, 16, 0.9);
+  box-shadow:
+    0 16px 26px rgba(0, 0, 0, 0.45),
+    0 0 0 1px rgba(255, 255, 255, 0.5) inset,
+    inset 0 -8px 14px rgba(10, 12, 18, 0.14);
+}
+
+.nodeMontageButton:focus-visible {
+  outline: 2px solid rgba(200, 210, 232, 0.85);
+  outline-offset: 3px;
 }
 
 .nodeLongPressOverlay {
@@ -539,6 +631,503 @@
   place-items: center;
   padding: 32px;
   z-index: 4;
+}
+
+.montageOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(12, 15, 20, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 95;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+
+.montageCard {
+  width: 100%;
+  max-width: 1200px;
+  height: 92vh;
+  max-height: 92vh;
+  background: #10141c;
+  border-radius: 20px;
+  border: 1px solid rgba(120, 130, 150, 0.3);
+  box-shadow: 0 26px 48px rgba(0, 0, 0, 0.48);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  margin: 0;
+  min-height: 0;
+}
+
+.montageHeader {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding: 20px 22px 12px;
+  gap: 12px;
+  border-bottom: 1px solid rgba(120, 130, 150, 0.2);
+  background: #141a24;
+}
+
+.montageSubcopy {
+  padding: 12px 22px 0;
+  display: grid;
+  gap: 6px;
+  color: rgba(214, 222, 236, 0.85);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  background: #141a24;
+  border-bottom: 1px solid rgba(120, 130, 150, 0.22);
+  padding-bottom: 14px;
+}
+
+.montageSubcopy p {
+  margin: 0;
+}
+.montageHeaderTop {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.montageHeaderTitle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.montageHeaderPrompt {
+  display: flex;
+  justify-content: flex-start;
+}
+
+.montagePromptText {
+  display: grid;
+  gap: 4px;
+  font-size: 0.95rem;
+  color: rgba(220, 226, 238, 0.9);
+}
+
+.montagePromptText > span {
+  display: block;
+}
+
+.montagePromptText > span:first-child {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f4f6fb;
+}
+
+.montageLabel {
+  margin: 0 0 6px;
+  font-size: 0.7rem;
+  color: rgba(185, 201, 232, 0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.montageTitle {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #f4f6fb;
+}
+
+.montageClose {
+  padding: 4px 8px;
+}
+
+.montageArrow {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(calc(-50% + 60px));
+  width: 42px;
+  height: 72px;
+  border-radius: 999px;
+  background: rgba(230, 236, 248, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  color: #f6f8ff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  box-shadow:
+    0 12px 22px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  opacity: 0.9;
+  transition: opacity 0.16s ease, transform 0.16s ease;
+  z-index: 3;
+}
+
+.montageArrow:hover {
+  opacity: 1;
+  transform: translateY(calc(-50% + 60px)) translateX(2px);
+}
+
+.montageArrowLeft {
+  right: auto;
+  left: 16px;
+}
+
+.montageArrowLeft:hover {
+  transform: translateY(calc(-50% + 60px)) translateX(-2px);
+}
+
+.montageBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  flex: 1;
+  min-height: 0;
+  background: #0d1118;
+  overscroll-behavior: contain;
+}
+
+.montagePagerWrap {
+  width: 100%;
+  padding: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  flex: 1;
+  -webkit-overflow-scrolling: touch;
+}
+
+.montagePager {
+  display: flex;
+  gap: 0;
+  transition: transform 0.3s ease;
+  transform: translateX(0%);
+}
+
+.montagePage {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 18px 22px 24px;
+}
+
+.montageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.montageSectionTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(228, 234, 246, 0.8);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.montageToggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
+.montageToggleState {
+  font-size: 0.72rem;
+  color: rgba(198, 207, 224, 0.75);
+}
+
+.montageEmpty {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(210, 218, 232, 0.6);
+}
+
+.montageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.montageChip {
+  background: rgba(22, 27, 36, 0.9);
+  border-radius: 14px;
+  border: 1px solid rgba(120, 130, 150, 0.28);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #f2f4f7;
+}
+
+.montageChipTitle {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.montageChipBody {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: rgba(224, 230, 242, 0.85);
+  white-space: pre-wrap;
+}
+
+.sequenceList {
+  display: grid;
+  gap: 10px;
+}
+
+.sequenceRow {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(120, 130, 150, 0.18);
+}
+
+.sequenceIndex {
+  min-width: 80px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: rgba(190, 202, 224, 0.9);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.sequenceBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sequenceText {
+  margin: 0;
+  font-size: 0.98rem;
+  color: rgba(236, 240, 248, 0.9);
+  line-height: 1.5;
+}
+
+.logicList {
+  display: grid;
+  gap: 12px;
+}
+
+.logicRow {
+  display: grid;
+  gap: 6px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(120, 130, 150, 0.18);
+}
+
+.logicMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: rgba(200, 210, 232, 0.85);
+}
+
+.logicArrow {
+  color: rgba(200, 210, 232, 0.5);
+}
+
+.logicTag {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(120, 130, 150, 0.2);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.logicText {
+  margin: 0;
+  font-size: 0.9rem;
+  color: rgba(224, 230, 242, 0.85);
+  line-height: 1.5;
+}
+
+.freezeStack {
+  display: grid;
+  gap: 20px;
+}
+
+.freezePanel {
+  display: grid;
+  gap: 16px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(120, 130, 150, 0.22);
+}
+
+.freezeIntro {
+  display: grid;
+  gap: 6px;
+}
+
+.freezeLabel {
+  margin: 0;
+  font-size: 0.8rem;
+  color: rgba(185, 201, 232, 0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.freezeTitle {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f4f6fb;
+}
+
+.freezeField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.freezeFieldLabel {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: rgba(220, 226, 238, 0.8);
+}
+
+.freezeFieldValue {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(236, 240, 248, 0.9);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.freezeFieldList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: rgba(236, 240, 248, 0.9);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.freezeFieldListItem {
+  margin: 0;
+}
+
+.montageList {
+  display: grid;
+  gap: 8px;
+}
+
+.montageListItem {
+  background: rgba(22, 27, 36, 0.9);
+  border-radius: 12px;
+  border: 1px solid rgba(120, 130, 150, 0.25);
+  padding: 10px 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.montageListTitle {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: rgba(240, 244, 252, 0.92);
+}
+
+.montageListBody {
+  margin: 0;
+  font-size: 0.75rem;
+  color: rgba(221, 228, 238, 0.82);
+  line-height: 1.4;
+}
+
+.montageStack {
+  display: grid;
+  gap: 14px;
+}
+
+.montageFreezeCard {
+  background: rgba(18, 22, 30, 0.92);
+  border-radius: 16px;
+  border: 1px solid rgba(120, 130, 150, 0.3);
+  padding: 14px 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.montageFreezeHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.montageFreezeLabel {
+  margin: 0;
+  font-size: 0.7rem;
+  color: rgba(185, 201, 232, 0.7);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.montageFreezeTitle {
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f4f6fb;
+}
+
+.montageFreezeHint {
+  margin: 6px 0 0;
+  font-size: 0.72rem;
+  color: rgba(202, 210, 228, 0.7);
+}
+
+.montageField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.montageFieldLabel {
+  margin: 0;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgba(220, 226, 238, 0.8);
+}
+
+.montageFieldValue {
+  margin: 0;
+  font-size: 0.78rem;
+  color: rgba(236, 240, 248, 0.9);
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.montageFieldList {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 6px;
+  color: rgba(236, 240, 248, 0.9);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.montageFieldListItem {
+  margin: 0;
 }
 
 .deepOverlayCard {

@@ -1,8 +1,8 @@
 import type { CbtToastVariant } from "@/components/cbt/common/CbtToast";
-import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 import type { TokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
+import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 
-export const MEMBER_DAILY_LIMIT = 20000;
+export const MEMBER_DAILY_LIMIT = 30000;
 export const MEMBER_MONTHLY_LIMIT = 150000;
 export const GUEST_DAILY_LIMIT = 15000;
 export const GUEST_MONTHLY_LIMIT = 50000;
@@ -14,7 +14,9 @@ export type AiUsageDecision = {
   message?: string;
 };
 
-export const getAiUsageDecision = (status: TokenUsageStatus): AiUsageDecision => {
+export const getAiUsageDecision = (
+  status: TokenUsageStatus,
+): AiUsageDecision => {
   const dailyLimit = status.is_member ? MEMBER_DAILY_LIMIT : GUEST_DAILY_LIMIT;
   const monthlyLimit = status.is_member
     ? MEMBER_MONTHLY_LIMIT

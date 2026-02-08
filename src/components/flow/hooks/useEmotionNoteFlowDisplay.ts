@@ -3,6 +3,8 @@
 import { useMemo } from "react";
 import type { Edge, Node } from "reactflow";
 import type { EmotionNoteFlowNodeData } from "../nodes/EmotionNoteFlowNode";
+import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
+import styles from "../EmotionNoteFlowSection.module.css";
 
 type TimelineNode = Node<EmotionNoteFlowNodeData & { note: { id: number } }>;
 
@@ -10,13 +12,26 @@ export const useEmotionNoteFlowDisplay = (
   timelineNodes: TimelineNode[],
   timelineEdges: Edge[],
   selectedNodeId: string | null,
+  options?: {
+    montageByNoteId?: Map<string, EmotionMontage>;
+    onOpenMontage?: (montage: EmotionMontage) => void;
+  },
 ) => {
   return useMemo(() => {
+    const montageByNoteId = options?.montageByNoteId;
+    const onOpenMontage = options?.onOpenMontage;
+
     if (!selectedNodeId) {
       return {
         displayNodes: timelineNodes.map((node) => ({
           ...node,
+          data: {
+            ...node.data,
+            montage: montageByNoteId?.get(node.id) ?? null,
+            onOpenMontage,
+          },
           selected: false,
+          className: node.className,
         })),
         displayEdges: timelineEdges,
       };
@@ -26,7 +41,15 @@ export const useEmotionNoteFlowDisplay = (
       const isSelected = node.id === selectedNodeId;
       return {
         ...node,
+        data: {
+          ...node.data,
+          montage: montageByNoteId?.get(node.id) ?? null,
+          onOpenMontage,
+        },
         selected: isSelected,
+        className: isSelected
+          ? `${node.className ?? ""} ${styles.nodeSelected}`.trim()
+          : node.className,
         style: {
           ...node.style,
           borderColor: isSelected ? "var(--accent)" : "var(--border-strong)",
@@ -58,5 +81,11 @@ export const useEmotionNoteFlowDisplay = (
       displayNodes,
       displayEdges,
     };
-  }, [selectedNodeId, timelineEdges, timelineNodes]);
+  }, [
+    options?.montageByNoteId,
+    options?.onOpenMontage,
+    selectedNodeId,
+    timelineEdges,
+    timelineNodes,
+  ]);
 };

@@ -173,5 +173,28 @@ export const handleGetEmotionNoteFlow = async (
       };
     }) ?? [];
 
-  return json(res, 200, { notes: mappedNotes, middles });
+  const montageBaseQuery = supabase
+    .from("emotion_montages")
+    .select(
+      "id,flow_id,main_note_id,sub_note_ids,montage_caption,montage_jsonb,atoms_jsonb,freeze_frames_jsonb,created_at",
+    )
+    .eq("flow_id", flowId)
+    .order("created_at", { ascending: false });
+
+  const montageQuery = user
+    ? montageBaseQuery.eq("user_id", user.id)
+    : montageBaseQuery.eq("device_id", deviceId).is("user_id", null);
+
+  const { data: montages, error: montageError } = await montageQuery;
+
+  if (montageError) {
+    return json(res, 500, {
+      notes: mappedNotes,
+      middles,
+      montages: [],
+      message: "몽타주 정보를 불러오지 못했습니다.",
+    });
+  }
+
+  return json(res, 200, { notes: mappedNotes, middles, montages: montages ?? [] });
 };

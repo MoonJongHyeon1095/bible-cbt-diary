@@ -151,7 +151,7 @@ export default function AuthModal({
     setMode("signin");
   };
 
-  const handleOAuth = async (provider: "google") => {
+  const handleOAuth = async (provider: "google" | "apple" | "facebook") => {
     setIsSubmitting(true);
     setMessage("");
     setError("");
@@ -381,6 +381,40 @@ export default function AuthModal({
               />
             </svg>
             Google로 계속하기
+          </SafeButton>
+          <SafeButton
+            type="button"
+            variant="unstyled"
+            className={`${styles.socialButton} ${styles.appleButton}`}
+            onClick={() => handleOAuth("apple")}
+            loading={isSubmitting}
+            loadingText="연결 중..."
+            disabled={isSubmitting}
+          >
+            <svg className={styles.appleIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M16.37 1.5c0 1-.41 1.95-1.1 2.67-.79.81-2.08 1.44-3.17 1.36-.14-1.07.38-2.17 1.11-2.9.79-.8 2.13-1.39 3.16-1.13zM20.89 17.1c-.63 1.42-1.4 2.75-2.53 4.01-1.06 1.18-1.93 1.98-3.47 2-1.5.02-1.98-.98-3.7-.98-1.73 0-2.25.95-3.68 1-1.48.06-2.63-.96-3.7-2.14-2.04-2.23-3.6-6.29-1.51-9.03.99-1.31 2.75-2.14 4.64-2.18 1.45-.03 2.81.99 3.69.99.86 0 2.49-1.22 4.2-1.04.72.03 2.72.29 4 2.2-.1.07-2.39 1.4-2.36 4.18.04 3.34 2.94 4.46 2.97 4.47-.02.08-.47 1.6-1.55 3.52z"
+              />
+            </svg>
+            Apple로 계속하기
+          </SafeButton>
+          <SafeButton
+            type="button"
+            variant="unstyled"
+            className={`${styles.socialButton} ${styles.facebookButton}`}
+            onClick={() => handleOAuth("facebook")}
+            loading={isSubmitting}
+            loadingText="연결 중..."
+            disabled={isSubmitting}
+          >
+            <svg className={styles.facebookIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M13.5 9.24V7.5c0-.83.68-1.5 1.5-1.5h1.5V3h-1.5C12.02 3 10 5.02 10 7.5v1.74H8v3h2v7.5h3V12.24h2.25l.75-3H13.5z"
+              />
+            </svg>
+            Facebook으로 계속하기
           </SafeButton>
 
           <div className={styles.switchRow}>

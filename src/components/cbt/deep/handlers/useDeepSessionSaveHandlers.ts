@@ -46,7 +46,7 @@ type UseDeepSessionSaveHandlersParams = {
   queryClient: {
     invalidateQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
   };
-  router: { push: (path: string) => void };
+  router: { push: (path: string) => void; replace: (path: string) => void };
   pushToast: (message: string, type: "success" | "error") => void;
   setErrors: (errors: SelectedCognitiveError[], seedBump: boolean) => void;
 };

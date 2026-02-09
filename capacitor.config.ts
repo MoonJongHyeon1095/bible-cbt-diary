@@ -4,10 +4,10 @@ const config: CapacitorConfig = {
   appId: "com.alliance617.emotionaldiary",
   appName: "Flow : AI 일기 · 감정 그래프",
   webDir: "out",
-  server: {
-    url: "http://10.0.2.2:3000", // Android 에뮬레이터에서 WSL/Windows 호스트 접근
-    cleartext: true,
-  },
+  // server: {
+  //   url: "http://10.0.2.2:3000", // Android 에뮬레이터에서 WSL/Windows 호스트 접근
+  //   cleartext: true,
+  // },
 };
 
 export default config;

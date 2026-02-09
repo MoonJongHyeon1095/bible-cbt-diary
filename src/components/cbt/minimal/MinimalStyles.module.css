@@ -68,6 +68,10 @@
     calc(var(--section-bottom-space) + env(safe-area-inset-bottom));
 }
 
+.mobileLineBreak {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .section {
     --section-bottom-space: clamp(30px, 18vh, 100px);
@@ -80,7 +84,7 @@
   }
 }
 
-@container (max-width: 360px) {
+@container (max-width: 520px) {
   .mobileLineBreak {
     display: block;
   }
@@ -124,6 +128,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
+  container-type: inline-size;
 }
 
 .center {
@@ -145,10 +150,6 @@
   font-size: 1rem;
   color: var(--muted);
   line-height: 1.6;
-}
-
-.mobileLineBreak {
-  display: none;
 }
 
 .helperText {

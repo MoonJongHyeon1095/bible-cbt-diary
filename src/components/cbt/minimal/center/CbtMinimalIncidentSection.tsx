@@ -28,6 +28,7 @@ export function CbtMinimalIncidentSection({
   const description = (
     <>
       힘들었던 경험이나 불편했던 상황을
+      {" "}
       <br className={styles.mobileLineBreak} />
       자유롭게 적어주세요.
     </>

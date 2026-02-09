@@ -13,7 +13,9 @@ export default function LegalAccountDeletionPage() {
             <p className={styles.subtitle}>
               계정 및 관련 데이터 삭제 방법을 안내합니다.
             </p>
-            <LegalAccountDeletionContent />
+            <div className={styles.legalBody}>
+              <LegalAccountDeletionContent />
+            </div>
           </section>
         </div>
       </main>

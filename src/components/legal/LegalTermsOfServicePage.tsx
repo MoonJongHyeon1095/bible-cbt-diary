@@ -13,7 +13,9 @@ export default function LegalTermsOfServicePage() {
             <p className={styles.subtitle}>
               Flow : AI 일기 · 감정 그래프 서비스 이용을 위한 약관입니다.
             </p>
-            <LegalTermsOfServiceContent />
+            <div className={styles.legalBody}>
+              <LegalTermsOfServiceContent />
+            </div>
           </section>
         </div>
       </main>

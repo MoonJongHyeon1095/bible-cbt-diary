@@ -111,7 +111,7 @@ export default function LegalTermsConsentPage() {
                 <span>{openSection === "terms" ? "접기" : "펼치기"}</span>
               </SafeButton>
               {openSection === "terms" && (
-                <div className={styles.accordionContent}>
+                <div className={`${styles.accordionContent} ${styles.legalBody}`}>
                   <LegalTermsOfServiceContent />
                 </div>
               )}
@@ -127,7 +127,7 @@ export default function LegalTermsConsentPage() {
                 <span>{openSection === "privacy" ? "접기" : "펼치기"}</span>
               </SafeButton>
               {openSection === "privacy" && (
-                <div className={styles.accordionContent}>
+                <div className={`${styles.accordionContent} ${styles.legalBody}`}>
                   <LegalPrivacyPolicyContent />
                 </div>
               )}
@@ -143,7 +143,7 @@ export default function LegalTermsConsentPage() {
                 <span>{openSection === "consent" ? "접기" : "펼치기"}</span>
               </SafeButton>
               {openSection === "consent" && (
-                <div className={styles.accordionContent}>
+                <div className={`${styles.accordionContent} ${styles.legalBody}`}>
                   <LegalConsentFormContent />
                 </div>
               )}

@@ -1,5 +1,7 @@
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtCognitiveErrorRanking } from "@/components/cbt/hooks/useCbtCognitiveErrorRanking";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
@@ -8,8 +10,6 @@ import { COGNITIVE_ERRORS_BY_INDEX } from "@/lib/ai";
 import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
-import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
-import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalCognitiveErrorCard } from "./components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "./components/CbtMinimalCognitiveErrorErrorState";
@@ -74,7 +74,7 @@ export function CbtMinimalCognitiveErrorSection({
     }
     if (!currentMeta) return;
     if (!currentDetail) {
-      pushToast("설명을 불러오는 중입니다.", "error");
+      pushToast("더 자세한 내용을 준비중이에요.", "error");
       return;
     }
     const payload: SelectedCognitiveError = {

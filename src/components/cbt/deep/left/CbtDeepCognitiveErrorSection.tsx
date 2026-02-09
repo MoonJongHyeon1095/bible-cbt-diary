@@ -1,9 +1,9 @@
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
+import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtMinimalCognitiveErrorCard } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorCard";
 import { CbtMinimalCognitiveErrorErrorState } from "@/components/cbt/minimal/left/components/CbtMinimalCognitiveErrorErrorState";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
@@ -67,7 +67,7 @@ export function CbtDeepCognitiveErrorSection({
     }
     if (!currentMeta) return;
     if (!currentDetail) {
-      pushToast("설명을 불러오는 중입니다.", "error");
+      pushToast("더 자세한 내용을 준비중이에요.", "error");
       return;
     }
     const payload: SelectedCognitiveError = {

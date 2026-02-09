@@ -74,6 +74,18 @@
   }
 }
 
+@media (max-width: 520px) {
+  .mobileLineBreak {
+    display: block;
+  }
+}
+
+@container (max-width: 360px) {
+  .mobileLineBreak {
+    display: block;
+  }
+}
+
 .sectionInner {
   width: 100%;
   max-width: 720px;
@@ -133,6 +145,10 @@
   font-size: 1rem;
   color: var(--muted);
   line-height: 1.6;
+}
+
+.mobileLineBreak {
+  display: none;
 }
 
 .helperText {
@@ -672,14 +688,14 @@
   align-items: center;
   gap: 10px;
   font-size: 0.9rem;
-  color: var(--muted);
+  color: rgba(186, 198, 216, 0.85);
 }
 
 .spinner {
   width: 16px;
   height: 16px;
   border-radius: 999px;
-  border: 2px solid rgba(120, 132, 154, 0.6);
+  border: 2px solid rgba(146, 160, 188, 0.7);
   border-top-color: transparent;
   animation: spin 0.8s linear infinite;
 }
@@ -1036,6 +1052,7 @@
   display: grid;
   gap: 6px;
   color: var(--text);
+  container-type: inline-size;
 }
 
 .savingSpinner {

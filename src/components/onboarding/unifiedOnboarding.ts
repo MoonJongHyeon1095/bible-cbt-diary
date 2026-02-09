@@ -26,15 +26,16 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
       },
       {
         selector: "[data-tour='minimal-incident-next']",
-        side: "top",
+        side: "bottom",
         content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
       },
     ],
     emotion: [
       {
         selector: "[data-tour='emotion-grid']",
-        side: "top",
-        content: "지금 가장 가까운 감정을 골라주세요.",
+        side: "bottom",
+        content:
+          "지금 가장 비슷한 감정을 골라주세요.\n클릭하면 감정에 대한 설명을 볼 수 있어요.",
       },
     ],
     thought: [
@@ -45,7 +46,7 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
       },
       {
         selector: "[data-tour='minimal-thought-next']",
-        side: "top",
+        side: "bottom",
         content: "지금 고른 생각을 같이 탐구해봐요.",
       },
     ],

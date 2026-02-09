@@ -46,7 +46,11 @@ export default function EmotionNoteFlowSection({
   const { pushToast } = useCbtToast();
   const queryClient = useQueryClient();
   // Usage guard for deep-session entry.
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   // Load notes/middles either by flow or single note.
   const { notes, middles, montages, isLoading } = useEmotionNoteFlowData({
     access,

@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import { startPerf } from "@/lib/utils/perf";
 import {
+  clearAiUsageGuardCache,
   readAiUsageGuardCache,
   writeAiUsageGuardCache,
 } from "@/lib/utils/aiUsageGuardCache";
@@ -24,12 +26,14 @@ export function useAiUsageGuard({
   redirectTo = "/",
 }: UseAiUsageGuardOptions = {}) {
   const { pushToast } = useCbtToast();
+  const { accessMode, accessToken } = useAccessContext();
   const router = useRouter();
   const hasCheckedRef = useRef(false);
   const lastAllowedRef = useRef<boolean | null>(null);
   const lastMessageRef = useRef<string | null>(null);
   const hasNotifiedRef = useRef(false);
   const [gateReady, setGateReady] = useState(!enabled);
+  const lastAccessKeyRef = useRef<string | null>(null);
 
   const notifyDenied = useCallback(
     (message?: string | null) => {
@@ -116,6 +120,19 @@ export function useAiUsageGuard({
     endPerf();
     return true;
   }, [cache, handleDenied, hydrateFromCache, pushToast]);
+
+  useEffect(() => {
+    const accessKey = `${accessMode}:${accessToken ?? "none"}`;
+    if (lastAccessKeyRef.current === accessKey) return;
+    lastAccessKeyRef.current = accessKey;
+    hasCheckedRef.current = false;
+    lastAllowedRef.current = null;
+    lastMessageRef.current = null;
+    hasNotifiedRef.current = false;
+    if (cache) {
+      clearAiUsageGuardCache();
+    }
+  }, [accessMode, accessToken, cache]);
 
   useEffect(() => {
     if (!enabled) {

@@ -1,5 +1,7 @@
 import CbtCarousel from "@/components/cbt/common/CbtCarousel";
 import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
+import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { useCbtAlternativeThoughts } from "@/components/cbt/hooks/useCbtAlternativeThoughts";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import CharacterPrompt from "@/components/ui/CharacterPrompt";
@@ -10,8 +12,6 @@ import type {
 } from "@/lib/types/cbtTypes";
 import { useEffect, useState } from "react";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
-import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
-import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "./components/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "./components/CbtMinimalAlternativeThoughtErrorState";
@@ -84,7 +84,7 @@ export function CbtMinimalAlternativeThoughtSection({
         prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
-        message="대안사고를 정리하고 있어요."
+        message="새로운 목소리를 찾아보고 있어요."
         variant="page"
       />
     );
@@ -106,10 +106,7 @@ export function CbtMinimalAlternativeThoughtSection({
           <div className={styles.headerPrompt}>
             <CharacterPrompt name="EDi" greeting="" />
           </div>
-          <CbtStepHeaderSection
-            title={TITLE}
-            description={DESCRIPTION}
-          />
+          <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
         {isFallback && (
           <AiFallbackNotice

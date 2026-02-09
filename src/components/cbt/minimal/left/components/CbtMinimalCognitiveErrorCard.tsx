@@ -41,7 +41,7 @@ export function CbtMinimalCognitiveErrorCard({
       ) : (
         <div className={styles.loadingFooter}>
           <span className={styles.spinner} />
-          <span>설명을 불러오는 중입니다.</span>
+          <span>더 자세한 내용을 준비중이에요.</span>
         </div>
       )}
     </div>

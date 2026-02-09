@@ -88,7 +88,11 @@ export default function EmotionNoteDetailPage({
   const triggerTextareaRef = useRef<HTMLTextAreaElement | null>(null);
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const {
     accessMode: accessStateMode,
     accessToken,

@@ -29,7 +29,11 @@ export default function EmotionNoteTodaySection({
   getDetailHref,
 }: EmotionNoteTodaySectionProps) {
   const router = useRouter();
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const [isStartLoading, setIsStartLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
 

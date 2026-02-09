@@ -36,12 +36,12 @@ export function useDeepSessionOnboarding({
         },
         {
           selector: "[data-tour='deep-select-list']",
-          side: "top",
+          side: "bottom",
           content: "연결할 기록을 1~2개 골라주세요.",
         },
         {
           selector: "[data-tour='deep-select-next']",
-          side: "top",
+          side: "bottom",
           content: "이 조합으로 심화 세션을 시작해요.",
         },
       ];
@@ -59,8 +59,9 @@ export function useDeepSessionOnboarding({
       return [
         {
           selector: "[data-tour='emotion-grid']",
-          side: "top",
-          content: "지금 가장 가까운 감정을 골라주세요.",
+          side: "bottom",
+          content:
+            "지금 가장 비슷한 감정을 골라주세요.\n클릭하면 감정에 대한 설명을 볼 수 있어요.",
         },
       ];
     }

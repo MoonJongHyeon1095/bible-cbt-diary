@@ -25,7 +25,13 @@ export function CbtMinimalIncidentSection({
   title = "오늘 무슨 일이 있었나요?",
 }: CbtMinimalIncidentSectionProps) {
   const { pushToast } = useCbtToast();
-  const description = "힘들었던 경험이나 불편했던 상황을 자유롭게 적어주세요.";
+  const description = (
+    <>
+      힘들었던 경험이나 불편했던 상황을
+      <br className={styles.mobileLineBreak} />
+      자유롭게 적어주세요.
+    </>
+  );
   const headerRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [isExampleOpen, setIsExampleOpen] = useState(false);

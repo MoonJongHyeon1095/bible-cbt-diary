@@ -67,7 +67,11 @@ export default function EmotionNoteCalendarSection({
   const [isAddLoading, setIsAddLoading] = useState(false);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
 
   const monthLabel = useMemo(
     () =>

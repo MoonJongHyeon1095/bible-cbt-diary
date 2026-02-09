@@ -4,6 +4,8 @@ import AppTabs from "@/components/tab/AppTabs";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { clearAiUsageGuardCache } from "@/lib/utils/aiUsageGuardCache";
+import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
 import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
@@ -50,6 +52,8 @@ export default function AppHeader() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     setUser(null);
+    clearAiUsageGuardCache();
+    clearTokenSessionStorage();
   };
 
   return (

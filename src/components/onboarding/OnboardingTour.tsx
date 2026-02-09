@@ -90,7 +90,7 @@ export default function OnboardingTour({
         element: step.selector,
         popover: {
           description: step.content,
-          side: "top",
+          side: step.side ?? "bottom",
           align: step.align ?? "center",
         },
       })),

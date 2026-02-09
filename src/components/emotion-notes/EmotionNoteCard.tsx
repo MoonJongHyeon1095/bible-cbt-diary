@@ -45,7 +45,11 @@ export default function EmotionNoteCard({
   const [isPressing, setIsPressing] = useState(false);
   const [pressProgress, setPressProgress] = useState(0);
   const [isTriggered, setIsTriggered] = useState(false);
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const { openAuthModal } = useAuthModal();
   const { pushToast } = useCbtToast();
   const { accessMode, accessToken } = useAccessContext();

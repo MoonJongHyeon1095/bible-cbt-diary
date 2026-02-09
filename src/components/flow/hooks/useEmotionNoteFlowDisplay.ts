@@ -13,7 +13,7 @@ export const useEmotionNoteFlowDisplay = (
   timelineEdges: Edge[],
   selectedNodeId: string | null,
   options?: {
-    montageByNoteId?: Map<string, EmotionMontage>;
+    montageByNoteId?: Map<string, EmotionMontage[]>;
     onOpenMontage?: (montage: EmotionMontage) => void;
   },
 ) => {
@@ -27,7 +27,7 @@ export const useEmotionNoteFlowDisplay = (
           ...node,
           data: {
             ...node.data,
-            montage: montageByNoteId?.get(node.id) ?? null,
+            montages: montageByNoteId?.get(node.id) ?? [],
             onOpenMontage,
           },
           selected: false,
@@ -43,7 +43,7 @@ export const useEmotionNoteFlowDisplay = (
         ...node,
         data: {
           ...node.data,
-          montage: montageByNoteId?.get(node.id) ?? null,
+          montages: montageByNoteId?.get(node.id) ?? [],
           onOpenMontage,
         },
         selected: isSelected,

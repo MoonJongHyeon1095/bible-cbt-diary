@@ -1,11 +1,11 @@
 import { markAiFallback } from "@/lib/utils/aiFallback";
 import type { DeepMontageScenario } from "./deepMontageScenario";
 import { runGptJson } from "./utils/core/run";
+import { mapRelationDirectionForPicture } from "./utils/deep/montagePictureHelpers";
 import {
   createEmptyDeepMontagePicture,
   parseDeepMontagePictureResponse,
 } from "./utils/deep/parseMontagePicture";
-import { mapRelationDirectionForPicture } from "./utils/deep/montagePictureHelpers";
 
 export type DeepMontagePicture = {
   atomsText: { atomId: string; label: string; text: string }[];
@@ -28,7 +28,7 @@ export type DeepMontagePicture = {
   }[];
 };
 const SYSTEM_PROMPT = `
-You are an editor who renders an analytic montage into a concise, user-viewable description in Korean.
+You are an editor who renders an analytic montage into a concise, user-viewable description in Korean. (DO NOT USE ENGLISH.)
 This is NOT advice, NOT encouragement, and NOT therapy. Do not solve or soothe.
 
 You will receive ONE JSON input (DeepMontageScenario) with:

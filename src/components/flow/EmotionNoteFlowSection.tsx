@@ -71,7 +71,17 @@ export default function EmotionNoteFlowSection({
     null,
   );
   const montageByNoteId = useMemo(() => {
-    const map = new Map<string, EmotionMontage>();
+    const map = new Map<string, EmotionMontage[]>();
+    const compareMontage = (left: EmotionMontage, right: EmotionMontage) => {
+      const leftStamp = left.created_at ?? "";
+      const rightStamp = right.created_at ?? "";
+      if (leftStamp && rightStamp && leftStamp !== rightStamp) {
+        return rightStamp.localeCompare(leftStamp);
+      }
+      if (leftStamp && !rightStamp) return -1;
+      if (!leftStamp && rightStamp) return 1;
+      return right.id - left.id;
+    };
     montages.forEach((montage) => {
       const rawIds = [montage.main_note_id, ...(montage.sub_note_ids ?? [])];
       const ids = rawIds.filter((id) => Number.isFinite(id));
@@ -80,18 +90,13 @@ export default function EmotionNoteFlowSection({
       const key = String(targetId);
       const existing = map.get(key);
       if (!existing) {
-        map.set(key, montage);
+        map.set(key, [montage]);
         return;
       }
-      const existingStamp = existing.created_at ?? "";
-      const incomingStamp = montage.created_at ?? "";
-      if (incomingStamp && existingStamp && incomingStamp > existingStamp) {
-        map.set(key, montage);
-        return;
-      }
-      if (!incomingStamp && !existingStamp && montage.id > existing.id) {
-        map.set(key, montage);
-      }
+      existing.push(montage);
+    });
+    map.forEach((list, key) => {
+      map.set(key, [...list].sort(compareMontage));
     });
     return map;
   }, [montages]);

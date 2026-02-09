@@ -132,6 +132,7 @@ After generating atoms, create a montage:
 - Arrange them by resonance, contrast, or escalation.
 - Do NOT follow time order.
 - Use cutLogic to explain WHY atoms are adjacent.
+- Use between 3 and 5 sequence items. NEVER output fewer than 3.
 Allowed cutLogic values:
 - echo (similar meaning repeats)
 - hard_cut (abrupt conceptual jump)
@@ -201,7 +202,8 @@ Output schema (exactly):
   "montage": {
     "caption": "...",
     "sequence": [
-      { "atomId": "a1", "cutLogic": "echo" }
+      { "atomId": "a1", "cutLogic": "echo" },
+      { "atomId": "a2", "cutLogic": "match_cut" }
     ]
   },
   "freezeFrames": [
@@ -210,7 +212,7 @@ Output schema (exactly):
       "dialecticalTension": "...",
       "relations": [
         {
-          "direction": "(emotional) body/meaning → (thoughtful) interpretation/meaning/rule",
+          "direction": "(emotional) body/meaning → (automatic cognitive patterns) interpretation/meaning/rule",
           "type": "amplifies",
           "fromAtomId": "a1",
           "toAtomId": "a2",

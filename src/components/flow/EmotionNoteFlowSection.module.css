@@ -358,10 +358,12 @@
     box-shadow 0.18s ease,
     border-color 0.18s ease;
   z-index: 3;
+  --montage-transform: none;
+  transform: var(--montage-transform);
 }
 
 .nodeMontageButton:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: var(--montage-transform) translateY(-2px) scale(1.03);
   border-color: rgba(8, 10, 16, 0.9);
   box-shadow:
     0 16px 26px rgba(0, 0, 0, 0.45),
@@ -372,6 +374,16 @@
 .nodeMontageButton:focus-visible {
   outline: 2px solid rgba(200, 210, 232, 0.85);
   outline-offset: 3px;
+}
+
+.nodeMontageOrbitalButton {
+  left: 50%;
+  top: 50%;
+  right: auto;
+  width: 58px;
+  height: 58px;
+  --montage-transform: translate(-50%, -50%)
+    translate(var(--montage-x, 0px), var(--montage-y, 0px));
 }
 
 .nodeLongPressOverlay {

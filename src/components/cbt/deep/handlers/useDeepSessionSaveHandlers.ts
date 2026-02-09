@@ -126,22 +126,20 @@ export function useDeepSessionSaveHandlers({
         void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
         void queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all });
         void queryClient.invalidateQueries({ queryKey: queryKeys.flow.all });
-        window.setTimeout(() => {
-          try {
-            void flushTokenSessionUsage({ sessionCount: 1 });
-            clearCbtSessionStorage();
-            if (resolvedFlowId) {
-              router.push(`/flow?flowId=${resolvedFlowId}&noteId=${noteId}`);
-            } else {
-              router.push(`/detail?id=${noteId}`);
-            }
-          } catch (timeoutError) {
-            console.error("deep 세션 이동 실패:", timeoutError);
-            pushToast("세션 이동 중 문제가 발생했습니다.", "error");
-          } finally {
-            setIsSaving(false);
+        try {
+          void flushTokenSessionUsage({ sessionCount: 1 });
+          clearCbtSessionStorage();
+          if (resolvedFlowId) {
+            router.replace(`/flow?flowId=${resolvedFlowId}&noteId=${noteId}`);
+          } else {
+            router.replace(`/detail?id=${noteId}`);
           }
-        }, 180);
+        } catch (navigationError) {
+          console.error("deep 세션 이동 실패:", navigationError);
+          pushToast("세션 이동 중 문제가 발생했습니다.", "error");
+        } finally {
+          setIsSaving(false);
+        }
       } catch (error) {
         console.error("deep 세션 저장 실패:", error);
         pushToast("세션 기록을 저장하지 못했습니다.", "error");

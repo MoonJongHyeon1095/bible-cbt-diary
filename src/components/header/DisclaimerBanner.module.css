@@ -13,14 +13,84 @@
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 4px 8px;
+  padding: 4px 10px 4px 8px;
   border-radius: 999px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background 160ms ease, color 160ms ease;
 }
 
 .dismissButton:hover {
   color: #ffe3a1;
   background: rgba(242, 201, 109, 0.24);
+}
+
+.dismissButton:focus-visible {
+  outline: 2px solid rgba(242, 201, 109, 0.6);
+  outline-offset: 2px;
+}
+
+.checkbox {
+  width: 16px;
+  height: 16px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  background: rgba(242, 201, 109, 0.08);
+  box-shadow: inset 0 0 0 1px rgba(242, 201, 109, 0.18);
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.checkbox::before {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: rgba(242, 201, 109, 0.28);
+  opacity: 0;
+  transform: scale(0.85);
+  transition: opacity 160ms ease, transform 200ms ease;
+}
+
+.checkbox::after {
+  content: "";
+  width: 7px;
+  height: 4px;
+  border-left: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(-45deg);
+  margin-top: 1px;
+  opacity: 0.7;
+  transition: opacity 160ms ease, transform 220ms ease;
+}
+
+.dismissButton:hover .checkbox,
+.dismissButton:focus-visible .checkbox {
+  background: rgba(242, 201, 109, 0.14);
+  border-color: #ffe3a1;
+  box-shadow: inset 0 0 0 1px rgba(255, 227, 161, 0.28);
+}
+
+.dismissButton:hover .checkbox::before,
+.dismissButton:focus-visible .checkbox::before {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.dismissButton:hover .checkbox::after,
+.dismissButton:focus-visible .checkbox::after {
+  opacity: 1;
+  transform: rotate(-45deg) scale(1.1);
+}
+
+.dismissLabel {
+  line-height: 1;
 }
 
 @media (max-width: 640px) {

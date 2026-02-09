@@ -395,6 +395,8 @@ export default function EmotionNoteDetailPage({
                     const deleted = await handleDeleteNote();
                     if (deleted) {
                       setConfirmDelete(false);
+                      pushToast("기록을 삭제했습니다.", "success");
+                      router.replace("/today");
                     }
                   }}
                   loading={isDeleting}

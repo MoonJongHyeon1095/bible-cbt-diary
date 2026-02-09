@@ -2,14 +2,15 @@
 
 import styles from "@/app/page.module.css";
 import EmotionNoteTodaySection from "@/components/emotion-notes/EmotionNoteTodaySection";
+import { buildTodayTourSteps } from "@/components/emotion-notes/onboarding/todayOnboarding";
 import {
-  buildTodayTourSteps,
-  TODAY_TOUR_STORAGE_KEY,
-} from "@/components/emotion-notes/onboarding/todayOnboarding";
+  UNIFIED_TOUR_BASE_TOTAL,
+  UNIFIED_TOUR_STORAGE_KEY,
+} from "@/components/onboarding/unifiedOnboarding";
 import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
-import OnboardingTour from "@/components/ui/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
 import { fetchEmotionNoteList } from "@/lib/api/emotion-notes/getEmotionNoteList";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
@@ -52,19 +53,40 @@ export default function EmotionNoteTodayPage() {
     () => buildTodayTourSteps(notes.length),
     [notes.length],
   );
+  const [activeTourGroup, setActiveTourGroup] = useState<"lead" | "tail" | null>(
+    null,
+  );
+  const leadTourSteps = useMemo(() => tourSteps.slice(0, 1), [tourSteps]);
+  const tailTourSteps = useMemo(() => tourSteps.slice(1), [tourSteps]);
+  const activeTourSteps =
+    activeTourGroup === "tail"
+      ? tailTourSteps
+      : activeTourGroup === "lead"
+        ? leadTourSteps
+        : [];
+  const activeTourOffset =
+    activeTourGroup === "tail" ? UNIFIED_TOUR_BASE_TOTAL : 0;
+  const tourTotal = UNIFIED_TOUR_BASE_TOTAL + tailTourSteps.length;
+  const activeTourProgress = useMemo(() => {
+    if (!activeTourGroup) return null;
+    return {
+      offset: activeTourOffset,
+      total: tourTotal,
+    };
+  }, [activeTourGroup, activeTourOffset, tourTotal]);
 
   const persistTourProgress = useCallback(
     (stepIndex: number) => {
       if (!safeLocalStorage.isAvailable()) return;
       safeLocalStorage.setItem(
-        TODAY_TOUR_STORAGE_KEY,
+        UNIFIED_TOUR_STORAGE_KEY,
         JSON.stringify({
-          lastStep: stepIndex,
-          lastTotal: tourSteps.length,
+          lastStep: activeTourOffset + stepIndex,
+          lastTotal: tourTotal,
         }),
       );
     },
-    [tourSteps.length],
+    [activeTourOffset, tourTotal],
   );
 
   const {
@@ -118,8 +140,8 @@ export default function EmotionNoteTodayPage() {
     if (access.mode === "blocked" || isLoading || isAccessLoading) return;
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
-    const stored = safeLocalStorage.getItem(TODAY_TOUR_STORAGE_KEY);
-    const maxStepIndex = tourSteps.length - 1;
+    const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
+    const maxStepIndex = tourTotal - 1;
     let progress: TourProgress | null = null;
     if (stored) {
       try {
@@ -130,17 +152,33 @@ export default function EmotionNoteTodayPage() {
     }
 
     if (!progress) {
+      if (leadTourSteps.length === 0) return;
+      setActiveTourGroup("lead");
       setCurrentStep(0);
       setIsTourOpen(true);
       return;
     }
 
-    if (tourSteps.length > progress.lastTotal) {
-      const nextStep = Math.max(
-        0,
-        Math.min(progress.lastStep + 1, maxStepIndex),
-      );
-      setCurrentStep(nextStep);
+    if (progress.lastStep >= maxStepIndex) return;
+
+    const nextStep = Math.max(
+      0,
+      Math.min(progress.lastStep + 1, maxStepIndex),
+    );
+    if (nextStep === 0 && leadTourSteps.length > 0) {
+      setActiveTourGroup("lead");
+      setCurrentStep(0);
+      setIsTourOpen(true);
+      return;
+    }
+
+    if (
+      nextStep >= UNIFIED_TOUR_BASE_TOTAL &&
+      nextStep < UNIFIED_TOUR_BASE_TOTAL + tailTourSteps.length &&
+      tailTourSteps.length > 0
+    ) {
+      setActiveTourGroup("tail");
+      setCurrentStep(nextStep - UNIFIED_TOUR_BASE_TOTAL);
       setIsTourOpen(true);
     }
   }, [
@@ -149,9 +187,12 @@ export default function EmotionNoteTodayPage() {
     isTourOpen,
     isAccessLoading,
     canShowOnboarding,
-    tourSteps.length,
+    leadTourSteps.length,
+    tailTourSteps.length,
+    tourTotal,
     setCurrentStep,
     setIsTourOpen,
+    setActiveTourGroup,
   ]);
 
   return (
@@ -171,11 +212,12 @@ export default function EmotionNoteTodayPage() {
         </div>
       </main>
       <OnboardingTour
-        steps={tourSteps}
+        steps={activeTourSteps}
         isOpen={isTourOpen}
         setIsOpen={setIsTourOpen}
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
+        progress={activeTourProgress ?? undefined}
         onFinish={handleTourFinish}
         onClose={handleTourClose}
         onMaskClick={handleTourMaskClick}

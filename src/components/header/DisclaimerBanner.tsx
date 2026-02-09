@@ -38,12 +38,14 @@ export default function DisclaimerBanner({
     <div className={detailsClassName} role="note">
       <div className={styles.detailsHeader}>
         <p className={titleClassName}>{DISCLAIMER_TEXT}</p>
-        <SafeButton mode="native"
+        <SafeButton
+          mode="native"
           type="button"
           onClick={handleDismiss}
           className={styles.dismissButton}
         >
-          이해했습니다
+          <span className={styles.checkbox} aria-hidden="true" />
+          <span className={styles.dismissLabel}>이해했습니다</span>
         </SafeButton>
       </div>
       {SUPPORT_TEXT_LINES.map((line) => (

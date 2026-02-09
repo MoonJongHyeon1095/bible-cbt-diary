@@ -4,9 +4,10 @@ import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
+import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import EmotionNoteListSection from "./EmotionNoteListSection";
 import styles from "./EmotionNoteSection.module.css";
 
@@ -18,6 +19,8 @@ type EmotionNoteTodaySectionProps = {
   getDetailHref?: (note: EmotionNote) => string;
 };
 
+const HAS_STARTED_EMOTION_NOTE_KEY = "emotion-note-started-v1";
+
 export default function EmotionNoteTodaySection({
   notes,
   todayLabel,
@@ -28,6 +31,20 @@ export default function EmotionNoteTodaySection({
   const router = useRouter();
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true });
   const [isStartLoading, setIsStartLoading] = useState(false);
+  const [hasStarted, setHasStarted] = useState(false);
+
+  useEffect(() => {
+    if (notes.length > 0) {
+      setHasStarted(true);
+      return;
+    }
+    if (!safeLocalStorage.isAvailable()) {
+      setHasStarted(false);
+      return;
+    }
+    const stored = safeLocalStorage.getItem(HAS_STARTED_EMOTION_NOTE_KEY);
+    setHasStarted(stored === "true");
+  }, [notes.length]);
 
   const handleStartSession = async (event: MouseEvent<HTMLButtonElement>) => {
     if (isStartLoading) {
@@ -97,6 +114,7 @@ export default function EmotionNoteTodaySection({
         }
         notes={notes}
         isLoading={isLoading}
+        showEmptyState={hasStarted}
         canGoDeeper={canGoDeeper}
         getDetailHref={getDetailHref}
       />

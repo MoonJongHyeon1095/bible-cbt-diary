@@ -124,6 +124,36 @@ select {
   line-height: 1 !important;
 }
 
+.onboarding-popover .onboarding-popover__skip {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent !important;
+  border: 1px solid transparent !important;
+  color: rgba(230, 231, 234, 0.65) !important;
+  padding: 4px 8px !important;
+  font-size: 13px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.01em;
+  outline: none;
+  box-shadow: none;
+}
+
+.onboarding-popover .onboarding-popover__skip:hover {
+  background: rgba(143, 167, 200, 0.12) !important;
+  color: #e6e7ea !important;
+}
+
+.onboarding-popover .onboarding-popover__skip:focus,
+.onboarding-popover .onboarding-popover__skip:focus-visible,
+.onboarding-popover .onboarding-popover__skip:active {
+  outline: none;
+  box-shadow: none;
+  border-color: transparent !important;
+  background: transparent !important;
+  color: rgba(230, 231, 234, 0.65) !important;
+}
+
 .onboarding-popover .driver-popover-close-btn {
   display: none !important;
 }

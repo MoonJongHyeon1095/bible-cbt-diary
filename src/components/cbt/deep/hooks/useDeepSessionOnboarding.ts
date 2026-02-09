@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo } from "react";
-import type { OnboardingStep } from "@/components/ui/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
+import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
 import { safeLocalStorage } from "@/lib/utils/safeStorage";
 import type { DeepStep } from "@/components/cbt/hooks/useCbtDeepSessionFlow";
 

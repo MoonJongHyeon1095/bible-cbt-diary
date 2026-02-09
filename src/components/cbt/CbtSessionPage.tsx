@@ -10,8 +10,14 @@ import { clearCbtSessionStorage } from "@/components/cbt/utils/storage/cbtSessio
 import { useGate } from "@/components/gate/GateProvider";
 import OnboardingTour, {
   type OnboardingStep,
-} from "@/components/ui/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/ui/useOnboardingTourControls";
+} from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
+import {
+  MINIMAL_TOUR_STEPS_BY_FLOW,
+  UNIFIED_TOUR_BASE_TOTAL,
+  UNIFIED_TOUR_STORAGE_KEY,
+  getMinimalTourOffset,
+} from "@/components/onboarding/unifiedOnboarding";
 import {
   saveMinimalPatternAPI,
   type MinimalSavePayload,
@@ -39,12 +45,12 @@ import { CbtMinimalCognitiveErrorSection } from "./minimal/left/CbtMinimalCognit
 import styles from "./minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/right/CbtMinimalAlternativeThoughtSection";
 
-const TOUR_STORAGE_PREFIX = "minimal-session-onboarding";
-
 type TourProgress = {
   lastStep: number;
   lastTotal: number;
 };
+
+const HAS_STARTED_EMOTION_NOTE_KEY = "emotion-note-started-v1";
 
 function CbtSessionPageContent() {
   const router = useRouter();
@@ -83,6 +89,26 @@ function CbtSessionPageContent() {
     "alternative",
   ];
   const currentStepIndex = stepOrder.indexOf(flow.step);
+  const tourSteps = useMemo<OnboardingStep[]>(
+    () => MINIMAL_TOUR_STEPS_BY_FLOW[flow.step],
+    [flow.step],
+  );
+  const tourGlobalOffset = useMemo(
+    () => 1 + getMinimalTourOffset(flow.step),
+    [flow.step],
+  );
+  const tourProgress = useMemo(
+    () => ({
+      offset: tourGlobalOffset,
+      total: UNIFIED_TOUR_BASE_TOTAL,
+    }),
+    [tourGlobalOffset],
+  );
+
+  useEffect(() => {
+    if (!safeLocalStorage.isAvailable()) return;
+    safeLocalStorage.setItem(HAS_STARTED_EMOTION_NOTE_KEY, "true");
+  }, []);
 
   const saveMinimalMutation = useMutation({
     mutationFn: async (args: {
@@ -104,73 +130,18 @@ function CbtSessionPageContent() {
     }) => saveSessionHistoryAPI(args.access, args.payload),
   });
 
-  const tourSteps = useMemo<OnboardingStep[]>(() => {
-    if (flow.step === "incident") {
-      const steps: OnboardingStep[] = [
-        {
-          selector: "[data-tour='minimal-incident-input']",
-          side: "bottom",
-          content: "오늘 있었던 일을 간단히 적어주세요.",
-        },
-        {
-          selector: "[data-tour='minimal-incident-example']",
-          side: "bottom",
-          content: "직접 쓰시거나 예시를 살짝 보실 수도 있어요.",
-        },
-        {
-          selector: "[data-tour='minimal-incident-next']",
-          side: "top",
-          content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
-        },
-      ];
-      return steps;
-    }
-    if (flow.step === "emotion") {
-      const steps: OnboardingStep[] = [
-        {
-          selector: "[data-tour='emotion-grid']",
-          side: "top",
-          content: "지금 가장 가까운 감정을 골라주세요.",
-        },
-      ];
-      return steps;
-    }
-    if (flow.step === "thought") {
-      const steps: OnboardingStep[] = [
-        {
-          selector: "[data-tour='minimal-thought-carousel']",
-          side: "bottom",
-          content: "감정을 불러일으킨 생각을 찾아볼까요?",
-        },
-        {
-          selector: "[data-tour='minimal-thought-next']",
-          side: "top",
-          content: "지금 고른 생각을 같이 탐구해봐요.",
-        },
-      ];
-      return steps;
-    }
-    if (flow.step === "errors") {
-      return [];
-    }
-    if (flow.step === "alternative") {
-      return [];
-    }
-    return [];
-  }, [flow.step]);
-
   const persistTourProgress = useCallback(
     (stepIndex: number) => {
-      const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
+      if (!safeLocalStorage.isAvailable()) return;
       safeLocalStorage.setItem(
-        storageKey,
+        UNIFIED_TOUR_STORAGE_KEY,
         JSON.stringify({
-          lastStep: stepIndex,
-          lastTotal: tourSteps.length,
+          lastStep: tourGlobalOffset + stepIndex,
+          lastTotal: UNIFIED_TOUR_BASE_TOTAL,
         }),
       );
     },
-    [flow.step, tourSteps.length],
+    [tourGlobalOffset],
   );
 
   const {
@@ -205,9 +176,9 @@ function CbtSessionPageContent() {
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
-    const storageKey = `${TOUR_STORAGE_PREFIX}:${flow.step}`;
-    const stored = safeLocalStorage.getItem(storageKey);
-    const maxStepIndex = tourSteps.length - 1;
+    if (!safeLocalStorage.isAvailable()) return;
+    const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
+    const maxGlobalStepIndex = UNIFIED_TOUR_BASE_TOTAL - 1;
     let progress: TourProgress | null = null;
     if (stored) {
       try {
@@ -217,20 +188,17 @@ function CbtSessionPageContent() {
       }
     }
 
-    if (!progress) {
-      setTourStep(0);
-      setIsTourOpen(true);
-      return;
-    }
+    if (!progress) return;
+    if (progress.lastStep >= maxGlobalStepIndex) return;
 
-    if (tourSteps.length > progress.lastTotal) {
-      const nextStep = Math.max(
-        0,
-        Math.min(progress.lastStep + 1, maxStepIndex),
-      );
-      setTourStep(nextStep);
-      setIsTourOpen(true);
-    }
+    const nextGlobalStep = Math.max(
+      0,
+      Math.min(progress.lastStep + 1, maxGlobalStepIndex),
+    );
+    const localIndex = nextGlobalStep - tourGlobalOffset;
+    if (localIndex < 0 || localIndex >= tourSteps.length) return;
+    setTourStep(localIndex);
+    setIsTourOpen(true);
   }, [
     accessMode,
     isAccessLoading,
@@ -238,6 +206,7 @@ function CbtSessionPageContent() {
     canShowOnboarding,
     flow.step,
     tourSteps.length,
+    tourGlobalOffset,
     setIsTourOpen,
     setTourStep,
   ]);
@@ -344,18 +313,16 @@ function CbtSessionPageContent() {
       void queryClient.invalidateQueries({
         queryKey: queryKeys.sessionHistory.all,
       });
-      window.setTimeout(() => {
-        try {
-          void flushTokenSessionUsage({ sessionCount: 1 });
-          clearCbtSessionStorage();
-          router.push(`/detail?id=${noteId}`);
-        } catch (timeoutError) {
-          console.error("세션 이동 실패:", timeoutError);
-          pushToast("세션 이동 중 문제가 발생했습니다.", "error");
-        } finally {
-          setIsSaving(false);
-        }
-      }, 180);
+      try {
+        void flushTokenSessionUsage({ sessionCount: 1 });
+        clearCbtSessionStorage();
+        router.replace(`/detail?id=${noteId}`);
+      } catch (navigationError) {
+        console.error("세션 이동 실패:", navigationError);
+        pushToast("세션 이동 중 문제가 발생했습니다.", "error");
+      } finally {
+        setIsSaving(false);
+      }
     } catch (error) {
       console.error("세션 저장 실패:", error);
       pushToast("세션 기록을 저장하지 못했습니다.", "error");
@@ -431,6 +398,7 @@ function CbtSessionPageContent() {
         setIsOpen={setIsTourOpen}
         currentStep={tourStep}
         setCurrentStep={setTourStep}
+        progress={tourProgress}
         onFinish={handleTourFinish}
         onClose={handleTourClose}
         onMaskClick={handleTourMaskClick}

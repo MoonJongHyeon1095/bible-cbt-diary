@@ -33,7 +33,7 @@ import {
   type DeepStep,
 } from "@/components/cbt/hooks/useCbtDeepSessionFlow";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import OnboardingTour from "@/components/ui/OnboardingTour";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
 
 function CbtDeepSessionPageContent() {
   const router = useRouter();

@@ -1,8 +1,6 @@
 "use client";
 
-import type { OnboardingStep } from "@/components/ui/OnboardingTour";
-
-export const TODAY_TOUR_STORAGE_KEY = "today-onboarding-step";
+import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 
 export function buildTodayTourSteps(noteCount: number): OnboardingStep[] {
   const steps: OnboardingStep[] = [
@@ -10,11 +8,7 @@ export function buildTodayTourSteps(noteCount: number): OnboardingStep[] {
       selector: "[data-tour='new-note']",
       side: "bottom",
       content: "만나서 반가워요.\n오늘 하루를 기록해볼까요?",
-    },
-    {
-      selector: "[data-tour='notes-list']",
-      side: "top",
-      content: "오늘 작성한 일기를 여기서 볼 수 있어요.",
+      completeOnTargetClick: true,
     },
   ];
 

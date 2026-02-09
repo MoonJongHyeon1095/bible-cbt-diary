@@ -1,16 +1,16 @@
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
 import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
-import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "@/components/cbt/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/cbt/utils/validation";
+import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { History } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import deepStyles from "../DeepStyles.module.css";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 
 interface CbtDeepIncidentSectionProps {
   userInput: string;
@@ -157,10 +157,7 @@ export function CbtDeepIncidentSection({
               }
             />
           </div>
-          <CbtStepHeaderSection
-            title={title}
-            description={description}
-          />
+          <CbtStepHeaderSection title={title} description={description} />
         </div>
 
         <div className={styles.formStack}>
@@ -196,20 +193,16 @@ export function CbtDeepIncidentSection({
                   이전 기록
                 </SafeButton>
               </div>
-              <CbtInlineNextButton
-                onClick={handleNext}
-                ariaLabel="다음으로"
-              />
+              <CbtInlineNextButton onClick={handleNext} ariaLabel="다음으로" />
             </div>
           </div>
         </div>
-
       </div>
 
       <CbtCarouselModal
         open={isPreviousOpen}
         title="이전의 상황을 살펴볼까요?"
-        notice="선택하면 입력창에 자동으로 채워집니다."
+        notice="선택하면 입력창에 자동으로 입력됩니다."
         items={previousItems}
         onClose={() => setIsPreviousOpen(false)}
         onSelect={(value) => {

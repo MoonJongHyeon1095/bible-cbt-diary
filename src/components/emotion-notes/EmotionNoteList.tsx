@@ -7,6 +7,7 @@ type EmotionNoteListProps = {
   notes: EmotionNote[];
   emptyTitle?: string;
   emptyHint?: string | null;
+  showEmptyState?: boolean;
   canGoDeeper?: boolean;
   getDetailHref?: (note: EmotionNote) => string;
   onImportNote?: (note: EmotionNote) => void;
@@ -17,12 +18,14 @@ export default function EmotionNoteList({
   notes,
   emptyTitle,
   emptyHint,
+  showEmptyState = true,
   canGoDeeper = true,
   getDetailHref,
   onImportNote,
   importingNoteId,
 }: EmotionNoteListProps) {
   if (notes.length === 0) {
+    if (!showEmptyState) return null;
     return <EmotionNoteEmptyState title={emptyTitle} hint={emptyHint} />;
   }
 

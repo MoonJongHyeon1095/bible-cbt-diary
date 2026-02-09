@@ -203,8 +203,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
     }
 
     setIsDeleting(false);
-    await queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
-    router.push("/today");
+    void queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all });
     return true;
   };
 

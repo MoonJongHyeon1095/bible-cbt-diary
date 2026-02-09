@@ -1,4 +1,5 @@
 import CbtCarouselModal from "@/components/cbt/common/CbtCarouselModal";
+import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { validateUserText } from "@/components/cbt/utils/validation";
 import CharacterPrompt from "@/components/ui/CharacterPrompt";
@@ -7,7 +8,6 @@ import { ALL_EXAMPLES } from "@/lib/constants/examples";
 import { Sparkles } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
-import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalIncidentForm } from "./components/CbtMinimalIncidentForm";
 
@@ -102,10 +102,7 @@ export function CbtMinimalIncidentSection({
               }
             />
           </div>
-          <CbtStepHeaderSection
-            title={title}
-            description={description}
-          />
+          <CbtStepHeaderSection title={title} description={description} />
         </div>
 
         <CbtMinimalIncidentForm
@@ -138,7 +135,7 @@ export function CbtMinimalIncidentSection({
       <CbtCarouselModal
         open={isExampleOpen}
         title="예시를 골라서 시작해볼까요?"
-        notice="선택하면 입력창에 자동으로 채워집니다."
+        notice="선택하면 입력창에 자동으로 입력됩니다."
         items={exampleItems}
         onClose={() => setIsExampleOpen(false)}
         onSelect={(value) => {

@@ -9,6 +9,7 @@ type EmotionNoteListSectionProps = {
   isLoading?: boolean;
   emptyTitle?: string;
   emptyHint?: string | null;
+  showEmptyState?: boolean;
   headerRef?: Ref<HTMLDivElement>;
   canGoDeeper?: boolean;
   getDetailHref?: (note: EmotionNote) => string;
@@ -22,6 +23,7 @@ export default function EmotionNoteListSection({
   isLoading = false,
   emptyTitle,
   emptyHint,
+  showEmptyState,
   headerRef,
   canGoDeeper = true,
   getDetailHref,
@@ -41,6 +43,7 @@ export default function EmotionNoteListSection({
         notes={notes}
         emptyTitle={emptyTitle}
         emptyHint={emptyHint}
+        showEmptyState={showEmptyState}
         canGoDeeper={canGoDeeper}
         getDetailHref={getDetailHref}
         onImportNote={onImportNote}

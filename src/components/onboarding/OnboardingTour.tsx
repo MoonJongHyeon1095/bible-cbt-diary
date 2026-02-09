@@ -14,6 +14,7 @@ export type OnboardingStep = {
   content: string;
   side?: Side;
   align?: Alignment;
+  completeOnTargetClick?: boolean;
 };
 
 type OnboardingTourProps = {
@@ -23,6 +24,10 @@ type OnboardingTourProps = {
   currentStep: number;
   setCurrentStep: React.Dispatch<React.SetStateAction<number>>;
   stepTrigger?: number;
+  progress?: {
+    offset: number;
+    total: number;
+  };
   onClose?: (stepIndex: number) => void;
   onMaskClick?: (stepIndex: number) => void;
   onFinish?: (stepIndex: number) => void;
@@ -35,13 +40,18 @@ export default function OnboardingTour({
   currentStep,
   setCurrentStep,
   stepTrigger,
+  progress,
   onClose,
   onMaskClick,
   onFinish,
 }: OnboardingTourProps) {
   const driverRef = useRef<Driver | null>(null);
+  const progressRef = useRef<OnboardingTourProps["progress"] | null>(null);
+  const targetClickCleanupRef = useRef<(() => void) | null>(null);
 
   const cleanupDriver = () => {
+    targetClickCleanupRef.current?.();
+    targetClickCleanupRef.current = null;
     driverRef.current?.destroy();
     driverRef.current = null;
     document.documentElement.classList.remove("driver-active");
@@ -70,13 +80,17 @@ export default function OnboardingTour({
     };
   }, []);
 
+  useEffect(() => {
+    progressRef.current = progress ?? null;
+  }, [progress]);
+
   const driveSteps = useMemo<DriveStep[]>(
     () =>
       steps.map((step) => ({
         element: step.selector,
         popover: {
           description: step.content,
-          side: step.side ?? "bottom",
+          side: "top",
           align: step.align ?? "center",
         },
       })),
@@ -90,25 +104,30 @@ export default function OnboardingTour({
     }
 
     if (!driverRef.current) {
-      driverRef.current = driver({
+      const driverOptions = {
         animate: false,
         overlayOpacity: 0.75,
         overlayColor: "#05070a",
-        smoothScroll: false,
-        allowClose: true,
+        smoothScroll: true,
+        scrollIntoViewOptions: {
+          behavior: "smooth",
+          block: "center",
+          inline: "nearest",
+        },
+        allowClose: false,
         stageRadius: 16,
         stagePadding: 10,
         popoverClass: "onboarding-popover",
         popoverOffset: 12,
         showProgress: true,
         progressText: "{{current}} / {{total}}",
-        showButtons: ["previous", "next", "close"],
+        showButtons: ["previous", "next"],
         nextBtnText: "다음",
         prevBtnText: "이전",
         doneBtnText: "완료",
         onPopoverRender: (popover, opts) => {
-          const isLast =
-            opts.state.activeIndex === (opts.config.steps?.length ?? 0) - 1;
+          const activeIndex = opts.state.activeIndex ?? 0;
+          const isLast = activeIndex === (opts.config.steps?.length ?? 0) - 1;
           popover.nextButton.innerHTML = isLast ? "✓" : "→";
           popover.previousButton.innerHTML = "←";
           popover.nextButton.setAttribute(
@@ -116,7 +135,79 @@ export default function OnboardingTour({
             isLast ? "완료" : "다음",
           );
           popover.previousButton.setAttribute("aria-label", "이전");
-          popover.closeButton.setAttribute("aria-label", "닫기");
+          if (popover.closeButton) {
+            popover.closeButton.setAttribute("aria-label", "닫기");
+          }
+
+          const activeProgress = progressRef.current;
+          if (activeProgress) {
+            const progressNode = popover.wrapper.querySelector(
+              ".driver-popover-progress-text",
+            );
+            if (progressNode) {
+              const current = activeProgress.offset + activeIndex + 1;
+              progressNode.textContent = `${current} / ${activeProgress.total}`;
+            }
+          }
+
+          const isFirstGlobalStep =
+            activeProgress && activeProgress.offset + activeIndex === 0;
+          if (isFirstGlobalStep) {
+            if (popover.nextButton) {
+              popover.nextButton.style.display = "";
+              popover.nextButton.innerHTML = "✓";
+              popover.nextButton.setAttribute("aria-label", "확인");
+            }
+            if (popover.previousButton) {
+              popover.previousButton.style.display = "none";
+            }
+            const skipButton = popover.wrapper.querySelector<HTMLButtonElement>(
+              ".onboarding-popover__skip",
+            );
+            if (skipButton) {
+              skipButton.style.display = "none";
+            }
+            const progressNode = popover.wrapper.querySelector(
+              ".driver-popover-progress-text",
+            );
+            if (progressNode) {
+              progressNode.textContent = "";
+            }
+          } else {
+            if (popover.nextButton) {
+              popover.nextButton.style.display = "";
+            }
+            if (popover.previousButton) {
+              popover.previousButton.style.display =
+                activeIndex > 0 ? "" : "none";
+            }
+            const skipButton = popover.wrapper.querySelector<HTMLButtonElement>(
+              ".onboarding-popover__skip",
+            );
+            if (skipButton) {
+              skipButton.style.display = "";
+            }
+          }
+
+          if (popover.wrapper) {
+            let skipButton = popover.wrapper.querySelector<HTMLButtonElement>(
+              ".onboarding-popover__skip",
+            );
+            if (!skipButton) {
+              skipButton = document.createElement("button");
+              skipButton.type = "button";
+              skipButton.className = "onboarding-popover__skip";
+              skipButton.textContent = "Skip";
+              skipButton.tabIndex = -1;
+              popover.wrapper.appendChild(skipButton);
+            }
+            skipButton.onclick = () => {
+              const lastLocalIndex = Math.max(0, steps.length - 1);
+              onClose?.(lastLocalIndex);
+              setIsOpen(false);
+              cleanupDriver();
+            };
+          }
 
           const existingBadge = popover.wrapper.querySelector(
             ".onboarding-popover__badge",
@@ -182,7 +273,39 @@ export default function OnboardingTour({
         onHighlightStarted: () => {
           const index = driverRef.current?.getActiveIndex();
           if (typeof index === "number") {
+            targetClickCleanupRef.current?.();
+            targetClickCleanupRef.current = null;
             setCurrentStep(index);
+            const activeStep = steps[index];
+            const selector = activeStep?.selector;
+            if (selector) {
+              const target = document.querySelector(selector);
+              if (target instanceof HTMLElement) {
+                target.scrollIntoView({
+                  behavior: "smooth",
+                  block: "center",
+                  inline: "nearest",
+                });
+                if (activeStep?.completeOnTargetClick) {
+                  const handleTargetClick = () => {
+                    const activeIndex =
+                      driverRef.current?.getActiveIndex() ?? index;
+                    onFinish?.(activeIndex);
+                    setIsOpen(false);
+                    cleanupDriver();
+                  };
+                  target.addEventListener("click", handleTargetClick, {
+                    capture: true,
+                    once: true,
+                  });
+                  targetClickCleanupRef.current = () => {
+                    target.removeEventListener("click", handleTargetClick, {
+                      capture: true,
+                    });
+                  };
+                }
+              }
+            }
           }
         },
         onHighlighted: () => {
@@ -211,16 +334,14 @@ export default function OnboardingTour({
           cleanupDriver();
         },
         overlayClickBehavior: () => {
-          const index = driverRef.current?.getActiveIndex() ?? currentStep;
-          onMaskClick?.(index);
-          setIsOpen(false);
-          cleanupDriver();
+          // Prevent closing on outside click.
         },
         onDestroyed: () => {
           driverRef.current = null;
           setIsOpen(false);
         },
-      });
+      } as Parameters<typeof driver>[0];
+      driverRef.current = driver(driverOptions);
     }
   }, [
     currentStep,
@@ -230,6 +351,7 @@ export default function OnboardingTour({
     onMaskClick,
     setCurrentStep,
     setIsOpen,
+    steps,
   ]);
 
   useEffect(() => {

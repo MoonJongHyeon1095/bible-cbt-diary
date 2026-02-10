@@ -207,6 +207,8 @@ function CbtDeepSessionPageContent() {
     flowStep: flow.step,
     currentStepIndex,
     stepOrder,
+    autoThoughtWantsCustom: flow.autoThoughtWantsCustom,
+    setWantsCustom: actions.setWantsCustom,
     flowId,
     mainNote,
     setStep: actions.setStep,
@@ -294,7 +296,10 @@ function CbtDeepSessionPageContent() {
           <CbtMinimalEmotionSection
             selectedEmotion={flow.selectedEmotion}
             onSelectEmotion={actions.setSelectedEmotion}
-            onNext={() => actions.setStep("thought")}
+            onNext={() => {
+              actions.setWantsCustom(false);
+              actions.setStep("thought");
+            }}
           />
         )}
 
@@ -305,6 +310,8 @@ function CbtDeepSessionPageContent() {
             mainNote={mainNote}
             subNotes={subNotes}
             internalContext={internalContext}
+            wantsCustom={flow.autoThoughtWantsCustom}
+            onWantsCustomChange={actions.setWantsCustom}
             onComplete={(nextThought) => {
               actions.setAutoThought(nextThought);
             }}

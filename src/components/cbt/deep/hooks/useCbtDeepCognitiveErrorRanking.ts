@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import {
   analyzeDeepCognitiveErrorDetails,
   rankDeepCognitiveErrors,
-  COGNITIVE_ERRORS_BY_INDEX,
   type ErrorIndex,
 } from "@/lib/ai";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
@@ -33,11 +32,7 @@ export function useCbtDeepCognitiveErrorRanking({
     Partial<Record<ErrorIndex, DetailItem>>
   >({});
   const [pageIndex, setPageIndex] = useState(0);
-  const [withinIndex, setWithinIndex] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [detailFallbackByIndex, setDetailFallbackByIndex] = useState<
-    Partial<Record<ErrorIndex, boolean>>
-  >({});
 
   const cacheKey = useMemo(() => {
     const ctxKey = internalContext
@@ -58,9 +53,7 @@ export function useCbtDeepCognitiveErrorRanking({
 
   useEffect(() => {
     setDetailByIndex({});
-    setDetailFallbackByIndex({});
     setPageIndex(0);
-    setWithinIndex(0);
     setError(null);
   }, [cacheKey]);
 
@@ -100,22 +93,13 @@ export function useCbtDeepCognitiveErrorRanking({
   });
 
   const detailLoading = detailQuery.isPending || detailQuery.isFetching;
-  const currentIndex = pageIndex * BATCH_SIZE + withinIndex;
 
   useEffect(() => {
     if (!detailQuery.data) return;
-    const detailFallback = isAiFallback(detailQuery.data);
     setDetailByIndex((prev) => {
       const next = { ...prev };
       detailQuery.data.errors.forEach((item) => {
         next[item.index] = { index: item.index, analysis: item.analysis };
-      });
-      return next;
-    });
-    setDetailFallbackByIndex((prev) => {
-      const next = { ...prev };
-      detailQuery.data.errors.forEach((item) => {
-        next[item.index] = detailFallback;
       });
       return next;
     });
@@ -127,87 +111,36 @@ export function useCbtDeepCognitiveErrorRanking({
     }
   }, [detailQuery.isError]);
 
-  useEffect(() => {
-    setWithinIndex(0);
-  }, [pageIndex]);
-
-  const currentRankItem = useMemo(() => {
-    const start = pageIndex * BATCH_SIZE;
-    return ranked[start + withinIndex] ?? null;
-  }, [pageIndex, ranked, withinIndex]);
-  const canPrev = currentIndex > 0;
-  const canNext = currentIndex < ranked.length - 1;
-
-  const currentDetail = currentRankItem
-    ? detailByIndex[currentRankItem.index]
-    : null;
-  const currentDetailFallback = currentRankItem
-    ? Boolean(detailFallbackByIndex[currentRankItem.index])
-    : false;
-  const currentMeta = currentRankItem
-    ? COGNITIVE_ERRORS_BY_INDEX[currentRankItem.index]
-    : undefined;
-
-  const handleNext = () => {
-    if (rankLoading || detailLoading) return;
-    if (withinIndex < currentIndices.length - 1) {
-      setWithinIndex((prev) => prev + 1);
-      return;
-    }
-    if (pageIndex < Math.ceil(ranked.length / BATCH_SIZE) - 1) {
-      setPageIndex((prev) => prev + 1);
-    }
-  };
-
-  const handlePrev = () => {
-    if (rankLoading || detailLoading) return;
-    if (withinIndex > 0) {
-      setWithinIndex((prev) => prev - 1);
-      return;
-    }
-    if (pageIndex > 0) {
-      setPageIndex((prev) => prev - 1);
-      setWithinIndex(BATCH_SIZE - 1);
-    }
-  };
-
-  const handleSelectIndex = (index: number) => {
-    setPageIndex(Math.floor(index / BATCH_SIZE));
-    setWithinIndex(index % BATCH_SIZE);
-  };
-
   const reset = () => {
     setDetailByIndex({});
-    setDetailFallbackByIndex({});
     setPageIndex(0);
-    setWithinIndex(0);
     setError(null);
+  };
+
+  const visibleCount = Math.min(ranked.length, (pageIndex + 1) * BATCH_SIZE);
+  const visibleRanked = ranked.slice(0, visibleCount);
+  const canLoadMore = visibleCount < ranked.length;
+
+  const loadMore = () => {
+    if (rankLoading) return;
+    if (!canLoadMore) return;
+    setPageIndex((prev) => prev + 1);
   };
 
   return {
     ranked,
     detailByIndex,
-    currentMeta,
-    currentRankItem,
-    currentDetail,
-    currentDetailFallback,
-    canPrev,
-    canNext,
-    pageIndex,
-    withinIndex,
-    currentIndex,
+    visibleRanked,
+    canLoadMore,
     loading: rankLoading,
     rankLoading,
     detailLoading,
     error,
     isFallback: rankFallback,
-    setCurrentIndex: handleSelectIndex,
     reload: async () => {
       await rankQuery.refetch();
     },
-    handleNext,
-    handlePrev,
-    handleSelectIndex,
+    loadMore,
     reset,
   };
 }

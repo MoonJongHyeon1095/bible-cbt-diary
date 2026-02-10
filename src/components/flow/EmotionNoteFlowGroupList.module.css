@@ -114,6 +114,10 @@
   overflow: visible;
 }
 
+.nodeNoTransition {
+  transition: none;
+}
+
 .nodeSelected {
   transform: translate(var(--tx), var(--ty)) scale(1.05);
   box-shadow:

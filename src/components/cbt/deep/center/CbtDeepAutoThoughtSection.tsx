@@ -1,10 +1,9 @@
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { useCbtToast } from "@/components/cbt/common/CbtToast";
 import { CbtMinimalAutoThoughtHintSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtHintSection";
 import { CbtMinimalAutoThoughtInputForm } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtInputForm";
 import { CbtMinimalAutoThoughtTextSection } from "@/components/cbt/minimal/center/components/CbtMinimalAutoThoughtTextSection";
 import { CbtInlineNextButton } from "@/components/cbt/minimal/common/CbtInlineNextButton";
+import { CbtMinimalFloatingCustomThoughtButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingCustomThoughtButton";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
 import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
@@ -14,9 +13,8 @@ import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCbtDeepAutoThought } from "../hooks/useCbtDeepAutoThought";
 
 interface CbtDeepAutoThoughtSectionProps {
@@ -25,6 +23,8 @@ interface CbtDeepAutoThoughtSectionProps {
   mainNote: EmotionNote;
   subNotes: EmotionNote[];
   internalContext: DeepInternalContext | null;
+  wantsCustom: boolean;
+  onWantsCustomChange: (next: boolean) => void;
   onComplete: (autoThought: string) => void;
 }
 
@@ -36,6 +36,8 @@ export function CbtDeepAutoThoughtSection({
   mainNote,
   subNotes,
   internalContext,
+  wantsCustom,
+  onWantsCustomChange,
   onComplete,
 }: CbtDeepAutoThoughtSectionProps) {
   const { pushToast } = useCbtToast();
@@ -46,22 +48,24 @@ export function CbtDeepAutoThoughtSection({
     subNotes,
     internalContext,
   });
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [wantsCustom, setWantsCustom] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const [customThought, setCustomThought] = useState("");
 
   useEffect(() => {
-    setCurrentIndex(0);
     setCustomThought("");
+    setSelectedIndex(null);
   }, [items]);
+  const selectedThought = useMemo(
+    () => (selectedIndex === null ? null : items[selectedIndex] ?? null),
+    [items, selectedIndex],
+  );
 
-  const currentThought = items[currentIndex] ?? null;
-  const { emblaRef, controls } = useEmblaPagination({
-    slidesCount: items.length,
-    draggable: !loading && !wantsCustom,
-    selectedIndex: currentIndex,
-    onSelectIndex: setCurrentIndex,
-  });
+  useEffect(() => {
+    if (!wantsCustom) {
+      setSelectedIndex(null);
+      setCustomThought("");
+    }
+  }, [wantsCustom]);
 
   const handleSelect = () => {
     if (wantsCustom) {
@@ -76,11 +80,11 @@ export function CbtDeepAutoThoughtSection({
       onComplete(customThought.trim());
       return;
     }
-    if (!currentThought?.belief?.trim()) {
-      pushToast("생각을 불러오는 중입니다.", "error");
+    if (!selectedThought?.belief?.trim()) {
+      pushToast("생각을 선택해주세요.", "error");
       return;
     }
-    onComplete(currentThought.belief.trim());
+    onComplete(selectedThought.belief.trim());
   };
 
   if (loading) {
@@ -145,48 +149,53 @@ export function CbtDeepAutoThoughtSection({
             />
           </div>
         ) : (
-          <CbtCarousel emblaRef={emblaRef}>
-            {items.map((item, index) => (
-              <div
-                key={`${item.belief}-${index}`}
-                className={styles.emblaSlide}
-              >
-                <div className={styles.inlineCard}>
+          <div className={styles.cardList}>
+            {items.map((item, index) => {
+              const isSelected = selectedIndex === index;
+              return (
+                <SafeButton
+                  key={`${item.belief}-${index}`}
+                  type="button"
+                  variant="unstyled"
+                  onClick={() => setSelectedIndex(index)}
+                  aria-pressed={isSelected}
+                  className={`${styles.selectableCard} ${
+                    isSelected ? styles.selectableCardSelected : ""
+                  }`}
+                >
+                  <div className={styles.inlineCard}>
                   <CbtMinimalAutoThoughtTextSection
                     belief={item.belief ?? ""}
                     emotionReason={item.emotionReason ?? ""}
                     fallback="생각을 불러오는 중입니다."
                   />
-                </div>
-              </div>
-            ))}
-          </CbtCarousel>
+                  </div>
+                </SafeButton>
+              );
+            })}
+          </div>
         )}
 
         <div className={styles.formStack}>
           {!wantsCustom && (
-            <CbtMinimalFloatingNextButton onClick={handleSelect} />
+            <CbtMinimalFloatingNextButton
+              onClick={handleSelect}
+              disabled={!selectedThought}
+            />
           )}
-          {wantsCustom ? (
-            <CbtMinimalAutoThoughtHintSection />
-          ) : (
-            <div className={styles.carouselControlStack}>
-              <CbtCarouselDots
-                count={items.length}
-                currentIndex={currentIndex}
-                onSelect={controls.scrollTo}
-              />
-              <SafeButton
-                type="button"
-                variant="unstyled"
-                onClick={() => setWantsCustom(true)}
-                className={`${styles.secondaryButton} ${styles.carouselCustomPrompt}`}
-              >
-                또는 직접 생각을 작성해보세요
-              </SafeButton>
-            </div>
-          )}
+          {wantsCustom && <CbtMinimalAutoThoughtHintSection />}
         </div>
+
+        {!wantsCustom && (
+          <CbtMinimalFloatingCustomThoughtButton
+            onClick={() => {
+              onWantsCustomChange(true);
+              setCustomThought("");
+              setSelectedIndex(null);
+            }}
+            disabled={loading}
+          />
+        )}
       </div>
     </div>
   );

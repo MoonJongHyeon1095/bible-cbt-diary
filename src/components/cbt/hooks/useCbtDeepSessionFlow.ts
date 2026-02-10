@@ -15,6 +15,7 @@ type FlowState = {
   selectedEmotion: string;
   autoThought: string;
   selectedCognitiveErrors: SelectedCognitiveError[];
+  autoThoughtWantsCustom: boolean;
   alternativeSeed: number;
 };
 
@@ -24,6 +25,7 @@ type FlowAction =
   | { type: "SET_SELECTED_EMOTION"; value: string }
   | { type: "SET_AUTO_THOUGHT"; value: string }
   | { type: "SET_ERRORS"; errors: SelectedCognitiveError[]; seedBump: boolean }
+  | { type: "SET_WANTS_CUSTOM"; value: boolean }
   | { type: "RESET_FLOW"; step: DeepStep };
 
 const buildInitialState = (step: DeepStep): FlowState => ({
@@ -32,6 +34,7 @@ const buildInitialState = (step: DeepStep): FlowState => ({
   selectedEmotion: "",
   autoThought: "",
   selectedCognitiveErrors: [],
+  autoThoughtWantsCustom: false,
   alternativeSeed: 0,
 });
 
@@ -45,6 +48,8 @@ const reducer = (state: FlowState, action: FlowAction): FlowState => {
       return { ...state, selectedEmotion: action.value };
     case "SET_AUTO_THOUGHT":
       return { ...state, autoThought: action.value, step: "errors" };
+    case "SET_WANTS_CUSTOM":
+      return { ...state, autoThoughtWantsCustom: action.value };
     case "SET_ERRORS":
       return {
         ...state,
@@ -78,6 +83,8 @@ export function useCbtDeepSessionFlow(initialStep: DeepStep) {
         dispatch({ type: "SET_AUTO_THOUGHT", value }),
       setErrors: (errors: SelectedCognitiveError[], seedBump: boolean) =>
         dispatch({ type: "SET_ERRORS", errors, seedBump }),
+      setWantsCustom: (value: boolean) =>
+        dispatch({ type: "SET_WANTS_CUSTOM", value }),
       reset: (step: DeepStep) => dispatch({ type: "RESET_FLOW", step }),
     }),
     [],

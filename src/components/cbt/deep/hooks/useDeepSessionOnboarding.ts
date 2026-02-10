@@ -10,6 +10,7 @@ type TourProgress = {
 };
 
 const TOUR_STORAGE_PREFIX = "deep-session-onboarding";
+const TOUR_STORAGE_COMPLETE_KEY = `${TOUR_STORAGE_PREFIX}:complete`;
 
 type UseDeepSessionOnboardingParams = {
   flowStep: DeepStep;
@@ -79,6 +80,9 @@ export function useDeepSessionOnboarding({
           lastTotal: tourSteps.length,
         }),
       );
+      if (stepIndex >= Math.max(0, tourSteps.length - 1)) {
+        safeLocalStorage.setItem(TOUR_STORAGE_COMPLETE_KEY, "true");
+      }
     },
     [flowStep, tourSteps.length],
   );
@@ -106,6 +110,9 @@ export function useDeepSessionOnboarding({
     if (!canShowOnboarding) return;
     if (isTourOpen) return;
     if (tourSteps.length === 0) return;
+    const isCompleted =
+      safeLocalStorage.getItem(TOUR_STORAGE_COMPLETE_KEY) === "true";
+    if (isCompleted) return;
     const storageKey = `${TOUR_STORAGE_PREFIX}:${flowStep}`;
     const stored = safeLocalStorage.getItem(storageKey);
     const maxStepIndex = tourSteps.length - 1;

@@ -7,6 +7,8 @@ type UseDeepSessionNavigationHandlersParams = {
   flowStep: DeepStep;
   currentStepIndex: number;
   stepOrder: DeepStep[];
+  autoThoughtWantsCustom: boolean;
+  setWantsCustom: (value: boolean) => void;
   flowId: number | null;
   mainNote: EmotionNote | null;
   setStep: (step: DeepStep) => void;
@@ -17,6 +19,8 @@ export function useDeepSessionNavigationHandlers({
   flowStep,
   currentStepIndex,
   stepOrder,
+  autoThoughtWantsCustom,
+  setWantsCustom,
   flowId,
   mainNote,
   setStep,
@@ -30,8 +34,22 @@ export function useDeepSessionNavigationHandlers({
       return;
     }
     if (currentStepIndex <= 0) return;
+    if (flowStep === "thought" && autoThoughtWantsCustom) {
+      setWantsCustom(false);
+      return;
+    }
     setStep(stepOrder[currentStepIndex - 1]);
-  }, [currentStepIndex, flowId, flowStep, mainNote, router, setStep, stepOrder]);
+  }, [
+    autoThoughtWantsCustom,
+    currentStepIndex,
+    flowId,
+    flowStep,
+    mainNote,
+    router,
+    setStep,
+    setWantsCustom,
+    stepOrder,
+  ]);
 
   const handleGoHome = useCallback(() => {
     clearCbtSessionStorage();

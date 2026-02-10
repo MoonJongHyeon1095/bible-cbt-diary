@@ -1,5 +1,3 @@
-import CbtCarousel from "@/components/cbt/common/CbtCarousel";
-import CbtCarouselDots from "@/components/cbt/common/CbtCarouselDots";
 import { CbtLoadingState } from "@/components/cbt/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/cbt/common/CbtStepHeaderSection";
 import { CbtMinimalFloatingNextButton } from "@/components/cbt/minimal/common/CbtMinimalFloatingNextButton";
@@ -8,10 +6,10 @@ import { CbtMinimalAlternativeThoughtBodySection } from "@/components/cbt/minima
 import { CbtMinimalAlternativeThoughtErrorState } from "@/components/cbt/minimal/right/components/CbtMinimalAlternativeThoughtErrorState";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
-import { useEmblaPagination } from "@/lib/hooks/useEmblaPagination";
 import type { SelectedCognitiveError } from "@/lib/types/cbtTypes";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useCbtDeepAlternativeThoughts } from "../hooks/useCbtDeepAlternativeThoughts";
 
 interface CbtDeepAlternativeThoughtSectionProps {
@@ -38,7 +36,7 @@ export function CbtDeepAlternativeThoughtSection({
   seed,
   onSelect,
 }: CbtDeepAlternativeThoughtSectionProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const {
     alternativeThoughts,
@@ -62,17 +60,16 @@ export function CbtDeepAlternativeThoughtSection({
   }, [generateAlternatives, seed]);
 
   useEffect(() => {
-    setCurrentIndex(0);
+    setSelectedIndex(null);
   }, [alternativeThoughts]);
 
-  const currentThought = alternativeThoughts[currentIndex];
-
-  const { emblaRef, controls } = useEmblaPagination({
-    slidesCount: alternativeThoughts.length,
-    draggable: !thoughtsLoading,
-    selectedIndex: currentIndex,
-    onSelectIndex: setCurrentIndex,
-  });
+  const selectedThought = useMemo(
+    () =>
+      selectedIndex === null
+        ? null
+        : alternativeThoughts[selectedIndex] ?? null,
+    [alternativeThoughts, selectedIndex],
+  );
 
   if (thoughtsLoading) {
     return (
@@ -110,35 +107,39 @@ export function CbtDeepAlternativeThoughtSection({
           />
         )}
 
-        <CbtCarousel emblaRef={emblaRef}>
-          {alternativeThoughts.map((thought, index) => (
-            <div
-              key={`${thought.thought}-${index}`}
-              className={styles.emblaSlide}
-            >
-              <div className={styles.inlineCard}>
+        <div className={styles.cardList}>
+          {alternativeThoughts.map((thought, index) => {
+            const isSelected = selectedIndex === index;
+            return (
+              <SafeButton
+                key={`${thought.thought}-${index}`}
+                type="button"
+                variant="unstyled"
+                onClick={() => setSelectedIndex(index)}
+                aria-pressed={isSelected}
+                className={`${styles.selectableCard} ${
+                  isSelected ? styles.selectableCardSelected : ""
+                }`}
+              >
+                <div className={styles.inlineCard}>
                 <CbtMinimalAlternativeThoughtBodySection
                   thought={thought.thought ?? ""}
                   technique={thought.technique}
                   fallback="대안사고를 불러오는 중입니다."
                 />
-              </div>
-            </div>
-          ))}
-        </CbtCarousel>
+                </div>
+              </SafeButton>
+            );
+          })}
+        </div>
 
         <div className={styles.formStack}>
           <CbtMinimalFloatingNextButton
             onClick={() =>
-              currentThought?.thought && onSelect(currentThought.thought)
+              selectedThought?.thought && onSelect(selectedThought.thought)
             }
             ariaLabel="이 생각으로 진행"
-            disabled={!currentThought?.thought}
-          />
-          <CbtCarouselDots
-            count={alternativeThoughts.length}
-            currentIndex={currentIndex}
-            onSelect={controls.scrollTo}
+            disabled={!selectedThought?.thought}
           />
         </div>
       </div>

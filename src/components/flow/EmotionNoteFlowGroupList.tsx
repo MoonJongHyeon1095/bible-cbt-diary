@@ -46,9 +46,9 @@ const buildNodes = (
     title: string;
     description: string | null;
   }[],
-) =>
-  flows.map((flow) => {
-    const minRadius = 36 + Math.min(90, 2 * 6);
+) => {
+  const minRadius = 36 + Math.min(90, 2 * 6);
+  return flows.map((flow) => {
     const radius = Math.max(minRadius, 36 + Math.min(90, flow.note_count * 6));
     const theme = getFlowThemeColor(flow.id);
     return {
@@ -63,6 +63,38 @@ const buildNodes = (
       y: 0,
     };
   });
+};
+
+const seedNodes = (
+  flows: {
+    id: number;
+    note_count: number;
+    title: string;
+    description: string | null;
+  }[],
+  prevNodes: GroupNode[],
+  size: { width: number; height: number },
+) => {
+  const seeded = buildNodes(flows);
+  const prevById = new Map(prevNodes.map((node) => [node.id, node]));
+  const width = size.width || 320;
+  const height = size.height || 520;
+  const centerX = width / 2;
+  const centerY = height / 2;
+  const jitter = Math.min(80, Math.max(30, Math.min(width, height) * 0.12));
+
+  return seeded.map((node) => {
+    const prev = prevById.get(node.id);
+    if (prev) {
+      return { ...node, x: prev.x, y: prev.y };
+    }
+    return {
+      ...node,
+      x: centerX + (Math.random() - 0.5) * jitter,
+      y: centerY + (Math.random() - 0.5) * jitter,
+    };
+  });
+};
 
 export default function EmotionNoteFlowGroupList({
   access,
@@ -76,6 +108,7 @@ export default function EmotionNoteFlowGroupList({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isSimulating, setIsSimulating] = useState(false);
   const [noteFilterInput, setNoteFilterInput] = useState(
     noteId ? String(noteId) : "",
   );
@@ -130,8 +163,8 @@ export default function EmotionNoteFlowGroupList({
       setNodes([]);
       return;
     }
-    setNodes(buildNodes(flows));
-  }, [flows, flowsQuery.isError]);
+    setNodes((prev) => seedNodes(flows, prev, size));
+  }, [flows, flowsQuery.isError, size]);
 
   useEffect(() => {
     if (selectedFlowId && !flows.some((flow) => flow.id === selectedFlowId)) {
@@ -151,8 +184,11 @@ export default function EmotionNoteFlowGroupList({
 
   useEffect(() => {
     if (nodes.length === 0 || size.width === 0 || size.height === 0) {
+      setIsSimulating(false);
       return;
     }
+    let isActive = true;
+    setIsSimulating(true);
     const simNodes = nodesRef.current.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
       .force("charge", forceManyBody().strength(-8))
@@ -161,7 +197,9 @@ export default function EmotionNoteFlowGroupList({
         "collide",
         forceCollide().radius((node) => (node as GroupNode).radius * 0.92),
       )
-      .alpha(0.9);
+      .alpha(0.9)
+      .alphaMin(0.06)
+      .alphaDecay(0.12);
 
     let rafId: number | null = null;
     const tick = () => {
@@ -172,8 +210,14 @@ export default function EmotionNoteFlowGroupList({
       });
     };
     simulation.on("tick", tick);
+    simulation.on("end", () => {
+      if (isActive) {
+        setIsSimulating(false);
+      }
+    });
 
     return () => {
+      isActive = false;
       simulation.stop();
       if (rafId !== null) {
         window.cancelAnimationFrame(rafId);
@@ -330,7 +374,7 @@ export default function EmotionNoteFlowGroupList({
                   type="button"
                   className={`${styles.node} ${
                     selectedFlowId === node.id ? styles.nodeSelected : ""
-                  }`}
+                  } ${isSimulating ? styles.nodeNoTransition : ""}`}
                   style={
                     {
                       width: node.radius * 2,

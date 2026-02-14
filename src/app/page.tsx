@@ -1,5 +1,5 @@
-import DailyEntryRedirect from "@/components/home/DailyEntryRedirect";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <DailyEntryRedirect />;
+  redirect("/home");
 }

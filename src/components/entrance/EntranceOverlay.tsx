@@ -27,6 +27,12 @@ type EntranceOverlayProps = {
   onComplete: () => void;
 };
 
+type PointerDownState = {
+  x: number;
+  y: number;
+  sceneToken: number;
+};
+
 const INTRO_SUBTEXT = `
 If we were drawn as a flow graph—
 the self within the self within the self,
@@ -47,10 +53,11 @@ const formatEntranceDate = (value: string) => {
 export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
   const [sequenceStep, setSequenceStep] = useState(0);
   const [sceneIndex, setSceneIndex] = useState(0);
-  const pointerDownRef = useRef<{ x: number; y: number } | null>(null);
+  const pointerDownRef = useRef<PointerDownState | null>(null);
   const suppressNextClickRef = useRef(false);
   const transitionLockUntilRef = useRef(0);
   const sceneEnteredAtRef = useRef(Date.now());
+  const sceneTokenRef = useRef(0);
 
   const scene = SCENE_1[sceneIndex] ?? SCENE_1[0];
   const themeColor = useMemo(() => getFlowThemeColor(10).rgb, []);
@@ -142,10 +149,17 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
 
   useEffect(() => {
     sceneEnteredAtRef.current = Date.now();
+    sceneTokenRef.current += 1;
+    pointerDownRef.current = null;
+    suppressNextClickRef.current = false;
   }, [sceneIndex, sequenceStep]);
 
   const handlePointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
-    pointerDownRef.current = { x: event.clientX, y: event.clientY };
+    pointerDownRef.current = {
+      x: event.clientX,
+      y: event.clientY,
+      sceneToken: sceneTokenRef.current,
+    };
   };
 
   const handlePointerMoveCapture = (event: PointerEvent<HTMLDivElement>) => {
@@ -158,15 +172,14 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
     }
   };
 
-  const handlePointerUpCapture = () => {
-    pointerDownRef.current = null;
-  };
-
   const handleSceneAdvanceClick = (event: MouseEvent<HTMLDivElement>) => {
+    const pointerDown = pointerDownRef.current;
+    pointerDownRef.current = null;
     if (suppressNextClickRef.current) {
       suppressNextClickRef.current = false;
       return;
     }
+    if (!pointerDown || pointerDown.sceneToken !== sceneTokenRef.current) return;
     const now = Date.now();
     if (now < transitionLockUntilRef.current) return;
     const target = event.target as HTMLElement | null;
@@ -199,7 +212,6 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
       className={styles.overlay}
       onPointerDownCapture={handlePointerDownCapture}
       onPointerMoveCapture={handlePointerMoveCapture}
-      onPointerUpCapture={handlePointerUpCapture}
       onClickCapture={handleSceneAdvanceClick}
     >
       {sequenceStep === 0 ? (

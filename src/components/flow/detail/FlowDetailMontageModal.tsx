@@ -123,24 +123,26 @@ export default function FlowDetailMontageModal({
           </div>
         ) : null}
         {activePage > 0 ? (
-          <button
+          <SafeButton
+            mode="native"
             type="button"
             className={`${styles.montageArrow} ${styles.montageArrowLeft}`}
             onClick={handlePrevPage}
             aria-label="이전 페이지"
           >
             <ChevronLeft size={18} />
-          </button>
+          </SafeButton>
         ) : null}
         {activePage < pageCount - 1 ? (
-          <button
+          <SafeButton
+            mode="native"
             type="button"
             className={styles.montageArrow}
             onClick={handleNextPage}
             aria-label="다음 페이지"
           >
             <ChevronRight size={18} />
-          </button>
+          </SafeButton>
         ) : null}
         <div className={styles.montageBody}>
           <div className={styles.montagePagerWrap}>
@@ -153,7 +155,8 @@ export default function FlowDetailMontageModal({
             >
               <div className={styles.montagePage} style={{ width: pageWidth }}>
                 <section className={styles.montageSection}>
-                  <button
+                  <SafeButton
+                    mode="native"
                     type="button"
                     className={styles.montageToggle}
                     onClick={() => setShowAtoms((prev) => !prev)}
@@ -164,7 +167,7 @@ export default function FlowDetailMontageModal({
                     <span className={styles.montageToggleState}>
                       {showAtoms ? "접기" : "펼치기"}
                     </span>
-                  </button>
+                  </SafeButton>
                   {showAtoms ? (
                     atoms.length === 0 ? (
                       <p className={styles.montageEmpty}>

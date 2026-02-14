@@ -12,9 +12,10 @@ import { useOnboardingTourControls } from "@/components/onboarding/useOnboarding
 import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
-import { formatKoreanDateTime } from "@/lib/utils/time";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { HOME_TOUR_STORAGE_KEY } from "@/lib/storage/keys/onboarding";
+import { HOME_LAST_ENTRY_DATE_KEY } from "@/lib/storage/keys/ui";
+import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -30,6 +31,8 @@ export default function EmotionNoteHomePage() {
     redirectTo: null,
   });
   const [isStartLoading, setIsStartLoading] = useState(false);
+  const todayKey = useMemo(() => formatKoreanDateKey(new Date()), []);
+  const [titleText, setTitleText] = useState("오늘 무슨 일이 있었나요?");
   const todayLabel = useMemo(
     () =>
       formatKoreanDateTime(new Date(), {
@@ -60,6 +63,19 @@ export default function EmotionNoteHomePage() {
       );
     },
   });
+
+  useEffect(() => {
+    if (!safeLocalStorage.isAvailable()) {
+      return;
+    }
+    const lastVisitedDate = safeLocalStorage.getItem(HOME_LAST_ENTRY_DATE_KEY);
+    setTitleText(
+      lastVisitedDate === todayKey
+        ? "다시 만나서 반가워요."
+        : "오늘 무슨 일이 있었나요?",
+    );
+    safeLocalStorage.setItem(HOME_LAST_ENTRY_DATE_KEY, todayKey);
+  }, [todayKey]);
 
   useEffect(() => {
     if (blocker && isTourOpen) {
@@ -122,9 +138,7 @@ export default function EmotionNoteHomePage() {
           <div className={`${pageStyles.shell} ${homeStyles.shell}`}>
             <section className={homeStyles.card}>
               <h2 className={homeStyles.title}>
-                <span className={homeStyles.titleQuestion}>
-                  오늘 무슨 일이 있었나요?
-                </span>
+                <span className={homeStyles.titleQuestion}>{titleText}</span>
               </h2>
               <SafeButton
                 type="button"

@@ -184,13 +184,14 @@ export default function EmotionNoteSearchSection({
               }
             }}
           />
-          <button
+          <SafeButton
+            mode="native"
             type="button"
             className={styles.searchSubmit}
             onClick={handleSearch}
           >
             검색
-          </button>
+          </SafeButton>
         </div>
       </div>
 

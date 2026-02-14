@@ -1,10 +1,11 @@
 "use client";
 
-import { Handle, Position, type NodeProps } from "reactflow";
-import styles from "../FlowDetailSection.module.css";
+import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
 import { Video } from "lucide-react";
 import type { CSSProperties } from "react";
+import { Handle, Position, type NodeProps } from "reactflow";
+import styles from "../FlowDetailSection.module.css";
 import { useLayoutEffect, useRef, useState } from "react";
 
 export type EmotionNoteDetailSection =
@@ -106,7 +107,8 @@ export default function FlowDetailNode({
         </span>
       </div>
       {montageCount === 1 ? (
-        <button
+        <SafeButton
+          mode="native"
           type="button"
           className={styles.nodeMontageButton}
           onClick={(event) => {
@@ -116,7 +118,7 @@ export default function FlowDetailNode({
           aria-label="몽타주 보기"
         >
           <Video size={32} />
-        </button>
+        </SafeButton>
       ) : null}
       {montageCount > 1
         ? montages.map((montage, index) => {
@@ -128,7 +130,8 @@ export default function FlowDetailNode({
               ["--montage-y" as string]: `${y}px`,
             } satisfies CSSProperties;
             return (
-              <button
+              <SafeButton
+                mode="native"
                 key={montage.id}
                 type="button"
                 className={`${styles.nodeMontageButton} ${styles.nodeMontageOrbitalButton}`}
@@ -140,7 +143,7 @@ export default function FlowDetailNode({
                 aria-label={`몽타주 보기 ${index + 1}`}
               >
                 <Video size={28} />
-              </button>
+              </SafeButton>
             );
           })
         : null}

@@ -4,6 +4,7 @@ import {
   FileText,
   ListChecks,
   Menu,
+  PlayCircle,
   ShieldCheck,
   SignalHigh,
   UserMinus,
@@ -13,6 +14,8 @@ import { useState } from "react";
 import styles from "./CompactNav.module.css";
 import { Drawer } from "./Drawer";
 import SafeButton from "@/components/ui/SafeButton";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
+import { ENTRANCE_COMPLETED_KEY } from "@/lib/storage/keys/entrance";
 
 const navItems = [
   {
@@ -50,6 +53,14 @@ const usageItems = [
     label: "사용량 조회",
     href: "/usage",
     icon: SignalHigh,
+  },
+];
+
+const featureItems = [
+  {
+    id: "entrance-sequence",
+    label: "Entrance sequence",
+    icon: PlayCircle,
   },
 ];
 
@@ -134,6 +145,29 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
                   onClick={() => {
                     setOpen(false);
                     router.push(item.href);
+                  }}
+                >
+                  <Icon size={20} />
+                  <span>{item.label}</span>
+                </SafeButton>
+              );
+            })}
+          </div>
+          <div className={styles.drawerSection}>
+            <span className={styles.drawerSectionTitle}>FEATURES</span>
+            {featureItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <SafeButton mode="native"
+                  key={item.id}
+                  type="button"
+                  className={styles.drawerItem}
+                  onClick={() => {
+                    if (safeLocalStorage.isAvailable()) {
+                      safeLocalStorage.removeItem(ENTRANCE_COMPLETED_KEY);
+                    }
+                    setOpen(false);
+                    router.push("/entrance");
                   }}
                 >
                   <Icon size={20} />

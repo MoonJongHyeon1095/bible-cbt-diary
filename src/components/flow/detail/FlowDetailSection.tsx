@@ -49,7 +49,7 @@ export default function FlowDetailSection({
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { notes, middles, montages, isLoading } = useFlowDetailData({
+  const { flow, notes, middles, montages, isLoading } = useFlowDetailData({
     access,
     flowId,
   });
@@ -185,6 +185,8 @@ export default function FlowDetailSection({
     <FlowDetailSectionView
       access={access}
       flowId={flowId}
+      flowTitle={flow?.title ?? null}
+      flowDescription={flow?.description ?? null}
       noteCount={noteCount}
       displayNodes={displayNodes}
       displayEdges={displayEdges}

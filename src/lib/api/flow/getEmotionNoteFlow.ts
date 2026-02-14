@@ -17,6 +17,12 @@ export type EmotionFlowSummary = {
   description: string | null;
 };
 
+export type EmotionFlowDetailMeta = {
+  id: number;
+  title: string;
+  description: string | null;
+};
+
 // GET /api/emotion-flow?action=detail&flowId=...&includeMiddles=...
 // flow 상세 조회
 export const fetchEmotionNoteFlow = async (
@@ -29,6 +35,7 @@ export const fetchEmotionNoteFlow = async (
     return {
       response: new Response(null, { status: 401 }),
       data: {
+        flow: null as EmotionFlowDetailMeta | null,
         notes: [] as EmotionNote[],
         middles: [] as EmotionNoteMiddle[],
         montages: [] as EmotionMontage[],
@@ -50,11 +57,12 @@ export const fetchEmotionNoteFlow = async (
 
   const data = response.ok
     ? ((await response.json()) as {
+        flow: EmotionFlowDetailMeta | null;
         notes: EmotionNote[];
         middles: EmotionNoteMiddle[];
         montages: EmotionMontage[];
       })
-    : { notes: [], middles: [], montages: [] };
+    : { flow: null, notes: [], middles: [], montages: [] };
 
   return { response, data };
 };

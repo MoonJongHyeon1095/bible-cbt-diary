@@ -14,7 +14,7 @@ export const useFlowDetailQuery = (
     queryKey: queryKeys.flow.flow(access, flowId ?? 0, includeMiddles),
     queryFn: async () => {
       if (!flowId) {
-        return { notes: [], middles: [], montages: [] };
+        return { flow: null, notes: [], middles: [], montages: [] };
       }
       const { response, data } = await fetchEmotionNoteFlow(access, flowId, {
         includeMiddles,
@@ -23,6 +23,7 @@ export const useFlowDetailQuery = (
         throw new Error("emotion_flow detail fetch failed");
       }
       return {
+        flow: data.flow ?? null,
         notes: data.notes ?? [],
         middles: data.middles ?? [],
         montages: data.montages ?? [],

@@ -18,9 +18,9 @@ import {
 } from "./data/entranceSampleFlow";
 import styles from "./EntranceOverlay.module.css";
 import { SCENE_1 } from "./scenes";
-import EntranceFlowScene from "./scenes/components/EntranceFlowScene";
+import EntranceFlowScene1 from "./scenes/components/EntranceFlowScene1";
+import EntranceFlowScene2 from "./scenes/components/EntranceFlowScene2";
 import EntranceIntroScene from "./scenes/components/EntranceIntroScene";
-import EntranceScene2 from "./scenes/components/EntranceScene2";
 import Scene2_1 from "./scenes/Scene2-1";
 
 type EntranceOverlayProps = {
@@ -205,7 +205,7 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
       {sequenceStep === 0 ? (
         <EntranceIntroScene title="Flow Entrance" subtext={INTRO_SUBTEXT} />
       ) : sceneIndex < SCENE_1.length ? (
-        <EntranceFlowScene
+        <EntranceFlowScene1
           scene={scene}
           nodes={displayNodes}
           edges={displayEdges}
@@ -214,7 +214,7 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
       ) : null}
 
       {sequenceStep > 0 && sceneIndex >= SCENE_1.length ? (
-        <EntranceScene2
+        <EntranceFlowScene2
           lines={scene2Lines}
           skipLabel={scene2Actions.skipLabel}
           continueLabel={scene2Actions.continueLabel}

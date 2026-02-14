@@ -17,10 +17,17 @@ export const useFlowDetailData = ({
 
   return useMemo(() => {
     if (!flowId) {
-      return { notes: [], middles: [], montages: [], isLoading: false };
+      return {
+        flow: null,
+        notes: [],
+        middles: [],
+        montages: [],
+        isLoading: false,
+      };
     }
 
     return {
+      flow: flowQuery.data?.flow ?? null,
       notes: flowQuery.data?.notes ?? [],
       middles: flowQuery.data?.middles ?? [],
       montages: flowQuery.data?.montages ?? [],

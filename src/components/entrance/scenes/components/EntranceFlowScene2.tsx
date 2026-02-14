@@ -3,7 +3,7 @@
 import SafeButton from "@/components/ui/SafeButton";
 import styles from "../../EntranceOverlay.module.css";
 
-type EntranceScene2Props = {
+type EntranceFlowScene2Props = {
   lines: string[];
   skipLabel: string;
   continueLabel: string;
@@ -11,13 +11,13 @@ type EntranceScene2Props = {
   onContinue: () => void;
 };
 
-export default function EntranceScene2({
+export default function EntranceFlowScene2({
   lines,
   skipLabel,
   continueLabel,
   onSkip,
   onContinue,
-}: EntranceScene2Props) {
+}: EntranceFlowScene2Props) {
   return (
     <div className={styles.scene2Wrap}>
       <div className={styles.scene2Content}>
@@ -25,7 +25,9 @@ export default function EntranceScene2({
           {lines.map((line, index) => (
             <p
               key={`scene2-line-${index}`}
-              className={`${styles.scene2Line} ${line.startsWith("(") ? styles.scene2LineAside : ""}`.trim()}
+              className={`${styles.scene2Line} ${
+                line.startsWith("(") ? styles.scene2LineAside : ""
+              }`.trim()}
               style={{ ["--line-i" as string]: index }}
             >
               {line}

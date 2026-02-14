@@ -17,6 +17,8 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 type FlowDetailSectionViewProps = {
   access: AccessContext;
   flowId: number | null;
+  flowTitle: string | null;
+  flowDescription: string | null;
   noteCount: number;
   displayNodes: Node<FlowDetailNodeData>[];
   displayEdges: Edge[];
@@ -50,6 +52,8 @@ type FlowDetailSectionViewProps = {
 export default function FlowDetailSectionView({
   access,
   flowId,
+  flowTitle,
+  flowDescription,
   noteCount,
   displayNodes,
   displayEdges,
@@ -79,11 +83,25 @@ export default function FlowDetailSectionView({
   onClearSelection,
   onSelectNode,
 }: FlowDetailSectionViewProps) {
+  const trimmedTitle = flowTitle?.trim() ?? "";
+  const trimmedDescription = flowDescription?.trim() ?? "";
+  const headerTitle =
+    trimmedTitle.length > 0
+      ? trimmedTitle
+      : `${noteCount}개의 감정 기록이 있습니다`;
+  const headerHint =
+    trimmedDescription.length > 0
+      ? trimmedDescription
+      : trimmedTitle.length > 0
+        ? `${noteCount}개의 감정 기록이 있습니다`
+        : "";
+
   return (
     <section className={styles.section}>
       <div className={styles.header}>
         <div>
-          <h2 className={styles.title}>{noteCount}개의 감정 기록이 있습니다</h2>
+          <h2 className={styles.title}>{headerTitle}</h2>
+          {headerHint ? <p className={styles.hint}>{headerHint}</p> : null}
         </div>
         <SafeButton type="button" variant="ghost" onClick={onBackToList}>
           <LayoutDashboard size={18} />

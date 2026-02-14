@@ -15,7 +15,7 @@ type EntranceFlowSceneProps = {
   onGoDeeper: () => void;
 };
 
-export default function EntranceFlowScene({
+export default function EntranceFlowScene1({
   scene,
   nodes,
   edges,

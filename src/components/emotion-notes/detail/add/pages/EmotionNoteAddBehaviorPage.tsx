@@ -1,7 +1,7 @@
 "use client";
 
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
-import { validateUserText } from "@/components/cbt/utils/validation";
+import { useCbtToast } from "@/components/session/common/CbtToast";
+import { validateUserText } from "@/components/session/utils/validation";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";

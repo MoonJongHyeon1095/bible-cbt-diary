@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 
 type UseStorageBlockedRedirectOptions = {
   enabled: boolean;

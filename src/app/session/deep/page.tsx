@@ -1,4 +1,4 @@
-import CbtDeepSessionRouteClient from "@/components/cbt/deep/CbtDeepSessionRouteClient";
+import CbtDeepSessionRouteClient from "@/components/session/deep/CbtDeepSessionRouteClient";
 
 export default function CbtDeepSessionRoutePage() {
   return <CbtDeepSessionRouteClient />;

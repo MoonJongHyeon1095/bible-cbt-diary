@@ -80,7 +80,7 @@ export const handleGetEmotionNoteFlow = async (
       title,
       trigger_text,
       created_at,
-      emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
+      emotion_auto_thought_details(id,note_id,automatic_thought,emotion,created_at),
       emotion_error_details(id,note_id,error_label,error_description,created_at),
       emotion_alternative_details(id,note_id,alternative,created_at),
       emotion_behavior_details(
@@ -138,7 +138,7 @@ export const handleGetEmotionNoteFlow = async (
     notes?.map((note) => {
       const emotionLabels = Array.from(
         new Set(
-          (note.emotion_note_details ?? [])
+          (note.emotion_auto_thought_details ?? [])
             .map((detail) => detail.emotion)
             .filter(Boolean),
         ),
@@ -166,7 +166,7 @@ export const handleGetEmotionNoteFlow = async (
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
         behavior_labels: behaviorLabels,
-        thought_details: note.emotion_note_details ?? [],
+        thought_details: note.emotion_auto_thought_details ?? [],
         error_details: note.emotion_error_details ?? [],
         alternative_details: note.emotion_alternative_details ?? [],
         behavior_details: note.emotion_behavior_details ?? [],

@@ -3,7 +3,7 @@
 import EmotionNoteSearchSection from "@/components/search/EmotionNoteSearchSection";
 import SafeButton from "@/components/ui/SafeButton";
 import { useModalOpen } from "@/components/common/useModalOpen";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import { postEmotionNoteFlow } from "@/lib/api/flow/postEmotionNoteFlow";
 import { queryKeys } from "@/lib/queryKeys";
 import type { AccessContext } from "@/lib/types/access";

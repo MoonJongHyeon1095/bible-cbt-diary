@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { checkAiUsageLimit } from "@/lib/utils/aiUsageGuard";
 import { startPerf } from "@/lib/utils/perf";
@@ -8,8 +8,8 @@ import {
   clearAiUsageGuardCache,
   readAiUsageGuardCache,
   writeAiUsageGuardCache,
-} from "@/lib/utils/aiUsageGuardCache";
-import type { UsageCacheEntry } from "@/lib/utils/aiUsageGuardCache";
+} from "@/lib/storage/ai-usage/cache";
+import type { UsageCacheEntry } from "@/lib/storage/ai-usage/cache";
 
 type UseAiUsageGuardOptions = {
   enabled?: boolean;
@@ -96,7 +96,9 @@ export function useAiUsageGuard({
       pushToast(message, variant);
     };
     try {
-      allowed = await checkAiUsageLimit(captureToast);
+      const decision = await checkAiUsageLimit({ pushToast: captureToast });
+      allowed = decision.allowed;
+      lastMessage = decision.message ?? lastMessage;
     } catch (error) {
       console.error("ai usage guard failed:", error);
       pushToast("토큰 사용량 확인 중 서버 오류가 발생했습니다.", "error");

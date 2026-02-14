@@ -1,6 +1,6 @@
 "use client";
 
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { useModalOpen } from "@/components/common/useModalOpen";
 import SafeButton from "@/components/ui/SafeButton";

@@ -10,7 +10,7 @@ import {
   TERMS_STORAGE_KEY,
   TERMS_VERSION,
 } from "@/lib/constants/legal";
-import { safeLocalStorage } from "@/lib/utils/safeStorage";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";

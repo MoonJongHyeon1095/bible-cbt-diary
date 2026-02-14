@@ -1,8 +1,8 @@
 "use client";
 
 import { buildApiUrl } from "@/lib/utils/apiBase";
-import { getDeviceId } from "@/lib/utils/deviceId";
-import type { TokenUsage } from "@/lib/utils/tokenSessionStorage";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
+import type { TokenUsage } from "@/lib/storage/token/sessionUsage";
 import { buildUsageHeaders } from "@/lib/api/token-usage/_helpers";
 
 // POST /api/token-usage

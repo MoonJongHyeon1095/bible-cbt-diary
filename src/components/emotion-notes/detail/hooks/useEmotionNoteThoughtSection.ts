@@ -2,10 +2,10 @@
 
 import type { EmotionNoteDetail } from "@/lib/types/emotionNoteTypes";
 import { useCallback, useState } from "react";
-import { fetchThoughtDetails } from "@/lib/api/emotion-note-details/getEmotionNoteDetails";
-import { createThoughtDetail } from "@/lib/api/emotion-note-details/postEmotionNoteDetails";
-import { updateThoughtDetail } from "@/lib/api/emotion-note-details/patchEmotionNoteDetails";
-import { deleteThoughtDetail } from "@/lib/api/emotion-note-details/deleteEmotionNoteDetails";
+import { fetchThoughtDetails } from "@/lib/api/emotion-auto-thought-details/getEmotionNoteDetails";
+import { createThoughtDetail } from "@/lib/api/emotion-auto-thought-details/postEmotionNoteDetails";
+import { updateThoughtDetail } from "@/lib/api/emotion-auto-thought-details/patchEmotionNoteDetails";
+import { deleteThoughtDetail } from "@/lib/api/emotion-auto-thought-details/deleteEmotionNoteDetails";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
 import type { AccessContext } from "@/lib/types/access";
@@ -54,7 +54,7 @@ export default function useEmotionNoteThoughtSection({
       }
       const { response, data } = await fetchThoughtDetails(noteId, resolved);
       if (!response.ok) {
-        throw new Error("emotion_note_details fetch failed");
+        throw new Error("emotion_auto_thought_details fetch failed");
       }
       return data.details ?? [];
     },

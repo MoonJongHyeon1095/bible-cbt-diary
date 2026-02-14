@@ -1,6 +1,6 @@
 "use client";
 
-import { hasAcceptedTerms } from "@/lib/utils/terms";
+import { hasAcceptedTerms } from "@/lib/storage/legal/termsAgreement";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { useGate } from "@/components/gate/GateProvider";

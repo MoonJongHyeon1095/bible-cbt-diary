@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import styles from "./UsagePage.module.css";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
-import { getDeviceId } from "@/lib/utils/deviceId";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
 
 type UsageState = {
   daily: number;

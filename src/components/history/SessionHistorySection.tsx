@@ -2,7 +2,7 @@
 
 import SafeButton from "@/components/ui/SafeButton";
 import type { AccessContext } from "@/lib/types/access";
-import type { SessionHistory } from "@/lib/types/cbtTypes";
+import type { SessionHistory } from "@/lib/types/sessionTypes";
 import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { ChevronDown, Trash2 } from "lucide-react";

@@ -57,7 +57,7 @@ export const handleSearchEmotionNoteList = async (
       trigger_text,
       created_at,
       emotion_flow_note_middles(flow_id),
-      emotion_note_details(emotion),
+      emotion_auto_thought_details(emotion),
       emotion_error_details(error_label),
       emotion_behavior_details(behavior_label)
     `,
@@ -105,7 +105,7 @@ export const handleSearchEmotionNoteList = async (
     data?.map((note) => {
       const emotionLabels = Array.from(
         new Set(
-          (note.emotion_note_details ?? [])
+          (note.emotion_auto_thought_details ?? [])
             .map((detail) => detail.emotion)
             .filter(Boolean),
         ),

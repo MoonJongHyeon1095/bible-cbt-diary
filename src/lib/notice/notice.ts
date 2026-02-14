@@ -1,4 +1,8 @@
-import { safeLocalStorage } from "@/lib/utils/safeStorage";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
+import {
+  NOTICE_DISMISSED_KEY,
+  NOTICE_DISMISSED_TODAY_KEY,
+} from "@/lib/storage/keys/notice";
 export { loadNotices } from "@/lib/api/notice/getNotice";
 
 export type NoticeLevel = "info" | "warning" | "critical";
@@ -20,9 +24,6 @@ export type NoticePayload = {
   items: NoticeItem[];
 };
 
-const DISMISSED_KEY = "notice_dismissed_v1";
-const DISMISSED_TODAY_KEY = "notice_dismissed_today_v1";
-
 function nowMs() {
   return Date.now();
 }
@@ -36,7 +37,8 @@ function isWithinWindow(n: NoticeItem) {
 
 export function getDismissedSet(): Set<string> {
   try {
-    const arr = JSON.parse(safeLocalStorage.getItem(DISMISSED_KEY) || "[]");
+    const raw = safeLocalStorage.getItem(NOTICE_DISMISSED_KEY);
+    const arr = JSON.parse(raw || "[]");
     return new Set<string>(Array.isArray(arr) ? arr : []);
   } catch {
     return new Set();
@@ -46,7 +48,7 @@ export function getDismissedSet(): Set<string> {
 export function dismissNotice(id: string) {
   const s = getDismissedSet();
   s.add(id);
-  safeLocalStorage.setItem(DISMISSED_KEY, JSON.stringify([...s]));
+  safeLocalStorage.setItem(NOTICE_DISMISSED_KEY, JSON.stringify([...s]));
 }
 
 function todayKey() {
@@ -59,10 +61,10 @@ function todayKey() {
 
 export function dismissNoticeToday(id: string) {
   try {
-    const raw = safeLocalStorage.getItem(DISMISSED_TODAY_KEY);
+    const raw = safeLocalStorage.getItem(NOTICE_DISMISSED_TODAY_KEY);
     const parsed = raw ? (JSON.parse(raw) as Record<string, string>) : {};
     parsed[id] = todayKey();
-    safeLocalStorage.setItem(DISMISSED_TODAY_KEY, JSON.stringify(parsed));
+    safeLocalStorage.setItem(NOTICE_DISMISSED_TODAY_KEY, JSON.stringify(parsed));
   } catch {
     // ignore
   }
@@ -70,7 +72,7 @@ export function dismissNoticeToday(id: string) {
 
 function isDismissedToday(id: string) {
   try {
-    const raw = safeLocalStorage.getItem(DISMISSED_TODAY_KEY);
+    const raw = safeLocalStorage.getItem(NOTICE_DISMISSED_TODAY_KEY);
     if (!raw) return false;
     const parsed = JSON.parse(raw) as Record<string, string>;
     return parsed[id] === todayKey();

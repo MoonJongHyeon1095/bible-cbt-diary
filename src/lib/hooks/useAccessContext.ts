@@ -1,6 +1,6 @@
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { AccessContext, AccessMode } from "@/lib/types/access";
-import { isDeviceIdAvailable } from "@/lib/utils/deviceId";
+import { isDeviceIdAvailable } from "@/lib/storage/device/deviceId";
 import { startPerf } from "@/lib/utils/perf";
 import { useEffect, useMemo, useState } from "react";
 

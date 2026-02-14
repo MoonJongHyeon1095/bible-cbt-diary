@@ -1,7 +1,7 @@
 "use client";
 
 import pageStyles from "@/app/page.module.css";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import { fetchEmotionNote } from "@/lib/api/emotion-notes/getEmotionNote";
 import { useAuthModal } from "@/components/header/AuthModalProvider";

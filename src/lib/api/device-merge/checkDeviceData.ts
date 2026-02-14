@@ -2,7 +2,7 @@
 
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
-import { getDeviceId } from "@/lib/utils/deviceId";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
 
 // GET /api/device-merge
 // device-merge 조회

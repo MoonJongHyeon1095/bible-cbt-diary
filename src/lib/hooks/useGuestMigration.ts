@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import { queryKeys } from "@/lib/queryKeys";
 import { mergeDeviceData } from "@/lib/api/device-merge/postDeviceMerge";
 import { checkDeviceData } from "@/lib/api/device-merge/checkDeviceData";
@@ -65,7 +65,7 @@ export const useGuestMigration = () => {
       setState((prev) => ({ ...prev, isUploading: false, error: null }));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all }),
-        queryClient.invalidateQueries({ queryKey: ["emotion-note-details"] }),
+        queryClient.invalidateQueries({ queryKey: ["emotion-auto-thought-details"] }),
         queryClient.invalidateQueries({ queryKey: ["emotion-error-details"] }),
         queryClient.invalidateQueries({
           queryKey: ["emotion-alternative-details"],

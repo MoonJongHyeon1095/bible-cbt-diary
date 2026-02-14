@@ -1,4 +1,4 @@
-import EmotionNoteCalendarPage from "@/components/calendar/EmotionNoteCalendarPage";
+import EmotionNoteCalendarPage from "@/components/month/EmotionNoteCalendarPage";
 import { Suspense } from "react";
 
 export default function EmotionNoteCalendarRoutePage() {

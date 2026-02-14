@@ -1,4 +1,4 @@
-import EmotionNoteTodayPage from "@/components/emotion-notes/EmotionNoteTodayPage";
+import EmotionNoteTodayPage from "@/components/today/EmotionNoteTodayPage";
 
 export default function EmotionNoteTodayRoutePage() {
   return <EmotionNoteTodayPage />;

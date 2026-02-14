@@ -1,7 +1,7 @@
 "use client";
 
 import type { AccessContext } from "@/lib/types/access";
-import type { SessionHistory } from "@/lib/types/cbtTypes";
+import type { SessionHistory } from "@/lib/types/sessionTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
 

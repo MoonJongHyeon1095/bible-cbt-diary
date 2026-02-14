@@ -31,7 +31,7 @@ export const handleGetEmotionNote = async (
         trigger_text,
         created_at,
         emotion_flow_note_middles(flow_id),
-        emotion_note_details(id,note_id,automatic_thought,emotion,created_at),
+        emotion_auto_thought_details(id,note_id,automatic_thought,emotion,created_at),
         emotion_error_details(id,note_id,error_label,error_description,created_at),
         emotion_alternative_details(id,note_id,alternative,created_at),
         emotion_behavior_details(
@@ -53,7 +53,7 @@ export const handleGetEmotionNote = async (
     .eq("id", noteId)
     .order("created_at", {
       ascending: true,
-      foreignTable: "emotion_note_details",
+      foreignTable: "emotion_auto_thought_details",
     })
     .order("created_at", {
       ascending: true,
@@ -95,7 +95,7 @@ export const handleGetEmotionNote = async (
               .filter((id) => Number.isFinite(id)),
           ),
         ),
-        thought_details: data.emotion_note_details ?? [],
+        thought_details: data.emotion_auto_thought_details ?? [],
         error_details: data.emotion_error_details ?? [],
         alternative_details: data.emotion_alternative_details ?? [],
         behavior_details: data.emotion_behavior_details ?? [],

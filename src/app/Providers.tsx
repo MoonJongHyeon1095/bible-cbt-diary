@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { CbtToastProvider } from "@/components/cbt/common/CbtToast";
+import { CbtToastProvider } from "@/components/session/common/CbtToast";
 import { AuthModalProvider } from "@/components/header/AuthModalProvider";
 import NoticeGate from "@/components/gate/NoticeGate";
 import UpdateNoticeGate from "@/components/gate/UpdateNoticeGate";

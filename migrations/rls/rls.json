@@ -145,8 +145,8 @@
   },
   {
     "schema": "public",
-    "table": "emotion_note_details",
-    "policy_name": "emotion_note_details_delete_own",
+    "table": "emotion_auto_thought_details",
+    "policy_name": "emotion_auto_thought_details_delete_own",
     "command": "DELETE",
     "roles": "PUBLIC",
     "using_expr": "(auth.uid() = user_id)",
@@ -154,8 +154,8 @@
   },
   {
     "schema": "public",
-    "table": "emotion_note_details",
-    "policy_name": "emotion_note_details_insert_own",
+    "table": "emotion_auto_thought_details",
+    "policy_name": "emotion_auto_thought_details_insert_own",
     "command": "INSERT",
     "roles": "PUBLIC",
     "using_expr": null,
@@ -163,8 +163,8 @@
   },
   {
     "schema": "public",
-    "table": "emotion_note_details",
-    "policy_name": "emotion_note_details_select_own",
+    "table": "emotion_auto_thought_details",
+    "policy_name": "emotion_auto_thought_details_select_own",
     "command": "SELECT",
     "roles": "PUBLIC",
     "using_expr": "(auth.uid() = user_id)",
@@ -172,8 +172,8 @@
   },
   {
     "schema": "public",
-    "table": "emotion_note_details",
-    "policy_name": "emotion_note_details_update_own",
+    "table": "emotion_auto_thought_details",
+    "policy_name": "emotion_auto_thought_details_update_own",
     "command": "UPDATE",
     "roles": "PUBLIC",
     "using_expr": "(auth.uid() = user_id)",

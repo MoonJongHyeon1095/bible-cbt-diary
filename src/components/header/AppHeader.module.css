@@ -1,3 +1,7 @@
+.mobileSafeTopInset {
+  display: none;
+}
+
 .header {
   padding: calc(24px + env(safe-area-inset-top)) 24px 24px;
   display: grid;
@@ -130,6 +134,12 @@
 }
 
 @media (max-width: 900px) {
+  .mobileSafeTopInset {
+    display: block;
+    height: env(safe-area-inset-top);
+    pointer-events: none;
+  }
+
   .header {
     grid-template-columns: 1fr;
   }

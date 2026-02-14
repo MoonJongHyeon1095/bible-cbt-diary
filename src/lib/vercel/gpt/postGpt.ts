@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
-import { json, methodNotAllowed, readJson } from "../_utils.js";
+import { json, readJson } from "../_utils.js";
 
 const allowedModels = new Set(["gpt-4.1-mini", "gpt-4o-mini", "gpt-5-nano"]);
 
@@ -24,10 +24,6 @@ function extractTextFromResponsesPayload(payload: unknown): string | null {
 // POST /api/gpt
 // gpt 등록
 export const handlePostGpt = async (req: VercelRequest, res: VercelResponse) => {
-  if (req.method !== "POST") {
-    return methodNotAllowed(res);
-  }
-
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const body = await readJson<{
     prompt?: string;

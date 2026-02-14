@@ -1,7 +1,7 @@
 "use client";
 
 import { buildApiUrl } from "@/lib/utils/apiBase";
-import { getDeviceId } from "@/lib/utils/deviceId";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
 import { buildUsageHeaders } from "@/lib/api/token-usage/_helpers";
 
 export type TokenUsageStatus = {

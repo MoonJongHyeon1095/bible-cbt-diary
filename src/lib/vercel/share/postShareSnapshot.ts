@@ -60,7 +60,7 @@ export const handlePostShareSnapshot = async (
         id,
         title,
         trigger_text,
-        emotion_note_details(id,automatic_thought,emotion,created_at),
+        emotion_auto_thought_details(id,automatic_thought,emotion,created_at),
         emotion_error_details(id,error_label,error_description,created_at),
         emotion_alternative_details(id,alternative,created_at),
         emotion_behavior_details(id,behavior_label,behavior_description,error_tags,created_at)
@@ -70,7 +70,7 @@ export const handlePostShareSnapshot = async (
     .eq("id", noteId)
     .order("created_at", {
       ascending: true,
-      foreignTable: "emotion_note_details",
+      foreignTable: "emotion_auto_thought_details",
     })
     .order("created_at", {
       ascending: true,
@@ -100,7 +100,7 @@ export const handlePostShareSnapshot = async (
     return json(res, 404, { ok: false, message: "노트를 찾을 수 없습니다." });
   }
 
-  const thoughtItems = (data.emotion_note_details ?? []).filter((item) =>
+  const thoughtItems = (data.emotion_auto_thought_details ?? []).filter((item) =>
     selectedThoughtIds.includes(item.id),
   );
   const errorItems = (data.emotion_error_details ?? []).filter((item) =>

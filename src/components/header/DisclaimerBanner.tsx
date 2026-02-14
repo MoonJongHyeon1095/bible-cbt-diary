@@ -1,7 +1,8 @@
 import { useState } from "react";
 import styles from "./DisclaimerBanner.module.css";
 import SafeButton from "@/components/ui/SafeButton";
-import { safeSessionStorage } from "@/lib/utils/safeStorage";
+import { safeSessionStorage } from "@/lib/storage/core/safeStorage";
+import { DISCLAIMER_BANNER_DISMISS_KEY } from "@/lib/storage/keys/ui";
 
 type DisclaimerBannerProps = {
   detailsClassName: string;
@@ -16,19 +17,17 @@ export const SUPPORT_TEXT_LINES = [
   "생성된 내용은 전문가의 검토를 거치지 않았으며 오류가 있을 수 있습니다.",
 ];
 
-const DISMISS_KEY = "disclaimer-banner-dismissed";
-
 export default function DisclaimerBanner({
   detailsClassName,
   titleClassName,
   textClassName,
 }: DisclaimerBannerProps) {
   const [isDismissed, setIsDismissed] = useState(() => {
-    return safeSessionStorage.getItem(DISMISS_KEY) === "true";
+    return safeSessionStorage.getItem(DISCLAIMER_BANNER_DISMISS_KEY) === "true";
   });
 
   const handleDismiss = () => {
-    safeSessionStorage.setItem(DISMISS_KEY, "true");
+    safeSessionStorage.setItem(DISCLAIMER_BANNER_DISMISS_KEY, "true");
     setIsDismissed(true);
   };
 

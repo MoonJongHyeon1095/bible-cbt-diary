@@ -2,10 +2,14 @@ import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { handleGetEmotionNoteFlow } from "../src/lib/vercel/flow/getEmotionNoteFlow.js";
 import { handleGetEmotionFlowList } from "../src/lib/vercel/flow/getEmotionNoteFlowList.js";
 import { handlePostEmotionNoteFlow } from "../src/lib/vercel/flow/postEmotionNoteFlow.js";
-import { handleDeleteEmotionNoteFlow } from "../src/lib/vercel/flow/deleteEmotionNoteFlow.js";
+import {
+  handleDeleteEmotionFlow,
+  handleDeleteEmotionFlowNote,
+} from "../src/lib/vercel/flow/deleteEmotionNoteFlow.js";
 import {
   getQueryParam,
   handleCors,
+  json,
   methodNotAllowed,
   readJson,
 } from "./_utils.js";
@@ -30,7 +34,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   if (req.method === "DELETE") {
-    return handleDeleteEmotionNoteFlow(req, res);
+    const action = getQueryParam(req, "action");
+    if (action === "flow") {
+      return handleDeleteEmotionFlow(req, res);
+    }
+    if (action === "note") {
+      return handleDeleteEmotionFlowNote(req, res);
+    }
+    return json(res, 400, { ok: false, message: "지원하지 않는 action입니다." });
   }
 
   return methodNotAllowed(res);

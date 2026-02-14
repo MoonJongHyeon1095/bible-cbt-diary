@@ -10,7 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
-import { useCbtToast } from "@/components/cbt/common/CbtToast";
+import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
 import EmotionNoteCardOverlay from "./EmotionNoteCardOverlay";

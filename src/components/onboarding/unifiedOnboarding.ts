@@ -1,7 +1,8 @@
-import type { MinimalStep } from "@/components/cbt/hooks/useCbtMinimalSessionFlow";
+import type { MinimalStep } from "@/components/session/hooks/useCbtMinimalSessionFlow";
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
+import { UNIFIED_TOUR_STORAGE_KEY as UNIFIED_ONBOARDING_KEY } from "@/lib/storage/keys/onboarding";
 
-export const UNIFIED_TOUR_STORAGE_KEY = "unified-onboarding";
+export const UNIFIED_TOUR_STORAGE_KEY = UNIFIED_ONBOARDING_KEY;
 
 export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
   "incident",

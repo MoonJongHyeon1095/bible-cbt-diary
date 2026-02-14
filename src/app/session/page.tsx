@@ -1,5 +1,5 @@
-import CbtSessionRouteClient from "@/components/cbt/CbtSessionRouteClient";
+import SessionRouteClient from "@/components/session/SessionRouteClient";
 
-export default function CbtSessionRoutePage() {
-  return <CbtSessionRouteClient />;
+export default function SessionRoutePage() {
+  return <SessionRouteClient />;
 }

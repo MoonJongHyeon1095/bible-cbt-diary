@@ -4,8 +4,8 @@ import AppTabs from "@/components/tab/AppTabs";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-import { clearAiUsageGuardCache } from "@/lib/utils/aiUsageGuardCache";
-import { clearTokenSessionStorage } from "@/lib/utils/tokenSessionStorage";
+import { clearAiUsageGuardCache } from "@/lib/storage/ai-usage/cache";
+import { clearTokenSessionStorage } from "@/lib/storage/token/sessionUsage";
 import { LogIn, LogOut } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
@@ -58,6 +58,7 @@ export default function AppHeader() {
 
   return (
     <>
+      <div className={styles.mobileSafeTopInset} aria-hidden />
       <header className={styles.header}>
         <div className={styles.logoSlot}>
           <CompactNav userEmail={user?.email ?? null} />

@@ -32,7 +32,7 @@ export const queryKeys = {
       ["emotion-notes", "detail", accessKey(access), noteId] as const,
   },
   thoughtDetails: (access: AccessContext, noteId: number) =>
-    ["emotion-note-details", accessKey(access), noteId] as const,
+    ["emotion-auto-thought-details", accessKey(access), noteId] as const,
   errorDetails: (access: AccessContext, noteId: number) =>
     ["emotion-error-details", accessKey(access), noteId] as const,
   alternativeDetails: (access: AccessContext, noteId: number) =>

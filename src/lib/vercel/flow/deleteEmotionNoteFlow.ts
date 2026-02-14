@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getUserFromAuthHeader } from "../../auth/sessionNode.js";
-import { json, normalizeDeviceId, readJson, getQueryParam } from "../_utils.js";
+import { json, normalizeDeviceId, readJson } from "../_utils.js";
 
 type DeleteFlowPayload = {
   flow_id?: number;
@@ -118,16 +118,10 @@ const handleDeleteFlow = async (
   return json(res, 200, { ok: true });
 };
 
-// DELETE /api/emotion-flow?action=note
-export const handleDeleteEmotionNoteFlow = async (
+export const handleDeleteEmotionFlowNote = async (
   req: VercelRequest,
   res: VercelResponse,
 ) => {
-  const action = getQueryParam(req, "action");
-  if (action !== "note" && action !== "flow") {
-    return json(res, 400, { ok: false, message: "지원하지 않는 action입니다." });
-  }
-
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const payload = await readJson<DeleteFlowPayload>(req);
   const deviceId = normalizeDeviceId(payload.deviceId);
@@ -140,9 +134,24 @@ export const handleDeleteEmotionNoteFlow = async (
     ? { user_id: user.id, device_id: null }
     : { user_id: null, device_id: deviceId };
 
-  if (action === "flow") {
-    return handleDeleteFlow(res, payload, owner);
+  return handleDeleteFlowNote(res, payload, owner);
+};
+
+export const handleDeleteEmotionFlow = async (
+  req: VercelRequest,
+  res: VercelResponse,
+) => {
+  const user = await getUserFromAuthHeader(req.headers.authorization);
+  const payload = await readJson<DeleteFlowPayload>(req);
+  const deviceId = normalizeDeviceId(payload.deviceId);
+
+  if (!user && !deviceId) {
+    return json(res, 401, { ok: false, message: "로그인이 필요합니다." });
   }
 
-  return handleDeleteFlowNote(res, payload, owner);
+  const owner = user
+    ? { user_id: user.id, device_id: null }
+    : { user_id: null, device_id: deviceId };
+
+  return handleDeleteFlow(res, payload, owner);
 };

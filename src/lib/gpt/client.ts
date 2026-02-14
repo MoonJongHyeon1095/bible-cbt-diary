@@ -3,11 +3,11 @@
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { postGpt } from "@/lib/api/gpt/postGpt";
-import { getDeviceId } from "@/lib/utils/deviceId";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
 import {
   readTokenSessionUsage,
   writeTokenSessionUsage,
-} from "@/lib/utils/tokenSessionStorage";
+} from "@/lib/storage/token/sessionUsage";
 import { syncTokenUsage } from "@/lib/api/token-usage/postTokenUsage";
 
 export type GptCallOptions = {

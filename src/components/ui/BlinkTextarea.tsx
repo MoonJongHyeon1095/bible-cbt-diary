@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 import { useRef } from "react";
-import { useCbtAutoResizeTextarea } from "@/components/cbt/hooks/useCbtAutoResizeTextarea";
+import { useCbtAutoResizeTextarea } from "@/components/session/hooks/useCbtAutoResizeTextarea";
 import styles from "./BlinkTextarea.module.css";
 
 type BlinkTextareaProps = {

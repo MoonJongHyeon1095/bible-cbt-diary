@@ -1,6 +1,6 @@
 import type { AccessContext } from "@/lib/types/access";
 import { buildAuthHeaders } from "@/lib/utils/buildAuthHeaders";
-import { getDeviceId } from "@/lib/utils/deviceId";
+import { getDeviceId } from "@/lib/storage/device/deviceId";
 
 export type ResolvedAccess =
   | { kind: "auth"; headers: Record<string, string> }

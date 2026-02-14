@@ -1,4 +1,4 @@
-import type { CbtToastVariant } from "@/components/cbt/common/CbtToast";
+import type { CbtToastVariant } from "@/components/session/common/CbtToast";
 import type { TokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 import { fetchTokenUsageStatus } from "@/lib/api/token-usage/getTokenUsageStatus";
 
@@ -14,9 +14,7 @@ export type AiUsageDecision = {
   message?: string;
 };
 
-export const getAiUsageDecision = (
-  status: TokenUsageStatus,
-): AiUsageDecision => {
+const resolveAiUsageDecision = (status: TokenUsageStatus): AiUsageDecision => {
   const dailyLimit = status.is_member ? MEMBER_DAILY_LIMIT : GUEST_DAILY_LIMIT;
   const monthlyLimit = status.is_member
     ? MEMBER_MONTHLY_LIMIT
@@ -39,19 +37,24 @@ export const getAiUsageDecision = (
   return { allowed: true };
 };
 
-export const checkAiUsageLimit = async (pushToast?: ToastHandler) => {
+export const checkAiUsageLimit = async (options?: {
+  pushToast?: ToastHandler;
+  status?: TokenUsageStatus;
+}): Promise<AiUsageDecision> => {
+  const pushToast = options?.pushToast;
   try {
-    const status = await fetchTokenUsageStatus();
-    const decision = getAiUsageDecision(status);
+    const status = options?.status ?? (await fetchTokenUsageStatus());
+    const decision = resolveAiUsageDecision(status);
     if (!decision.allowed) {
       pushToast?.(decision.message ?? "토큰 사용량을 초과했습니다.", "error");
-      return false;
     }
+    return decision;
   } catch (error) {
     console.error("token usage check failed:", error);
     pushToast?.("토큰 사용량 확인 중 서버 오류가 발생했습니다.", "error");
-    return false;
+    return {
+      allowed: false,
+      message: "토큰 사용량 확인 중 서버 오류가 발생했습니다.",
+    };
   }
-
-  return true;
 };

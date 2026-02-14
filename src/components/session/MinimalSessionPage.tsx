@@ -7,7 +7,6 @@ import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/alternative/CbtMinimalAlternativeThoughtSection";
 import { CbtMinimalAutoThoughtSection } from "./minimal/auto-thought/CbtMinimalAutoThoughtSection";
 import { CbtMinimalCognitiveErrorSection } from "./minimal/cognitive-error/CbtMinimalCognitiveErrorSection";
-import { CbtMinimalEmotionSection } from "./minimal/emotion-select/CbtMinimalEmotionSection";
 import { useMinimalSessionController } from "./minimal/hooks/useMinimalSessionController";
 import { CbtMinimalIncidentSection } from "./minimal/incident/CbtMinimalIncidentSection";
 import styles from "./minimal/MinimalStyles.module.css";
@@ -22,7 +21,6 @@ function MinimalSessionPageContent() {
     handleBack,
     handleGoHome,
     handleSubmitThought,
-    handleSelectEmotion,
     handleSelectErrors,
     handleComplete,
     tourSteps,
@@ -55,19 +53,8 @@ function MinimalSessionPageContent() {
           <CbtMinimalIncidentSection
             userInput={flow.userInput}
             onInputChange={actions.setUserInput}
-            onNext={() => actions.setStep("emotion")}
+            onNext={() => actions.setStep("thought")}
             title={incidentTitle}
-          />
-        )}
-
-        {flow.step === "emotion" && (
-          <CbtMinimalEmotionSection
-            selectedEmotion={flow.selectedEmotion}
-            onSelectEmotion={handleSelectEmotion}
-            onNext={() => {
-              actions.setWantsCustom(false);
-              actions.setStep("thought");
-            }}
           />
         )}
 

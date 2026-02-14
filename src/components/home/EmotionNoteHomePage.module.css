@@ -5,15 +5,27 @@
 }
 
 .main {
+  position: relative;
   flex: 1;
-  padding: 0 24px;
+  padding: clamp(22vh, 28vh, 34vh) 24px 36px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
 }
 
+.dateDock {
+  position: absolute;
+  top: clamp(10vh, 14vh, 18vh);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(960px, calc(100% - 48px));
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
 .shell {
-  width: min(1080px, 100%);
+  width: min(1120px, 100%);
   max-width: 100%;
   display: flex;
   justify-content: center;
@@ -21,24 +33,25 @@
 }
 
 .card {
-  width: 100%;
+  width: min(960px, 100%);
+  padding: clamp(8px, 1.2vw, 14px) 0;
   display: flex;
   flex-direction: column;
+  gap: 12px;
   align-items: center;
-  text-align: center;
-  gap: 10px;
-  transform: translateY(clamp(-56px, -8vh, -28px));
 }
 
 .title {
   margin: 0;
   width: 100%;
+  text-align: center;
+  margin-bottom: 16px;
 }
 
 .titleQuestion {
   display: block;
   width: 100%;
-  font-size: clamp(1.35rem, 5vw, 2.4rem);
+  font-size: clamp(1.35rem, 1.05rem + 1.8vw, 2.2rem);
   line-height: 1.25;
   font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
     serif;
@@ -46,24 +59,114 @@
   letter-spacing: -0.01em;
 }
 
-.startButton {
-  width: 98px;
-  height: 98px;
-  border-radius: 50%;
-  border: none;
-  background: rgba(20, 28, 40, 0.42);
-  margin-top: 10px;
+.dateHint {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 88%, white);
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+
+.emotionGrid {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.emotionCard {
+  position: relative;
+  width: clamp(64px, 7.2vw, 76px);
+  height: clamp(64px, 7.2vw, 76px);
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  background: transparent;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 4px;
+  text-align: center;
+  transition: border-color 0.16s ease, opacity 0.16s ease, box-shadow 0.2s ease;
+}
+
+.emotionCard:hover {
+  opacity: 0.95;
+}
+
+.emotionCard::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  pointer-events: none;
+}
+
+.emotionCardLoading {
+  animation: homeChipSparkle 1s ease-in-out infinite;
+}
+
+.emotionCardLoading::after {
+  border-color: color-mix(in srgb, currentColor 58%, transparent);
+  animation: homeChipInnerGleam 0.92s ease-in-out infinite;
+}
+
+.emotionCardLoading::before {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid color-mix(in srgb, currentColor 86%, transparent);
+  border-right-color: transparent;
+  border-bottom-color: transparent;
+  box-shadow: 0 0 10px color-mix(in srgb, currentColor 42%, transparent);
+  animation: homeChipOrbit 0.68s linear infinite;
+  pointer-events: none;
+}
+
+.emotionCardSelected {
+  border-width: 2px;
+}
+
+.emotionCardSelected::after {
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
+}
+
+.emotionName {
+  font-size: 0.86rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.selectionText {
+  margin: 2px 0 2px;
+  font-size: 0.84rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.startButton {
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid rgba(243, 204, 113, 0.45);
+  background: linear-gradient(145deg, rgba(243, 204, 113, 0.18), rgba(89, 69, 24, 0.2));
+  margin-top: 2px;
+  min-height: 52px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
   position: relative;
-  box-shadow: 0 0 0 1px rgba(128, 156, 196, 0.2),
-    0 10px 24px rgba(6, 10, 18, 0.45);
+  box-shadow: 0 8px 22px rgba(8, 12, 18, 0.35);
+}
+
+.startButton[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .startButtonLoading {
@@ -72,46 +175,69 @@
 
 .startButtonRing {
   position: absolute;
-  inset: -6px;
-  border-radius: 999px;
-  border: 2px solid currentColor;
+  inset: -5px;
+  border-radius: 14px;
+  border: 2px solid rgba(243, 204, 113, 0.85);
   border-top-color: transparent;
-  opacity: 0.85;
-  animation: homePlusSpin 1s linear infinite;
+  animation: homeButtonSpin 0.9s linear infinite;
   pointer-events: none;
-  z-index: 0;
-}
-
-.startButton > span:not(.startButtonRing) {
-  position: relative;
-  z-index: 1;
-}
-
-.plusIcon {
-  font-size: 2.4rem;
-  line-height: 1;
-  font-weight: 500;
 }
 
 .plusText {
-  font-size: 0.75rem;
-  color: var(--muted);
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.dateHint {
-  margin: 2px 0 0;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
-@keyframes homePlusSpin {
+@keyframes homeButtonSpin {
   to {
     transform: rotate(360deg);
   }
 }
 
-@media (max-width: 900px) {
+@keyframes homeChipOrbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes homeChipSparkle {
+  0% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
+      0 0 9px color-mix(in srgb, currentColor 26%, transparent),
+      inset 0 0 8px color-mix(in srgb, currentColor 16%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 72%, transparent),
+      0 0 18px color-mix(in srgb, currentColor 52%, transparent),
+      inset 0 0 14px color-mix(in srgb, currentColor 24%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
+      0 0 9px color-mix(in srgb, currentColor 26%, transparent),
+      inset 0 0 8px color-mix(in srgb, currentColor 16%, transparent);
+  }
+}
+
+@keyframes homeChipInnerGleam {
+  0% {
+    border-color: color-mix(in srgb, currentColor 42%, transparent);
+  }
+  50% {
+    border-color: color-mix(in srgb, currentColor 76%, transparent);
+  }
+  100% {
+    border-color: color-mix(in srgb, currentColor 42%, transparent);
+  }
+}
+
+@media (max-width: 980px) {
   .main {
-    padding: 0 16px;
+    padding: clamp(20vh, 26vh, 32vh) 14px 26px;
+  }
+
+  .dateDock {
+    top: clamp(9vh, 12vh, 16vh);
+    width: calc(100% - 28px);
   }
 }

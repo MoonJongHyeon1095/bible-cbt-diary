@@ -6,15 +6,11 @@ import type {
 
 export type MinimalStep =
   | "incident"
-  | "emotion"
   | "thought"
   | "errors"
   | "alternative";
 
 export const MINIMAL_INCIDENT_STEPS: ReadonlyArray<MinimalStep> = ["incident"];
-export const MINIMAL_EMOTION_SELECT_STEPS: ReadonlyArray<MinimalStep> = [
-  "emotion",
-];
 export const MINIMAL_AUTO_THOUGHT_STEPS: ReadonlyArray<MinimalStep> = [
   "thought",
 ];

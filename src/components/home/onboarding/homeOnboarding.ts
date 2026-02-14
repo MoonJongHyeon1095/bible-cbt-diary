@@ -2,9 +2,9 @@ import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 
 export const HOME_ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    selector: "[data-tour='home-new-note']",
+    selector: "[data-tour='home-emotion-grid']",
     side: "bottom",
-    content: "만나서 반가워요.\n오늘 하루를 기록해볼까요?",
+    content: "감정 칩을 누르면 바로 세션이 시작돼요.",
     completeOnTargetClick: true,
   },
 ];

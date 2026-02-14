@@ -6,7 +6,6 @@ export const UNIFIED_TOUR_STORAGE_KEY = UNIFIED_ONBOARDING_KEY;
 
 export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
   "incident",
-  "emotion",
   "thought",
   "errors",
   "alternative",
@@ -29,14 +28,6 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
         selector: "[data-tour='minimal-incident-next']",
         side: "bottom",
         content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
-      },
-    ],
-    emotion: [
-      {
-        selector: "[data-tour='emotion-grid']",
-        side: "bottom",
-        content:
-          "지금 가장 비슷한 감정을 골라주세요.\n클릭하면 감정에 대한 설명을 볼 수 있어요.",
       },
     ],
     thought: [

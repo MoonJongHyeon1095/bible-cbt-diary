@@ -4,7 +4,6 @@ import {
   MINIMAL_ALTERNATIVE_STEPS,
   MINIMAL_AUTO_THOUGHT_STEPS,
   MINIMAL_COGNITIVE_ERROR_STEPS,
-  MINIMAL_EMOTION_SELECT_STEPS,
   MINIMAL_INCIDENT_STEPS,
   useCbtMinimalSessionFlow,
   type MinimalStep,
@@ -39,6 +38,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
+import { EMOTIONS } from "@/lib/constants/emotions";
 
 type TourProgress = {
   lastStep: number;
@@ -54,6 +54,7 @@ export function useMinimalSessionController() {
   const [isSaving, setIsSaving] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
   const lastErrorsKeyRef = useRef<string>("");
+  const hasRedirectedForMissingEmotionRef = useRef(false);
   const { requireAccessContext } = useCbtAccess({
     setError: (message) => {
       pushToast(message, "error");
@@ -61,9 +62,17 @@ export function useMinimalSessionController() {
   });
   const queryClient = useQueryClient();
   const dateParam = searchParams.get("date");
+  const emotionIdParam = searchParams.get("emotionId");
   const hasDateParam = Boolean(
     dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam),
   );
+  const preselectedEmotion = useMemo(() => {
+    if (!emotionIdParam) {
+      return "";
+    }
+    return EMOTIONS.find((item) => item.id === emotionIdParam)?.label ?? "";
+  }, [emotionIdParam]);
+  const hasEmotionParam = Boolean(preselectedEmotion);
   const dateLabel = hasDateParam
     ? formatKoreanDateTime(`${dateParam}T00:00:00+09:00`, {
         month: "long",
@@ -77,7 +86,6 @@ export function useMinimalSessionController() {
   const stepOrder: MinimalStep[] = useMemo(
     () => [
       ...MINIMAL_INCIDENT_STEPS,
-      ...MINIMAL_EMOTION_SELECT_STEPS,
       ...MINIMAL_AUTO_THOUGHT_STEPS,
       ...MINIMAL_COGNITIVE_ERROR_STEPS,
       ...MINIMAL_ALTERNATIVE_STEPS,
@@ -105,6 +113,30 @@ export function useMinimalSessionController() {
     if (!safeLocalStorage.isAvailable()) return;
     safeLocalStorage.setItem(EMOTION_NOTE_STARTED_KEY, "true");
   }, []);
+
+  useEffect(() => {
+    if (!preselectedEmotion) return;
+    if (flow.selectedEmotion === preselectedEmotion) return;
+    actions.setSelectedEmotion(preselectedEmotion);
+  }, [actions, flow.selectedEmotion, preselectedEmotion]);
+
+  useEffect(() => {
+    if (isAccessLoading || accessMode === "blocked") return;
+    if (hasEmotionParam) return;
+    if (hasRedirectedForMissingEmotionRef.current) return;
+    hasRedirectedForMissingEmotionRef.current = true;
+    const next = hasDateParam ? `/home?date=${dateParam}` : "/home";
+    pushToast("홈에서 감정을 먼저 선택해주세요.", "error");
+    router.replace(next);
+  }, [
+    accessMode,
+    dateParam,
+    hasDateParam,
+    hasEmotionParam,
+    isAccessLoading,
+    pushToast,
+    router,
+  ]);
 
   const saveMinimalMutation = useMutation({
     mutationFn: async (args: {
@@ -228,17 +260,6 @@ export function useMinimalSessionController() {
     [actions, flow.selectedEmotion],
   );
 
-  const handleSelectEmotion = useCallback(
-    (emotion: string) => {
-      actions.setSelectedEmotion(emotion);
-      if (isTourOpen && flow.step === "emotion") {
-        handleTourFinish(tourStep);
-        setIsTourOpen(false);
-      }
-    },
-    [actions, flow.step, handleTourFinish, isTourOpen, setIsTourOpen, tourStep],
-  );
-
   const handleSelectErrors = useCallback(
     (errors: SelectedCognitiveError[]) => {
       const nextKey = JSON.stringify(
@@ -351,7 +372,6 @@ export function useMinimalSessionController() {
     handleBack,
     handleGoHome,
     handleSubmitThought,
-    handleSelectEmotion,
     handleSelectErrors,
     handleComplete,
     tourSteps,

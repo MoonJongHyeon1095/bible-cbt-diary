@@ -483,10 +483,10 @@ export default function EmotionNoteListCalendarSection({
             return;
           }
           if (selectedKey === todayKey) {
-            router.push("/session");
+            router.push("/home");
             return;
           }
-          router.push(`/session?date=${selectedKey}`);
+          router.push(`/home?date=${selectedKey}`);
         }}
         className={styles.calendarFab}
       />

@@ -12,7 +12,7 @@ import { useGate } from "@/components/gate/GateProvider";
 import styles from "./NoticeGate.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
-const NOTICE_PATHS = ["/", "/today"];
+const NOTICE_PATHS = ["/", "/home", "/list"];
 
 export default function NoticeGate() {
   const [notice, setNotice] = useState<NoticeItem | null>(null);

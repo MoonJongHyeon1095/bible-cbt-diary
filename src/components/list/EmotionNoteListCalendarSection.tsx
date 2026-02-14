@@ -2,21 +2,21 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
+import { useGate } from "@/components/gate/GateProvider";
+import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
 import SafeButton from "@/components/ui/SafeButton";
+import { buildListTourSteps } from "@/components/list/onboarding/listOnboarding";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
+import { LIST_TOUR_STORAGE_KEY } from "@/lib/storage/keys/onboarding";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
-import {
-  ChevronLeft,
-  ChevronRight,
-  CornerDownLeft,
-  Plus,
-  Search,
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, CornerDownLeft, Plus, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
-import styles from "./EmotionNoteCalendarSection.module.css";
+import styles from "./EmotionNoteListCalendarSection.module.css";
 import { fetchEmotionNoteListByRange } from "@/lib/api/emotion-notes/getEmotionNoteListByRange";
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queryKeys";
@@ -24,6 +24,10 @@ import { queryKeys } from "@/lib/queryKeys";
 type DayCell = {
   date: Date;
   inMonth: boolean;
+};
+type TourProgress = {
+  lastStep: number;
+  lastTotal: number;
 };
 
 const buildCalendar = (baseDate: Date): DayCell[] => {
@@ -48,15 +52,22 @@ const buildCalendar = (baseDate: Date): DayCell[] => {
 
 const formatDateKey = (date: Date) => formatKoreanDateKey(date);
 
-type EmotionNoteCalendarSectionProps = {
+type EmotionNoteListCalendarSectionProps = {
   access: AccessContext;
   initialSelectedDate?: Date | null;
 };
 
-export default function EmotionNoteCalendarSection({
+export default function EmotionNoteListCalendarSection({
   access,
   initialSelectedDate = null,
-}: EmotionNoteCalendarSectionProps) {
+}: EmotionNoteListCalendarSectionProps) {
+  const { blocker, canShowOnboarding } = useGate();
+  const router = useRouter();
+  const { checkUsage } = useAiUsageGuard({
+    enabled: false,
+    cache: true,
+    redirectTo: null,
+  });
   const initialMonth = initialSelectedDate ?? new Date();
   const [currentMonth, setCurrentMonth] = useState(() => initialMonth);
   const [selectedDate, setSelectedDate] = useState<Date | null>(
@@ -66,12 +77,6 @@ export default function EmotionNoteCalendarSection({
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddLoading, setIsAddLoading] = useState(false);
   const listHeaderRef = useRef<HTMLDivElement | null>(null);
-  const router = useRouter();
-  const { checkUsage } = useAiUsageGuard({
-    enabled: false,
-    cache: true,
-    redirectTo: null,
-  });
 
   const monthLabel = useMemo(
     () =>
@@ -134,6 +139,27 @@ export default function EmotionNoteCalendarSection({
 
   const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
   const isLoading = notesQuery.isPending || notesQuery.isFetching;
+  const tourSteps = useMemo(() => buildListTourSteps(notes.length), [notes.length]);
+  const {
+    isOpen: isTourOpen,
+    setIsOpen: setIsTourOpen,
+    currentStep,
+    setCurrentStep,
+    onFinish,
+    onClose,
+    onMaskClick,
+  } = useOnboardingTourControls({
+    onPersist: (stepIndex) => {
+      if (!safeLocalStorage.isAvailable()) return;
+      safeLocalStorage.setItem(
+        LIST_TOUR_STORAGE_KEY,
+        JSON.stringify({
+          lastStep: stepIndex,
+          lastTotal: tourSteps.length,
+        }),
+      );
+    },
+  });
 
   const countsByDate = useMemo(() => {
     const counts = new Map<string, number>();
@@ -213,6 +239,48 @@ export default function EmotionNoteCalendarSection({
   }, [normalizedQuery]);
 
   useEffect(() => {
+    if (blocker && isTourOpen) {
+      setIsTourOpen(false);
+    }
+  }, [blocker, isTourOpen, setIsTourOpen]);
+
+  useEffect(() => {
+    if (access.mode === "blocked") return;
+    if (isLoading) return;
+    if (!canShowOnboarding) return;
+    if (isTourOpen) return;
+    if (tourSteps.length === 0) return;
+    if (!safeLocalStorage.isAvailable()) return;
+    const stored = safeLocalStorage.getItem(LIST_TOUR_STORAGE_KEY);
+    let progress: TourProgress | null = null;
+    if (stored) {
+      try {
+        progress = JSON.parse(stored) as TourProgress;
+      } catch {
+        progress = null;
+      }
+    }
+    if (!progress) {
+      setCurrentStep(0);
+      setIsTourOpen(true);
+      return;
+    }
+    const maxStepIndex = tourSteps.length - 1;
+    if (progress.lastStep >= maxStepIndex) return;
+    const nextStep = Math.max(0, Math.min(progress.lastStep + 1, maxStepIndex));
+    setCurrentStep(nextStep);
+    setIsTourOpen(true);
+  }, [
+    access.mode,
+    isLoading,
+    canShowOnboarding,
+    isTourOpen,
+    tourSteps.length,
+    setCurrentStep,
+    setIsTourOpen,
+  ]);
+
+  useEffect(() => {
     if (access.mode === "blocked") {
       return;
     }
@@ -224,7 +292,7 @@ export default function EmotionNoteCalendarSection({
       const dateKey = selectedDate
         ? formatKoreanDateKey(selectedDate)
         : formatKoreanDateKey(note.created_at);
-      return `/detail?id=${note.id}&from=month&date=${dateKey}`;
+      return `/detail?id=${note.id}&from=list&date=${dateKey}`;
     },
     [selectedDate],
   );
@@ -236,9 +304,7 @@ export default function EmotionNoteCalendarSection({
     }
   };
   const todayKey = formatDateKey(new Date());
-  const selectedKey = selectedDate ? formatDateKey(selectedDate) : null;
-  const isPastDate =
-    selectedKey !== null && selectedKey < todayKey && !normalizedQuery;
+  const selectedKey = selectedDate ? formatDateKey(selectedDate) : todayKey;
   const getHeatClass = (count: number) => {
     if (count >= 5) {
       return styles.cellHeat4;
@@ -259,7 +325,7 @@ export default function EmotionNoteCalendarSection({
     <section className={styles.section}>
       <header className={styles.header}>
         <div>
-          <p className={styles.label}>월별 기록</p>
+          <p className={styles.label}>기록 목록</p>
           <h2 className={styles.title}>{monthLabel}</h2>
         </div>
         <div className={styles.controls}>
@@ -310,7 +376,7 @@ export default function EmotionNoteCalendarSection({
         ))}
       </div>
 
-      <div className={styles.grid}>
+      <div className={styles.grid} data-tour="list-calendar">
         {days.map((day) => {
           const key = formatDateKey(day.date);
           const count = countsByDate.get(key) ?? 0;
@@ -397,35 +463,43 @@ export default function EmotionNoteCalendarSection({
           getDetailHref={getDetailHref}
         />
       </div>
-      {isPastDate ? (
-        <FloatingActionButton
-          label="이 날의 기록 추가"
-          icon={<Plus size={24} />}
-          helperText="이 날의 기록 추가"
-          loadingRing={isAddLoading}
-          onClick={async () => {
-            if (isAddLoading) {
-              return;
-            }
-            setIsAddLoading(true);
-            await new Promise<void>((resolve) =>
-              requestAnimationFrame(() => resolve()),
-            );
-            const allowed = await checkUsage();
-            if (!allowed) {
-              setIsAddLoading(false);
-              return;
-            }
-            if (!selectedDate) {
-              router.push("/session");
-              return;
-            }
-            const dateKey = formatKoreanDateKey(selectedDate);
-            router.push(`/session?date=${dateKey}`);
-          }}
-          className={styles.calendarFab}
-        />
-      ) : null}
+      <FloatingActionButton
+        label="기록 추가"
+        icon={<Plus size={24} />}
+        helperText="기록 추가"
+        loadingRing={isAddLoading}
+        disabled={isAddLoading}
+        onClick={async () => {
+          if (isAddLoading) {
+            return;
+          }
+          setIsAddLoading(true);
+          await new Promise<void>((resolve) =>
+            requestAnimationFrame(() => resolve()),
+          );
+          const allowed = await checkUsage();
+          if (!allowed) {
+            setIsAddLoading(false);
+            return;
+          }
+          if (selectedKey === todayKey) {
+            router.push("/session");
+            return;
+          }
+          router.push(`/session?date=${selectedKey}`);
+        }}
+        className={styles.calendarFab}
+      />
+      <OnboardingTour
+        steps={tourSteps}
+        isOpen={isTourOpen}
+        setIsOpen={setIsTourOpen}
+        currentStep={currentStep}
+        setCurrentStep={setCurrentStep}
+        onFinish={onFinish}
+        onClose={onClose}
+        onMaskClick={onMaskClick}
+      />
     </section>
   );
 }

@@ -1,0 +1,117 @@
+.content {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.main {
+  flex: 1;
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.shell {
+  width: min(1080px, 100%);
+  max-width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.card {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  transform: translateY(clamp(-56px, -8vh, -28px));
+}
+
+.title {
+  margin: 0;
+  width: 100%;
+}
+
+.titleQuestion {
+  display: block;
+  width: 100%;
+  font-size: clamp(1.35rem, 5vw, 2.4rem);
+  line-height: 1.25;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
+    serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.startButton {
+  width: 98px;
+  height: 98px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(20, 28, 40, 0.42);
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  box-shadow: 0 0 0 1px rgba(128, 156, 196, 0.2),
+    0 10px 24px rgba(6, 10, 18, 0.45);
+}
+
+.startButtonLoading {
+  isolation: isolate;
+}
+
+.startButtonRing {
+  position: absolute;
+  inset: -6px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: homePlusSpin 1s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.startButton > span:not(.startButtonRing) {
+  position: relative;
+  z-index: 1;
+}
+
+.plusIcon {
+  font-size: 2.4rem;
+  line-height: 1;
+  font-weight: 500;
+}
+
+.plusText {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.dateHint {
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+@keyframes homePlusSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 900px) {
+  .main {
+    padding: 0 16px;
+  }
+}

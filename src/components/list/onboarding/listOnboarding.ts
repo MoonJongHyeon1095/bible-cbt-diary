@@ -1,14 +1,16 @@
-"use client";
-
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 
-export function buildTodayTourSteps(noteCount: number): OnboardingStep[] {
+export function buildListTourSteps(noteCount: number): OnboardingStep[] {
   const steps: OnboardingStep[] = [
     {
-      selector: "[data-tour='new-note']",
+      selector: "[data-tour='list-calendar']",
       side: "bottom",
-      content: "만나서 반가워요.\n오늘 하루를 기록해볼까요?",
-      completeOnTargetClick: true,
+      content: "달력에서 날짜를 선택해 기록을 확인할 수 있어요.",
+    },
+    {
+      selector: "[data-tour='notes-list']",
+      side: "top",
+      content: "선택한 날짜의 기록 목록은 여기서 확인해요.",
     },
   ];
 

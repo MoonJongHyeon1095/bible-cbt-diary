@@ -400,7 +400,7 @@ export default function EmotionNoteDetailPage({
                     if (deleted) {
                       setConfirmDelete(false);
                       pushToast("기록을 삭제했습니다.", "success");
-                      router.replace("/today");
+                      router.replace("/list");
                     }
                   }}
                   loading={isDeleting}

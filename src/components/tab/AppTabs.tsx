@@ -2,7 +2,7 @@
 
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { CalendarDays, Home, Sun, Waypoints, Search } from "lucide-react";
+import { CalendarDays, Home, Waypoints, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { MouseEvent } from "react";
@@ -13,9 +13,8 @@ export default function AppTabs() {
   const { openAuthModal } = useAuthModal();
   const { isBlocked } = useAccessContext();
   const tabs = [
-    { href: "/", label: "홈", icon: Home },
-    { href: "/today", label: "오늘", icon: Sun },
-    { href: "/month", label: "월별", icon: CalendarDays },
+    { href: "/home", label: "홈", icon: Home },
+    { href: "/list", label: "기록", icon: CalendarDays },
     { href: "/search", label: "검색", icon: Search },
     { href: "/flow", label: "Flow", icon: Waypoints },
   ];
@@ -34,7 +33,11 @@ export default function AppTabs() {
             key={tab.href}
             href={tab.href}
             className={styles.tabButton}
-            aria-current={pathname === tab.href ? "page" : undefined}
+            aria-current={
+              pathname === tab.href || (tab.href === "/home" && pathname === "/")
+                ? "page"
+                : undefined
+            }
             onClick={handleTabClick(tab.href)}
           >
             <tab.icon size={16} aria-hidden className={styles.tabIcon} />
@@ -50,7 +53,11 @@ export default function AppTabs() {
               key={tab.href}
               href={tab.href}
               className={styles.tabButton}
-              aria-current={pathname === tab.href ? "page" : undefined}
+              aria-current={
+                pathname === tab.href || (tab.href === "/home" && pathname === "/")
+                  ? "page"
+                  : undefined
+              }
               onClick={handleTabClick(tab.href)}
             >
               <Icon size={18} aria-hidden />

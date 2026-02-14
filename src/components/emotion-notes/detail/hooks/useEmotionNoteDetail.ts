@@ -179,7 +179,7 @@ export default function useEmotionNoteDetail(noteId?: number | null) {
   };
 
   const handleGoToList = useCallback(() => {
-    router.push("/today");
+    router.push("/list");
   }, [router]);
 
   const handleDeleteNote = async () => {

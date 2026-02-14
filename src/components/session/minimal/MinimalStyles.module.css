@@ -29,27 +29,28 @@
   z-index: 0;
   background-image: radial-gradient(
       900px 480px at 0% 30%,
-      rgba(63, 74, 90, 0.4),
+      rgba(78, 95, 122, 0.52),
       transparent 55%
     ),
     radial-gradient(
       700px 420px at 100% 0%,
-      rgba(68, 82, 101, 0.45),
+      rgba(98, 118, 148, 0.56),
       transparent 58%
     ),
     radial-gradient(
       800px 520px at 20% 100%,
-      rgba(50, 70, 86, 0.35),
+      rgba(62, 96, 112, 0.5),
       transparent 55%
     ),
     radial-gradient(
       600px 360px at 80% 60%,
-      rgba(48, 58, 76, 0.4),
+      rgba(86, 105, 136, 0.52),
       transparent 60%
     );
   background-repeat: no-repeat;
-  background-size: 160% 160%;
-  animation: minimalBgFloat 12s ease-in-out infinite;
+  background-size: 145% 145%;
+  opacity: 0.95;
+  animation: minimalBgFloat 9s ease-in-out infinite;
   pointer-events: none;
 }
 
@@ -1180,7 +1181,7 @@
     background-position: 0% 20%, 100% 0%, 20% 100%, 80% 60%;
   }
   50% {
-    background-position: 60% 10%, 40% 80%, 80% 60%, 20% 30%;
+    background-position: 80% 8%, 20% 90%, 92% 52%, 10% 20%;
   }
   100% {
     background-position: 0% 20%, 100% 0%, 20% 100%, 80% 60%;

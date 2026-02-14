@@ -53,7 +53,7 @@ export function useDeepSessionNavigationHandlers({
 
   const handleGoHome = useCallback(() => {
     clearCbtSessionStorage();
-    router.push("/today");
+    router.push("/home");
   }, [router]);
 
   return { handleBack, handleGoHome };

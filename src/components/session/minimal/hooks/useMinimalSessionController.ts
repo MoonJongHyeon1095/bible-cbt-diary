@@ -218,7 +218,7 @@ export function useMinimalSessionController() {
 
   const handleGoHome = useCallback(() => {
     clearCbtSessionStorage();
-    router.push("/today");
+    router.push("/home");
   }, [router]);
 
   const handleSubmitThought = useCallback(

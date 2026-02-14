@@ -119,7 +119,7 @@ export default function Providers({ children }: ProvidersProps) {
         // Android 하드웨어 뒤로가기 처리: 히스토리가 있으면 뒤로, 없으면 앱 종료.
         const backButtonListener = await CapApp.addListener("backButton", () => {
           const pathname = window.location.pathname;
-          if (pathname === "/" || pathname === "/today") {
+          if (pathname === "/" || pathname === "/home" || pathname === "/list") {
             CapApp.exitApp();
             return;
           }

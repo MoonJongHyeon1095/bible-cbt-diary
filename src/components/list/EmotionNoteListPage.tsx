@@ -1,6 +1,6 @@
 "use client";
 
-import EmotionNoteCalendarSection from "@/components/month/EmotionNoteCalendarSection";
+import EmotionNoteListCalendarSection from "@/components/list/EmotionNoteListCalendarSection";
 import AppHeader from "@/components/header/AppHeader";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
@@ -8,16 +8,16 @@ import { useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import styles from "@/app/page.module.css";
 
-export default function EmotionNoteCalendarPage() {
+export default function EmotionNoteListPage() {
   const { accessMode, accessToken, isLoading } = useAccessContext();
   const searchParams = useSearchParams();
   const dateParam = searchParams.get("date");
   const initialSelectedDate = useMemo(() => {
     if (!dateParam || !/^\d{4}-\d{2}-\d{2}$/.test(dateParam)) {
-      return null;
+      return new Date();
     }
     const parsed = new Date(`${dateParam}T00:00:00+09:00`);
-    return Number.isNaN(parsed.getTime()) ? null : parsed;
+    return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
   }, [dateParam]);
   const access = useMemo(
     () => ({ mode: accessMode, accessToken }),
@@ -33,7 +33,7 @@ export default function EmotionNoteCalendarPage() {
       <main className={styles.main}>
         <div className={styles.shell}>
           {isLoading || accessMode === "blocked" ? null : (
-            <EmotionNoteCalendarSection
+            <EmotionNoteListCalendarSection
               access={access}
               initialSelectedDate={initialSelectedDate}
             />

@@ -2,7 +2,6 @@ import CbtCarouselModal from "@/components/session/common/CbtCarouselModal";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { validateUserText } from "@/components/session/utils/validation";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import { ALL_EXAMPLES } from "@/lib/constants/examples";
 import { Sparkles } from "lucide-react";
@@ -27,8 +26,7 @@ export function CbtMinimalIncidentSection({
   const { pushToast } = useCbtToast();
   const description = (
     <>
-      힘들었던 경험이나 불편했던 상황을
-      {" "}
+      힘들었던 경험이나 불편했던 상황을{" "}
       <br className={styles.mobileLineBreak} />
       자유롭게 적어주세요.
     </>
@@ -97,18 +95,6 @@ export function CbtMinimalIncidentSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset} ref={headerRef}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt
-              name="EDi"
-              greeting={
-                <>
-                  반가워요.
-                  <br />
-                  당신의 이야기를 들려주세요.
-                </>
-              }
-            />
-          </div>
           <CbtStepHeaderSection title={title} description={description} />
         </div>
 

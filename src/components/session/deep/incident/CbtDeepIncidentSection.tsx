@@ -5,7 +5,6 @@ import { useCbtAutoResizeTextarea } from "@/components/session/hooks/useCbtAutoR
 import { CbtInlineNextButton } from "@/components/session/minimal/common/CbtInlineNextButton";
 import styles from "@/components/session/minimal/MinimalStyles.module.css";
 import { validateUserText } from "@/components/session/utils/validation";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { History } from "lucide-react";
@@ -145,18 +144,6 @@ export function CbtDeepIncidentSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset} ref={headerRef}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt
-              name="EDi"
-              greeting={
-                <>
-                  반가워요.
-                  <br />
-                  당신의 이야기를 들려주세요.
-                </>
-              }
-            />
-          </div>
           <CbtStepHeaderSection title={title} description={description} />
         </div>
 

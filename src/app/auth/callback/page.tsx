@@ -50,7 +50,7 @@ export default function AuthCallbackPage() {
       }
 
       if (!cancelled) {
-        router.replace("/today");
+        router.replace("/");
       }
     };
 

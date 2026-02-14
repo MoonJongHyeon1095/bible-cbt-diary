@@ -125,6 +125,7 @@
 }
 
 .calendarFab {
+  --fab-ring-color: rgba(255, 255, 255, 0.95);
   position: fixed;
   right: 24px;
   bottom: 25vh;

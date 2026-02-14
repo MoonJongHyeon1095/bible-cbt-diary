@@ -79,6 +79,63 @@
 }
 
 @media (max-width: 640px) {
+  .page {
+    background:
+      radial-gradient(
+        980px 560px at 12% 18%,
+        rgba(34, 44, 60, 0.74),
+        transparent 58%
+      ),
+      radial-gradient(
+        740px 480px at 88% 8%,
+        rgba(33, 49, 60, 0.76),
+        transparent 58%
+      ),
+      radial-gradient(
+        700px 420px at 22% 92%,
+        rgba(34, 54, 50, 0.62),
+        transparent 60%
+      ),
+      radial-gradient(
+        620px 360px at 78% 82%,
+        rgba(44, 58, 78, 0.56),
+        transparent 62%
+      ),
+      var(--bg);
+  }
+
+  .bgWaves {
+    background-image:
+      radial-gradient(
+        620px 340px at -4% 28%,
+        rgba(92, 112, 146, 0.58),
+        transparent 54%
+      ),
+      radial-gradient(
+        540px 310px at 104% -2%,
+        rgba(104, 124, 156, 0.6),
+        transparent 56%
+      ),
+      radial-gradient(
+        560px 350px at 18% 102%,
+        rgba(74, 106, 122, 0.56),
+        transparent 54%
+      ),
+      radial-gradient(
+        500px 290px at 82% 64%,
+        rgba(96, 116, 146, 0.58),
+        transparent 58%
+      ),
+      radial-gradient(
+        380px 240px at 48% 12%,
+        rgba(86, 104, 134, 0.42),
+        transparent 62%
+      );
+    background-size: 172% 172%;
+    opacity: 0.98;
+    animation-duration: 8s;
+  }
+
   .section {
     --section-bottom-space: clamp(30px, 18vh, 100px);
   }

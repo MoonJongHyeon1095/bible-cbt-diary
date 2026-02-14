@@ -1,5 +1,5 @@
-import EmotionNoteFlowPage from "@/components/flow/EmotionNoteFlowPage";
+import { redirect } from "next/navigation";
 
 export default function EmotionFlowRoutePage() {
-  return <EmotionNoteFlowPage />;
+  redirect("/flow/list");
 }

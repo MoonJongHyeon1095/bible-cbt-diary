@@ -74,7 +74,12 @@ export function GateProvider({ children }: { children: ReactNode }) {
     if (status.terms.blocking) return "terms";
     if (status.notice.open) return "notice";
     return null;
-  }, [status.update.blocking, status.update.failed, status.terms.blocking, status.notice.open]);
+  }, [
+    status.notice.open,
+    status.terms.blocking,
+    status.update.blocking,
+    status.update.failed,
+  ]);
 
   const canShowOnboarding = useMemo(() => {
     return (

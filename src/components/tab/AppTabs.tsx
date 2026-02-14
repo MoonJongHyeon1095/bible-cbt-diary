@@ -16,13 +16,19 @@ export default function AppTabs() {
     { href: "/home", label: "홈", icon: Home },
     { href: "/list", label: "기록", icon: CalendarDays },
     { href: "/search", label: "검색", icon: Search },
-    { href: "/flow", label: "Flow", icon: Waypoints },
+    { href: "/flow/list", label: "Flow", icon: Waypoints },
   ];
   const handleTabClick = (href: string) => (event: MouseEvent) => {
-    if (href !== "/flow") return;
+    if (href !== "/flow/list") return;
     if (!isBlocked) return;
     event.preventDefault();
     openAuthModal();
+  };
+
+  const isActiveTab = (href: string) => {
+    if (href === "/home" && pathname === "/") return true;
+    if (href === "/flow/list") return pathname.startsWith("/flow");
+    return pathname === href;
   };
 
   return (
@@ -33,11 +39,7 @@ export default function AppTabs() {
             key={tab.href}
             href={tab.href}
             className={styles.tabButton}
-            aria-current={
-              pathname === tab.href || (tab.href === "/home" && pathname === "/")
-                ? "page"
-                : undefined
-            }
+            aria-current={isActiveTab(tab.href) ? "page" : undefined}
             onClick={handleTabClick(tab.href)}
           >
             <tab.icon size={16} aria-hidden className={styles.tabIcon} />
@@ -53,11 +55,7 @@ export default function AppTabs() {
               key={tab.href}
               href={tab.href}
               className={styles.tabButton}
-              aria-current={
-                pathname === tab.href || (tab.href === "/home" && pathname === "/")
-                  ? "page"
-                  : undefined
-              }
+              aria-current={isActiveTab(tab.href) ? "page" : undefined}
               onClick={handleTabClick(tab.href)}
             >
               <Icon size={18} aria-hidden />

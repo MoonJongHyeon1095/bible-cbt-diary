@@ -9,7 +9,7 @@ import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
+import { goToFlowForNote } from "@/components/flow/domain/navigation/goToFlowForNote";
 import { queryKeys } from "@/lib/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";
 import { formatKoreanDateTime } from "@/lib/utils/time";

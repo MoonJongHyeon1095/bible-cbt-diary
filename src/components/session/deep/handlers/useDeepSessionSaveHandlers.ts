@@ -4,6 +4,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
 import { formatAutoTitle } from "@/components/session/utils/formatAutoTitle";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
+import { flowRoutes } from "@/components/flow/domain/navigation/flowRoutes";
 
 type AccessContext = {
   mode: "auth" | "guest" | "blocked";
@@ -124,7 +125,7 @@ export function useDeepSessionSaveHandlers({
           queryClient,
           router,
           nextPath: resolvedFlowId
-            ? `/flow?flowId=${resolvedFlowId}&noteId=${noteId}`
+            ? flowRoutes.byFlowAndNote(resolvedFlowId, noteId)
             : `/detail?id=${noteId}`,
           pushToast,
           includeFlowQuery: true,

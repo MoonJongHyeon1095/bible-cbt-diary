@@ -1,0 +1,376 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1150;
+  overflow: hidden;
+  --app-bottom-tab-offset: 0px;
+  background:
+    radial-gradient(
+      1400px 800px at 10% 20%,
+      rgba(27, 34, 46, 0.65),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 90% 10%,
+      rgba(26, 40, 48, 0.7),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 600px at 20% 90%,
+      rgba(30, 44, 38, 0.5),
+      transparent 60%
+    ),
+    var(--bg);
+  color: #f0f4fb;
+}
+
+.overlay::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background-image: radial-gradient(
+      900px 480px at 0% 30%,
+      rgba(78, 95, 122, 0.52),
+      transparent 55%
+    ),
+    radial-gradient(
+      700px 420px at 100% 0%,
+      rgba(98, 118, 148, 0.56),
+      transparent 58%
+    ),
+    radial-gradient(
+      800px 520px at 20% 100%,
+      rgba(62, 96, 112, 0.5),
+      transparent 55%
+    ),
+    radial-gradient(
+      600px 360px at 80% 60%,
+      rgba(86, 105, 136, 0.52),
+      transparent 60%
+    );
+  background-repeat: no-repeat;
+  background-size: 145% 145%;
+  opacity: 0.95;
+  animation: entranceBgFloat 9s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.introWrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  z-index: 7;
+  padding: 24px;
+  pointer-events: none;
+}
+
+.introTextGroup {
+  width: min(860px, 100%);
+  padding: 10px 6px;
+  text-align: center;
+  animation: introFadeUp 900ms ease forwards;
+}
+
+.introTitle {
+  margin: 0;
+  font-size: clamp(34px, 5.4vw, 58px);
+  line-height: 1.18;
+  letter-spacing: -0.015em;
+  color: #f3f7ff;
+  text-shadow: 0 14px 30px rgba(4, 9, 18, 0.58);
+}
+
+.introSub {
+  margin-top: 22px;
+  font-size: clamp(16px, 2.2vw, 23px);
+  line-height: 1.62;
+  color: #c7d3e8;
+  text-shadow: 0 8px 18px rgba(4, 9, 18, 0.45);
+  white-space: pre-line;
+}
+
+.shakyChar {
+  display: inline-block;
+  animation: drift 1.8s ease-in-out infinite;
+  animation-delay: calc(var(--char-i, 0) * 32ms);
+}
+
+.sceneWrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-rows: 1fr auto;
+}
+
+.flowCanvasFrame {
+  position: absolute;
+  inset: 0;
+}
+
+.flowCanvasInner {
+  width: 100%;
+  height: 100%;
+}
+
+.canvasArea {
+  position: relative;
+  min-height: 0;
+}
+
+.narration {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 30vh;
+  z-index: 8;
+  padding: 0 20px;
+  pointer-events: none;
+}
+
+.narrationCard {
+  margin: 0 auto;
+  width: min(860px, 100%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(8, 11, 16, 0.86);
+  backdrop-filter: blur(4px);
+  padding: 14px 18px;
+}
+
+.narrationText {
+  margin: 0;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
+    serif;
+  font-size: clamp(18px, 2.2vw, 24px);
+  font-weight: 400;
+  line-height: 1.72;
+  text-align: center;
+  color: #e0e6f0;
+  white-space: pre-line;
+}
+
+.deepFab {
+  background: #121417;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.35);
+  --fab-right: 26px;
+  --fab-bottom: calc(132px + env(safe-area-inset-bottom));
+  --fab-bottom-mobile: calc(114px + env(safe-area-inset-bottom) + 8px);
+  width: 74px;
+  height: 74px;
+  animation: deepRing 1.1s ease-out infinite;
+}
+
+.deepHint {
+  position: fixed;
+  right: calc(26px + 74px + 12px);
+  bottom: calc(146px + env(safe-area-inset-bottom));
+  z-index: 31;
+  font-size: 13px;
+  color: #ced8ea;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(20, 30, 46, 0.76);
+  border: 1px solid rgba(157, 186, 232, 0.32);
+  animation: deepPulse 1.1s ease-in-out infinite;
+}
+
+.scene2Wrap {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 42px;
+  z-index: 10;
+  padding: 24px;
+  transform: translateY(-26px);
+}
+
+.scene2Content {
+  width: min(760px, 100%);
+  padding: 0 8px;
+}
+
+.scene2Body {
+  margin: 0;
+  font-family: var(--font-noto-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
+  font-size: clamp(17px, 1.7vw, 21px);
+  font-weight: 400;
+  line-height: 1.68;
+  text-align: center;
+  color: #e2e9f6;
+  text-wrap: pretty;
+  display: grid;
+  gap: 6px;
+}
+
+.scene2Line {
+  margin: 0;
+  opacity: 0;
+  transform: translateY(7px);
+  filter: blur(1.4px);
+  animation: scene2SpeakIn 0.46s ease forwards;
+  animation-delay: calc(var(--line-i, 0) * 240ms + 120ms);
+}
+
+.scene2LineAside {
+  color: rgba(226, 233, 246, 0.78);
+  font-size: 0.92em;
+  letter-spacing: 0.01em;
+}
+
+.scene2Actions {
+  width: min(760px, 100%);
+  display: flex;
+  gap: 12px;
+  flex-wrap: nowrap;
+  justify-content: center;
+}
+
+.scene2Button {
+  flex: 1 1 0;
+  min-height: 52px;
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease,
+    background 0.16s ease;
+}
+
+.scene2Button:hover {
+  transform: translateY(-1px);
+}
+
+.scene2ButtonPrimary {
+  border: 1px solid rgba(214, 230, 255, 0.45);
+  color: #f7fbff;
+  background: linear-gradient(160deg, #314d78 0%, #223958 52%, #1a2b44 100%);
+  box-shadow:
+    0 10px 22px rgba(8, 14, 24, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.scene2ButtonPrimary:hover {
+  border-color: rgba(234, 244, 255, 0.62);
+}
+
+.scene2ButtonSecondary {
+  border: 1px solid rgba(224, 236, 255, 0.48);
+  color: #f4f8ff;
+  background: linear-gradient(160deg, #2d3f5d 0%, #24354f 100%);
+  box-shadow:
+    0 10px 20px rgba(7, 12, 22, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.scene2ButtonSecondary:hover {
+  border-color: rgba(234, 244, 255, 0.64);
+  background: linear-gradient(160deg, #334a6d 0%, #2a3d5c 100%);
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    filter: blur(0px);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translateX(calc((var(--char-i, 0) - 18) * 0.02px))
+      translateY(-0.6px) rotate(0.5deg);
+    filter: blur(0.2px);
+    opacity: 1;
+  }
+}
+
+@keyframes deepRing {
+  0% {
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.22),
+      0 0 0 0 rgba(126, 163, 220, 0.42);
+  }
+  100% {
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.22),
+      0 0 0 18px rgba(126, 163, 220, 0);
+  }
+}
+
+@keyframes deepPulse {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-1px);
+  }
+}
+
+@keyframes entranceBgFloat {
+  0% {
+    background-position: 0% 20%, 100% 0%, 20% 100%, 80% 60%;
+  }
+  50% {
+    background-position: 80% 8%, 20% 90%, 92% 52%, 10% 20%;
+  }
+  100% {
+    background-position: 0% 20%, 100% 0%, 20% 100%, 80% 60%;
+  }
+}
+
+@keyframes introFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes scene2SpeakIn {
+  0% {
+    opacity: 0;
+    transform: translateY(7px);
+    filter: blur(1.4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@media (max-width: 780px) {
+  .narration {
+    bottom: 26vh;
+  }
+
+  .deepFab {
+    --fab-right: 16px;
+    width: 64px;
+    height: 64px;
+  }
+
+  .deepHint {
+    right: calc(16px + 64px + 10px);
+    bottom: calc(126px + env(safe-area-inset-bottom) + 8px);
+  }
+
+  .scene2Actions {
+    flex-direction: column;
+    width: min(520px, 100%);
+  }
+}

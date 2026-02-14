@@ -12,7 +12,7 @@ import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { goToFlowForNote } from "@/lib/flow/goToFlowForNote";
+import { goToFlowForNote } from "@/components/flow/domain/navigation/goToFlowForNote";
 import EmotionNoteCardOverlay from "./EmotionNoteCardOverlay";
 import { queryKeys } from "@/lib/queryKeys";
 import { useQueryClient } from "@tanstack/react-query";

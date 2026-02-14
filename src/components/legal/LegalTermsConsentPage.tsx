@@ -86,7 +86,7 @@ export default function LegalTermsConsentPage() {
     safeLocalStorage.setItem(TERMS_STORAGE_KEY, JSON.stringify(payload));
     const secure = window.location.protocol === "https:" ? "; secure" : "";
     document.cookie = `${TERMS_COOKIE_KEY}=v${TERMS_VERSION}; path=/; max-age=31536000; samesite=lax${secure}`;
-    router.replace("/");
+    router.replace("/entrance");
   };
 
   return (

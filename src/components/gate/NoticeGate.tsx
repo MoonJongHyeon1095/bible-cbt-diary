@@ -36,7 +36,11 @@ export default function NoticeGate() {
         return;
       }
 
-      if (status.update.blocking || status.update.failed || status.terms.blocking) {
+      if (
+        status.update.blocking ||
+        status.update.failed ||
+        status.terms.blocking
+      ) {
         applyNoticeState(null, true);
         return;
       }

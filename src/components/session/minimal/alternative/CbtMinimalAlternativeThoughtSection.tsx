@@ -1,13 +1,12 @@
+import AiFallbackNotice from "@/components/common/AiFallbackNotice";
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtAlternativeThoughts } from "@/components/session/hooks/useCbtAlternativeThoughts";
-import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import SafeButton from "@/components/ui/SafeButton";
 import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
 } from "@/lib/types/sessionTypes";
-import SafeButton from "@/components/ui/SafeButton";
 import { useEffect, useMemo, useState } from "react";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
 import styles from "../MinimalStyles.module.css";
@@ -26,12 +25,8 @@ const TITLE = "힘이 되는 새로운 생각을 골라 볼까요?";
 const DESCRIPTION = (
   <div>
     <p>
-      <strong>속삭이는 목소리를 바꿀 수 있다면?</strong>
-    </p>
-    <p>
-      조금만 들여다 보아도 목소리는 잦아듭니다.
-      <br />
-      그리고 어쩌면 우리는 이곳에 더 나은 목소리를 새길 수 있을지도 모릅니다.
+      생각은 우리를 어디론가 데려다 놓지만...
+      <br />그 생각에 전부 동의할 필요는 없잖아요?
     </p>
   </div>
 );
@@ -78,7 +73,6 @@ export function CbtMinimalAlternativeThoughtSection({
   if (thoughtsLoading) {
     return (
       <CbtLoadingState
-        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
         message="새로운 목소리를 찾아보고 있어요."
@@ -100,9 +94,6 @@ export function CbtMinimalAlternativeThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt name="EDi" greeting="" />
-          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
         {isFallback && (
@@ -126,11 +117,11 @@ export function CbtMinimalAlternativeThoughtSection({
                 }`}
               >
                 <div className={styles.inlineCard}>
-                <CbtMinimalAlternativeThoughtBodySection
-                  thought={thought.thought ?? ""}
-                  technique={thought.technique}
-                  fallback="대안사고를 불러오는 중입니다."
-                />
+                  <CbtMinimalAlternativeThoughtBodySection
+                    thought={thought.thought ?? ""}
+                    technique={thought.technique}
+                    fallback="대안사고를 불러오는 중입니다."
+                  />
                 </div>
               </SafeButton>
             );

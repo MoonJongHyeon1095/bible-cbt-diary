@@ -81,7 +81,12 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
         onClick={() => setOpen(true)}
         aria-label="메뉴 열기"
       >
-        <Menu size={20} />
+        <Menu
+          size={22}
+          strokeWidth={2.2}
+          absoluteStrokeWidth
+          className={styles.menuIcon}
+        />
       </SafeButton>
 
       <Drawer

@@ -5,7 +5,6 @@ import styles from "@/components/session/minimal/MinimalStyles.module.css";
 import { CbtMinimalAlternativeThoughtBodySection } from "@/components/session/minimal/alternative/CbtMinimalAlternativeThoughtBodySection";
 import { CbtMinimalAlternativeThoughtErrorState } from "@/components/session/minimal/alternative/CbtMinimalAlternativeThoughtErrorState";
 import AiFallbackNotice from "@/components/common/AiFallbackNotice";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
@@ -74,7 +73,6 @@ export function CbtDeepAlternativeThoughtSection({
   if (thoughtsLoading) {
     return (
       <CbtLoadingState
-        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
         message="새로운 목소리를 찾아보고 있어요."
@@ -96,9 +94,6 @@ export function CbtDeepAlternativeThoughtSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt name="EDi" greeting="" />
-          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
         {isFallback && (

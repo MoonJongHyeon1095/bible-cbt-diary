@@ -4,7 +4,6 @@ import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDeepDistortionCards } from "@/components/session/deep/hooks/useCbtDeepDistortionCards";
 import type { DistortionCard } from "@/components/session/types/distortion";
 import { CbtDistortionCard } from "@/components/session/minimal/distortion/CbtDistortionCard";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
@@ -67,7 +66,6 @@ export function CbtDeepDistortionSection({
   if (!internalContext) {
     return (
       <CbtLoadingState
-        prompt={<CharacterPrompt name="EDi" greeting="" />}
         title={TITLE}
         description={DESCRIPTION}
         message="심화 맥락을 준비하고 있어요."
@@ -80,9 +78,6 @@ export function CbtDeepDistortionSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt name="EDi" greeting="" />
-          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
 

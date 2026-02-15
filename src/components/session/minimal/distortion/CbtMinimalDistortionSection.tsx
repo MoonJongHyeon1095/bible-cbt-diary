@@ -3,7 +3,6 @@ import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderS
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDistortionCards } from "@/components/session/hooks/useCbtDistortionCards";
 import type { DistortionCard } from "@/components/session/types/distortion";
-import CharacterPrompt from "@/components/ui/CharacterPrompt";
 import SafeButton from "@/components/ui/SafeButton";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import { useMemo, useState } from "react";
@@ -16,8 +15,19 @@ type CbtMinimalDistortionSectionProps = {
   onSelect: (thought: string, error: SelectedCognitiveError) => void;
 };
 
-const TITLE = "왜곡된 생각의 조각을 살펴볼게요.";
-const DESCRIPTION = "카드 하나씩 확인하고, 맞는 흐름으로 바로 진행하세요.";
+const TITLE = (
+  <>
+    혹시 이런 생각이 <br className={styles.mobileOnlyBreak} />
+    숨어있지 않았을까요?
+  </>
+);
+const DESCRIPTION = (
+  <>
+    생각은 가끔 우리를 어디론가 데려가버립니다.
+    <br />
+    우리 뜻과 상관없이 떠오르는 생각들이 있죠.
+  </>
+);
 
 export function CbtMinimalDistortionSection({
   userInput,
@@ -65,41 +75,40 @@ export function CbtMinimalDistortionSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <div className={styles.headerPrompt}>
-            <CharacterPrompt name="EDi" greeting="" />
-          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
 
-        {!hasCards ? (
-          <CbtLoadingState message="첫 distortion 카드를 준비하고 있어요." />
-        ) : (
-          <div className={styles.cardList} data-tour="minimal-distortion-list">
-            {cards.map((card) => {
-              const hintOpen = openHintCardId === card.cardId;
-              const currentCard = cardById.get(card.cardId) ?? card;
-              return (
-                <CbtDistortionCard
-                  key={card.cardId}
-                  card={currentCard}
-                  hintOpen={hintOpen}
-                  hintText={hintOpen ? hintDraft : ""}
-                  onOpenHint={() => {
-                    setOpenHintCardId(card.cardId);
-                    setHintDraft("");
-                  }}
-                  onChangeHint={setHintDraft}
-                  onCancelHint={() => {
-                    setOpenHintCardId(null);
-                    setHintDraft("");
-                  }}
-                  onSubmitHint={() => void submitHint(card.cardId)}
-                  onSelect={() => handleSelect(currentCard)}
-                />
-              );
-            })}
-          </div>
-        )}
+        <div data-tour="minimal-distortion-list">
+          {!hasCards ? (
+            <CbtLoadingState message="첫 distortion 카드를 준비하고 있어요." />
+          ) : (
+            <div className={styles.cardList}>
+              {cards.map((card) => {
+                const hintOpen = openHintCardId === card.cardId;
+                const currentCard = cardById.get(card.cardId) ?? card;
+                return (
+                  <CbtDistortionCard
+                    key={card.cardId}
+                    card={currentCard}
+                    hintOpen={hintOpen}
+                    hintText={hintOpen ? hintDraft : ""}
+                    onOpenHint={() => {
+                      setOpenHintCardId(card.cardId);
+                      setHintDraft("");
+                    }}
+                    onChangeHint={setHintDraft}
+                    onCancelHint={() => {
+                      setOpenHintCardId(null);
+                      setHintDraft("");
+                    }}
+                    onSubmitHint={() => void submitHint(card.cardId)}
+                    onSelect={() => handleSelect(currentCard)}
+                  />
+                );
+              })}
+            </div>
+          )}
+        </div>
 
         {canLoadMore && (
           <div className={styles.listFooter}>

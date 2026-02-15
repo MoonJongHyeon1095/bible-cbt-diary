@@ -14,18 +14,7 @@ export function CbtSessionMoodToggle({
   onChange,
 }: CbtSessionMoodToggleProps) {
   return (
-    <div className={styles.moodToggle}>
-      <SafeButton
-        type="button"
-        variant="unstyled"
-        className={`${styles.moodButton} ${
-          value === "positive" ? styles.moodButtonActive : ""
-        }`}
-        onClick={() => onChange("positive")}
-        aria-label="긍정 감정 보기"
-      >
-        <Smile size={28} />
-      </SafeButton>
+    <div className={styles.moodToggle} data-tour="session-mood-toggle">
       <SafeButton
         type="button"
         variant="unstyled"
@@ -36,6 +25,17 @@ export function CbtSessionMoodToggle({
         aria-label="부정 감정 보기"
       >
         <Frown size={28} />
+      </SafeButton>
+      <SafeButton
+        type="button"
+        variant="unstyled"
+        className={`${styles.moodButton} ${
+          value === "positive" ? styles.moodButtonActive : ""
+        }`}
+        onClick={() => onChange("positive")}
+        aria-label="긍정 감정 보기"
+      >
+        <Smile size={28} />
       </SafeButton>
     </div>
   );

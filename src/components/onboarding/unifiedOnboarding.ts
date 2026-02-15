@@ -1,5 +1,5 @@
-import type { MinimalStep } from "@/components/session/hooks/useCbtMinimalSessionFlow";
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
+import type { MinimalStep } from "@/components/session/hooks/useCbtMinimalSessionFlow";
 import { UNIFIED_TOUR_STORAGE_KEY as UNIFIED_ONBOARDING_KEY } from "@/lib/storage/keys/onboarding";
 
 export const UNIFIED_TOUR_STORAGE_KEY = UNIFIED_ONBOARDING_KEY;
@@ -14,8 +14,22 @@ export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
 
 export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
   {
-    mood: [],
-    emotion: [],
+    mood: [
+      {
+        selector:
+          "[data-tour='home-mood-toggle'], [data-tour='session-mood-toggle']",
+        side: "bottom",
+        content: "표정을 먼저 고르면 다음 단계에서 감정을 선택할 수 있어요.",
+      },
+    ],
+    emotion: [
+      {
+        selector: "[data-tour='home-emotion-grid'], [data-tour='emotion-grid']",
+        side: "bottom",
+        content: "지금의 감정에 가장 가까운 것을 골라주세요.",
+        completeOnTargetClick: true,
+      },
+    ],
     incident: [
       {
         selector: "[data-tour='minimal-incident-input']",
@@ -37,7 +51,7 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
       {
         selector: "[data-tour='minimal-distortion-list']",
         side: "bottom",
-        content: "왜곡 카드에서 배후의 믿음과 분석을 함께 확인해요.",
+        content: "감정 뒤에 혹시 있었을지 모르는 생각이에요.",
       },
       {
         selector: "[data-tour='minimal-distortion-more']",
@@ -53,7 +67,7 @@ export const MINIMAL_TOUR_TOTAL = MINIMAL_TOUR_STEP_ORDER.reduce(
   0,
 );
 
-export const UNIFIED_TOUR_BASE_TOTAL = 1 + MINIMAL_TOUR_TOTAL;
+export const UNIFIED_TOUR_BASE_TOTAL = MINIMAL_TOUR_TOTAL;
 
 export const getMinimalTourOffset = (step: MinimalStep) => {
   let offset = 0;

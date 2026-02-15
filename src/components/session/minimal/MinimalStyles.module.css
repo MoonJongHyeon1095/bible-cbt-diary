@@ -606,6 +606,10 @@
 .floatingMiniIcon {
   width: 20px;
   height: 20px;
+  flex: 0 0 auto;
+  display: block;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
 
 .floatingNav {
@@ -1372,6 +1376,10 @@
   .cardActionRow {
     gap: 8px;
   }
+
+  .mobileOnlyBreak {
+    display: initial;
+  }
 }
 
 .textBlock {
@@ -1404,6 +1412,10 @@
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: rgba(160, 176, 202, 0.75);
+}
+
+.mobileOnlyBreak {
+  display: none;
 }
 
 .quoteText {

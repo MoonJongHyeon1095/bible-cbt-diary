@@ -17,20 +17,8 @@ export function HomeMoodToggle({
   disabled = false,
 }: HomeMoodToggleProps) {
   return (
-    <div className={styles.moodBlock} data-tour="home-mood-toggle">
-      <div className={styles.moodToggle}>
-        <SafeButton
-          type="button"
-          variant="unstyled"
-          className={`${styles.moodButton} ${
-            value === "positive" ? styles.moodButtonActive : ""
-          }`}
-          onClick={() => onChange("positive")}
-          disabled={disabled}
-          aria-label="긍정 감정 보기"
-        >
-          <Smile size={28} />
-        </SafeButton>
+    <div className={styles.moodBlock}>
+      <div className={styles.moodToggle} data-tour="home-mood-toggle">
         <SafeButton
           type="button"
           variant="unstyled"
@@ -42,6 +30,18 @@ export function HomeMoodToggle({
           aria-label="부정 감정 보기"
         >
           <Frown size={28} />
+        </SafeButton>
+        <SafeButton
+          type="button"
+          variant="unstyled"
+          className={`${styles.moodButton} ${
+            value === "positive" ? styles.moodButtonActive : ""
+          }`}
+          onClick={() => onChange("positive")}
+          disabled={disabled}
+          aria-label="긍정 감정 보기"
+        >
+          <Smile size={28} />
         </SafeButton>
       </div>
     </div>

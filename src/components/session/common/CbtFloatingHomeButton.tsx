@@ -22,7 +22,11 @@ export function CbtFloatingHomeButton({
       disabled={disabled}
       className={styles.floatingMiniButton}
     >
-      <House className={styles.floatingMiniIcon} />
+      <House
+        className={styles.floatingMiniIcon}
+        strokeWidth={2.2}
+        absoluteStrokeWidth
+      />
     </SafeButton>
   );
 }

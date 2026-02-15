@@ -1,9 +1,10 @@
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
+import { MINIMAL_TOUR_STEPS_BY_FLOW } from "@/components/onboarding/unifiedOnboarding";
 
-export const HOME_ONBOARDING_STEPS: OnboardingStep[] = [
-  {
-    selector: "[data-tour='home-mood-toggle']",
-    side: "bottom",
-    content: "표정을 먼저 고르면 다음 단계에서 감정을 선택할 수 있어요.",
-  },
-];
+export const HOME_ONBOARDING_STEPS_BY_STEP: Record<
+  "mood" | "emotion",
+  OnboardingStep[]
+> = {
+  mood: MINIMAL_TOUR_STEPS_BY_FLOW.mood,
+  emotion: MINIMAL_TOUR_STEPS_BY_FLOW.emotion,
+};

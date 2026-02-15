@@ -105,7 +105,7 @@ export function useMinimalSessionController() {
     [flow.step],
   );
   const tourGlobalOffset = useMemo(
-    () => 1 + getMinimalTourOffset(flow.step),
+    () => getMinimalTourOffset(flow.step),
     [flow.step],
   );
   const tourProgress = useMemo(

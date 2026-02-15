@@ -22,7 +22,11 @@ export function CbtFloatingBackButton({
       disabled={disabled}
       className={styles.floatingMiniButton}
     >
-      <Undo2 className={styles.floatingMiniIcon} />
+      <Undo2
+        className={styles.floatingMiniIcon}
+        strokeWidth={2.2}
+        absoluteStrokeWidth
+      />
     </SafeButton>
   );
 }

@@ -83,31 +83,17 @@ select {
   box-sizing: border-box !important;
 }
 
+.onboarding-popover.onboarding-popover--has-skip {
+  padding-top: 40px !important;
+}
+
+.onboarding-popover.onboarding-popover--no-skip {
+  padding-top: 20px !important;
+}
+
 .onboarding-popover .driver-popover-description {
   color: #e6e7ea !important;
   white-space: pre-line;
-}
-
-.onboarding-popover .onboarding-popover__badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0;
-  margin-bottom: 12px;
-  border-radius: 0;
-  background: transparent;
-  border: none;
-  color: #c8b59c;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  line-height: 1;
-}
-
-.onboarding-popover .onboarding-popover__badge-icon {
-  width: 16px;
-  height: 16px;
-  color: #c8b59c;
-  flex: 0 0 auto;
 }
 
 .onboarding-popover .driver-popover-progress-text {

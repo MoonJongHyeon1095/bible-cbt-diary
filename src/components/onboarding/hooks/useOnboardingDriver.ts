@@ -31,7 +31,7 @@ export function useOnboardingDriver({
   onFinish,
 }: UseOnboardingDriverParams) {
   const driverRef = useRef<Driver | null>(null);
-  const progressRef = useRef<OnboardingProgress | null>(null);
+  const progressRef = useRef<OnboardingProgress | null>(progress ?? null);
   const targetClickCleanupRef = useRef<(() => void) | null>(null);
 
   const cleanupDriver = useCallback(() => {
@@ -137,6 +137,8 @@ export function useOnboardingDriver({
 
           const isFirstGlobalStep =
             activeProgress && activeProgress.offset + activeIndex === 0;
+          popover.wrapper.classList.add("onboarding-popover--has-skip");
+          popover.wrapper.classList.remove("onboarding-popover--no-skip");
           if (isFirstGlobalStep) {
             if (popover.nextButton) {
               popover.nextButton.style.display = "";
@@ -146,18 +148,6 @@ export function useOnboardingDriver({
             if (popover.previousButton) {
               popover.previousButton.style.display = "none";
             }
-            const skipButton = popover.wrapper.querySelector<HTMLButtonElement>(
-              ".onboarding-popover__skip",
-            );
-            if (skipButton) {
-              skipButton.style.display = "none";
-            }
-            const progressNode = popover.wrapper.querySelector(
-              ".driver-popover-progress-text",
-            );
-            if (progressNode) {
-              progressNode.textContent = "";
-            }
           } else {
             if (popover.nextButton) {
               popover.nextButton.style.display = "";
@@ -165,12 +155,6 @@ export function useOnboardingDriver({
             if (popover.previousButton) {
               popover.previousButton.style.display =
                 activeIndex > 0 ? "" : "none";
-            }
-            const skipButton = popover.wrapper.querySelector<HTMLButtonElement>(
-              ".onboarding-popover__skip",
-            );
-            if (skipButton) {
-              skipButton.style.display = "";
             }
           }
 
@@ -194,66 +178,6 @@ export function useOnboardingDriver({
             };
           }
 
-          const existingBadge = popover.wrapper.querySelector(
-            ".onboarding-popover__badge",
-          );
-          if (!existingBadge) {
-            const badge = document.createElement("div");
-            badge.className = "onboarding-popover__badge";
-
-            const label = document.createElement("span");
-            label.className = "onboarding-popover__badge-text";
-            label.textContent = "EDi";
-            badge.appendChild(label);
-
-            const icon = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "svg",
-            );
-            icon.setAttribute("viewBox", "0 0 24 24");
-            icon.setAttribute("fill", "none");
-            icon.setAttribute("stroke", "currentColor");
-            icon.setAttribute("stroke-width", "2");
-            icon.setAttribute("stroke-linecap", "round");
-            icon.setAttribute("stroke-linejoin", "round");
-            icon.setAttribute("aria-hidden", "true");
-            icon.classList.add("onboarding-popover__badge-icon");
-
-            const pathMain = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "path",
-            );
-            pathMain.setAttribute(
-              "d",
-              "M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719",
-            );
-
-            const dot1 = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "path",
-            );
-            dot1.setAttribute("d", "M8 12h.01");
-
-            const dot2 = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "path",
-            );
-            dot2.setAttribute("d", "M12 12h.01");
-
-            const dot3 = document.createElementNS(
-              "http://www.w3.org/2000/svg",
-              "path",
-            );
-            dot3.setAttribute("d", "M16 12h.01");
-
-            icon.appendChild(pathMain);
-            icon.appendChild(dot1);
-            icon.appendChild(dot2);
-            icon.appendChild(dot3);
-            badge.appendChild(icon);
-
-            popover.wrapper.insertBefore(badge, popover.description);
-          }
         },
         onHighlightStarted: () => {
           const index = driverRef.current?.getActiveIndex();

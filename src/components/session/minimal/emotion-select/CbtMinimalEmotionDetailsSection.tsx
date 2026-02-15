@@ -1,11 +1,9 @@
-import { EMOTIONS } from "@/lib/constants/emotions";
+import type { EmotionOption } from "@/lib/constants/emotions";
 import { CbtMinimalFloatingNextButton } from "../common/CbtMinimalFloatingNextButton";
 import styles from "../MinimalStyles.module.css";
 
-type EmotionItem = (typeof EMOTIONS)[number];
-
 interface CbtMinimalEmotionDetailsSectionProps {
-  emotion?: EmotionItem;
+  emotion?: EmotionOption;
   isVisible: boolean;
   onNext: () => void;
 }
@@ -44,17 +42,19 @@ export function CbtMinimalEmotionDetailsSection({
             ))}
           </div>
 
-          <div className={styles.detailList}>
-            <p className={styles.detailTitle} style={{ fontSize: "1rem" }}>
-              주의할 점
-            </p>
-            {emotion.caution.map((item, idx) => (
-              <div key={idx} className={styles.detailListItem}>
-                <span className={styles.detailBullet}>•</span>
-                <span>{item}</span>
-              </div>
-            ))}
-          </div>
+          {emotion.caution.length > 0 && (
+            <div className={styles.detailList}>
+              <p className={styles.detailTitle} style={{ fontSize: "1rem" }}>
+                주의할 점
+              </p>
+              {emotion.caution.map((item, idx) => (
+                <div key={idx} className={styles.detailListItem}>
+                  <span className={styles.detailBullet}>•</span>
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           <CbtMinimalFloatingNextButton
             onClick={onNext}

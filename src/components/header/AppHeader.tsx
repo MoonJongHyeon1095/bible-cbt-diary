@@ -19,9 +19,14 @@ type SessionUser = {
 
 const DisclaimerBanner = dynamic(() => import("./DisclaimerBanner"), {
   ssr: false,
+  loading: () => <div className={styles.disclaimerPlaceholder} aria-hidden />,
 });
 
-export default function AppHeader() {
+type AppHeaderProps = {
+  showDisclaimer?: boolean;
+};
+
+export default function AppHeader({ showDisclaimer = true }: AppHeaderProps) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const { openAuthModal } = useAuthModal();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
@@ -93,13 +98,15 @@ export default function AppHeader() {
           )}
         </div>
       </header>
-      <div className={styles.disclaimerWrap}>
-        <DisclaimerBanner
-          detailsClassName={styles.disclaimerDetails}
-          titleClassName={styles.disclaimerTitle}
-          textClassName={styles.disclaimerText}
-        />
-      </div>
+      {showDisclaimer ? (
+        <div className={styles.disclaimerWrap}>
+          <DisclaimerBanner
+            detailsClassName={styles.disclaimerDetails}
+            titleClassName={styles.disclaimerTitle}
+            textClassName={styles.disclaimerText}
+          />
+        </div>
+      ) : null}
 
     </>
   );

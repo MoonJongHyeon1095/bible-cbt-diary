@@ -78,6 +78,16 @@
   resize: vertical;
 }
 
+.readonlyValue {
+  border: 1px solid var(--border);
+  background: var(--surface-muted);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .triggerTextarea {
   resize: none;
   overflow: hidden;

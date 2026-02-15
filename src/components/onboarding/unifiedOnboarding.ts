@@ -5,14 +5,17 @@ import { UNIFIED_TOUR_STORAGE_KEY as UNIFIED_ONBOARDING_KEY } from "@/lib/storag
 export const UNIFIED_TOUR_STORAGE_KEY = UNIFIED_ONBOARDING_KEY;
 
 export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
+  "mood",
+  "emotion",
   "incident",
-  "thought",
-  "errors",
+  "distortion",
   "alternative",
 ];
 
 export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
   {
+    mood: [],
+    emotion: [],
     incident: [
       {
         selector: "[data-tour='minimal-incident-input']",
@@ -30,19 +33,18 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
         content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
       },
     ],
-    thought: [
+    distortion: [
       {
-        selector: "[data-tour='minimal-thought-carousel']",
+        selector: "[data-tour='minimal-distortion-list']",
         side: "bottom",
-        content: "감정을 불러일으킨 생각을 찾아볼까요?",
+        content: "왜곡 카드에서 배후의 믿음과 분석을 함께 확인해요.",
       },
       {
-        selector: "[data-tour='minimal-thought-next']",
+        selector: "[data-tour='minimal-distortion-more']",
         side: "bottom",
-        content: "지금 고른 생각을 같이 탐구해봐요.",
+        content: "원하면 다른 distortion 카드도 더 볼 수 있어요.",
       },
     ],
-    errors: [],
     alternative: [],
   };
 

@@ -5,8 +5,9 @@ import { CbtFloatingBackButton } from "@/components/session/common/CbtFloatingBa
 import { CbtFloatingHomeButton } from "@/components/session/common/CbtFloatingHomeButton";
 import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
 import { CbtMinimalAlternativeThoughtSection } from "./minimal/alternative/CbtMinimalAlternativeThoughtSection";
-import { CbtMinimalAutoThoughtSection } from "./minimal/auto-thought/CbtMinimalAutoThoughtSection";
-import { CbtMinimalCognitiveErrorSection } from "./minimal/cognitive-error/CbtMinimalCognitiveErrorSection";
+import { CbtMinimalDistortionSection } from "./minimal/distortion/CbtMinimalDistortionSection";
+import { CbtMinimalEmotionSection } from "./minimal/emotion-select/CbtMinimalEmotionSection";
+import { CbtMinimalMoodSection } from "./minimal/emotion-select/CbtMinimalMoodSection";
 import { useMinimalSessionController } from "./minimal/hooks/useMinimalSessionController";
 import { CbtMinimalIncidentSection } from "./minimal/incident/CbtMinimalIncidentSection";
 import styles from "./minimal/MinimalStyles.module.css";
@@ -15,13 +16,14 @@ function MinimalSessionPageContent() {
   const {
     flow,
     actions,
+    moodType,
+    handleSelectMood,
     incidentTitle,
     isSaving,
     canGoBack,
     handleBack,
     handleGoHome,
-    handleSubmitThought,
-    handleSelectErrors,
+    handleSelectDistortion,
     handleComplete,
     tourSteps,
     isTourOpen,
@@ -49,30 +51,42 @@ function MinimalSessionPageContent() {
           <CbtFloatingHomeButton onClick={handleGoHome} />
         </div>
 
+        {flow.step === "mood" && (
+          <CbtMinimalMoodSection
+            value={moodType}
+            onChange={(next) => {
+              handleSelectMood(next);
+              actions.setStep("emotion");
+            }}
+          />
+        )}
+
         {flow.step === "incident" && (
           <CbtMinimalIncidentSection
             userInput={flow.userInput}
             onInputChange={actions.setUserInput}
-            onNext={() => actions.setStep("thought")}
+            onNext={() => actions.setStep("distortion")}
             title={incidentTitle}
           />
         )}
 
-        {flow.step === "thought" && (
-          <CbtMinimalAutoThoughtSection
-            userInput={flow.userInput}
-            emotion={flow.selectedEmotion}
-            wantsCustom={flow.autoThoughtWantsCustom}
-            onWantsCustomChange={actions.setWantsCustom}
-            onSubmitThought={handleSubmitThought}
+        {flow.step === "emotion" && (
+          <CbtMinimalEmotionSection
+            moodType={moodType}
+            onSelectMood={handleSelectMood}
+            selectedEmotion={flow.selectedEmotion}
+            onSelectEmotion={actions.setSelectedEmotion}
+            onNext={() => {
+              actions.setStep("incident");
+            }}
           />
         )}
 
-        {flow.step === "errors" && (
-          <CbtMinimalCognitiveErrorSection
+        {flow.step === "distortion" && (
+          <CbtMinimalDistortionSection
             userInput={flow.userInput}
-            thought={flow.emotionThoughtPairs[0]?.thought ?? ""}
-            onSelect={handleSelectErrors}
+            emotion={flow.selectedEmotion}
+            onSelect={handleSelectDistortion}
           />
         )}
 

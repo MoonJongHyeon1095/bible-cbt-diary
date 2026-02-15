@@ -19,10 +19,15 @@ export default function AppTabs() {
     { href: "/flow/list", label: "Flow", icon: Waypoints },
   ];
   const handleTabClick = (href: string) => (event: MouseEvent) => {
-    if (href !== "/flow/list") return;
-    if (!isBlocked) return;
-    event.preventDefault();
-    openAuthModal();
+    if (href === "/flow/list" && isBlocked) {
+      event.preventDefault();
+      openAuthModal();
+      return;
+    }
+    if (href === "/home" && (pathname === "/" || pathname === "/home")) {
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent("app:home-tab-reset"));
+    }
   };
 
   const isActiveTab = (href: string) => {

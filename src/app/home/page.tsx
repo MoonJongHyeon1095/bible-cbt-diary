@@ -1,5 +1,10 @@
+import { Suspense } from "react";
 import EmotionNoteHomePage from "@/components/home/EmotionNoteHomePage";
 
 export default function EmotionNoteHomeRoutePage() {
-  return <EmotionNoteHomePage />;
+  return (
+    <Suspense fallback={null}>
+      <EmotionNoteHomePage />
+    </Suspense>
+  );
 }

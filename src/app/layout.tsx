@@ -1,7 +1,7 @@
 import EntranceGate from "@/components/gate/EntranceGate";
 import TermsGate from "@/components/gate/TermsGate";
 import "driver.js/dist/driver.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import Providers from "./Providers";
 import "./globals.css";
@@ -55,6 +55,12 @@ const notoSerifKr = localFont({
 export const metadata: Metadata = {
   title: "Flow : AI 일기 · 감정 그래프",
   description: "오늘의 감정 기록을 차분하게 쌓아가는 일기",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

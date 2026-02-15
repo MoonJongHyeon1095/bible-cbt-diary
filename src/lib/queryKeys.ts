@@ -71,16 +71,8 @@ export const queryKeys = {
       ["token-usage", deviceId] as const,
   },
   ai: {
-    autoThoughtSuggestions: (key: string) =>
-      ["ai", "auto-thought-suggestions", key] as const,
     alternativeThoughts: (key: string) =>
       ["ai", "alternative-thoughts", key] as const,
-    cognitiveErrorRank: (key: string) =>
-      ["ai", "cognitive-errors", "rank", key] as const,
-    cognitiveErrorDetail: (key: string, indicesKey: string) =>
-      ["ai", "cognitive-errors", "detail", key, indicesKey] as const,
-    deepAutoThought: (key: string) =>
-      ["ai", "deep-auto-thought", key] as const,
     deepAlternativeThoughts: (key: string) =>
       ["ai", "deep-alternative-thoughts", key] as const,
     deepInternalContext: (key: string) =>
@@ -89,9 +81,5 @@ export const queryKeys = {
       ["ai", "deep-montage-scenario", key] as const,
     deepMontagePicture: (key: string) =>
       ["ai", "deep-montage-picture", key] as const,
-    deepCognitiveErrorRank: (key: string) =>
-      ["ai", "deep-cognitive-errors", "rank", key] as const,
-    deepCognitiveErrorDetail: (key: string, indicesKey: string) =>
-      ["ai", "deep-cognitive-errors", "detail", key, indicesKey] as const,
   },
 } as const;

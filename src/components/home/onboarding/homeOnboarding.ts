@@ -2,9 +2,8 @@ import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 
 export const HOME_ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    selector: "[data-tour='home-emotion-grid']",
+    selector: "[data-tour='home-mood-toggle']",
     side: "bottom",
-    content: "감정 칩을 누르면 바로 세션이 시작돼요.",
-    completeOnTargetClick: true,
+    content: "표정을 먼저 고르면 다음 단계에서 감정을 선택할 수 있어요.",
   },
 ];

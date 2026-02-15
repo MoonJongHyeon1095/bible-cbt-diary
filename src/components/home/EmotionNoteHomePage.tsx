@@ -1,6 +1,5 @@
 "use client";
 
-import pageStyles from "@/app/page.module.css";
 import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
@@ -10,8 +9,11 @@ import {
 } from "@/components/onboarding/unifiedOnboarding";
 import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
 import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css";
-import SafeButton from "@/components/ui/SafeButton";
-import { EMOTIONS } from "@/lib/constants/emotions";
+import {
+  NEGATIVE_EMOTIONS,
+  POSITIVE_EMOTIONS,
+  type EmotionOption,
+} from "@/lib/constants/emotions";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { HOME_TOUR_STORAGE_KEY } from "@/lib/storage/keys/onboarding";
@@ -19,17 +21,21 @@ import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import homeStyles from "./EmotionNoteHomePage.module.css";
+import { HomeDate } from "./HomeDate";
+import { HomeEmotionGrid } from "./HomeEmotionGrid";
+import { HomeMoodToggle, type HomeMoodType } from "./HomeMoodToggle";
+import { HomeTitle } from "./HomeTitle";
 import { HOME_ONBOARDING_STEPS } from "./onboarding/homeOnboarding";
 
-const buildEmotionColorMap = () => {
+const buildEmotionColorMap = (emotions: EmotionOption[]) => {
   const colors: string[] = [];
-  for (let i = 0; i < EMOTIONS.length; i += 1) {
+  for (let i = 0; i < emotions.length; i += 1) {
     const hue = (i * 137.508) % 360;
     colors.push(`hsl(${hue.toFixed(1)} 54% 62%)`);
   }
   const map: Record<string, string> = {};
-  for (let i = 0; i < EMOTIONS.length; i += 1) {
-    map[EMOTIONS[i].id] = colors[i];
+  for (let i = 0; i < emotions.length; i += 1) {
+    map[emotions[i].id] = colors[i];
   }
   return map;
 };
@@ -45,8 +51,20 @@ export default function EmotionNoteHomePage() {
   });
   const [isStartLoading, setIsStartLoading] = useState(false);
   const [loadingEmotionId, setLoadingEmotionId] = useState<string | null>(null);
-  const titleText = "지금 당신의 감정은 무엇인가요?";
-  const emotionColorMap = useMemo(() => buildEmotionColorMap(), []);
+  const [step, setStep] = useState<"mood" | "emotion">("mood");
+  const [moodType, setMoodType] = useState<HomeMoodType | null>(null);
+  const titleText =
+    step === "mood"
+      ? "지금 어떤 기분인가요?"
+      : "지금 당신의 감정은 무엇인가요?";
+  const emotions = useMemo(
+    () => (moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS),
+    [moodType],
+  );
+  const emotionColorMap = useMemo(
+    () => buildEmotionColorMap(emotions),
+    [emotions],
+  );
   const todayLabel = useMemo(
     () =>
       formatKoreanDateTime(new Date(), {
@@ -110,6 +128,19 @@ export default function EmotionNoteHomePage() {
     setIsTourOpen(true);
   }, [canShowOnboarding, isTourOpen, setCurrentStep, setIsTourOpen]);
 
+  useEffect(() => {
+    const handleHomeTabReset = () => {
+      setStep("mood");
+      setMoodType(null);
+      setIsStartLoading(false);
+      setLoadingEmotionId(null);
+    };
+    window.addEventListener("app:home-tab-reset", handleHomeTabReset);
+    return () => {
+      window.removeEventListener("app:home-tab-reset", handleHomeTabReset);
+    };
+  }, []);
+
   const startSession = async (emotionId: string) => {
     if (!emotionId) {
       return false;
@@ -152,42 +183,42 @@ export default function EmotionNoteHomePage() {
       <div className={sessionStyles.bgWaves} />
       <div className={`${sessionStyles.content} ${homeStyles.content}`}>
         <AppHeader />
-        <main className={`${pageStyles.main} ${homeStyles.main}`}>
-          <div className={homeStyles.dateDock}>
-            <p className={homeStyles.dateHint}>{targetDateLabel}</p>
-          </div>
-          <div className={`${pageStyles.shell} ${homeStyles.shell}`}>
+        <main className={homeStyles.main}>
+          <div className={homeStyles.shell}>
             <section className={homeStyles.card}>
-              <h2 className={homeStyles.title}>
-                <span className={homeStyles.titleQuestion}>{titleText}</span>
-              </h2>
-              <div className={homeStyles.emotionGrid} data-tour="home-emotion-grid">
-                {EMOTIONS.map((emotion) => {
-                  const color = emotionColorMap[emotion.id];
-                  return (
-                    <SafeButton
-                      key={emotion.id}
-                      type="button"
-                      variant="unstyled"
-                      className={`${homeStyles.emotionCard} ${
-                        loadingEmotionId === emotion.id && isStartLoading
-                          ? homeStyles.emotionCardLoading
-                          : ""
-                      }`}
-                      onClick={() => void handleSelectEmotion(emotion.id)}
-                      disabled={isStartLoading}
-                      style={{
-                        borderColor: color,
-                        color,
-                      }}
-                    >
-                      <span className={homeStyles.emotionName}>
-                        {emotion.label}
-                      </span>
-                    </SafeButton>
-                  );
-                })}
-              </div>
+              {step === "mood" ? (
+                <div className={homeStyles.stepBlock}>
+                  <HomeDate label={targetDateLabel} />
+                  <HomeTitle text={titleText} />
+                  <HomeMoodToggle
+                    value={moodType}
+                    onChange={(next) => {
+                      setMoodType(next);
+                      setStep("emotion");
+                    }}
+                    disabled={isStartLoading}
+                  />
+                </div>
+              ) : (
+                <div className={homeStyles.stepBlock}>
+                  <HomeTitle text={titleText} />
+                  <HomeMoodToggle
+                    value={moodType}
+                    onChange={setMoodType}
+                    disabled={isStartLoading}
+                    prompt="감정군을 선택하세요"
+                  />
+                  <HomeEmotionGrid
+                    emotions={emotions}
+                    colorMap={emotionColorMap}
+                    loadingEmotionId={loadingEmotionId}
+                    isStartLoading={isStartLoading}
+                    onSelectEmotion={(emotionId) => {
+                      void handleSelectEmotion(emotionId);
+                    }}
+                  />
+                </div>
+              )}
             </section>
           </div>
         </main>

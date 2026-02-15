@@ -15,7 +15,6 @@ const parseStringItem = (raw: string): SelectedCognitiveError | null => {
         const meta = getMetaByTitle(parsed.title);
         return {
           id: meta?.id,
-          index: meta?.index,
           title: parsed.title,
           detail:
             typeof parsed.detail === "string" && parsed.detail.trim()
@@ -31,7 +30,6 @@ const parseStringItem = (raw: string): SelectedCognitiveError | null => {
   const meta = getMetaByTitle(value);
   return {
     id: meta?.id,
-    index: meta?.index,
     title: value,
   };
 };
@@ -54,7 +52,6 @@ export const normalizeSelectedCognitiveErrors = (
       const meta = getMetaByTitle(typed.title);
       out.push({
         id: typed.id ?? meta?.id,
-        index: typed.index ?? meta?.index,
         title: typed.title,
         detail:
           typeof typed.detail === "string" && typed.detail.trim()

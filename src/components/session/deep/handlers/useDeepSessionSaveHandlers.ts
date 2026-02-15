@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback } from "react";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
@@ -47,7 +47,6 @@ type UseDeepSessionSaveHandlersParams = {
   };
   router: { push: (path: string) => void; replace: (path: string) => void };
   pushToast: (message: string, type: "success" | "error") => void;
-  setErrors: (errors: SelectedCognitiveError[], seedBump: boolean) => void;
 };
 
 export function useDeepSessionSaveHandlers({
@@ -63,29 +62,7 @@ export function useDeepSessionSaveHandlers({
   queryClient,
   router,
   pushToast,
-  setErrors,
 }: UseDeepSessionSaveHandlersParams) {
-  const lastErrorsKeyRef = useRef<string>("");
-
-  const handleSelectErrors = useCallback(
-    (errors: SelectedCognitiveError[]) => {
-      const nextKey = JSON.stringify(
-        errors.map((item) => ({
-          id: item.id,
-          index: item.index,
-          title: item.title,
-          detail: item.detail,
-        })),
-      );
-      const seedBump = nextKey !== lastErrorsKeyRef.current;
-      if (seedBump) {
-        lastErrorsKeyRef.current = nextKey;
-      }
-      setErrors(errors, seedBump);
-    },
-    [setErrors],
-  );
-
   const handleComplete = useCallback(
     async (thought: string) => {
       if (isSaving || !mainNote) return;
@@ -158,5 +135,5 @@ export function useDeepSessionSaveHandlers({
     ],
   );
 
-  return { handleSelectErrors, handleComplete };
+  return { handleComplete };
 }

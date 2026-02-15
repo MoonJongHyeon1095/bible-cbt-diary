@@ -1,7 +1,4 @@
-import type {
-  CognitiveErrorId,
-  CognitiveErrorIndex,
-} from "@/lib/constants/errors";
+import type { CognitiveErrorId } from "@/lib/constants/errors";
 
 export interface EmotionThoughtPair {
   emotion: string;
@@ -11,7 +8,6 @@ export interface EmotionThoughtPair {
 
 export interface SelectedCognitiveError {
   id?: CognitiveErrorId;
-  index?: CognitiveErrorIndex;
   title: string;
   detail?: string;
 }

@@ -1,14 +1,12 @@
 import { Check } from "lucide-react";
-import { EMOTIONS } from "@/lib/constants/emotions";
+import type { EmotionOption } from "@/lib/constants/emotions";
 import styles from "../MinimalStyles.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
-type EmotionItem = (typeof EMOTIONS)[number];
-
 interface CbtMinimalEmotionItemProps {
-  emotion: EmotionItem;
+  emotion: EmotionOption;
   isSelected: boolean;
-  onSelect: (emotion: EmotionItem["label"]) => void;
+  onSelect: (emotion: EmotionOption["label"]) => void;
 }
 
 export function CbtMinimalEmotionItem({

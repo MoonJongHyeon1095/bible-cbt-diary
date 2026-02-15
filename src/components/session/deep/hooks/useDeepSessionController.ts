@@ -5,7 +5,7 @@ import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import { flushTokenSessionUsage } from "@/lib/storage/token/sessionUsage";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useCbtDeepInternalContext } from "./useCbtDeepInternalContext";
 import { useCbtDeepMontageScenario } from "./useCbtDeepMontageScenario";
 import { useCbtDeepMontagePicture } from "./useCbtDeepMontagePicture";
@@ -17,15 +17,21 @@ import { useDeepSessionSaveHandlers } from "../handlers/useDeepSessionSaveHandle
 import { useGate } from "@/components/gate/GateProvider";
 import {
   DEEP_ALTERNATIVE_STEPS,
-  DEEP_AUTO_THOUGHT_STEPS,
-  DEEP_COGNITIVE_ERROR_STEPS,
+  DEEP_DISTORTION_STEPS,
   DEEP_EMOTION_SELECT_STEPS,
   DEEP_INCIDENT_STEPS,
+  DEEP_MOOD_STEPS,
   DEEP_NOTE_SELECT_STEPS,
   useCbtDeepSessionFlow,
   type DeepStep,
 } from "@/components/session/hooks/useCbtDeepSessionFlow";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  ALL_EMOTIONS,
+  NEGATIVE_EMOTIONS,
+  POSITIVE_EMOTIONS,
+} from "@/lib/constants/emotions";
+import type { SessionMoodType } from "../../minimal/emotion-select/CbtSessionMoodToggle";
 
 export function useDeepSessionController() {
   const router = useRouter();
@@ -41,6 +47,11 @@ export function useDeepSessionController() {
   const mainIdParam = searchParams.get("mainId") ?? "";
   const flowIdParam = searchParams.get("flowId") ?? "";
   const subIdsParam = searchParams.get("subIds") ?? "";
+  const emotionIdParam = searchParams.get("emotionId");
+  const preselectedEmotion = useMemo(() => {
+    if (!emotionIdParam) return "";
+    return ALL_EMOTIONS.find((item) => item.id === emotionIdParam)?.label ?? "";
+  }, [emotionIdParam]);
 
   const {
     flowId,
@@ -65,28 +76,35 @@ export function useDeepSessionController() {
   });
 
   const { state: flow, actions } = useCbtDeepSessionFlow(
-    shouldSelectSubNotes ? "select" : "incident",
+    shouldSelectSubNotes ? "select" : "mood",
   );
+  const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const { blocker, canShowOnboarding } = useGate();
 
-  const stepOrder: DeepStep[] = shouldSelectSubNotes
-    ? [
-        ...DEEP_NOTE_SELECT_STEPS,
-        ...DEEP_INCIDENT_STEPS,
-        ...DEEP_EMOTION_SELECT_STEPS,
-        ...DEEP_AUTO_THOUGHT_STEPS,
-        ...DEEP_COGNITIVE_ERROR_STEPS,
-        ...DEEP_ALTERNATIVE_STEPS,
-      ]
-    : [
-        ...DEEP_INCIDENT_STEPS,
-        ...DEEP_EMOTION_SELECT_STEPS,
-        ...DEEP_AUTO_THOUGHT_STEPS,
-        ...DEEP_COGNITIVE_ERROR_STEPS,
-        ...DEEP_ALTERNATIVE_STEPS,
-      ];
+  const stepOrder: DeepStep[] = useMemo(
+    () =>
+      shouldSelectSubNotes
+        ? [
+            ...DEEP_NOTE_SELECT_STEPS,
+            ...(flow.selectedEmotion
+              ? []
+              : [...DEEP_MOOD_STEPS, ...DEEP_EMOTION_SELECT_STEPS]),
+            ...DEEP_INCIDENT_STEPS,
+            ...DEEP_DISTORTION_STEPS,
+            ...DEEP_ALTERNATIVE_STEPS,
+          ]
+        : [
+            ...(flow.selectedEmotion
+              ? []
+              : [...DEEP_MOOD_STEPS, ...DEEP_EMOTION_SELECT_STEPS]),
+            ...DEEP_INCIDENT_STEPS,
+            ...DEEP_DISTORTION_STEPS,
+            ...DEEP_ALTERNATIVE_STEPS,
+          ],
+    [flow.selectedEmotion, shouldSelectSubNotes],
+  );
   const currentStepIndex = stepOrder.indexOf(flow.step);
 
   const saveDeepMutation = useMutation({
@@ -124,8 +142,27 @@ export function useDeepSessionController() {
   });
 
   useEffect(() => {
-    actions.setStep(shouldSelectSubNotes ? "select" : "incident");
+    actions.setStep(shouldSelectSubNotes ? "select" : "mood");
   }, [actions, flowIdParam, mainIdParam, shouldSelectSubNotes]);
+
+  useEffect(() => {
+    if (!preselectedEmotion) return;
+    if (flow.selectedEmotion !== preselectedEmotion) {
+      actions.setSelectedEmotion(preselectedEmotion);
+      return;
+    }
+    if (flow.step === "mood" || flow.step === "emotion") {
+      actions.setStep("incident");
+    }
+  }, [actions, flow.selectedEmotion, flow.step, preselectedEmotion]);
+
+  useEffect(() => {
+    if (!flow.selectedEmotion) return;
+    const inPositive = POSITIVE_EMOTIONS.some(
+      (emotion) => emotion.label === flow.selectedEmotion,
+    );
+    setMoodType(inPositive ? "positive" : "negative");
+  }, [flow.selectedEmotion]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -213,8 +250,6 @@ export function useDeepSessionController() {
     flowStep: flow.step,
     currentStepIndex,
     stepOrder,
-    autoThoughtWantsCustom: flow.autoThoughtWantsCustom,
-    setWantsCustom: actions.setWantsCustom,
     flowId,
     mainNote,
     setStep: actions.setStep,
@@ -224,9 +259,10 @@ export function useDeepSessionController() {
   const { handleConfirmSelection } = useDeepSessionSelectionHandlers({
     confirmSelection,
     setStep: actions.setStep,
+    nextStep: flow.selectedEmotion ? "incident" : "mood",
   });
 
-  const { handleSelectErrors, handleComplete } = useDeepSessionSaveHandlers({
+  const { handleComplete } = useDeepSessionSaveHandlers({
     flow,
     flowId,
     mainNote,
@@ -239,12 +275,43 @@ export function useDeepSessionController() {
     queryClient,
     router,
     pushToast,
-    setErrors: actions.setErrors,
   });
+
+  const lastDistortionKeyRef = useRef("");
+  const handleSelectDistortion = (thought: string, error: SelectedCognitiveError) => {
+    const nextKey = JSON.stringify({
+      thought: thought.trim(),
+      errorId: error.id,
+      errorTitle: error.title,
+      errorDetail: error.detail,
+    });
+    const seedBump = nextKey !== lastDistortionKeyRef.current;
+    if (seedBump) {
+      lastDistortionKeyRef.current = nextKey;
+    }
+    actions.setDistortion(thought, error, seedBump);
+  };
+
+  const handleSelectMood = (nextMood: SessionMoodType) => {
+    setMoodType(nextMood);
+    if (!flow.selectedEmotion) {
+      return;
+    }
+    const nextPool =
+      nextMood === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
+    const hasSelectedEmotion = nextPool.some(
+      (emotion) => emotion.label === flow.selectedEmotion,
+    );
+    if (!hasSelectedEmotion) {
+      actions.setSelectedEmotion("");
+    }
+  };
 
   return {
     flow,
     actions,
+    moodType,
+    handleSelectMood,
     notesLoading,
     notesError,
     mainNote,
@@ -261,7 +328,7 @@ export function useDeepSessionController() {
     canGoBack: currentStepIndex > 0 || flow.step === "select",
     handleBack,
     handleGoHome,
-    handleSelectErrors,
+    handleSelectDistortion,
     handleComplete,
     tourSteps,
     isTourOpen,

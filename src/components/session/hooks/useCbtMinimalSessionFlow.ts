@@ -5,17 +5,19 @@ import type {
 } from "@/lib/types/sessionTypes";
 
 export type MinimalStep =
+  | "mood"
   | "incident"
-  | "thought"
-  | "errors"
+  | "emotion"
+  | "distortion"
   | "alternative";
 
+export const MINIMAL_MOOD_STEPS: ReadonlyArray<MinimalStep> = ["mood"];
 export const MINIMAL_INCIDENT_STEPS: ReadonlyArray<MinimalStep> = ["incident"];
-export const MINIMAL_AUTO_THOUGHT_STEPS: ReadonlyArray<MinimalStep> = [
-  "thought",
+export const MINIMAL_EMOTION_SELECT_STEPS: ReadonlyArray<MinimalStep> = [
+  "emotion",
 ];
-export const MINIMAL_COGNITIVE_ERROR_STEPS: ReadonlyArray<MinimalStep> = [
-  "errors",
+export const MINIMAL_DISTORTION_STEPS: ReadonlyArray<MinimalStep> = [
+  "distortion",
 ];
 export const MINIMAL_ALTERNATIVE_STEPS: ReadonlyArray<MinimalStep> = [
   "alternative",
@@ -27,7 +29,6 @@ type FlowState = {
   selectedEmotion: string;
   emotionThoughtPairs: EmotionThoughtPair[];
   selectedCognitiveErrors: SelectedCognitiveError[];
-  autoThoughtWantsCustom: boolean;
   alternativeSeed: number;
 };
 
@@ -35,18 +36,21 @@ type FlowAction =
   | { type: "SET_STEP"; step: MinimalStep }
   | { type: "SET_USER_INPUT"; value: string }
   | { type: "SET_SELECTED_EMOTION"; value: string }
-  | { type: "SET_THOUGHT_PAIR"; thought: string; emotion: string }
-  | { type: "SET_ERRORS"; errors: SelectedCognitiveError[]; seedBump: boolean }
-  | { type: "SET_WANTS_CUSTOM"; value: boolean }
+  | {
+      type: "SET_DISTORTION";
+      thought: string;
+      emotion: string;
+      error: SelectedCognitiveError;
+      seedBump: boolean;
+    }
   | { type: "RESET_FLOW" };
 
 const initialFlowState: FlowState = {
-  step: "incident",
+  step: "mood",
   userInput: "",
   selectedEmotion: "",
   emotionThoughtPairs: [],
   selectedCognitiveErrors: [],
-  autoThoughtWantsCustom: false,
   alternativeSeed: 0,
 };
 
@@ -58,25 +62,18 @@ const reducer = (state: FlowState, action: FlowAction): FlowState => {
       return { ...state, userInput: action.value };
     case "SET_SELECTED_EMOTION":
       return { ...state, selectedEmotion: action.value };
-    case "SET_THOUGHT_PAIR":
+    case "SET_DISTORTION":
       return {
         ...state,
         emotionThoughtPairs: [
           { emotion: action.emotion, intensity: null, thought: action.thought },
         ],
-        step: "errors",
-      };
-    case "SET_ERRORS":
-      return {
-        ...state,
-        selectedCognitiveErrors: action.errors,
+        selectedCognitiveErrors: [action.error],
         alternativeSeed: action.seedBump
           ? state.alternativeSeed + 1
           : state.alternativeSeed,
         step: "alternative",
       };
-    case "SET_WANTS_CUSTOM":
-      return { ...state, autoThoughtWantsCustom: action.value };
     case "RESET_FLOW":
       return initialFlowState;
     default:
@@ -93,12 +90,19 @@ export function useCbtMinimalSessionFlow() {
         dispatch({ type: "SET_USER_INPUT", value }),
       setSelectedEmotion: (value: string) =>
         dispatch({ type: "SET_SELECTED_EMOTION", value }),
-      setThoughtPair: (thought: string, emotion: string) =>
-        dispatch({ type: "SET_THOUGHT_PAIR", thought, emotion }),
-      setErrors: (errors: SelectedCognitiveError[], seedBump: boolean) =>
-        dispatch({ type: "SET_ERRORS", errors, seedBump }),
-      setWantsCustom: (value: boolean) =>
-        dispatch({ type: "SET_WANTS_CUSTOM", value }),
+      setDistortion: (
+        thought: string,
+        emotion: string,
+        error: SelectedCognitiveError,
+        seedBump: boolean,
+      ) =>
+        dispatch({
+          type: "SET_DISTORTION",
+          thought,
+          emotion,
+          error,
+          seedBump,
+        }),
       reset: () => dispatch({ type: "RESET_FLOW" }),
     }),
     [],

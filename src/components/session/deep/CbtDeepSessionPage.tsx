@@ -6,10 +6,10 @@ import { CbtFloatingHomeButton } from "@/components/session/common/CbtFloatingHo
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
 import { CbtMinimalEmotionSection } from "@/components/session/minimal/emotion-select/CbtMinimalEmotionSection";
+import { CbtMinimalMoodSection } from "@/components/session/minimal/emotion-select/CbtMinimalMoodSection";
 import styles from "@/components/session/minimal/MinimalStyles.module.css";
 import { CbtDeepAlternativeThoughtSection } from "./alternative/CbtDeepAlternativeThoughtSection";
-import { CbtDeepAutoThoughtSection } from "./auto-thought/CbtDeepAutoThoughtSection";
-import { CbtDeepCognitiveErrorSection } from "./cognitive-error/CbtDeepCognitiveErrorSection";
+import { CbtDeepDistortionSection } from "./distortion/CbtDeepDistortionSection";
 import { useDeepSessionController } from "./hooks/useDeepSessionController";
 import { CbtDeepIncidentSection } from "./incident/CbtDeepIncidentSection";
 import { CbtDeepSelectSection } from "./note-select/CbtDeepSelectSection";
@@ -18,6 +18,8 @@ function CbtDeepSessionPageContent() {
   const {
     flow,
     actions,
+    moodType,
+    handleSelectMood,
     notesLoading,
     notesError,
     mainNote,
@@ -34,7 +36,7 @@ function CbtDeepSessionPageContent() {
     canGoBack,
     handleBack,
     handleGoHome,
-    handleSelectErrors,
+    handleSelectDistortion,
     handleComplete,
     tourSteps,
     isTourOpen,
@@ -81,11 +83,21 @@ function CbtDeepSessionPageContent() {
           <CbtFloatingHomeButton onClick={handleGoHome} />
         </div>
 
+        {flow.step === "mood" && (
+          <CbtMinimalMoodSection
+            value={moodType}
+            onChange={(next) => {
+              handleSelectMood(next);
+              actions.setStep("emotion");
+            }}
+          />
+        )}
+
         {flow.step === "incident" && (
           <CbtDeepIncidentSection
             userInput={flow.userInput}
             onInputChange={actions.setUserInput}
-            onNext={() => actions.setStep("emotion")}
+            onNext={() => actions.setStep("distortion")}
             mainNote={mainNote}
             subNotes={subNotes}
           />
@@ -105,34 +117,22 @@ function CbtDeepSessionPageContent() {
 
         {flow.step === "emotion" && (
           <CbtMinimalEmotionSection
+            moodType={moodType}
+            onSelectMood={handleSelectMood}
             selectedEmotion={flow.selectedEmotion}
             onSelectEmotion={actions.setSelectedEmotion}
             onNext={() => {
-              actions.setWantsCustom(false);
-              actions.setStep("thought");
+              actions.setStep("incident");
             }}
           />
         )}
 
-        {flow.step === "thought" && (
-          <CbtDeepAutoThoughtSection
+        {flow.step === "distortion" && (
+          <CbtDeepDistortionSection
             userInput={flow.userInput}
             emotion={flow.selectedEmotion}
-            mainNote={mainNote}
-            subNotes={subNotes}
             internalContext={internalContext}
-            wantsCustom={flow.autoThoughtWantsCustom}
-            onWantsCustomChange={actions.setWantsCustom}
-            onComplete={actions.setAutoThought}
-          />
-        )}
-
-        {flow.step === "errors" && (
-          <CbtDeepCognitiveErrorSection
-            userInput={flow.userInput}
-            thought={flow.autoThought}
-            internalContext={internalContext}
-            onSelect={handleSelectErrors}
+            onSelect={handleSelectDistortion}
           />
         )}
 

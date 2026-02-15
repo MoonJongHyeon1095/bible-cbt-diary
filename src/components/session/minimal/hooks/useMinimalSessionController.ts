@@ -2,9 +2,10 @@ import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtAccess } from "@/components/session/hooks/useCbtAccess";
 import {
   MINIMAL_ALTERNATIVE_STEPS,
-  MINIMAL_AUTO_THOUGHT_STEPS,
-  MINIMAL_COGNITIVE_ERROR_STEPS,
+  MINIMAL_DISTORTION_STEPS,
+  MINIMAL_EMOTION_SELECT_STEPS,
   MINIMAL_INCIDENT_STEPS,
+  MINIMAL_MOOD_STEPS,
   useCbtMinimalSessionFlow,
   type MinimalStep,
 } from "@/components/session/hooks/useCbtMinimalSessionFlow";
@@ -38,7 +39,12 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
-import { EMOTIONS } from "@/lib/constants/emotions";
+import {
+  ALL_EMOTIONS,
+  NEGATIVE_EMOTIONS,
+  POSITIVE_EMOTIONS,
+} from "@/lib/constants/emotions";
+import type { SessionMoodType } from "../emotion-select/CbtSessionMoodToggle";
 
 type TourProgress = {
   lastStep: number;
@@ -51,10 +57,10 @@ export function useMinimalSessionController() {
   const { pushToast } = useCbtToast();
   const { accessMode, isLoading: isAccessLoading } = useAccessContext();
   const { state: flow, actions } = useCbtMinimalSessionFlow();
+  const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
-  const lastErrorsKeyRef = useRef<string>("");
-  const hasRedirectedForMissingEmotionRef = useRef(false);
+  const lastDistortionKeyRef = useRef<string>("");
   const { requireAccessContext } = useCbtAccess({
     setError: (message) => {
       pushToast(message, "error");
@@ -70,9 +76,8 @@ export function useMinimalSessionController() {
     if (!emotionIdParam) {
       return "";
     }
-    return EMOTIONS.find((item) => item.id === emotionIdParam)?.label ?? "";
+    return ALL_EMOTIONS.find((item) => item.id === emotionIdParam)?.label ?? "";
   }, [emotionIdParam]);
-  const hasEmotionParam = Boolean(preselectedEmotion);
   const dateLabel = hasDateParam
     ? formatKoreanDateTime(`${dateParam}T00:00:00+09:00`, {
         month: "long",
@@ -85,12 +90,14 @@ export function useMinimalSessionController() {
 
   const stepOrder: MinimalStep[] = useMemo(
     () => [
+      ...(flow.selectedEmotion
+        ? []
+        : [...MINIMAL_MOOD_STEPS, ...MINIMAL_EMOTION_SELECT_STEPS]),
       ...MINIMAL_INCIDENT_STEPS,
-      ...MINIMAL_AUTO_THOUGHT_STEPS,
-      ...MINIMAL_COGNITIVE_ERROR_STEPS,
+      ...MINIMAL_DISTORTION_STEPS,
       ...MINIMAL_ALTERNATIVE_STEPS,
     ],
-    [],
+    [flow.selectedEmotion],
   );
   const currentStepIndex = stepOrder.indexOf(flow.step);
   const tourSteps = useMemo<OnboardingStep[]>(
@@ -116,27 +123,22 @@ export function useMinimalSessionController() {
 
   useEffect(() => {
     if (!preselectedEmotion) return;
-    if (flow.selectedEmotion === preselectedEmotion) return;
-    actions.setSelectedEmotion(preselectedEmotion);
-  }, [actions, flow.selectedEmotion, preselectedEmotion]);
+    if (flow.selectedEmotion !== preselectedEmotion) {
+      actions.setSelectedEmotion(preselectedEmotion);
+      return;
+    }
+    if (flow.step === "mood" || flow.step === "emotion") {
+      actions.setStep("incident");
+    }
+  }, [actions, flow.selectedEmotion, flow.step, preselectedEmotion]);
 
   useEffect(() => {
-    if (isAccessLoading || accessMode === "blocked") return;
-    if (hasEmotionParam) return;
-    if (hasRedirectedForMissingEmotionRef.current) return;
-    hasRedirectedForMissingEmotionRef.current = true;
-    const next = hasDateParam ? `/home?date=${dateParam}` : "/home";
-    pushToast("홈에서 감정을 먼저 선택해주세요.", "error");
-    router.replace(next);
-  }, [
-    accessMode,
-    dateParam,
-    hasDateParam,
-    hasEmotionParam,
-    isAccessLoading,
-    pushToast,
-    router,
-  ]);
+    if (!flow.selectedEmotion) return;
+    const inPositive = POSITIVE_EMOTIONS.some(
+      (emotion) => emotion.label === flow.selectedEmotion,
+    );
+    setMoodType(inPositive ? "positive" : "negative");
+  }, [flow.selectedEmotion]);
 
   const saveMinimalMutation = useMutation({
     mutationFn: async (args: {
@@ -241,42 +243,29 @@ export function useMinimalSessionController() {
 
   const handleBack = useCallback(() => {
     if (currentStepIndex <= 0) return;
-    if (flow.step === "thought" && flow.autoThoughtWantsCustom) {
-      actions.setWantsCustom(false);
-      return;
-    }
     actions.setStep(stepOrder[currentStepIndex - 1]);
-  }, [actions, currentStepIndex, flow.autoThoughtWantsCustom, flow.step, stepOrder]);
+  }, [actions, currentStepIndex, stepOrder]);
 
   const handleGoHome = useCallback(() => {
     clearCbtSessionStorage();
     router.push("/home");
   }, [router]);
 
-  const handleSubmitThought = useCallback(
-    (thought: string) => {
-      actions.setThoughtPair(thought, flow.selectedEmotion);
+  const handleSelectDistortion = useCallback(
+    (thought: string, error: SelectedCognitiveError) => {
+      const nextKey = JSON.stringify({
+        thought: thought.trim(),
+        errorId: error.id,
+        errorTitle: error.title,
+        errorDetail: error.detail,
+      });
+      const seedBump = nextKey !== lastDistortionKeyRef.current;
+      if (seedBump) {
+        lastDistortionKeyRef.current = nextKey;
+      }
+      actions.setDistortion(thought, flow.selectedEmotion, error, seedBump);
     },
     [actions, flow.selectedEmotion],
-  );
-
-  const handleSelectErrors = useCallback(
-    (errors: SelectedCognitiveError[]) => {
-      const nextKey = JSON.stringify(
-        errors.map((item) => ({
-          id: item.id,
-          index: item.index,
-          title: item.title,
-          detail: item.detail,
-        })),
-      );
-      const seedBump = nextKey !== lastErrorsKeyRef.current;
-      if (nextKey !== lastErrorsKeyRef.current) {
-        lastErrorsKeyRef.current = nextKey;
-      }
-      actions.setErrors(errors, seedBump);
-    },
-    [actions],
   );
 
   const handleComplete = useCallback(
@@ -363,16 +352,35 @@ export function useMinimalSessionController() {
     ],
   );
 
+  const handleSelectMood = useCallback(
+    (nextMood: SessionMoodType) => {
+      setMoodType(nextMood);
+      if (!flow.selectedEmotion) {
+        return;
+      }
+      const nextPool =
+        nextMood === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
+      const hasSelectedEmotion = nextPool.some(
+        (emotion) => emotion.label === flow.selectedEmotion,
+      );
+      if (!hasSelectedEmotion) {
+        actions.setSelectedEmotion("");
+      }
+    },
+    [actions, flow.selectedEmotion],
+  );
+
   return {
     flow,
     actions,
+    moodType,
+    handleSelectMood,
     incidentTitle,
     isSaving,
     canGoBack: currentStepIndex > 0,
     handleBack,
     handleGoHome,
-    handleSubmitThought,
-    handleSelectErrors,
+    handleSelectDistortion,
     handleComplete,
     tourSteps,
     isTourOpen,

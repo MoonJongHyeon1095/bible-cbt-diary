@@ -3,22 +3,12 @@
 import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItem";
 import type { EmotionNoteAlternativeDetail } from "@/lib/types/emotionNoteTypes";
 import { Lightbulb } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
 import styles from "./EmotionNoteDetailPage.module.css";
 import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 
 type EmotionNoteAlternativeDetailSectionProps = {
   details: EmotionNoteAlternativeDetail[];
-  editingAlternativeId: number | null;
-  editingAlternativeText: string;
-  onStartEditing: (detail: EmotionNoteAlternativeDetail) => void;
-  onCancelEditing: () => void;
-  onUpdate: (detailId: number) => void;
-  onDelete: (detailId: number) => void;
-  onChangeEditingAlternativeText: (value: string) => void;
   formatDateTime: (value: string) => string;
-  onSelectDetail?: (detailId: number) => void;
-  selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
   onOpenModal?: (
     title: string,
@@ -32,39 +22,10 @@ export default function EmotionNoteAlternativeDetailSection(
 ) {
   const {
     details,
-    editingAlternativeId,
-    editingAlternativeText,
-    onChangeEditingAlternativeText,
     formatDateTime,
-    onSelectDetail,
-    selectedDetailId,
     onCopyText,
     onOpenModal,
   } = props;
-  const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const resizeEditTextarea = () => {
-    const element = editTextareaRef.current;
-    if (!element) {
-      return;
-    }
-    element.style.height = "auto";
-    element.style.height = `${element.scrollHeight}px`;
-  };
-
-  useLayoutEffect(() => {
-    if (editingAlternativeId === null) {
-      return;
-    }
-    resizeEditTextarea();
-    const element = editTextareaRef.current;
-    if (!element) {
-      return;
-    }
-    requestAnimationFrame(() => {
-      element.focus();
-      element.scrollIntoView({ block: "center", behavior: "smooth" });
-    });
-  }, [editingAlternativeId, editingAlternativeText]);
 
   return (
     <EmotionNoteDetailSectionCard
@@ -81,48 +42,20 @@ export default function EmotionNoteAlternativeDetailSection(
           details.map((detail) => (
             <div
               key={detail.id}
-              className={`${styles.detailCard} ${
-                selectedDetailId === detail.id ? styles.detailCardSelected : ""
-              }`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectDetail?.(detail.id);
-              }}
-              role={onSelectDetail ? "button" : undefined}
-              tabIndex={onSelectDetail ? 0 : undefined}
+              className={styles.detailCard}
             >
-              {editingAlternativeId === detail.id ? (
-                <div className={styles.detailEdit}>
-                  <textarea
-                    ref={editTextareaRef}
-                    value={editingAlternativeText}
-                    onChange={(event) =>
-                      onChangeEditingAlternativeText(event.target.value)
-                    }
-                    onFocus={resizeEditTextarea}
-                    onInput={resizeEditTextarea}
-                    rows={2}
-                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                  />
-                </div>
-              ) : (
-                <>
-                  {null}
-                  <EmotionNoteDetailSectionItem
-                    body={detail.alternative}
-                    actions={{
-                      copyText: `대안 사고: ${detail.alternative}`,
-                      modalTitle: "대안 사고",
-                      modalBody: detail.alternative,
-                      modalBadgeText: null,
-                      timeText: formatDateTime(detail.created_at),
-                      onCopyText,
-                      onOpenModal,
-                    }}
-                  />
-                  {null}
-                </>
-              )}
+              <EmotionNoteDetailSectionItem
+                body={detail.alternative}
+                actions={{
+                  copyText: `대안 사고: ${detail.alternative}`,
+                  modalTitle: "대안 사고",
+                  modalBody: detail.alternative,
+                  modalBadgeText: null,
+                  timeText: formatDateTime(detail.created_at),
+                  onCopyText,
+                  onOpenModal,
+                }}
+              />
             </div>
           ))
         )}

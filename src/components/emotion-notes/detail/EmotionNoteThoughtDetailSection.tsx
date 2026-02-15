@@ -1,26 +1,14 @@
 "use client";
 
-import EmotionNoteDetailSectionBadge from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionBadge";
 import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItem";
 import type { EmotionNoteDetail } from "@/lib/types/emotionNoteTypes";
 import { Brain } from "lucide-react";
-import { useLayoutEffect, useRef } from "react";
 import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 import styles from "./EmotionNoteDetailPage.module.css";
 
 type EmotionNoteThoughtDetailSectionProps = {
   details: EmotionNoteDetail[];
-  editingThoughtId: number | null;
-  editingThoughtText: string;
-  editingEmotionText: string;
-  onStartEditing: (detail: EmotionNoteDetail) => void;
-  onCancelEditing: () => void;
-  onUpdate: (detailId: number) => void;
-  onDelete: (detailId: number) => void;
-  onChangeEditingThoughtText: (value: string) => void;
   formatDateTime: (value: string) => string;
-  onSelectDetail?: (detailId: number) => void;
-  selectedDetailId?: number | null;
   onCopyText?: (text: string) => void;
   onOpenModal?: (
     title: string,
@@ -32,40 +20,10 @@ type EmotionNoteThoughtDetailSectionProps = {
 export default function EmotionNoteThoughtDetailSection(props: EmotionNoteThoughtDetailSectionProps) {
   const {
     details,
-    editingThoughtId,
-    editingThoughtText,
-    editingEmotionText,
-    onChangeEditingThoughtText,
     formatDateTime,
-    onSelectDetail,
-    selectedDetailId,
     onCopyText,
     onOpenModal,
   } = props;
-  const editTextareaRef = useRef<HTMLTextAreaElement | null>(null);
-  const resizeEditTextarea = () => {
-    const element = editTextareaRef.current;
-    if (!element) {
-      return;
-    }
-    element.style.height = "auto";
-    element.style.height = `${element.scrollHeight}px`;
-  };
-
-  useLayoutEffect(() => {
-    if (editingThoughtId === null) {
-      return;
-    }
-    resizeEditTextarea();
-    const element = editTextareaRef.current;
-    if (!element) {
-      return;
-    }
-    requestAnimationFrame(() => {
-      element.focus();
-      element.scrollIntoView({ block: "center", behavior: "smooth" });
-    });
-  }, [editingThoughtId, editingThoughtText]);
 
   return (
     <EmotionNoteDetailSectionCard
@@ -82,54 +40,21 @@ export default function EmotionNoteThoughtDetailSection(props: EmotionNoteThough
           details.map((detail) => (
             <div
               key={detail.id}
-              className={`${styles.detailCard} ${
-                selectedDetailId === detail.id ? styles.detailCardSelected : ""
-              }`}
-              onClick={(event) => {
-                event.stopPropagation();
-                onSelectDetail?.(detail.id);
-              }}
-              role={onSelectDetail ? "button" : undefined}
-              tabIndex={onSelectDetail ? 0 : undefined}
+              className={styles.detailCard}
             >
-              {editingThoughtId === detail.id ? (
-                <div className={styles.detailEdit}>
-                  {editingEmotionText ? (
-                    <div className={styles.detailEditBadge}>
-                      <EmotionNoteDetailSectionBadge text={`${editingEmotionText}`} />
-                    </div>
-                  ) : null}
-                  <textarea
-                    ref={editTextareaRef}
-                    value={editingThoughtText}
-                    onChange={(event) =>
-                      onChangeEditingThoughtText(event.target.value)
-                    }
-                    onFocus={resizeEditTextarea}
-                    onInput={resizeEditTextarea}
-                    rows={2}
-                    className={`${styles.textarea} ${styles.autoGrowTextarea}`}
-                  />
-                </div>
-              ) : (
-                <>
-                  {null}
-                  <EmotionNoteDetailSectionItem
-                    badgeText={detail.emotion}
-                    body={detail.automatic_thought}
-                    actions={{
-                      copyText: `자동 사고: ${detail.automatic_thought}\n감정: ${detail.emotion}`,
-                      modalTitle: "자동 사고",
-                      modalBody: detail.automatic_thought,
-                      modalBadgeText: `${detail.emotion}`,
-                      timeText: formatDateTime(detail.created_at),
-                      onCopyText,
-                      onOpenModal,
-                    }}
-                  />
-                  {null}
-                </>
-              )}
+              <EmotionNoteDetailSectionItem
+                badgeText={detail.emotion}
+                body={detail.automatic_thought}
+                actions={{
+                  copyText: `자동 사고: ${detail.automatic_thought}\n감정: ${detail.emotion}`,
+                  modalTitle: "자동 사고",
+                  modalBody: detail.automatic_thought,
+                  modalBadgeText: `${detail.emotion}`,
+                  timeText: formatDateTime(detail.created_at),
+                  onCopyText,
+                  onOpenModal,
+                }}
+              />
             </div>
           ))
         )}

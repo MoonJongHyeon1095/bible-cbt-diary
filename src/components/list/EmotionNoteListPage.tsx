@@ -29,7 +29,7 @@ export default function EmotionNoteListPage() {
 
   return (
     <div className={styles.page}>
-      <AppHeader />
+      <AppHeader showDisclaimer={false} />
       <main className={styles.main}>
         <div className={styles.shell}>
           {isLoading || accessMode === "blocked" ? null : (

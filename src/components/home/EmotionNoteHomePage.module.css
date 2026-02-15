@@ -1,85 +1,122 @@
 .content {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
 
 .main {
-  position: relative;
   flex: 1;
-  padding: clamp(22vh, 28vh, 34vh) 24px 36px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-}
-
-.dateDock {
-  position: absolute;
-  top: clamp(10vh, 14vh, 18vh);
-  left: 50%;
-  transform: translateX(-50%);
-  width: min(960px, calc(100% - 48px));
+  padding: 12px 16px 24px;
   display: flex;
   justify-content: center;
-  pointer-events: none;
 }
 
 .shell {
-  width: min(1120px, 100%);
-  max-width: 100%;
+  width: min(720px, 100%);
   display: flex;
   justify-content: center;
-  align-items: center;
 }
 
 .card {
-  width: min(960px, 100%);
-  padding: clamp(8px, 1.2vw, 14px) 0;
+  width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 12px;
   align-items: center;
 }
 
-.title {
-  margin: 0;
+.stepBlock {
   width: 100%;
-  text-align: center;
-  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
 }
 
-.titleQuestion {
-  display: block;
+.dateDock {
   width: 100%;
-  font-size: clamp(1.35rem, 1.05rem + 1.8vw, 2.2rem);
-  line-height: 1.25;
-  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
-    serif;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 18px;
 }
 
 .dateHint {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
-  color: color-mix(in srgb, var(--text) 88%, white);
+  line-height: 1.2;
+  color: color-mix(in srgb, var(--text) 92%, white);
+}
+
+.title {
+  margin: 0;
+  width: 100%;
   text-align: center;
-  letter-spacing: 0.01em;
+  margin-bottom: 2px;
+}
+
+.titleQuestion {
+  display: block;
+  width: 100%;
+  font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem);
+  line-height: 1.25;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+}
+
+.moodBlock {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 48px;
+}
+
+.moodPrompt {
+  margin: 0;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 78%, white);
+}
+
+.moodToggle {
+  display: inline-flex;
+  gap: 10px;
+}
+
+.moodButton {
+  width: 56px;
+  height: 56px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.04);
+  color: color-mix(in srgb, var(--text) 76%, white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.moodButtonActive {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.12);
+  color: color-mix(in srgb, var(--text) 96%, white);
 }
 
 .emotionGrid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
-  margin-top: 6px;
+  gap: 12px;
+  margin-top: 10px;
 }
 
 .emotionCard {
   position: relative;
-  width: clamp(64px, 7.2vw, 76px);
-  height: clamp(64px, 7.2vw, 76px);
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   border: 1.5px solid currentColor;
   background: transparent;
@@ -90,26 +127,17 @@
   transition: border-color 0.16s ease, opacity 0.16s ease, box-shadow 0.2s ease;
 }
 
-.emotionCard:hover {
-  opacity: 0.95;
-}
-
 .emotionCard::after {
   content: "";
   position: absolute;
-  inset: 3px;
+  inset: 4px;
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+  border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
   pointer-events: none;
 }
 
 .emotionCardLoading {
   animation: homeChipSparkle 1s ease-in-out infinite;
-}
-
-.emotionCardLoading::after {
-  border-color: color-mix(in srgb, currentColor 58%, transparent);
-  animation: homeChipInnerGleam 0.92s ease-in-out infinite;
 }
 
 .emotionCardLoading::before {
@@ -125,74 +153,11 @@
   pointer-events: none;
 }
 
-.emotionCardSelected {
-  border-width: 2px;
-}
-
-.emotionCardSelected::after {
-  border-color: color-mix(in srgb, currentColor 45%, transparent);
-}
-
 .emotionName {
   font-size: 0.86rem;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.01em;
-}
-
-.selectionText {
-  margin: 2px 0 2px;
-  font-size: 0.84rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
-.startButton {
-  width: 100%;
-  border-radius: 14px;
-  border: 1px solid rgba(243, 204, 113, 0.45);
-  background: linear-gradient(145deg, rgba(243, 204, 113, 0.18), rgba(89, 69, 24, 0.2));
-  margin-top: 2px;
-  min-height: 52px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  text-decoration: none;
-  color: inherit;
-  position: relative;
-  box-shadow: 0 8px 22px rgba(8, 12, 18, 0.35);
-}
-
-.startButton[disabled] {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.startButtonLoading {
-  isolation: isolate;
-}
-
-.startButtonRing {
-  position: absolute;
-  inset: -5px;
-  border-radius: 14px;
-  border: 2px solid rgba(243, 204, 113, 0.85);
-  border-top-color: transparent;
-  animation: homeButtonSpin 0.9s linear infinite;
-  pointer-events: none;
-}
-
-.plusText {
-  font-size: 0.95rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-@keyframes homeButtonSpin {
-  to {
-    transform: rotate(360deg);
-  }
 }
 
 @keyframes homeChipOrbit {
@@ -203,41 +168,60 @@
 
 @keyframes homeChipSparkle {
   0% {
-    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
       0 0 9px color-mix(in srgb, currentColor 26%, transparent),
       inset 0 0 8px color-mix(in srgb, currentColor 16%, transparent);
   }
+
   50% {
-    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 72%, transparent),
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, currentColor 72%, transparent),
       0 0 18px color-mix(in srgb, currentColor 52%, transparent),
       inset 0 0 14px color-mix(in srgb, currentColor 24%, transparent);
   }
+
   100% {
-    box-shadow: 0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
       0 0 9px color-mix(in srgb, currentColor 26%, transparent),
       inset 0 0 8px color-mix(in srgb, currentColor 16%, transparent);
-  }
-}
-
-@keyframes homeChipInnerGleam {
-  0% {
-    border-color: color-mix(in srgb, currentColor 42%, transparent);
-  }
-  50% {
-    border-color: color-mix(in srgb, currentColor 76%, transparent);
-  }
-  100% {
-    border-color: color-mix(in srgb, currentColor 42%, transparent);
   }
 }
 
 @media (max-width: 980px) {
   .main {
-    padding: clamp(20vh, 26vh, 32vh) 14px 26px;
+    padding: 8px 14px 24px;
   }
 
-  .dateDock {
-    top: clamp(9vh, 12vh, 16vh);
-    width: calc(100% - 28px);
+  .dateHint {
+    font-size: 1rem;
+  }
+
+  .titleQuestion {
+    font-size: 1.45rem;
+    white-space: nowrap;
+  }
+
+  .moodPrompt {
+    font-size: 0.8rem;
+  }
+
+  .moodBlock {
+    margin-top: 40px;
+  }
+
+  .emotionGrid {
+    margin-top: 6px;
+    gap: 8px;
+  }
+
+  .emotionCard {
+    width: 68px;
+    height: 68px;
+  }
+
+  .emotionName {
+    font-size: 0.86rem;
   }
 }

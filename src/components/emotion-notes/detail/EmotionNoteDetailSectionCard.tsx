@@ -15,11 +15,11 @@ export default function EmotionNoteDetailSectionCard({
   className,
   icon,
   title,
-  hint,
   children,
 }: EmotionNoteDetailSectionCardProps) {
   return (
     <div className={`${styles.sectionCard} ${className ?? ""}`.trim()}>
+      <div className={styles.sectionTape} aria-hidden />
       <div className={styles.sectionHeader}>
         <div className={styles.sectionTitle}>
           <span className={styles.sectionIcon} aria-hidden>
@@ -27,7 +27,6 @@ export default function EmotionNoteDetailSectionCard({
           </span>
           <h3>{title}</h3>
         </div>
-        <p className={styles.sectionHint}>{hint}</p>
       </div>
       {children}
     </div>

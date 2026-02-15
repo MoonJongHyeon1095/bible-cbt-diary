@@ -67,12 +67,9 @@ export const fetchEmotionNoteFlow = async (
   return { response, data };
 };
 
-// GET /api/emotion-flow?action=list&noteId=...
+// GET /api/emotion-flow?action=list
 // flow 목록 조회
-export const fetchEmotionFlowList = async (
-  access: AccessContext,
-  noteId?: number | null,
-) => {
+export const fetchEmotionFlowList = async (access: AccessContext) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
     return {
@@ -83,7 +80,6 @@ export const fetchEmotionFlowList = async (
 
   const url = appendQuery(buildApiUrl("/api/emotion-flow"), {
     action: "list",
-    ...(noteId ? { noteId: String(noteId) } : {}),
     ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),
   });
   const response = await fetch(url, {

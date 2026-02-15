@@ -23,7 +23,6 @@ import styles from "./FlowListSection.module.css";
 
 type FlowListSectionProps = {
   access: AccessContext;
-  noteId?: number | null;
 };
 
 type GroupNode = {
@@ -97,7 +96,6 @@ const seedNodes = (
 
 export default function FlowListSection({
   access,
-  noteId = null,
 }: FlowListSectionProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -118,9 +116,6 @@ export default function FlowListSection({
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const [isSimulating, setIsSimulating] = useState(false);
-  const [noteFilterInput, setNoteFilterInput] = useState(
-    noteId ? String(noteId) : "",
-  );
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -136,7 +131,7 @@ export default function FlowListSection({
     return () => observer.disconnect();
   }, []);
 
-  const flowsQuery = useFlowListQuery(access, noteId);
+  const flowsQuery = useFlowListQuery(access);
   const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
   const flows = useMemo(() => flowsQuery.data ?? [], [flowsQuery.data]);
 
@@ -224,25 +219,6 @@ export default function FlowListSection({
     [nodes],
   );
 
-  useEffect(() => {
-    setNoteFilterInput(noteId ? String(noteId) : "");
-  }, [noteId]);
-
-  const applyNoteFilter = () => {
-    const trimmed = noteFilterInput.trim();
-    if (!trimmed) {
-      router.push(flowRoutes.root());
-      return;
-    }
-
-    const parsed = Number(trimmed);
-    if (Number.isNaN(parsed)) {
-      return;
-    }
-
-    router.push(flowRoutes.byNote(parsed));
-  };
-
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
     if ((event.target as HTMLElement).closest(`.${styles.node}`)) {
       return;
@@ -287,7 +263,7 @@ export default function FlowListSection({
       return;
     }
 
-    await invalidateFlowListQueries(queryClient, access, noteId);
+    await invalidateFlowListQueries(queryClient, access);
     setConfirmDelete(false);
     setSelectedFlowId(null);
     setIsDeleting(false);
@@ -306,11 +282,8 @@ export default function FlowListSection({
       selectedNode={selectedNode}
       isSimulating={isSimulating}
       totalCount={totalCount}
-      noteFilterInput={noteFilterInput}
       confirmDelete={confirmDelete}
       isDeleting={isDeleting}
-      onChangeNoteFilterInput={setNoteFilterInput}
-      onApplyNoteFilter={applyNoteFilter}
       onCanvasPointerDown={handlePointerDown}
       onCanvasPointerMove={handlePointerMove}
       onCanvasPointerUp={handlePointerUp}

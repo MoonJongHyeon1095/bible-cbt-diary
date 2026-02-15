@@ -30,11 +30,8 @@ type FlowListSectionViewProps = {
   selectedNode: GroupNode | null;
   isSimulating: boolean;
   totalCount: number;
-  noteFilterInput: string;
   confirmDelete: boolean;
   isDeleting: boolean;
-  onChangeNoteFilterInput: (value: string) => void;
-  onApplyNoteFilter: () => void;
   onCanvasPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onCanvasPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onCanvasPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void;
@@ -56,11 +53,8 @@ export default function FlowListSectionView({
   selectedNode,
   isSimulating,
   totalCount,
-  noteFilterInput,
   confirmDelete,
   isDeleting,
-  onChangeNoteFilterInput,
-  onApplyNoteFilter,
   onCanvasPointerDown,
   onCanvasPointerMove,
   onCanvasPointerUp,
@@ -78,36 +72,6 @@ export default function FlowListSectionView({
           <h2 className={styles.title}>
             {nodes.length}개의 플로우, {totalCount}개의 기록
           </h2>
-          <div className={styles.noteFilter}>
-            <label className={styles.noteFilterLabel} htmlFor="flow-note-filter">
-              임시 노트 필터
-            </label>
-            <div className={styles.noteFilterField}>
-              <input
-                id="flow-note-filter"
-                type="number"
-                inputMode="numeric"
-                placeholder="noteId 입력"
-                value={noteFilterInput}
-                onChange={(event) => onChangeNoteFilterInput(event.target.value)}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    onApplyNoteFilter();
-                  }
-                }}
-                className={styles.noteFilterInput}
-              />
-              <SafeButton
-                type="button"
-                variant="ghost"
-                size="sm"
-                className={styles.noteFilterButton}
-                onClick={onApplyNoteFilter}
-              >
-                적용
-              </SafeButton>
-            </div>
-          </div>
         </div>
       </header>
 

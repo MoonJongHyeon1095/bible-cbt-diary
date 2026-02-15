@@ -33,7 +33,7 @@ export const goToFlowForNote = async ({
   }
 
   if (ids.length > 1) {
-    router.push(flowRoutes.byNote(noteId));
+    router.push(flowRoutes.root());
     return true;
   }
 

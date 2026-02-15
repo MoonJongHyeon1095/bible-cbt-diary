@@ -34,10 +34,7 @@ function FlowPageContent({ mode }: FlowPageProps) {
                 flowId={flowId}
               />
             ) : (
-              <FlowListSection
-                access={access}
-                noteId={noteId}
-              />
+              <FlowListSection access={access} />
             )
           ) : (
             <div className={styles.emptyAuth}>로그인 후 플로우를 확인할 수 있어요.</div>

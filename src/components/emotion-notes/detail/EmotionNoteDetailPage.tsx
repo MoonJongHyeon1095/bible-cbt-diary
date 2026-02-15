@@ -12,24 +12,18 @@ import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useQueryClient } from "@tanstack/react-query";
-import { AlertCircle, Brain, Footprints, Lightbulb, Route, Share2 } from "lucide-react";
+import { Lightbulb, NotebookPen, Route, Share2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import EmotionNoteAlternativeDetailSection from "./EmotionNoteAlternativeDetailSection";
-import EmotionNoteBehaviorDetailSection from "./EmotionNoteBehaviorDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
-import EmotionNoteDetailSectionChart from "./EmotionNoteDetailSectionChart";
-import EmotionNoteDetailSectionToggleList from "./EmotionNoteDetailSectionToggleList";
-import EmotionNoteErrorDetailSection from "./EmotionNoteErrorDetailSection";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
-import EmotionNoteThoughtDetailSection from "./EmotionNoteThoughtDetailSection";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
 };
 
-type SectionKey = "thought" | "error" | "alternative" | "behavior";
 type ModalContent = {
   title: string;
   body: string;
@@ -55,42 +49,21 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
   const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true, redirectTo: null });
   const { accessMode: accessStateMode, accessToken, isBlocked } = useAccessContext();
 
-  const [selectedSection, setSelectedSection] = useState<SectionKey | null>(null);
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
+  const latestAlternative = useMemo(
+    () =>
+      [...(note?.alternative_details ?? [])].sort((a, b) =>
+        b.created_at.localeCompare(a.created_at),
+      )[0] ?? null,
+    [note?.alternative_details],
+  );
 
   const createModalHandler =
     (color: string, icon: ReactNode) =>
     (title: string, body: string, badgeText?: string | null) => {
       setModalContent({ title, body, color, icon, badgeText: badgeText ?? null });
     };
-
-  const sections = [
-    {
-      key: "thought" as const,
-      label: "자동 사고",
-      color: "#ffd300",
-      count: note?.thought_details?.length ?? 0,
-    },
-    {
-      key: "error" as const,
-      label: "인지 오류",
-      color: "#ff4fd8",
-      count: note?.error_details?.length ?? 0,
-    },
-    {
-      key: "alternative" as const,
-      label: "대안 사고",
-      color: "#36d94a",
-      count: note?.alternative_details?.length ?? 0,
-    },
-    {
-      key: "behavior" as const,
-      label: "행동 반응",
-      color: "#26e0ff",
-      count: note?.behavior_details?.length ?? 0,
-    },
-  ];
 
   const handleCopyText = async (text: string) => {
     try {
@@ -101,78 +74,10 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
     }
   };
 
-  const toggleItems = [
-    {
-      key: "thought",
-      label: "자동 사고",
-      color: "#ffd300",
-      count: note?.thought_details?.length ?? 0,
-      isActive: selectedSection === "thought",
-      onToggle: () => setSelectedSection((prev) => (prev === "thought" ? null : "thought")),
-      content: (
-        <EmotionNoteThoughtDetailSection
-          details={note?.thought_details ?? []}
-          formatDateTime={formatDateTime}
-          onCopyText={handleCopyText}
-          onOpenModal={createModalHandler("#ffd300", <Brain size={18} />)}
-        />
-      ),
-    },
-    {
-      key: "error",
-      label: "인지 오류",
-      color: "#ff4fd8",
-      count: note?.error_details?.length ?? 0,
-      isActive: selectedSection === "error",
-      onToggle: () => setSelectedSection((prev) => (prev === "error" ? null : "error")),
-      content: (
-        <EmotionNoteErrorDetailSection
-          details={note?.error_details ?? []}
-          formatDateTime={formatDateTime}
-          onCopyText={handleCopyText}
-          onOpenModal={createModalHandler("#ff4fd8", <AlertCircle size={18} />)}
-        />
-      ),
-    },
-    {
-      key: "alternative",
-      label: "대안 사고",
-      color: "#36d94a",
-      count: note?.alternative_details?.length ?? 0,
-      isActive: selectedSection === "alternative",
-      onToggle: () =>
-        setSelectedSection((prev) => (prev === "alternative" ? null : "alternative")),
-      content: (
-        <EmotionNoteAlternativeDetailSection
-          details={note?.alternative_details ?? []}
-          formatDateTime={formatDateTime}
-          onCopyText={handleCopyText}
-          onOpenModal={createModalHandler("#36d94a", <Lightbulb size={18} />)}
-        />
-      ),
-    },
-    {
-      key: "behavior",
-      label: "행동 반응",
-      color: "#26e0ff",
-      count: note?.behavior_details?.length ?? 0,
-      isActive: selectedSection === "behavior",
-      onToggle: () => setSelectedSection((prev) => (prev === "behavior" ? null : "behavior")),
-      content: (
-        <EmotionNoteBehaviorDetailSection
-          details={note?.behavior_details ?? []}
-          formatDateTime={formatDateTime}
-          onCopyText={handleCopyText}
-          onOpenModal={createModalHandler("#26e0ff", <Footprints size={18} />)}
-        />
-      ),
-    },
-  ];
-
   if (detailAccessMode === "blocked" && !isLoading) {
     return (
       <div className={pageStyles.page}>
-        <AppHeader />
+        <AppHeader showDisclaimer={false} />
         <main className={pageStyles.main}>
           <div className={pageStyles.shell} />
         </main>
@@ -182,27 +87,35 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
 
   return (
     <div className={`${pageStyles.page} ${styles.root}`}>
-      <AppHeader />
-      <main className={pageStyles.main}>
+      <AppHeader showDisclaimer={false} />
+      <main className={`${pageStyles.main} ${styles.pageMain}`}>
         <div className={pageStyles.shell}>
           <section className={styles.noteForm}>
-            <label className={styles.field}>
-              <span className={styles.label}>제목</span>
-              <div className={styles.readonlyValue}>{note?.title?.trim() || "-"}</div>
-            </label>
-            <label className={styles.field}>
-              <span className={styles.label}>트리거 텍스트</span>
+            <div className={styles.notePin} aria-hidden />
+            <div className={styles.noteHeader}>
+              <span className={styles.noteHeaderIcon} aria-hidden>
+                <NotebookPen size={16} />
+              </span>
+              <div>
+                <p className={styles.noteEyebrow}>Emotion Note Report</p>
+                <h2 className={styles.noteTitle}>{note?.title?.trim() || "-"}</h2>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <span className={styles.label}>Incident</span>
               <div className={styles.readonlyValue}>{note?.trigger_text?.trim() || "-"}</div>
-            </label>
+            </div>
           </section>
 
           <section className={styles.sectionView}>
-            <EmotionNoteDetailSectionChart
-              sections={sections}
-              selectedKey={selectedSection}
-              onSelect={(key) => setSelectedSection((prev) => (prev === key ? null : key))}
+            <EmotionNoteAlternativeDetailSection
+              details={note?.alternative_details ?? []}
+              thoughtDetails={note?.thought_details ?? []}
+              errorDetails={note?.error_details ?? []}
+              formatDateTime={formatDateTime}
+              onCopyText={handleCopyText}
+              onOpenModal={createModalHandler("#36d94a", <Lightbulb size={18} />)}
             />
-            <EmotionNoteDetailSectionToggleList items={toggleItems} />
           </section>
 
           {note?.created_at ? (
@@ -223,6 +136,21 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
               backgroundColor: "#fff",
               color: "#121417",
               borderColor: "rgba(18, 20, 23, 0.35)",
+            }}
+          />
+          <FloatingActionButton
+            label="행동 제안"
+            icon={<Sparkles size={22} />}
+            helperText="행동 제안 (준비중)"
+            disabled
+            onClick={() => undefined}
+            className={styles.fabBehavior}
+            style={{
+              left: "24px",
+              right: "auto",
+              backgroundColor: "#121417",
+              color: "#fff",
+              borderColor: "rgba(255, 255, 255, 0.35)",
             }}
           />
           <FloatingActionButton
@@ -271,8 +199,8 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
 
       <EmotionNoteDetailSectionItemModal
         isOpen={Boolean(modalContent)}
-        title={modalContent?.title ?? ""}
-        body={modalContent?.body ?? ""}
+        title={modalContent?.title ?? (latestAlternative ? "대안 사고" : "")}
+        body={modalContent?.body ?? latestAlternative?.alternative ?? ""}
         accentColor={modalContent?.color ?? "#fff"}
         icon={modalContent?.icon ?? null}
         badgeText={modalContent?.badgeText ?? null}

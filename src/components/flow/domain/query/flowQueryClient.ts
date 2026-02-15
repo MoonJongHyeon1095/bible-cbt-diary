@@ -23,11 +23,10 @@ export const patchFlowCountAcrossLists = (
 export const invalidateFlowListQueries = async (
   queryClient: QueryClient,
   access: AccessContext,
-  noteId?: number | null,
 ) => {
   await Promise.all([
     queryClient.invalidateQueries({
-      queryKey: queryKeys.flow.flows(access, noteId),
+      queryKey: queryKeys.flow.flows(access),
     }),
     queryClient.invalidateQueries({
       queryKey: ["emotion-flow", "flows"],

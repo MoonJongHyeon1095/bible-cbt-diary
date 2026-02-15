@@ -2,7 +2,7 @@ import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import type { DistortionCard } from "@/components/session/types/distortion";
 import SafeButton from "@/components/ui/SafeButton";
 import Textarea from "@/components/ui/Textarea";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import styles from "../MinimalStyles.module.css";
 
 type CbtDistortionCardProps = {
@@ -70,8 +70,10 @@ export function CbtDistortionCard({
           className={styles.distortionHintButton}
           onClick={onOpenHint}
           disabled={card.isGenerating}
+          aria-label="user hint 입력"
         >
-          힌트로 재생성
+          <Sparkles className={styles.distortionHintIcon} />
+          <span className={styles.distortionHintLabel}>user hint</span>
         </SafeButton>
         <SafeButton
           type="button"
@@ -79,8 +81,8 @@ export function CbtDistortionCard({
           className={styles.distortionProceedButton}
           onClick={onSelect}
           disabled={!canSelect}
+          aria-label="이 distortion으로 진행"
         >
-          <span>이 distortion으로 진행</span>
           <ArrowRight className={styles.distortionProceedIcon} />
         </SafeButton>
       </div>

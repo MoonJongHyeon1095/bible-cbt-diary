@@ -35,6 +35,7 @@ function CbtDeepSessionPageContent() {
     canGoBack,
     handleBack,
     handleGoHome,
+    handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
     tourSteps,
@@ -96,7 +97,7 @@ function CbtDeepSessionPageContent() {
           <CbtDeepIncidentSection
             userInput={flow.userInput}
             onInputChange={actions.setUserInput}
-            onNext={() => actions.setStep("distortion")}
+            onNext={handleProceedFromIncident}
             mainNote={mainNote}
             subNotes={subNotes}
           />

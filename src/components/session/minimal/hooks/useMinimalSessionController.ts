@@ -39,6 +39,8 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
+import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
+import { generateSessionNoteTitle } from "@/lib/gpt/sessionTitle";
 import {
   ALL_EMOTIONS,
   NEGATIVE_EMOTIONS,
@@ -61,6 +63,7 @@ export function useMinimalSessionController() {
   const [isSaving, setIsSaving] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
   const lastDistortionKeyRef = useRef<string>("");
+  const titleRequestSeqRef = useRef(0);
   const { requireAccessContext } = useCbtAccess({
     setError: (message) => {
       pushToast(message, "error");
@@ -268,6 +271,32 @@ export function useMinimalSessionController() {
     [actions, flow.selectedEmotion],
   );
 
+  const handleProceedFromIncident = useCallback(() => {
+    const incident = flow.userInput;
+    const emotion = flow.selectedEmotion;
+    const fallbackTitle = buildSessionNoteTitle({
+      emotion,
+      incident,
+    });
+    actions.setNoteTitle(fallbackTitle);
+    actions.setStep("distortion");
+
+    const seq = ++titleRequestSeqRef.current;
+    void generateSessionNoteTitle({
+      emotion,
+      incident,
+    })
+      .then((generatedTitle) => {
+        if (seq !== titleRequestSeqRef.current) return;
+        const normalized = generatedTitle.trim();
+        if (!normalized) return;
+        actions.setNoteTitle(normalized);
+      })
+      .catch((error) => {
+        console.error("세션 제목 생성 실패(minimal):", error);
+      });
+  }, [actions, flow.selectedEmotion, flow.userInput]);
+
   const handleComplete = useCallback(
     async (thought: string) => {
       if (isSaving) return;
@@ -291,6 +320,12 @@ export function useMinimalSessionController() {
       };
 
       const minimalPayload = {
+        title:
+          flow.noteTitle ||
+          buildSessionNoteTitle({
+            emotion: flow.selectedEmotion,
+            incident: flow.userInput,
+          }),
         triggerText: flow.userInput,
         emotion: flow.selectedEmotion,
         automaticThought: flow.emotionThoughtPairs[0]?.thought ?? "",
@@ -339,6 +374,7 @@ export function useMinimalSessionController() {
     },
     [
       flow.emotionThoughtPairs,
+      flow.noteTitle,
       flow.selectedCognitiveErrors,
       flow.selectedEmotion,
       flow.userInput,
@@ -380,6 +416,7 @@ export function useMinimalSessionController() {
     canGoBack: currentStepIndex > 0,
     handleBack,
     handleGoHome,
+    handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
     tourSteps,

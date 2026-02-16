@@ -14,6 +14,8 @@ import { useDeepSessionOnboarding } from "./useDeepSessionOnboarding";
 import { useDeepSessionNavigationHandlers } from "../handlers/useDeepSessionNavigationHandlers";
 import { useDeepSessionSelectionHandlers } from "../handlers/useDeepSessionSelectionHandlers";
 import { useDeepSessionSaveHandlers } from "../handlers/useDeepSessionSaveHandlers";
+import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
+import { generateSessionNoteTitle } from "@/lib/gpt/sessionTitle";
 import { useGate } from "@/components/gate/GateProvider";
 import {
   DEEP_ALTERNATIVE_STEPS,
@@ -82,6 +84,7 @@ export function useDeepSessionController() {
   const [isSaving, setIsSaving] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const { blocker, canShowOnboarding } = useGate();
+  const titleRequestSeqRef = useRef(0);
 
   const stepOrder: DeepStep[] = useMemo(
     () =>
@@ -262,6 +265,32 @@ export function useDeepSessionController() {
     nextStep: flow.selectedEmotion ? "incident" : "mood",
   });
 
+  const handleProceedFromIncident = () => {
+    const incident = flow.userInput;
+    const emotion = flow.selectedEmotion;
+    const fallbackTitle = buildSessionNoteTitle({
+      emotion,
+      incident,
+    });
+    actions.setNoteTitle(fallbackTitle);
+    actions.setStep("distortion");
+
+    const seq = ++titleRequestSeqRef.current;
+    void generateSessionNoteTitle({
+      emotion,
+      incident,
+    })
+      .then((generatedTitle) => {
+        if (seq !== titleRequestSeqRef.current) return;
+        const normalized = generatedTitle.trim();
+        if (!normalized) return;
+        actions.setNoteTitle(normalized);
+      })
+      .catch((error) => {
+        console.error("세션 제목 생성 실패(deep):", error);
+      });
+  };
+
   const { handleComplete } = useDeepSessionSaveHandlers({
     flow,
     flowId,
@@ -328,6 +357,7 @@ export function useDeepSessionController() {
     canGoBack: currentStepIndex > 0 || flow.step === "select",
     handleBack,
     handleGoHome,
+    handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
     tourSteps,

@@ -4,9 +4,10 @@ import type { AccessContext } from "@/lib/types/access";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
-import { formatAutoTitle } from "@/components/session/utils/formatAutoTitle";
+import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
 
 export type MinimalSavePayload = {
+  title: string;
   triggerText: string;
   emotion: string;
   automaticThought: string;
@@ -29,12 +30,15 @@ export async function saveMinimalPatternAPI(
   const automaticThought = payload.automaticThought.trim();
   const emotion = payload.emotion.trim();
   const alternativeThought = payload.alternativeThought.trim();
+  const title =
+    payload.title.trim() ||
+    buildSessionNoteTitle({ emotion, incident: triggerText });
   const errorTitle = payload.cognitiveError?.title?.trim() ?? "";
   const errorDescription = payload.cognitiveError?.detail?.trim() ?? "";
 
   const body = {
     mode: "minimal",
-    title: formatAutoTitle(new Date(), emotion),
+    title,
     triggerText,
     emotion,
     automaticThought,

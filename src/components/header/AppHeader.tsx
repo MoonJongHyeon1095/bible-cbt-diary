@@ -12,17 +12,12 @@ import { House, LogIn, LogOut, Undo2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import styles from "./AppHeader.module.css";
 import CompactNav from "./navigation/CompactNav";
-import dynamic from "next/dynamic";
+import DisclaimerBanner from "./DisclaimerBanner";
 
 type SessionUser = {
   id: string;
   email: string | null;
 };
-
-const DisclaimerBanner = dynamic(() => import("./DisclaimerBanner"), {
-  ssr: false,
-  loading: () => <div className={styles.disclaimerPlaceholder} aria-hidden />,
-});
 
 type AppHeaderProps = {
   showDisclaimer?: boolean;
@@ -101,11 +96,17 @@ function DefaultAppHeader({
 }: Pick<AppHeaderProps, "showDisclaimer" | "preserveDisclaimerGap">) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [isAuthResolved, setIsAuthResolved] = useState(false);
-  const [isDisclaimerVisible, setIsDisclaimerVisible] = useState(() => {
-    return safeSessionStorage.getItem(DISCLAIMER_BANNER_DISMISS_KEY) !== "true";
-  });
+  const [isDisclaimerVisible, setIsDisclaimerVisible] = useState<boolean | null>(
+    null,
+  );
   const { openAuthModal } = useAuthModal();
   const supabase = useMemo(() => getSupabaseBrowserClient(), []);
+
+  useEffect(() => {
+    setIsDisclaimerVisible(
+      safeSessionStorage.getItem(DISCLAIMER_BANNER_DISMISS_KEY) !== "true",
+    );
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -142,6 +143,17 @@ function DefaultAppHeader({
     clearAiUsageGuardCache();
     clearTokenSessionStorage();
   };
+
+  const handleDismissDisclaimer = () => {
+    safeSessionStorage.setItem(DISCLAIMER_BANNER_DISMISS_KEY, "true");
+    setIsDisclaimerVisible(false);
+  };
+
+  const shouldRenderDisclaimerWrap =
+    showDisclaimer &&
+    (isDisclaimerVisible === null
+      ? true
+      : isDisclaimerVisible || preserveDisclaimerGap);
 
   return (
     <>
@@ -180,14 +192,14 @@ function DefaultAppHeader({
           )}
         </div>
       </header>
-      {showDisclaimer && (isDisclaimerVisible || preserveDisclaimerGap) ? (
+      {shouldRenderDisclaimerWrap ? (
         <div className={styles.disclaimerWrap}>
           {isDisclaimerVisible ? (
             <DisclaimerBanner
               detailsClassName={styles.disclaimerDetails}
               titleClassName={styles.disclaimerTitle}
               textClassName={styles.disclaimerText}
-              onDismiss={() => setIsDisclaimerVisible(false)}
+              onDismiss={handleDismissDisclaimer}
             />
           ) : (
             <div className={styles.disclaimerPlaceholder} aria-hidden />

@@ -26,6 +26,7 @@ type FlowState = {
   step: DeepStep;
   userInput: string;
   selectedEmotion: string;
+  noteTitle: string;
   autoThought: string;
   selectedCognitiveErrors: SelectedCognitiveError[];
   alternativeSeed: number;
@@ -35,6 +36,7 @@ type FlowAction =
   | { type: "SET_STEP"; step: DeepStep }
   | { type: "SET_USER_INPUT"; value: string }
   | { type: "SET_SELECTED_EMOTION"; value: string }
+  | { type: "SET_NOTE_TITLE"; value: string }
   | {
       type: "SET_DISTORTION";
       thought: string;
@@ -47,6 +49,7 @@ const buildInitialState = (step: DeepStep): FlowState => ({
   step,
   userInput: "",
   selectedEmotion: "",
+  noteTitle: "",
   autoThought: "",
   selectedCognitiveErrors: [],
   alternativeSeed: 0,
@@ -60,6 +63,8 @@ const reducer = (state: FlowState, action: FlowAction): FlowState => {
       return { ...state, userInput: action.value };
     case "SET_SELECTED_EMOTION":
       return { ...state, selectedEmotion: action.value };
+    case "SET_NOTE_TITLE":
+      return { ...state, noteTitle: action.value };
     case "SET_DISTORTION":
       return {
         ...state,
@@ -90,6 +95,8 @@ export function useCbtDeepSessionFlow(initialStep: DeepStep) {
         dispatch({ type: "SET_USER_INPUT", value }),
       setSelectedEmotion: (value: string) =>
         dispatch({ type: "SET_SELECTED_EMOTION", value }),
+      setNoteTitle: (value: string) =>
+        dispatch({ type: "SET_NOTE_TITLE", value }),
       setDistortion: (
         thought: string,
         error: SelectedCognitiveError,

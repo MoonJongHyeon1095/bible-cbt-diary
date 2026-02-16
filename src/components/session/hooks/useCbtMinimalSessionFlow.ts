@@ -27,6 +27,7 @@ type FlowState = {
   step: MinimalStep;
   userInput: string;
   selectedEmotion: string;
+  noteTitle: string;
   emotionThoughtPairs: EmotionThoughtPair[];
   selectedCognitiveErrors: SelectedCognitiveError[];
   alternativeSeed: number;
@@ -36,6 +37,7 @@ type FlowAction =
   | { type: "SET_STEP"; step: MinimalStep }
   | { type: "SET_USER_INPUT"; value: string }
   | { type: "SET_SELECTED_EMOTION"; value: string }
+  | { type: "SET_NOTE_TITLE"; value: string }
   | {
       type: "SET_DISTORTION";
       thought: string;
@@ -49,6 +51,7 @@ const initialFlowState: FlowState = {
   step: "mood",
   userInput: "",
   selectedEmotion: "",
+  noteTitle: "",
   emotionThoughtPairs: [],
   selectedCognitiveErrors: [],
   alternativeSeed: 0,
@@ -62,6 +65,8 @@ const reducer = (state: FlowState, action: FlowAction): FlowState => {
       return { ...state, userInput: action.value };
     case "SET_SELECTED_EMOTION":
       return { ...state, selectedEmotion: action.value };
+    case "SET_NOTE_TITLE":
+      return { ...state, noteTitle: action.value };
     case "SET_DISTORTION":
       return {
         ...state,
@@ -90,6 +95,8 @@ export function useCbtMinimalSessionFlow() {
         dispatch({ type: "SET_USER_INPUT", value }),
       setSelectedEmotion: (value: string) =>
         dispatch({ type: "SET_SELECTED_EMOTION", value }),
+      setNoteTitle: (value: string) =>
+        dispatch({ type: "SET_NOTE_TITLE", value }),
       setDistortion: (
         thought: string,
         emotion: string,

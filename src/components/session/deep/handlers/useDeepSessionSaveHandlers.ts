@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
-import { formatAutoTitle } from "@/components/session/utils/formatAutoTitle";
+import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
 import { flowRoutes } from "@/components/flow/domain/navigation/flowRoutes";
 
@@ -18,6 +18,7 @@ type UseDeepSessionSaveHandlersParams = {
     step: DeepStep;
     userInput: string;
     selectedEmotion: string;
+    noteTitle: string;
     autoThought: string;
     selectedCognitiveErrors: SelectedCognitiveError[];
   };
@@ -76,7 +77,12 @@ export function useDeepSessionSaveHandlers({
         const result = await saveDeep({
           access,
           payload: {
-            title: formatAutoTitle(new Date(), flow.selectedEmotion),
+            title:
+              flow.noteTitle ||
+              buildSessionNoteTitle({
+                emotion: flow.selectedEmotion,
+                incident: flow.userInput,
+              }),
             trigger_text: flow.userInput,
             emotion: flow.selectedEmotion,
             automatic_thought: flow.autoThought,
@@ -118,6 +124,7 @@ export function useDeepSessionSaveHandlers({
     },
     [
       flow.selectedEmotion,
+      flow.noteTitle,
       flow.userInput,
       flow.autoThought,
       flow.selectedCognitiveErrors,

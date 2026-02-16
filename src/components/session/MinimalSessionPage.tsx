@@ -22,6 +22,7 @@ function MinimalSessionPageContent() {
     canGoBack,
     handleBack,
     handleGoHome,
+    handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
     tourSteps,
@@ -64,7 +65,7 @@ function MinimalSessionPageContent() {
           <CbtMinimalIncidentSection
             userInput={flow.userInput}
             onInputChange={actions.setUserInput}
-            onNext={() => actions.setStep("distortion")}
+            onNext={handleProceedFromIncident}
             title={incidentTitle}
           />
         )}

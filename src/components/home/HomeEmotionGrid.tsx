@@ -8,7 +8,6 @@ type HomeEmotion = {
 
 type HomeEmotionGridProps = {
   emotions: HomeEmotion[];
-  colorMap: Record<string, string>;
   loadingEmotionId: string | null;
   isStartLoading: boolean;
   onSelectEmotion: (emotionId: string) => void;
@@ -16,7 +15,6 @@ type HomeEmotionGridProps = {
 
 export function HomeEmotionGrid({
   emotions,
-  colorMap,
   loadingEmotionId,
   isStartLoading,
   onSelectEmotion,
@@ -24,7 +22,6 @@ export function HomeEmotionGrid({
   return (
     <div className={styles.emotionGrid} data-tour="home-emotion-grid">
       {emotions.map((emotion) => {
-        const color = colorMap[emotion.id];
         const isLoading = loadingEmotionId === emotion.id && isStartLoading;
         return (
           <SafeButton
@@ -34,10 +31,6 @@ export function HomeEmotionGrid({
             className={`${styles.emotionCard} ${isLoading ? styles.emotionCardLoading : ""}`}
             onClick={() => onSelectEmotion(emotion.id)}
             disabled={isStartLoading}
-            style={{
-              borderColor: color,
-              color,
-            }}
           >
             <span className={styles.emotionName}>{emotion.label}</span>
           </SafeButton>

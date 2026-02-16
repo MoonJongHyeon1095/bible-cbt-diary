@@ -115,11 +115,12 @@
 
 .emotionCard {
   position: relative;
-  width: 68px;
-  height: 68px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   border: 1.5px solid currentColor;
   background: transparent;
+  color: color-mix(in srgb, var(--text) 78%, white);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -159,10 +160,11 @@
 }
 
 .emotionName {
-  font-size: 0.86rem;
+  font-size: 0.88rem;
   font-weight: 600;
   line-height: 1.15;
   letter-spacing: -0.01em;
+  white-space: nowrap;
 }
 
 
@@ -235,11 +237,11 @@
   }
 
   .emotionCard {
-    width: 68px;
-    height: 68px;
+    width: 72px;
+    height: 72px;
   }
 
   .emotionName {
-    font-size: 0.86rem;
+    font-size: 0.87rem;
   }
 }

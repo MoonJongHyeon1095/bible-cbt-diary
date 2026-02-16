@@ -15,7 +15,6 @@ import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css
 import {
   NEGATIVE_EMOTIONS,
   POSITIVE_EMOTIONS,
-  type EmotionOption,
 } from "@/lib/constants/emotions";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
@@ -28,19 +27,6 @@ import { HomeEmotionGrid } from "./HomeEmotionGrid";
 import { HomeMoodToggle, type HomeMoodType } from "./HomeMoodToggle";
 import { HomeTitle } from "./HomeTitle";
 import { HOME_ONBOARDING_STEPS_BY_STEP } from "./onboarding/homeOnboarding";
-
-const buildEmotionColorMap = (emotions: EmotionOption[]) => {
-  const colors: string[] = [];
-  for (let i = 0; i < emotions.length; i += 1) {
-    const hue = (i * 137.508) % 360;
-    colors.push(`hsl(${hue.toFixed(1)} 54% 62%)`);
-  }
-  const map: Record<string, string> = {};
-  for (let i = 0; i < emotions.length; i += 1) {
-    map[emotions[i].id] = colors[i];
-  }
-  return map;
-};
 
 export default function EmotionNoteHomePage() {
   const router = useRouter();
@@ -57,10 +43,6 @@ export default function EmotionNoteHomePage() {
   const emotions = useMemo(
     () => (moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS),
     [moodType],
-  );
-  const emotionColorMap = useMemo(
-    () => buildEmotionColorMap(emotions),
-    [emotions],
   );
   const todayLabel = useMemo(
     () =>
@@ -259,7 +241,6 @@ export default function EmotionNoteHomePage() {
                   />
                   <HomeEmotionGrid
                     emotions={emotions}
-                    colorMap={emotionColorMap}
                     loadingEmotionId={loadingEmotionId}
                     isStartLoading={isStartLoading}
                     onSelectEmotion={(emotionId) => {

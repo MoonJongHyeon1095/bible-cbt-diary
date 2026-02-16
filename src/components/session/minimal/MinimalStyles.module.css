@@ -704,61 +704,6 @@
   box-shadow: 0 10px 18px rgba(9, 11, 16, 0.35);
 }
 
-.emotionButton[data-emotion="sadness"] {
-  border-color: rgba(88, 126, 190, 0.7);
-  background: rgba(58, 80, 120, 0.45);
-}
-
-.emotionButton[data-emotion="anger"] {
-  border-color: rgba(190, 94, 94, 0.75);
-  background: rgba(120, 54, 54, 0.45);
-}
-
-.emotionButton[data-emotion="fear"] {
-  border-color: rgba(132, 110, 190, 0.75);
-  background: rgba(85, 70, 130, 0.45);
-}
-
-.emotionButton[data-emotion="disgust"] {
-  border-color: rgba(86, 150, 110, 0.75);
-  background: rgba(58, 96, 72, 0.45);
-}
-
-.emotionButton[data-emotion="shame"] {
-  border-color: rgba(190, 110, 150, 0.75);
-  background: rgba(110, 62, 82, 0.45);
-}
-
-.emotionButton[data-emotion="guilt"] {
-  border-color: rgba(190, 110, 160, 0.7);
-  background: rgba(106, 60, 88, 0.45);
-}
-
-.emotionButton[data-emotion="loneliness"] {
-  border-color: rgba(110, 130, 190, 0.75);
-  background: rgba(60, 74, 120, 0.45);
-}
-
-.emotionButton[data-emotion="despair"] {
-  border-color: rgba(120, 132, 148, 0.7);
-  background: rgba(64, 72, 86, 0.45);
-}
-
-.emotionButton[data-emotion="frustration"] {
-  border-color: rgba(190, 150, 96, 0.75);
-  background: rgba(110, 86, 54, 0.45);
-}
-
-.emotionButton[data-emotion="anxiety"] {
-  border-color: rgba(190, 132, 78, 0.75);
-  background: rgba(110, 76, 46, 0.45);
-}
-
-.emotionButton[data-emotion="irritation"] {
-  border-color: rgba(190, 174, 90, 0.75);
-  background: rgba(110, 98, 46, 0.45);
-}
-
 .emotionBadge {
   display: inline-flex;
   gap: 6px;

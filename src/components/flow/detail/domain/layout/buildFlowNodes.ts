@@ -10,6 +10,7 @@ const NODE_SIZE_MAX_EXTRA = 120;
 const SLOPE_STEP = 90;
 const TIME_AXIS_STEP = 420;
 const FLOW_PADDING = 12;
+const ISOLATED_BASE_Y_OFFSET = 56;
 const INDIGO: [number, number, number] = [79, 70, 229];
 const BASE_BLUE: [number, number, number] = [230, 232, 246];
 const BORDER_BASE: [number, number, number] = [150, 160, 214];
@@ -71,6 +72,16 @@ export const buildFlowNodes = ({
 }: BuildFlowNodesParams): Node<FlowDetailNodeData>[] => {
   const activeTheme = themeColor ?? INDIGO;
   const nodes: Node<FlowDetailNodeData>[] = [];
+  const connectedBaseYValues: number[] = [];
+
+  elkChildren.forEach((child) => {
+    if (!isPositionedElkNode(child)) return;
+    if (!connectedNodeIds.has(child.id)) return;
+    connectedBaseYValues.push(child.y - offsetY);
+  });
+
+  const connectedBaselineY =
+    connectedBaseYValues.length > 0 ? Math.min(...connectedBaseYValues) : 0;
 
   elkChildren.forEach((child) => {
     if (!isPositionedElkNode(child)) return;
@@ -89,17 +100,22 @@ export const buildFlowNodes = ({
     const triggerText = note.trigger_text?.trim() || "트리거가 없습니다.";
     const labelText = note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
     const dateText = formatFlowDateLabel(note.created_at);
-    const spreadY = spreadOffsets.get(child.id) ?? 0;
+    const spreadY = connectedNodeIds.has(child.id)
+      ? (spreadOffsets.get(child.id) ?? 0)
+      : 0;
     const timeOffset = (timeIndex.get(child.id) ?? 0) * SLOPE_STEP;
     const isIsolated = !connectedNodeIds.has(child.id);
     const timeX = (timeIndex.get(child.id) ?? 0) * TIME_AXIS_STEP;
+    const baseY = isIsolated
+      ? connectedBaselineY + ISOLATED_BASE_Y_OFFSET
+      : child.y - offsetY;
 
     const node: Node<FlowDetailNodeData> = {
       id: String(note.id),
       type: "emotion",
       position: {
         x: (isIsolated ? timeX : child.x - offsetX) + FLOW_PADDING,
-        y: child.y - offsetY + FLOW_PADDING + spreadY + timeOffset,
+        y: baseY + FLOW_PADDING + spreadY + timeOffset,
       },
       data: {
         note,

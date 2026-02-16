@@ -11,6 +11,7 @@ import { formatFlowAxisDateLabel } from "./formatFlowDateLabel";
 
 const SPREAD_STEP = 140;
 const DATE_JITTER_STEP = 210;
+const TIME_AXIS_STEP = 420;
 const INDIGO: [number, number, number] = [79, 70, 229];
 
 type PositionedElkNode = ElkNode & { x: number; y: number };
@@ -38,10 +39,23 @@ const buildOutDegreeMap = (middles: EmotionNoteMiddle[]) => {
   return map;
 };
 
+const toCreatedAtMs = (value: string) => {
+  const ms = Date.parse(value);
+  return Number.isFinite(ms) ? ms : null;
+};
+
 const createTimeIndex = (notes: EmotionNote[]) => {
   const order = notes
     .slice()
-    .sort((a, b) => a.created_at.localeCompare(b.created_at))
+    .sort((a, b) => {
+      const aMs = toCreatedAtMs(a.created_at);
+      const bMs = toCreatedAtMs(b.created_at);
+      if (aMs !== null && bMs !== null && aMs !== bMs) return aMs - bMs;
+      if (a.created_at !== b.created_at) {
+        return a.created_at.localeCompare(b.created_at);
+      }
+      return a.id - b.id;
+    })
     .map((note) => String(note.id));
 
   const map = new Map<string, number>();
@@ -177,6 +191,15 @@ export const buildFlowLayout = ({
 
   const alignedNodes = nodes.map((node) => ({ ...node }));
   const nodeIndexById = new Map(alignedNodes.map((node, index) => [node.id, index]));
+  const getBucketJitterStep = (bucket: string[], fallbackStep: number) => {
+    const maxWidth = bucket.reduce((acc, id) => {
+      const nodeIndex = nodeIndexById.get(id);
+      if (nodeIndex === undefined) return acc;
+      const width = Number(alignedNodes[nodeIndex].style?.width ?? 0) || 0;
+      return Math.max(acc, width);
+    }, 0);
+    return Math.max(fallbackStep, maxWidth + 28);
+  };
 
   nodesByComponent.forEach((group) => {
     if (group.length < 2) return;
@@ -216,13 +239,112 @@ export const buildFlowLayout = ({
       const bucketIndex = bucket.indexOf(id);
       const bucketOffset =
         bucketIndex >= 0 ? bucketIndex - (bucket.length - 1) / 2 : 0;
-      const jitterX = bucketOffset * DATE_JITTER_STEP;
+      const jitterStep = getBucketJitterStep(bucket, DATE_JITTER_STEP);
+      const jitterX = bucketOffset * jitterStep;
 
       alignedNodes[nodeIndex] = {
         ...alignedNodes[nodeIndex],
         position: {
           ...alignedNodes[nodeIndex].position,
           x: targetX + jitterX,
+        },
+      };
+    });
+  });
+
+  const connectedAlignedNodes = alignedNodes.filter((node) =>
+    connectedNodeIds.has(node.id),
+  );
+  if (connectedAlignedNodes.length > 0) {
+    const connectedTimeValues = connectedAlignedNodes
+      .map((node) => {
+        const note = notesById.get(node.id);
+        return note ? toCreatedAtMs(note.created_at) : null;
+      })
+      .filter((value): value is number => value !== null);
+    const connectedMaxX = Math.max(
+      ...connectedAlignedNodes.map((node) => node.position.x),
+    );
+    const connectedMinX = Math.min(
+      ...connectedAlignedNodes.map((node) => node.position.x),
+    );
+    const connectedMaxMs =
+      connectedTimeValues.length > 0 ? Math.max(...connectedTimeValues) : null;
+    const connectedMinMs =
+      connectedTimeValues.length > 0 ? Math.min(...connectedTimeValues) : null;
+
+    if (connectedMaxMs !== null && connectedMinMs !== null) {
+      const isolatedNodes = alignedNodes
+        .filter((node) => !connectedNodeIds.has(node.id))
+        .map((node) => {
+          const note = notesById.get(node.id);
+          return {
+            id: node.id,
+            createdAtMs: note ? toCreatedAtMs(note.created_at) : null,
+          };
+        })
+        .filter((item): item is { id: string; createdAtMs: number } => item.createdAtMs !== null);
+
+      const newerIsolated = isolatedNodes
+        .filter((item) => item.createdAtMs > connectedMaxMs)
+        .sort((a, b) => a.createdAtMs - b.createdAtMs || Number(a.id) - Number(b.id));
+      newerIsolated.forEach((item, index) => {
+        const nodeIndex = nodeIndexById.get(item.id);
+        if (nodeIndex === undefined) return;
+        const targetX = connectedMaxX + TIME_AXIS_STEP * (index + 1);
+        alignedNodes[nodeIndex] = {
+          ...alignedNodes[nodeIndex],
+          position: {
+            ...alignedNodes[nodeIndex].position,
+            x: Math.max(alignedNodes[nodeIndex].position.x, targetX),
+          },
+        };
+      });
+
+      const olderIsolated = isolatedNodes
+        .filter((item) => item.createdAtMs < connectedMinMs)
+        .sort((a, b) => b.createdAtMs - a.createdAtMs || Number(b.id) - Number(a.id));
+      olderIsolated.forEach((item, index) => {
+        const nodeIndex = nodeIndexById.get(item.id);
+        if (nodeIndex === undefined) return;
+        const targetX = connectedMinX - TIME_AXIS_STEP * (index + 1);
+        alignedNodes[nodeIndex] = {
+          ...alignedNodes[nodeIndex],
+          position: {
+            ...alignedNodes[nodeIndex].position,
+            x: Math.min(alignedNodes[nodeIndex].position.x, targetX),
+          },
+        };
+      });
+    }
+  }
+
+  const isolatedDateBuckets = new Map<string, string[]>();
+  alignedNodes
+    .slice()
+    .sort((a, b) => a.position.x - b.position.x || Number(a.id) - Number(b.id))
+    .forEach((node) => {
+      if (connectedNodeIds.has(node.id)) return;
+      const note = notesById.get(node.id);
+      const dateKey = note?.created_at?.slice(0, 10) ?? "unknown";
+      const bucket = isolatedDateBuckets.get(dateKey) ?? [];
+      bucket.push(node.id);
+      isolatedDateBuckets.set(dateKey, bucket);
+    });
+
+  isolatedDateBuckets.forEach((bucket) => {
+    if (bucket.length < 2) return;
+    const jitterStep = getBucketJitterStep(bucket, DATE_JITTER_STEP);
+    bucket.forEach((id, bucketIndex) => {
+      const nodeIndex = nodeIndexById.get(id);
+      if (nodeIndex === undefined) return;
+      const bucketOffset = bucketIndex - (bucket.length - 1) / 2;
+      const jitterX = bucketOffset * jitterStep;
+      alignedNodes[nodeIndex] = {
+        ...alignedNodes[nodeIndex],
+        position: {
+          ...alignedNodes[nodeIndex].position,
+          x: alignedNodes[nodeIndex].position.x + jitterX,
         },
       };
     });

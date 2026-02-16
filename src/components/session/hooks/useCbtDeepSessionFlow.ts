@@ -1,5 +1,9 @@
 import { useMemo, useReducer } from "react";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
+import {
+  createSessionFlowReducer,
+  type SessionFlowBaseState,
+} from "@/components/session/common/sessionFlowCore";
 
 export type DeepStep =
   | "select"
@@ -22,28 +26,13 @@ export const DEEP_EMOTION_SELECT_STEPS: ReadonlyArray<DeepStep> = [
 export const DEEP_DISTORTION_STEPS: ReadonlyArray<DeepStep> = ["distortion"];
 export const DEEP_ALTERNATIVE_STEPS: ReadonlyArray<DeepStep> = ["alternative"];
 
-type FlowState = {
-  step: DeepStep;
-  userInput: string;
-  selectedEmotion: string;
-  noteTitle: string;
+type FlowState = SessionFlowBaseState<DeepStep> & {
   autoThought: string;
-  selectedCognitiveErrors: SelectedCognitiveError[];
-  alternativeSeed: number;
 };
 
-type FlowAction =
-  | { type: "SET_STEP"; step: DeepStep }
-  | { type: "SET_USER_INPUT"; value: string }
-  | { type: "SET_SELECTED_EMOTION"; value: string }
-  | { type: "SET_NOTE_TITLE"; value: string }
-  | {
-      type: "SET_DISTORTION";
-      thought: string;
-      error: SelectedCognitiveError;
-      seedBump: boolean;
-    }
-  | { type: "RESET_FLOW"; step: DeepStep };
+type DistortionPayload = {
+  thought: string;
+};
 
 const buildInitialState = (step: DeepStep): FlowState => ({
   step,
@@ -55,32 +44,20 @@ const buildInitialState = (step: DeepStep): FlowState => ({
   alternativeSeed: 0,
 });
 
-const reducer = (state: FlowState, action: FlowAction): FlowState => {
-  switch (action.type) {
-    case "SET_STEP":
-      return { ...state, step: action.step };
-    case "SET_USER_INPUT":
-      return { ...state, userInput: action.value };
-    case "SET_SELECTED_EMOTION":
-      return { ...state, selectedEmotion: action.value };
-    case "SET_NOTE_TITLE":
-      return { ...state, noteTitle: action.value };
-    case "SET_DISTORTION":
-      return {
-        ...state,
-        autoThought: action.thought,
-        selectedCognitiveErrors: [action.error],
-        alternativeSeed: action.seedBump
-          ? state.alternativeSeed + 1
-          : state.alternativeSeed,
-        step: "alternative",
-      };
-    case "RESET_FLOW":
-      return buildInitialState(action.step);
-    default:
-      return state;
-  }
-};
+const reducer = createSessionFlowReducer<
+  DeepStep,
+  { autoThought: string },
+  DistortionPayload
+>({
+  buildInitialState,
+  applyDistortion: (state, payload, error, seedBump) => ({
+    ...state,
+    autoThought: payload.thought,
+    selectedCognitiveErrors: [error],
+    alternativeSeed: seedBump ? state.alternativeSeed + 1 : state.alternativeSeed,
+    step: "alternative",
+  }),
+});
 
 export function useCbtDeepSessionFlow(initialStep: DeepStep) {
   const [state, dispatch] = useReducer(
@@ -103,8 +80,8 @@ export function useCbtDeepSessionFlow(initialStep: DeepStep) {
         seedBump: boolean,
       ) =>
         dispatch({
-          type: "SET_DISTORTION",
-          thought,
+          type: "APPLY_DISTORTION",
+          payload: { thought },
           error,
           seedBump,
         }),

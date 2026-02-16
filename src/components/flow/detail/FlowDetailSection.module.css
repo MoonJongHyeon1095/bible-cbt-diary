@@ -133,18 +133,19 @@
 }
 
 .flowCanvas {
-  height: clamp(420px, 70vh, 760px);
+  height: clamp(460px, 72dvh, 780px);
   position: relative;
 }
 
 .detailStackWrap {
-  position: absolute;
+  position: fixed;
   left: 16px;
-  top: 16px;
-  width: min(38%, 420px);
-  max-height: calc(100% - 32px);
+  right: 96px;
+  bottom: calc(28px + var(--app-bottom-tab-offset, 0px));
+  width: min(320px, calc(100vw - 16px - 96px));
+  max-height: min(46vh, 420px);
   overflow: auto;
-  z-index: 3;
+  z-index: 40;
 }
 
 .confirmOverlay {
@@ -563,8 +564,13 @@
 .nodeLabel {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 4px;
   padding: 0 10px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
   position: relative;
   z-index: 2;
 }
@@ -572,20 +578,26 @@
 .nodeTitle {
   font-weight: 700;
   color: #0b0d12;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  width: 100%;
+  text-align: center;
 }
 
 .nodeMeta {
+  display: block;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: rgba(75, 85, 99, 0.85);
   font-size: 0.65rem;
 }
 
 .nodeMetaDateEmphasis {
-  color: #eaf2ff;
+  color: rgba(29, 43, 63, 0.9);
   display: block;
   width: 100%;
   text-align: center;
@@ -1407,6 +1419,17 @@
   color: rgba(220, 226, 238, 0.65);
 }
 
+@media (max-width: 900px) {
+  .section {
+    --app-bottom-tab-offset: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .detailStackWrap {
+    right: 84px;
+    width: min(240px, calc(100vw - 16px - 84px));
+  }
+}
+
 @media (max-width: 700px) {
   .header {
     flex-direction: column;
@@ -1414,11 +1437,37 @@
   }
 
   .flowCanvas {
-    height: 70vh;
+    height: clamp(380px, 62dvh, 680px);
   }
 
   .section {
-    --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
+    --app-bottom-tab-offset: calc(112px + env(safe-area-inset-bottom));
+  }
+
+  .detailStackWrap {
+    right: 84px;
+    width: min(220px, calc(100vw - 16px - 84px));
+  }
+
+  .detailStackCount {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .section {
+    --app-bottom-tab-offset: calc(136px + env(safe-area-inset-bottom));
+  }
+
+  .detailStackWrap {
+    right: 78px;
+    width: min(200px, calc(100vw - 16px - 78px));
+  }
+}
+
+@media (max-width: 400px) {
+  .section {
+    --app-bottom-tab-offset: calc(156px + env(safe-area-inset-bottom));
   }
 }
 

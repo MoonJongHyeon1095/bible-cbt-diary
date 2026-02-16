@@ -141,7 +141,7 @@ export default function FlowDetailSectionView({
                 onChange={(event) => onChangeMetaTitle(event.target.value)}
                 className={styles.metaTitleInput}
                 placeholder="플로우 제목"
-                maxLength={60}
+                maxLength={40}
                 disabled={isMetaSaving}
               />
               <textarea
@@ -149,7 +149,7 @@ export default function FlowDetailSectionView({
                 onChange={(event) => onChangeMetaDescription(event.target.value)}
                 className={styles.metaDescriptionInput}
                 placeholder="플로우 설명"
-                maxLength={180}
+                maxLength={40}
                 rows={2}
                 disabled={isMetaSaving}
               />

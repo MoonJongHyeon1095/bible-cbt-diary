@@ -28,6 +28,7 @@ type UseDeepSessionSaveHandlersParams = {
   isSaving: boolean;
   setIsSaving: (next: boolean) => void;
   setAiEnabled: (next: boolean) => void;
+  clearResumeDraft: () => void;
   requireAccessContext: () => Promise<AccessContext | null>;
   saveDeep: (args: {
     access: AccessContext;
@@ -58,6 +59,7 @@ export function useDeepSessionSaveHandlers({
   isSaving,
   setIsSaving,
   setAiEnabled,
+  clearResumeDraft,
   requireAccessContext,
   saveDeep,
   queryClient,
@@ -102,6 +104,7 @@ export function useDeepSessionSaveHandlers({
         if (!noteId) {
           throw new Error("note_id_missing");
         }
+        clearResumeDraft();
         const resolvedFlowId = result.payload?.flowId ?? flowId;
 
         const moved = await runSessionSavePostProcess({
@@ -137,6 +140,7 @@ export function useDeepSessionSaveHandlers({
       router,
       saveDeep,
       setAiEnabled,
+      clearResumeDraft,
       setIsSaving,
       subNotes,
     ],

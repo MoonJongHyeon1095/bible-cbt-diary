@@ -24,6 +24,31 @@ import { useFlowDetailLayout } from "./hooks/useFlowDetailLayout";
 import { useFlowDetailSelection } from "./hooks/useFlowDetailSelection";
 import FlowDetailSectionView from "./views/FlowDetailSectionView";
 
+const META_TITLE_PLACEHOLDER = "플로우 제목";
+const META_DESCRIPTION_PLACEHOLDER = "플로우 설명";
+const INVALID_META_TITLE_VALUES = new Set([
+  "",
+  META_TITLE_PLACEHOLDER,
+  "제목을 입력해주세요",
+  "제목 없는 플로우",
+]);
+const INVALID_META_DESCRIPTION_VALUES = new Set([
+  "",
+  META_DESCRIPTION_PLACEHOLDER,
+  "설명을 입력해주세요",
+  "설명이 아직 없습니다.",
+]);
+
+const normalizeMetaTitle = (value: string | null | undefined) => {
+  const text = String(value ?? "").trim();
+  return INVALID_META_TITLE_VALUES.has(text) ? "" : text;
+};
+
+const normalizeMetaDescription = (value: string | null | undefined) => {
+  const text = String(value ?? "").trim();
+  return INVALID_META_DESCRIPTION_VALUES.has(text) ? "" : text;
+};
+
 type FlowDetailSectionProps = {
   access: AccessContext;
   noteId: number | null;
@@ -121,8 +146,8 @@ export default function FlowDetailSection({
   useEffect(() => {
     if (!flow) return;
     if (isMetaEditing) return;
-    setMetaTitleDraft(flow.title ?? "");
-    setMetaDescriptionDraft(flow.description ?? "");
+    setMetaTitleDraft(normalizeMetaTitle(flow.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(flow.description));
   }, [flow, isMetaEditing]);
 
   useEffect(() => {
@@ -194,14 +219,14 @@ export default function FlowDetailSection({
   };
 
   const handleStartMetaEdit = () => {
-    setMetaTitleDraft(flow?.title ?? "");
-    setMetaDescriptionDraft(flow?.description ?? "");
+    setMetaTitleDraft(normalizeMetaTitle(flow?.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(flow?.description));
     setIsMetaEditing(true);
   };
 
   const handleCancelMetaEdit = () => {
-    setMetaTitleDraft(flow?.title ?? "");
-    setMetaDescriptionDraft(flow?.description ?? "");
+    setMetaTitleDraft(normalizeMetaTitle(flow?.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(flow?.description));
     setIsMetaEditing(false);
   };
 
@@ -212,8 +237,11 @@ export default function FlowDetailSection({
       return;
     }
 
-    const nextTitle = metaTitleDraft.trim();
-    const nextDescription = metaDescriptionDraft.trim();
+    const nextTitle = normalizeMetaTitle(metaTitleDraft).slice(0, 40);
+    const nextDescription = normalizeMetaDescription(metaDescriptionDraft).slice(
+      0,
+      40,
+    );
 
     if (!nextTitle) {
       pushToast("플로우 제목을 입력해주세요.", "error");
@@ -244,8 +272,8 @@ export default function FlowDetailSection({
     <FlowDetailSectionView
       access={access}
       flowId={flowId}
-      flowTitle={flow?.title ?? null}
-      flowDescription={flow?.description ?? null}
+      flowTitle={normalizeMetaTitle(flow?.title)}
+      flowDescription={normalizeMetaDescription(flow?.description)}
       noteCount={noteCount}
       displayNodes={displayNodes}
       displayEdges={displayEdges}
@@ -270,8 +298,10 @@ export default function FlowDetailSection({
       onStartMetaEdit={handleStartMetaEdit}
       onCancelMetaEdit={handleCancelMetaEdit}
       onSaveMeta={handleSaveMeta}
-      onChangeMetaTitle={setMetaTitleDraft}
-      onChangeMetaDescription={setMetaDescriptionDraft}
+      onChangeMetaTitle={(value) => setMetaTitleDraft(value.slice(0, 40))}
+      onChangeMetaDescription={(value) =>
+        setMetaDescriptionDraft(value.slice(0, 40))
+      }
       onOpenDeleteConfirm={() => setConfirmDelete(true)}
       onCloseDeleteConfirm={() => setConfirmDelete(false)}
       onDeleteNote={handleDeleteNote}

@@ -41,9 +41,10 @@ export function CbtMinimalIncidentForm({
           <textarea
             ref={resolvedRef}
             value={userInput}
-            onChange={(event) => onInputChange(event.target.value)}
+            onChange={(event) => onInputChange(event.target.value.slice(0, 400))}
             placeholder="구체적으로 적을 수록 효과적입니다."
             rows={1}
+            maxLength={400}
             data-tour="minimal-incident-input"
             className={`${styles.textarea} ${styles.incidentTextarea} ${
               action ? styles.textareaWithFab : ""

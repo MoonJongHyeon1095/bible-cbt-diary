@@ -5,11 +5,14 @@ import { queryKeys } from "@/lib/queryKeys";
 import type { AccessContext } from "@/lib/types/access";
 import { useQuery } from "@tanstack/react-query";
 
-export const useFlowListQuery = (access: AccessContext) =>
+export const useFlowListQuery = (
+  access: AccessContext,
+  noteId?: number | null,
+) =>
   useQuery({
-    queryKey: queryKeys.flow.flows(access),
+    queryKey: queryKeys.flow.flows(access, noteId),
     queryFn: async () => {
-      const { response, data } = await fetchEmotionFlowList(access);
+      const { response, data } = await fetchEmotionFlowList(access, noteId);
       if (!response.ok) {
         throw new Error("emotion_flow list fetch failed");
       }

@@ -132,7 +132,7 @@ export function CbtMinimalIncidentSection({
         items={exampleItems}
         onClose={() => setIsExampleOpen(false)}
         onSelect={(value) => {
-          onInputChange(value);
+          onInputChange(value.slice(0, 400));
           setIsExampleOpen(false);
           pushToast("입력창에 복사했어요.", "success");
           setHighlightInput(true);

@@ -33,7 +33,13 @@ import {
   NEGATIVE_EMOTIONS,
   POSITIVE_EMOTIONS,
 } from "@/lib/constants/emotions";
-import type { SessionMoodType } from "../../minimal/emotion-select/CbtSessionMoodToggle";
+import { useLeaveConfirm } from "@/components/restore/useLeaveConfirm";
+import { clearSessionResumeDraft } from "@/components/restore/storage";
+import { useDeepSessionRestore } from "./controller/useDeepSessionRestore";
+import { useDeepSessionInitialization } from "./controller/useDeepSessionInitialization";
+import { useDeepSessionResumeDraft } from "./controller/useDeepSessionResumeDraft";
+import { useDeepSessionErrorToasts } from "./controller/useDeepSessionErrorToasts";
+import { useSessionMoodController } from "@/components/session/common/useSessionMoodController";
 
 export function useDeepSessionController() {
   const router = useRouter();
@@ -80,7 +86,6 @@ export function useDeepSessionController() {
   const { state: flow, actions } = useCbtDeepSessionFlow(
     shouldSelectSubNotes ? "select" : "mood",
   );
-  const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [aiEnabled, setAiEnabled] = useState(true);
   const { blocker, canShowOnboarding } = useGate();
@@ -144,9 +149,29 @@ export function useDeepSessionController() {
     blocker,
   });
 
-  useEffect(() => {
-    actions.setStep(shouldSelectSubNotes ? "select" : "mood");
-  }, [actions, flowIdParam, mainIdParam, shouldSelectSubNotes]);
+  const routeInitKey = `${flowIdParam}|${mainIdParam}|${shouldSelectSubNotes ? "1" : "0"}`;
+
+  const { restoredInternalContext, hasPendingDeepRestore } = useDeepSessionRestore({
+    notesLoading,
+    mainNote,
+    flowId,
+    subNotes,
+    actions: {
+      setSelectedEmotion: actions.setSelectedEmotion,
+      setUserInput: actions.setUserInput,
+      setStep: (step) => actions.setStep(step),
+    },
+    queryClient: {
+      setQueryData: (queryKey, data) => queryClient.setQueryData(queryKey, data),
+    },
+  });
+
+  useDeepSessionInitialization({
+    routeInitKey,
+    shouldSelectSubNotes,
+    hasPendingDeepRestore,
+    setStep: actions.setStep,
+  });
 
   useEffect(() => {
     if (!preselectedEmotion) return;
@@ -158,14 +183,6 @@ export function useDeepSessionController() {
       actions.setStep("incident");
     }
   }, [actions, flow.selectedEmotion, flow.step, preselectedEmotion]);
-
-  useEffect(() => {
-    if (!flow.selectedEmotion) return;
-    const inPositive = POSITIVE_EMOTIONS.some(
-      (emotion) => emotion.label === flow.selectedEmotion,
-    );
-    setMoodType(inPositive ? "positive" : "negative");
-  }, [flow.selectedEmotion]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -192,11 +209,13 @@ export function useDeepSessionController() {
   } = useCbtDeepInternalContext(mainNote, subNotes, {
     enabled:
       aiEnabled &&
+      !restoredInternalContext &&
       Boolean(mainNote) &&
       !notesLoading &&
       (!selectionRequired ||
         (flow.step !== "select" && subNotes.length > 0)),
   });
+  const resolvedInternalContext = restoredInternalContext ?? internalContext;
   const {
     key: montageScenarioKey,
     scenario: montageScenario,
@@ -229,27 +248,24 @@ export function useDeepSessionController() {
       save: montageSaveConfig,
     });
 
-  useEffect(() => {
-    if (!internalContextLoadError) return;
-    pushToast(internalContextLoadError, "error");
-  }, [internalContextLoadError, pushToast]);
+  useDeepSessionResumeDraft({
+    mainNote,
+    flowId,
+    selectedEmotion: flow.selectedEmotion,
+    userInput: flow.userInput,
+    subNotes,
+    resolvedInternalContext,
+  });
 
-  useEffect(() => {
-    if (!montageScenarioError) return;
-    pushToast(montageScenarioError, "error");
-  }, [montageScenarioError, pushToast]);
+  useDeepSessionErrorToasts({
+    internalContextLoadError,
+    montageScenarioError,
+    montagePictureError,
+    montageSaveError,
+    pushToast,
+  });
 
-  useEffect(() => {
-    if (!montagePictureError) return;
-    pushToast(montagePictureError, "error");
-  }, [montagePictureError, pushToast]);
-
-  useEffect(() => {
-    if (!montageSaveError) return;
-    pushToast(montageSaveError, "error");
-  }, [montageSaveError, pushToast]);
-
-  const { handleBack, handleGoHome } = useDeepSessionNavigationHandlers({
+  const { handleBack, handleGoHome: handleGoHomeRaw } = useDeepSessionNavigationHandlers({
     flowStep: flow.step,
     currentStepIndex,
     stepOrder,
@@ -257,6 +273,17 @@ export function useDeepSessionController() {
     mainNote,
     setStep: actions.setStep,
     router,
+  });
+
+  const {
+    showConfirm: showLeaveConfirm,
+    requestLeave: handleGoHome,
+    cancelLeave: handleCancelLeave,
+    confirmLeave: handleConfirmLeave,
+  } = useLeaveConfirm({
+    step: flow.step,
+    protectedSteps: ["distortion", "alternative"] as const,
+    onLeave: handleGoHomeRaw,
   });
 
   const { handleConfirmSelection } = useDeepSessionSelectionHandlers({
@@ -299,6 +326,7 @@ export function useDeepSessionController() {
     isSaving,
     setIsSaving,
     setAiEnabled,
+    clearResumeDraft: clearSessionResumeDraft,
     requireAccessContext,
     saveDeep: saveDeepMutation.mutateAsync,
     queryClient,
@@ -321,20 +349,12 @@ export function useDeepSessionController() {
     actions.setDistortion(thought, error, seedBump);
   };
 
-  const handleSelectMood = (nextMood: SessionMoodType) => {
-    setMoodType(nextMood);
-    if (!flow.selectedEmotion) {
-      return;
-    }
-    const nextPool =
-      nextMood === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
-    const hasSelectedEmotion = nextPool.some(
-      (emotion) => emotion.label === flow.selectedEmotion,
-    );
-    if (!hasSelectedEmotion) {
-      actions.setSelectedEmotion("");
-    }
-  };
+  const { moodType, handleSelectMood } = useSessionMoodController({
+    selectedEmotion: flow.selectedEmotion,
+    setSelectedEmotion: actions.setSelectedEmotion,
+    positiveEmotions: POSITIVE_EMOTIONS,
+    negativeEmotions: NEGATIVE_EMOTIONS,
+  });
 
   return {
     flow,
@@ -351,12 +371,15 @@ export function useDeepSessionController() {
     canConfirmSelection,
     toggleSelectSub,
     handleConfirmSelection,
-    internalContext,
+    internalContext: resolvedInternalContext,
     previousAlternatives,
     isSaving,
     canGoBack: currentStepIndex > 0 || flow.step === "select",
     handleBack,
     handleGoHome,
+    showLeaveConfirm,
+    handleCancelLeave,
+    handleConfirmLeave,
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,

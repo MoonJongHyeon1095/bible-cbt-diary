@@ -3,6 +3,8 @@
 import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
+import ResumePromptModal from "@/components/restore/ResumePromptModal";
+import { useSessionResume } from "@/components/restore/useSessionResume";
 import {
   UNIFIED_TOUR_BASE_TOTAL,
   UNIFIED_TOUR_STORAGE_KEY,
@@ -18,7 +20,7 @@ import {
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import homeStyles from "./EmotionNoteHomePage.module.css";
 import { HomeDate } from "./HomeDate";
@@ -42,7 +44,6 @@ const buildEmotionColorMap = (emotions: EmotionOption[]) => {
 
 export default function EmotionNoteHomePage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { blocker, canShowOnboarding } = useGate();
   const { checkUsage } = useAiUsageGuard({
     enabled: false,
@@ -53,10 +54,6 @@ export default function EmotionNoteHomePage() {
   const [loadingEmotionId, setLoadingEmotionId] = useState<string | null>(null);
   const [step, setStep] = useState<"mood" | "emotion">("mood");
   const [moodType, setMoodType] = useState<HomeMoodType | null>(null);
-  const titleText =
-    step === "mood"
-      ? "지금 어떤 기분인가요?"
-      : "지금 당신의 감정은 무엇인가요?";
   const emotions = useMemo(
     () => (moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS),
     [moodType],
@@ -74,23 +71,10 @@ export default function EmotionNoteHomePage() {
       }),
     [],
   );
-  const dateParam = searchParams.get("date");
-  const normalizedDate = useMemo(() => {
-    if (!dateParam) {
-      return "";
-    }
-    return /^\d{4}-\d{2}-\d{2}$/.test(dateParam) ? dateParam : "";
-  }, [dateParam]);
-  const targetDateLabel = useMemo(() => {
-    if (!normalizedDate) {
-      return todayLabel;
-    }
-    return formatKoreanDateTime(`${normalizedDate}T00:00:00+09:00`, {
-      month: "long",
-      day: "numeric",
-      weekday: "short",
-    });
-  }, [normalizedDate, todayLabel]);
+  const titleText =
+    step === "mood"
+      ? "지금 어떤 기분인가요?"
+      : "지금 당신의 감정은 무엇인가요?";
   const homeTourSteps = useMemo(
     () => HOME_ONBOARDING_STEPS_BY_STEP[step],
     [step],
@@ -125,6 +109,9 @@ export default function EmotionNoteHomePage() {
         }),
       );
     },
+  });
+  const { showResumeModal, dismissResume, resume } = useSessionResume({
+    navigate: router.push,
   });
 
   useEffect(() => {
@@ -195,9 +182,6 @@ export default function EmotionNoteHomePage() {
       }
       const next = new URLSearchParams();
       next.set("emotionId", emotionId);
-      if (normalizedDate) {
-        next.set("date", normalizedDate);
-      }
       router.push(`/session?${next.toString()}`);
       return true;
     } catch {
@@ -253,7 +237,7 @@ export default function EmotionNoteHomePage() {
             <section className={homeStyles.card}>
               {step === "mood" ? (
                 <div className={homeStyles.stepBlock}>
-                  <HomeDate label={targetDateLabel} />
+                  <HomeDate label={todayLabel} />
                   <HomeTitle text={titleText} />
                   <HomeMoodToggle
                     value={moodType}
@@ -298,6 +282,11 @@ export default function EmotionNoteHomePage() {
         onFinish={onFinish}
         onClose={onClose}
         onMaskClick={onMaskClick}
+      />
+      <ResumePromptModal
+        open={showResumeModal}
+        onDismiss={dismissResume}
+        onResume={resume}
       />
     </div>
   );

@@ -2,8 +2,12 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SafeButton from "@/components/ui/SafeButton";
-import { Route, Trash2, Waypoints } from "lucide-react";
-import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
+import { LayoutDashboard, Route, Trash2, Waypoints } from "lucide-react";
+import type {
+  CSSProperties,
+  PointerEvent as ReactPointerEvent,
+  WheelEvent as ReactWheelEvent,
+} from "react";
 import type { LegacyRef } from "react";
 import styles from "../FlowListSection.module.css";
 
@@ -29,12 +33,25 @@ type FlowListSectionViewProps = {
   selectedFlow: { id: number } | null;
   selectedNode: GroupNode | null;
   totalCount: number;
+  filterNoteId: number | null;
+  filterNoteTitle: string | null;
+  isFilterNoteLoading: boolean;
   confirmDelete: boolean;
   isDeleting: boolean;
+  isMetaEditing: boolean;
+  isMetaSaving: boolean;
+  metaTitleDraft: string;
+  metaDescriptionDraft: string;
   onCanvasPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onCanvasPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
   onCanvasPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void;
+  onCanvasWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
   onSelectFlow: (flowId: number) => void;
+  onStartMetaEdit: () => void;
+  onCancelMetaEdit: () => void;
+  onSaveMeta: () => void;
+  onChangeMetaTitle: (value: string) => void;
+  onChangeMetaDescription: (value: string) => void;
   onOpenDeleteConfirm: () => void;
   onCloseDeleteConfirm: () => void;
   onDeleteFlow: () => void;
@@ -51,25 +68,55 @@ export default function FlowListSectionView({
   selectedFlow,
   selectedNode,
   totalCount,
+  filterNoteId,
+  filterNoteTitle,
+  isFilterNoteLoading,
   confirmDelete,
   isDeleting,
+  isMetaEditing,
+  isMetaSaving,
+  metaTitleDraft,
+  metaDescriptionDraft,
   onCanvasPointerDown,
   onCanvasPointerMove,
   onCanvasPointerUp,
+  onCanvasWheel,
   onSelectFlow,
+  onStartMetaEdit,
+  onCancelMetaEdit,
+  onSaveMeta,
+  onChangeMetaTitle,
+  onChangeMetaDescription,
   onOpenDeleteConfirm,
   onCloseDeleteConfirm,
   onDeleteFlow,
   onOpenFlow,
 }: FlowListSectionViewProps) {
+  const hasNoteFilter = Boolean(filterNoteId);
+  const summaryText = `${nodes.length}개의 플로우, ${totalCount}개의 기록`;
+  const noteTitle = filterNoteTitle?.trim() || "";
+  const headerTitle = hasNoteFilter
+    ? isFilterNoteLoading
+      ? "노트 제목을 불러오는 중..."
+      : noteTitle.length > 0
+        ? noteTitle
+        : "선택한 노트의 플로우 목록"
+    : "감정 노트 플로우";
+
   return (
     <section className={styles.section}>
       <header className={styles.header}>
-        <div>
-          <p className={styles.label}>감정 노트 플로우</p>
-          <h2 className={styles.title}>
-            {nodes.length}개의 플로우, {totalCount}개의 기록
-          </h2>
+        <div className={styles.headerMain}>
+          <div className={styles.headerLabelRow}>
+            <span className={styles.headerIconWrap} aria-hidden>
+              <LayoutDashboard size={16} />
+            </span>
+            {hasNoteFilter ? (
+              <p className={styles.label}>감정 노트 플로우</p>
+            ) : null}
+          </div>
+          <h2 className={styles.title}>{headerTitle}</h2>
+          <p className={styles.filterLabel}>{summaryText}</p>
         </div>
       </header>
 
@@ -80,6 +127,7 @@ export default function FlowListSectionView({
         onPointerMove={onCanvasPointerMove}
         onPointerUp={onCanvasPointerUp}
         onPointerLeave={onCanvasPointerUp}
+        onWheel={onCanvasWheel}
       >
         {isLoading ? (
           <div className={styles.placeholder}>플로우를 불러오는 중...</div>
@@ -130,7 +178,7 @@ export default function FlowListSectionView({
                 </SafeButton>
               );
             })}
-            {selectedNode && (selectedNode.description?.trim() ?? "") ? (
+            {selectedNode ? (
               <div
                 className={styles.nodeTooltip}
                 role="status"
@@ -141,10 +189,60 @@ export default function FlowListSectionView({
                   } as CSSProperties
                 }
               >
-                <div className={styles.nodeTooltipTitle}>
-                  {selectedNode.title.trim() || `플로우 ${selectedNode.id}`}
-                </div>
-                <div className={styles.nodeTooltipBody}>{selectedNode.description}</div>
+                {isMetaEditing ? (
+                  <>
+                    <input
+                      type="text"
+                      value={metaTitleDraft}
+                      onChange={(event) => onChangeMetaTitle(event.target.value)}
+                      className={styles.nodeTooltipInput}
+                      placeholder="플로우 제목"
+                      maxLength={40}
+                    />
+                    <textarea
+                      value={metaDescriptionDraft}
+                      onChange={(event) =>
+                        onChangeMetaDescription(event.target.value)
+                      }
+                      className={styles.nodeTooltipTextarea}
+                      placeholder="플로우 설명"
+                      rows={3}
+                      maxLength={40}
+                    />
+                    <div className={styles.nodeTooltipActions}>
+                      <SafeButton
+                        size="sm"
+                        variant="outline"
+                        onClick={onCancelMetaEdit}
+                        disabled={isMetaSaving}
+                      >
+                        취소
+                      </SafeButton>
+                      <SafeButton
+                        size="sm"
+                        onClick={onSaveMeta}
+                        loading={isMetaSaving}
+                        loadingText="저장 중..."
+                      >
+                        저장
+                      </SafeButton>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.nodeTooltipTitle}>
+                      {selectedNode.title.trim() || `플로우 ${selectedNode.id}`}
+                    </div>
+                    <div className={styles.nodeTooltipBody}>
+                      {selectedNode.description?.trim() || "설명이 아직 없습니다."}
+                    </div>
+                    <div className={styles.nodeTooltipActions}>
+                      <SafeButton size="sm" variant="outline" onClick={onStartMetaEdit}>
+                        수정
+                      </SafeButton>
+                    </div>
+                  </>
+                )}
               </div>
             ) : null}
           </div>

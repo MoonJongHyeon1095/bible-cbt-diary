@@ -3,6 +3,10 @@ import type {
   EmotionThoughtPair,
   SelectedCognitiveError,
 } from "@/lib/types/sessionTypes";
+import {
+  createSessionFlowReducer,
+  type SessionFlowBaseState,
+} from "@/components/session/common/sessionFlowCore";
 
 export type MinimalStep =
   | "mood"
@@ -23,71 +27,46 @@ export const MINIMAL_ALTERNATIVE_STEPS: ReadonlyArray<MinimalStep> = [
   "alternative",
 ];
 
-type FlowState = {
-  step: MinimalStep;
-  userInput: string;
-  selectedEmotion: string;
-  noteTitle: string;
+type FlowState = SessionFlowBaseState<MinimalStep> & {
   emotionThoughtPairs: EmotionThoughtPair[];
-  selectedCognitiveErrors: SelectedCognitiveError[];
-  alternativeSeed: number;
 };
 
-type FlowAction =
-  | { type: "SET_STEP"; step: MinimalStep }
-  | { type: "SET_USER_INPUT"; value: string }
-  | { type: "SET_SELECTED_EMOTION"; value: string }
-  | { type: "SET_NOTE_TITLE"; value: string }
-  | {
-      type: "SET_DISTORTION";
-      thought: string;
-      emotion: string;
-      error: SelectedCognitiveError;
-      seedBump: boolean;
-    }
-  | { type: "RESET_FLOW" };
+type DistortionPayload = {
+  thought: string;
+  emotion: string;
+};
 
-const initialFlowState: FlowState = {
-  step: "mood",
+const buildInitialState = (step: MinimalStep): FlowState => ({
+  step,
   userInput: "",
   selectedEmotion: "",
   noteTitle: "",
   emotionThoughtPairs: [],
   selectedCognitiveErrors: [],
   alternativeSeed: 0,
-};
+});
 
-const reducer = (state: FlowState, action: FlowAction): FlowState => {
-  switch (action.type) {
-    case "SET_STEP":
-      return { ...state, step: action.step };
-    case "SET_USER_INPUT":
-      return { ...state, userInput: action.value };
-    case "SET_SELECTED_EMOTION":
-      return { ...state, selectedEmotion: action.value };
-    case "SET_NOTE_TITLE":
-      return { ...state, noteTitle: action.value };
-    case "SET_DISTORTION":
-      return {
-        ...state,
-        emotionThoughtPairs: [
-          { emotion: action.emotion, intensity: null, thought: action.thought },
-        ],
-        selectedCognitiveErrors: [action.error],
-        alternativeSeed: action.seedBump
-          ? state.alternativeSeed + 1
-          : state.alternativeSeed,
-        step: "alternative",
-      };
-    case "RESET_FLOW":
-      return initialFlowState;
-    default:
-      return state;
-  }
-};
+const reducer = createSessionFlowReducer<
+  MinimalStep,
+  { emotionThoughtPairs: EmotionThoughtPair[] },
+  DistortionPayload
+>({
+  buildInitialState,
+  applyDistortion: (state, payload, error, seedBump) => ({
+    ...state,
+    emotionThoughtPairs: [
+      { emotion: payload.emotion, intensity: null, thought: payload.thought },
+    ],
+    selectedCognitiveErrors: [error],
+    alternativeSeed: seedBump
+      ? state.alternativeSeed + 1
+      : state.alternativeSeed,
+    step: "alternative",
+  }),
+});
 
 export function useCbtMinimalSessionFlow() {
-  const [state, dispatch] = useReducer(reducer, initialFlowState);
+  const [state, dispatch] = useReducer(reducer, "mood", buildInitialState);
   const actions = useMemo(
     () => ({
       setStep: (step: MinimalStep) => dispatch({ type: "SET_STEP", step }),
@@ -104,13 +83,12 @@ export function useCbtMinimalSessionFlow() {
         seedBump: boolean,
       ) =>
         dispatch({
-          type: "SET_DISTORTION",
-          thought,
-          emotion,
+          type: "APPLY_DISTORTION",
+          payload: { thought, emotion },
           error,
           seedBump,
         }),
-      reset: () => dispatch({ type: "RESET_FLOW" }),
+      reset: () => dispatch({ type: "RESET_FLOW", step: "mood" }),
     }),
     [],
   );

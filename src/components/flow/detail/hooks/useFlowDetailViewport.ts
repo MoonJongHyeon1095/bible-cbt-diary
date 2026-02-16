@@ -39,6 +39,12 @@ export const useFlowDetailViewport = () => {
     [],
   );
 
+  const syncViewport = useCallback(() => {
+    const instance = instanceRef.current;
+    if (!instance) return;
+    setViewport(instance.getViewport());
+  }, []);
+
   useEffect(
     () => () => {
       if (rafRef.current !== null) {
@@ -53,5 +59,6 @@ export const useFlowDetailViewport = () => {
     viewport,
     handleInit,
     handleMove,
+    syncViewport,
   };
 };

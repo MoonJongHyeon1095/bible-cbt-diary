@@ -165,6 +165,7 @@
   letter-spacing: -0.01em;
 }
 
+
 @keyframes homeChipOrbit {
   to {
     transform: rotate(360deg);

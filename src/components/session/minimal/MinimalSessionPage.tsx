@@ -2,14 +2,15 @@
 
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import AppHeader from "@/components/header/AppHeader";
+import LeaveConfirmModal from "@/components/restore/LeaveConfirmModal";
 import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
-import { CbtMinimalAlternativeThoughtSection } from "./minimal/alternative/CbtMinimalAlternativeThoughtSection";
-import { CbtMinimalDistortionSection } from "./minimal/distortion/CbtMinimalDistortionSection";
-import { CbtMinimalEmotionSection } from "./minimal/emotion-select/CbtMinimalEmotionSection";
-import { CbtMinimalMoodSection } from "./minimal/emotion-select/CbtMinimalMoodSection";
-import { useMinimalSessionController } from "./minimal/hooks/useMinimalSessionController";
-import { CbtMinimalIncidentSection } from "./minimal/incident/CbtMinimalIncidentSection";
-import styles from "./minimal/MinimalStyles.module.css";
+import { CbtMinimalAlternativeThoughtSection } from "./alternative/CbtMinimalAlternativeThoughtSection";
+import { CbtMinimalDistortionSection } from "./distortion/CbtMinimalDistortionSection";
+import { CbtMinimalEmotionSection } from "./emotion-select/CbtMinimalEmotionSection";
+import { CbtMinimalMoodSection } from "./emotion-select/CbtMinimalMoodSection";
+import { useMinimalSessionController } from "./hooks/useMinimalSessionController";
+import { CbtMinimalIncidentSection } from "./incident/CbtMinimalIncidentSection";
+import styles from "./MinimalStyles.module.css";
 
 function MinimalSessionPageContent() {
   const {
@@ -17,11 +18,15 @@ function MinimalSessionPageContent() {
     actions,
     moodType,
     handleSelectMood,
+    moodTitle,
     incidentTitle,
     isSaving,
     canGoBack,
     handleBack,
     handleGoHome,
+    showLeaveConfirm,
+    handleCancelLeave,
+    handleConfirmLeave,
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
@@ -54,6 +59,7 @@ function MinimalSessionPageContent() {
         {flow.step === "mood" && (
           <CbtMinimalMoodSection
             value={moodType}
+            title={moodTitle}
             onChange={(next) => {
               handleSelectMood(next);
               actions.setStep("emotion");
@@ -110,6 +116,11 @@ function MinimalSessionPageContent() {
         onFinish={handleTourFinish}
         onClose={handleTourClose}
         onMaskClick={handleTourMaskClick}
+      />
+      <LeaveConfirmModal
+        open={showLeaveConfirm}
+        onCancel={handleCancelLeave}
+        onConfirm={handleConfirmLeave}
       />
     </div>
   );

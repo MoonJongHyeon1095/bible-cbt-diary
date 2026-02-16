@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { clearCbtSessionStorage } from "@/lib/storage/session/cbtSessionStorage";
 import { flowRoutes } from "@/components/flow/domain/navigation/flowRoutes";
 
 type UseDeepSessionNavigationHandlersParams = {
@@ -43,7 +42,6 @@ export function useDeepSessionNavigationHandlers({
   ]);
 
   const handleGoHome = useCallback(() => {
-    clearCbtSessionStorage();
     router.push("/home");
   }, [router]);
 

@@ -107,7 +107,7 @@ export default function FlowDetailCanvas({
   onClearSelection,
   onSelectNode,
 }: FlowDetailCanvasProps) {
-  const { instanceRef, viewport, handleInit, handleMove } =
+  const { instanceRef, viewport, handleInit, handleMove, syncViewport } =
     useFlowDetailViewport();
   const { centerOnNode } = useFlowDetailCentering({
     displayNodes,
@@ -172,11 +172,20 @@ export default function FlowDetailCanvas({
         edges={displayEdges}
         onInit={(instance) => {
           handleInit(instance);
+          if (displayNodes.length > 0) {
+            instance.fitView({
+              padding: 0.18,
+              maxZoom: 1,
+              duration: 0,
+            });
+            syncViewport();
+          }
           const pending = pendingCenterRef.current;
           if (!pending) return;
           if (!displayNodes.some((node) => node.id === pending)) return;
           requestAnimationFrame(() => {
             centerOnNode(pending);
+            syncViewport();
           });
         }}
         onMove={handleMove}

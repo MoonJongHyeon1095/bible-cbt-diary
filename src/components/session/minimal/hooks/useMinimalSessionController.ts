@@ -9,7 +9,10 @@ import {
   useCbtMinimalSessionFlow,
   type MinimalStep,
 } from "@/components/session/hooks/useCbtMinimalSessionFlow";
-import { clearCbtSessionStorage } from "@/lib/storage/session/cbtSessionStorage";
+import { useLeaveConfirm } from "@/components/restore/useLeaveConfirm";
+import {
+  clearSessionResumeDraft,
+} from "@/components/restore/storage";
 import { useGate } from "@/components/gate/GateProvider";
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
@@ -43,10 +46,11 @@ import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNo
 import { generateSessionNoteTitle } from "@/lib/gpt/sessionTitle";
 import {
   ALL_EMOTIONS,
-  NEGATIVE_EMOTIONS,
-  POSITIVE_EMOTIONS,
+  NEGATIVE_EMOTIONS, POSITIVE_EMOTIONS,
 } from "@/lib/constants/emotions";
-import type { SessionMoodType } from "../emotion-select/CbtSessionMoodToggle";
+import { useSessionMoodController } from "@/components/session/common/useSessionMoodController";
+import { useMinimalSessionRestore } from "./controller/useMinimalSessionRestore";
+import { useMinimalSessionResumeDraft } from "./controller/useMinimalSessionResumeDraft";
 
 type TourProgress = {
   lastStep: number;
@@ -59,7 +63,6 @@ export function useMinimalSessionController() {
   const { pushToast } = useCbtToast();
   const { accessMode, isLoading: isAccessLoading } = useAccessContext();
   const { state: flow, actions } = useCbtMinimalSessionFlow();
-  const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const { blocker, canShowOnboarding } = useGate();
   const lastDistortionKeyRef = useRef<string>("");
@@ -87,6 +90,9 @@ export function useMinimalSessionController() {
         day: "numeric",
       })
     : "";
+  const moodTitle = hasDateParam
+    ? `${dateLabel}에 어떤 기분이었나요?`
+    : "지금 어떤 기분인가요?";
   const incidentTitle = hasDateParam
     ? `${dateLabel}에 무슨 일이 있었나요?`
     : "오늘 무슨 일이 있었나요?";
@@ -135,13 +141,20 @@ export function useMinimalSessionController() {
     }
   }, [actions, flow.selectedEmotion, flow.step, preselectedEmotion]);
 
-  useEffect(() => {
-    if (!flow.selectedEmotion) return;
-    const inPositive = POSITIVE_EMOTIONS.some(
-      (emotion) => emotion.label === flow.selectedEmotion,
-    );
-    setMoodType(inPositive ? "positive" : "negative");
-  }, [flow.selectedEmotion]);
+  useMinimalSessionRestore({
+    actions: {
+      setSelectedEmotion: actions.setSelectedEmotion,
+      setUserInput: actions.setUserInput,
+      setStep: (step) => actions.setStep(step),
+    },
+  });
+
+  useMinimalSessionResumeDraft({
+    selectedEmotion: flow.selectedEmotion,
+    userInput: flow.userInput,
+    hasDateParam,
+    dateParam,
+  });
 
   const saveMinimalMutation = useMutation({
     mutationFn: async (args: {
@@ -249,10 +262,20 @@ export function useMinimalSessionController() {
     actions.setStep(stepOrder[currentStepIndex - 1]);
   }, [actions, currentStepIndex, stepOrder]);
 
-  const handleGoHome = useCallback(() => {
-    clearCbtSessionStorage();
+  const moveToHome = useCallback(() => {
     router.push("/home");
   }, [router]);
+
+  const {
+    showConfirm: showLeaveConfirm,
+    requestLeave: handleGoHome,
+    cancelLeave: handleCancelLeave,
+    confirmLeave: handleConfirmLeave,
+  } = useLeaveConfirm({
+    step: flow.step,
+    protectedSteps: ["distortion", "alternative"] as const,
+    onLeave: moveToHome,
+  });
 
   const handleSelectDistortion = useCallback(
     (thought: string, error: SelectedCognitiveError) => {
@@ -357,6 +380,8 @@ export function useMinimalSessionController() {
           throw new Error("note_id_missing");
         }
 
+        clearSessionResumeDraft();
+
         const moved = await runSessionSavePostProcess({
           queryClient,
           router,
@@ -388,34 +413,27 @@ export function useMinimalSessionController() {
     ],
   );
 
-  const handleSelectMood = useCallback(
-    (nextMood: SessionMoodType) => {
-      setMoodType(nextMood);
-      if (!flow.selectedEmotion) {
-        return;
-      }
-      const nextPool =
-        nextMood === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
-      const hasSelectedEmotion = nextPool.some(
-        (emotion) => emotion.label === flow.selectedEmotion,
-      );
-      if (!hasSelectedEmotion) {
-        actions.setSelectedEmotion("");
-      }
-    },
-    [actions, flow.selectedEmotion],
-  );
+  const { moodType, handleSelectMood } = useSessionMoodController({
+    selectedEmotion: flow.selectedEmotion,
+    setSelectedEmotion: actions.setSelectedEmotion,
+    positiveEmotions: POSITIVE_EMOTIONS,
+    negativeEmotions: NEGATIVE_EMOTIONS,
+  });
 
   return {
     flow,
     actions,
     moodType,
     handleSelectMood,
+    moodTitle,
     incidentTitle,
     isSaving,
     canGoBack: currentStepIndex > 0,
     handleBack,
     handleGoHome,
+    showLeaveConfirm,
+    handleCancelLeave,
+    handleConfirmLeave,
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,

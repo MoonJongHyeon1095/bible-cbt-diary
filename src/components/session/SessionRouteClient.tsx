@@ -1,6 +1,6 @@
 "use client";
 
-import MinimalSessionPage from "@/components/session/MinimalSessionPage";
+import MinimalSessionPage from "@/components/session/minimal/MinimalSessionPage";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";

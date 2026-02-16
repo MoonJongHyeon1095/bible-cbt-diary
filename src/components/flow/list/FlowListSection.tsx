@@ -3,8 +3,11 @@
 import { useModalOpen } from "@/components/common/useModalOpen";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { deleteEmotionFlow } from "@/lib/api/flow/deleteEmotionFlow";
+import { fetchEmotionNote } from "@/lib/api/emotion-notes/getEmotionNote";
+import { patchEmotionNoteFlowMeta } from "@/lib/api/flow/patchEmotionNoteFlowMeta";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AccessContext } from "@/lib/types/access";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   forceCenter,
   forceCollide,
@@ -12,7 +15,10 @@ import {
   forceSimulation,
 } from "d3-force";
 import { useRouter } from "next/navigation";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import type {
+  PointerEvent as ReactPointerEvent,
+  WheelEvent as ReactWheelEvent,
+} from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { flowRoutes } from "../domain/navigation/flowRoutes";
 import { invalidateFlowListQueries } from "../domain/query/flowQueryClient";
@@ -21,8 +27,34 @@ import { getFlowThemeColor } from "../utils/flowColors";
 import FlowListSectionView from "./views/FlowListSectionView";
 import styles from "./FlowListSection.module.css";
 
+const META_TITLE_PLACEHOLDER = "플로우 제목";
+const META_DESCRIPTION_PLACEHOLDER = "플로우 설명";
+const INVALID_META_TITLE_VALUES = new Set([
+  "",
+  META_TITLE_PLACEHOLDER,
+  "제목을 입력해주세요",
+  "제목 없는 플로우",
+]);
+const INVALID_META_DESCRIPTION_VALUES = new Set([
+  "",
+  META_DESCRIPTION_PLACEHOLDER,
+  "설명을 입력해주세요",
+  "설명이 아직 없습니다.",
+]);
+
+const normalizeMetaTitle = (value: string | null | undefined) => {
+  const text = String(value ?? "").trim();
+  return INVALID_META_TITLE_VALUES.has(text) ? "" : text;
+};
+
+const normalizeMetaDescription = (value: string | null | undefined) => {
+  const text = String(value ?? "").trim();
+  return INVALID_META_DESCRIPTION_VALUES.has(text) ? "" : text;
+};
+
 type FlowListSectionProps = {
   access: AccessContext;
+  noteId?: number | null;
 };
 
 type GroupNode = {
@@ -96,6 +128,7 @@ const seedNodes = (
 
 export default function FlowListSection({
   access,
+  noteId = null,
 }: FlowListSectionProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -117,6 +150,10 @@ export default function FlowListSection({
   const [isPanning, setIsPanning] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMetaEditing, setIsMetaEditing] = useState(false);
+  const [metaTitleDraft, setMetaTitleDraft] = useState("");
+  const [metaDescriptionDraft, setMetaDescriptionDraft] = useState("");
+  const [isMetaSaving, setIsMetaSaving] = useState(false);
 
   useModalOpen(confirmDelete);
 
@@ -130,9 +167,29 @@ export default function FlowListSection({
     return () => observer.disconnect();
   }, []);
 
-  const flowsQuery = useFlowListQuery(access);
+  const flowsQuery = useFlowListQuery(access, noteId);
   const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
   const flows = useMemo(() => flowsQuery.data ?? [], [flowsQuery.data]);
+  const filterNoteQuery = useQuery({
+    queryKey:
+      noteId && access.mode !== "blocked"
+        ? queryKeys.emotionNotes.detail(access, noteId)
+        : ["flow-note-filter", "noop"],
+    queryFn: async () => {
+      if (!noteId) return null;
+      const { response, data } = await fetchEmotionNote(noteId, access);
+      if (!response.ok) {
+        throw new Error("note filter context fetch failed");
+      }
+      return data.note;
+    },
+    enabled: Boolean(noteId) && access.mode !== "blocked",
+    staleTime: 60_000,
+  });
+  const filterNoteTitle = useMemo(
+    () => filterNoteQuery.data?.title?.trim() || null,
+    [filterNoteQuery.data?.title],
+  );
 
   const selectedFlow = useMemo(
     () => flows.find((flow) => flow.id === selectedFlowId) ?? null,
@@ -161,8 +218,19 @@ export default function FlowListSection({
   useEffect(() => {
     if (!selectedFlowId) {
       setConfirmDelete(false);
+      setIsMetaEditing(false);
+      setMetaTitleDraft("");
+      setMetaDescriptionDraft("");
     }
   }, [selectedFlowId]);
+
+  useEffect(() => {
+    if (!selectedFlow || isMetaEditing) {
+      return;
+    }
+    setMetaTitleDraft(normalizeMetaTitle(selectedFlow.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(selectedFlow.description));
+  }, [isMetaEditing, selectedFlow]);
 
   useEffect(() => {
     nodesRef.current = nodes;
@@ -202,7 +270,10 @@ export default function FlowListSection({
   );
 
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if ((event.target as HTMLElement).closest(`.${styles.node}`)) {
+    if (
+      (event.target as HTMLElement).closest(`.${styles.node}`) ||
+      (event.target as HTMLElement).closest(`.${styles.nodeTooltip}`)
+    ) {
       return;
     }
     setSelectedFlowId(null);
@@ -232,6 +303,12 @@ export default function FlowListSection({
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 
+  const handleCanvasWheel = (event: ReactWheelEvent<HTMLDivElement>) => {
+    if (event.cancelable) {
+      event.preventDefault();
+    }
+  };
+
   const handleDeleteFlow = async () => {
     if (!selectedFlowId) return;
     setIsDeleting(true);
@@ -252,6 +329,55 @@ export default function FlowListSection({
     pushToast("플로우를 삭제했습니다.", "success");
   };
 
+  const handleStartMetaEdit = () => {
+    if (!selectedFlow) return;
+    setMetaTitleDraft(normalizeMetaTitle(selectedFlow.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(selectedFlow.description));
+    setIsMetaEditing(true);
+  };
+
+  const handleCancelMetaEdit = () => {
+    setMetaTitleDraft(normalizeMetaTitle(selectedFlow?.title));
+    setMetaDescriptionDraft(normalizeMetaDescription(selectedFlow?.description));
+    setIsMetaEditing(false);
+  };
+
+  const handleSaveMeta = async () => {
+    if (!selectedFlowId) return;
+    if (access.mode === "blocked") {
+      pushToast("플로우를 수정할 수 없습니다.", "error");
+      return;
+    }
+
+    const nextTitle = normalizeMetaTitle(metaTitleDraft).slice(0, 40);
+    const nextDescription = normalizeMetaDescription(metaDescriptionDraft).slice(
+      0,
+      40,
+    );
+    if (!nextTitle) {
+      pushToast("플로우 제목을 입력해주세요.", "error");
+      return;
+    }
+
+    setIsMetaSaving(true);
+    const { response, data } = await patchEmotionNoteFlowMeta(access, {
+      flow_id: selectedFlowId,
+      title: nextTitle,
+      description: nextDescription.length > 0 ? nextDescription : null,
+    });
+
+    if (!response.ok || !data.ok) {
+      setIsMetaSaving(false);
+      pushToast(data.message ?? "플로우 정보를 저장하지 못했습니다.", "error");
+      return;
+    }
+
+    await invalidateFlowListQueries(queryClient, access);
+    setIsMetaEditing(false);
+    setIsMetaSaving(false);
+    pushToast("플로우 정보를 저장했습니다.", "success");
+  };
+
   return (
     <FlowListSectionView
       containerRef={containerRef}
@@ -265,10 +391,25 @@ export default function FlowListSection({
       totalCount={totalCount}
       confirmDelete={confirmDelete}
       isDeleting={isDeleting}
+      isMetaEditing={isMetaEditing}
+      isMetaSaving={isMetaSaving}
+      metaTitleDraft={metaTitleDraft}
+      metaDescriptionDraft={metaDescriptionDraft}
       onCanvasPointerDown={handlePointerDown}
       onCanvasPointerMove={handlePointerMove}
       onCanvasPointerUp={handlePointerUp}
+      onCanvasWheel={handleCanvasWheel}
       onSelectFlow={setSelectedFlowId}
+      filterNoteId={noteId}
+      filterNoteTitle={filterNoteTitle}
+      isFilterNoteLoading={filterNoteQuery.isPending || filterNoteQuery.isFetching}
+      onStartMetaEdit={handleStartMetaEdit}
+      onCancelMetaEdit={handleCancelMetaEdit}
+      onSaveMeta={handleSaveMeta}
+      onChangeMetaTitle={(value) => setMetaTitleDraft(value.slice(0, 40))}
+      onChangeMetaDescription={(value) =>
+        setMetaDescriptionDraft(value.slice(0, 40))
+      }
       onOpenDeleteConfirm={() => setConfirmDelete(true)}
       onCloseDeleteConfirm={() => setConfirmDelete(false)}
       onDeleteFlow={handleDeleteFlow}

@@ -2,6 +2,7 @@ import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDeepDistortionCards } from "@/components/session/deep/hooks/useCbtDeepDistortionCards";
+import { validateUserText } from "@/components/session/utils/validation";
 import type { DistortionCard } from "@/components/session/types/distortion";
 import { CbtDistortionCard } from "@/components/session/minimal/distortion/CbtDistortionCard";
 import SafeButton from "@/components/ui/SafeButton";
@@ -42,8 +43,12 @@ export function CbtDeepDistortionSection({
 
   const submitHint = async (cardId: string) => {
     const hint = hintDraft.trim();
-    if (!hint) {
-      pushToast("힌트를 1자 이상 입력해주세요.", "error");
+    const validation = validateUserText(hint, {
+      minLength: 1,
+      minLengthMessage: "힌트를 1자 이상 입력해주세요.",
+    });
+    if (!validation.ok) {
+      pushToast(validation.message, "error");
       return;
     }
     setOpenHintCardId(null);

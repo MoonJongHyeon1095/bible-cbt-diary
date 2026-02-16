@@ -1,6 +1,5 @@
 import { queryKeys } from "@/lib/queryKeys";
 import { flushTokenSessionUsage } from "@/lib/storage/token/sessionUsage";
-import { clearCbtSessionStorage } from "@/lib/storage/session/cbtSessionStorage";
 
 type QueryClientLike = {
   invalidateQueries: (args: { queryKey: readonly unknown[] }) => Promise<unknown>;
@@ -40,7 +39,6 @@ export async function runSessionSavePostProcess({
 
   try {
     void flushTokenSessionUsage({ sessionCount: 1 });
-    clearCbtSessionStorage();
     router.replace(nextPath);
     return true;
   } catch (navigationError) {

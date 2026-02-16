@@ -16,7 +16,7 @@ type ModalContent = {
   badgeText?: string | null;
 } | null;
 
-type SectionKey = "thought" | "error" | "alternative" | "behavior";
+type SectionKey = "alternative" | "distortion" | "behavior";
 
 type FlowDetailStackProps = {
   selectedNote: EmotionNote | null;
@@ -40,30 +40,6 @@ export default function FlowDetailStack({
 
   const sectionItems = [
     {
-      key: "thought" as const,
-      label: "자동 사고",
-      color: "#ffd300",
-      icon: <Brain size={18} />,
-      items: thoughtDetails.map((detail) => ({
-        id: `thought-${detail.id}`,
-        title: detail.automatic_thought,
-        body: detail.automatic_thought,
-        badgeText: detail.emotion || null,
-      })),
-    },
-    {
-      key: "error" as const,
-      label: "인지 오류",
-      color: "#ff4fd8",
-      icon: <AlertCircle size={18} />,
-      items: errorDetails.map((detail) => ({
-        id: `error-${detail.id}`,
-        title: detail.error_description,
-        body: detail.error_description,
-        badgeText: detail.error_label,
-      })),
-    },
-    {
       key: "alternative" as const,
       label: "대안 사고",
       color: "#36d94a",
@@ -72,8 +48,37 @@ export default function FlowDetailStack({
         id: `alternative-${detail.id}`,
         title: detail.alternative,
         body: detail.alternative,
+        modalTitle: "대안 사고",
+        modalColor: "#36d94a",
+        modalIcon: <Lightbulb size={18} />,
         badgeText: null,
       })),
+    },
+    {
+      key: "distortion" as const,
+      label: "Distortion",
+      color: "#ff4fd8",
+      icon: <Brain size={18} />,
+      items: [
+        ...thoughtDetails.map((detail) => ({
+          id: `thought-${detail.id}`,
+          title: detail.automatic_thought,
+          body: detail.automatic_thought,
+          modalTitle: "Inner Belief",
+          modalColor: "#ffd300",
+          modalIcon: <Brain size={18} />,
+          badgeText: detail.emotion || null,
+        })),
+        ...errorDetails.map((detail) => ({
+          id: `error-${detail.id}`,
+          title: detail.error_description,
+          body: detail.error_description,
+          modalTitle: "Analysis",
+          modalColor: "#ff4fd8",
+          modalIcon: <AlertCircle size={18} />,
+          badgeText: detail.error_label,
+        })),
+      ],
     },
     {
       key: "behavior" as const,
@@ -84,6 +89,9 @@ export default function FlowDetailStack({
         id: `behavior-${detail.id}`,
         title: detail.behavior_description,
         body: detail.behavior_description,
+        modalTitle: "행동 반응",
+        modalColor: "#26e0ff",
+        modalIcon: <Footprints size={18} />,
         badgeText: detail.behavior_label,
       })),
     },
@@ -125,10 +133,10 @@ export default function FlowDetailStack({
                     className={styles.detailStackItem}
                     onClick={() =>
                       setModalContent({
-                        title: section.label,
+                        title: item.modalTitle,
                         body: item.body,
-                        color: section.color,
-                        icon: section.icon,
+                        color: item.modalColor,
+                        icon: item.modalIcon,
                         badgeText: item.badgeText,
                       })
                     }

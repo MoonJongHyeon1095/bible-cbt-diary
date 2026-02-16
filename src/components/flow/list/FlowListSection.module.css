@@ -2,6 +2,8 @@
   display: flex;
   flex-direction: column;
   gap: 16px;
+  height: 100%;
+  min-height: 0;
   --app-bottom-tab-offset: 0px;
 }
 
@@ -13,22 +15,70 @@
   padding: 4px 4px 0;
 }
 
+.headerMain {
+  min-width: 0;
+}
+
+.headerLabelRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.headerIconWrap {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #dbe8ff;
+  background: linear-gradient(
+    135deg,
+    rgba(78, 104, 176, 0.55),
+    rgba(34, 42, 66, 0.9)
+  );
+  border: 1px solid rgba(140, 176, 240, 0.45);
+  box-shadow:
+    0 6px 14px rgba(10, 14, 22, 0.35),
+    0 0 0 1px rgba(120, 160, 230, 0.12) inset;
+}
+
 .label {
-  margin: 0 0 6px;
+  margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  letter-spacing: 0.02em;
+}
+
+.filterLabel {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  max-width: min(560px, 92vw);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
+  line-height: 1.25;
+  max-width: min(640px, 92vw);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .canvas {
   position: relative;
-  height: clamp(420px, 70vh, 760px);
+  flex: 1;
+  min-height: clamp(460px, 72dvh, 780px);
   overflow: hidden;
   touch-action: none;
+  overscroll-behavior: contain;
   cursor: grab;
 }
 
@@ -191,6 +241,10 @@
   .section {
     --app-bottom-tab-offset: calc(84px + env(safe-area-inset-bottom));
   }
+
+  .canvas {
+    min-height: clamp(380px, 62dvh, 680px);
+  }
 }
 
 @media (max-width: 720px) {
@@ -276,7 +330,7 @@
   border: 1px solid rgba(255, 255, 255, 0.08);
   display: grid;
   gap: 6px;
-  pointer-events: none;
+  pointer-events: auto;
   z-index: 8;
 }
 
@@ -295,6 +349,41 @@
   color: rgba(240, 243, 248, 0.88);
   white-space: pre-wrap;
   word-break: keep-all;
+}
+
+.nodeTooltipInput,
+.nodeTooltipTextarea {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6f7f9;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  padding: 7px 9px;
+}
+
+.nodeTooltipInput::placeholder,
+.nodeTooltipTextarea::placeholder {
+  color: rgba(240, 243, 248, 0.58);
+}
+
+.nodeTooltipInput:focus,
+.nodeTooltipTextarea:focus {
+  outline: none;
+  border-color: rgba(138, 182, 255, 0.8);
+  box-shadow: 0 0 0 2px rgba(82, 146, 255, 0.22);
+}
+
+.nodeTooltipTextarea {
+  min-height: 66px;
+  resize: vertical;
+}
+
+.nodeTooltipActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 @media (max-width: 900px), (prefers-reduced-motion: reduce) {

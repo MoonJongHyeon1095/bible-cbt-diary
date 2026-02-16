@@ -163,9 +163,10 @@ export function CbtDeepIncidentSection({
               <textarea
                 ref={textareaRef}
                 value={userInput}
-                onChange={(event) => onInputChange(event.target.value)}
+                onChange={(event) => onInputChange(event.target.value.slice(0, 400))}
                 placeholder="구체적으로 쓰면 더욱 효과적입니다."
                 rows={1}
+                maxLength={400}
                 data-tour="deep-incident-input"
                 className={`${styles.textarea} ${styles.incidentTextarea} ${styles.textareaWithFab}`}
               />
@@ -193,7 +194,7 @@ export function CbtDeepIncidentSection({
         items={previousItems}
         onClose={() => setIsPreviousOpen(false)}
         onSelect={(value) => {
-          onInputChange(value);
+          onInputChange(value.slice(0, 400));
           setIsPreviousOpen(false);
           pushToast("입력창에 복사했어요.", "success");
           setHighlightInput(true);

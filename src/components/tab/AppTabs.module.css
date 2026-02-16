@@ -56,4 +56,8 @@
     font-size: 0.75rem;
     padding: 8px 12px;
   }
+
+  .bottomNav .tabButton span {
+    white-space: nowrap;
+  }
 }

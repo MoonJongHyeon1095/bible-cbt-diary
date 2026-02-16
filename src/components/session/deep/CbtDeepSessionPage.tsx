@@ -2,6 +2,7 @@
 
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import AppHeader from "@/components/header/AppHeader";
+import LeaveConfirmModal from "@/components/restore/LeaveConfirmModal";
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
 import { CbtMinimalEmotionSection } from "@/components/session/minimal/emotion-select/CbtMinimalEmotionSection";
@@ -35,6 +36,9 @@ function CbtDeepSessionPageContent() {
     canGoBack,
     handleBack,
     handleGoHome,
+    showLeaveConfirm,
+    handleCancelLeave,
+    handleConfirmLeave,
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
@@ -158,6 +162,11 @@ function CbtDeepSessionPageContent() {
         onFinish={handleTourFinish}
         onClose={handleTourClose}
         onMaskClick={handleTourMaskClick}
+      />
+      <LeaveConfirmModal
+        open={showLeaveConfirm}
+        onCancel={handleCancelLeave}
+        onConfirm={handleConfirmLeave}
       />
     </div>
   );

@@ -132,9 +132,8 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
           <FloatingActionButton
             label="행동 제안"
             icon={<Sparkles size={22} />}
-            helperText="행동 제안 (준비중)"
-            disabled
-            onClick={() => undefined}
+            helperText="행동 제안"
+            onClick={() => router.push(`/behavior/new?noteId=${note.id}`)}
             className={styles.fabBehavior}
             style={{
               left: "24px",

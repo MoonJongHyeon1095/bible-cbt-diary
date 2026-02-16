@@ -14,7 +14,7 @@ export const handlePatchEmotionBehaviorDetails = async (
     id?: number;
     behavior_label?: string;
     behavior_description?: string;
-    error_tags?: string[];
+    checks?: string[];
     deviceId?: string;
   }>(req);
 
@@ -31,7 +31,6 @@ export const handlePatchEmotionBehaviorDetails = async (
   const updatePayload: {
     behavior_label?: string;
     behavior_description?: string;
-    error_tags?: string[];
   } = {};
 
   if (payload.behavior_label !== undefined) {
@@ -40,11 +39,15 @@ export const handlePatchEmotionBehaviorDetails = async (
   if (payload.behavior_description !== undefined) {
     updatePayload.behavior_description = String(payload.behavior_description).trim();
   }
-  if (payload.error_tags !== undefined) {
-    updatePayload.error_tags = Array.isArray(payload.error_tags)
-      ? payload.error_tags.map((tag) => String(tag))
+  const checks =
+    payload.checks === undefined
+      ? undefined
+      : Array.isArray(payload.checks)
+      ? payload.checks
+          .map((item) => String(item ?? "").trim())
+          .filter((item) => item.length > 0)
+          .slice(0, 3)
       : [];
-  }
 
   const supabase = createSupabaseAdminClient();
   const baseQuery = supabase
@@ -58,6 +61,35 @@ export const handlePatchEmotionBehaviorDetails = async (
 
   if (error) {
     return json(res, 500, { ok: false, message: "행동 상세 수정에 실패했습니다." });
+  }
+
+  if (checks !== undefined) {
+    const deleteBaseQuery = supabase
+      .from("emotion_behavior_checks")
+      .delete()
+      .eq("behavior_detail_id", detailId);
+    const { error: deleteError } = user
+      ? await deleteBaseQuery.eq("user_id", user.id)
+      : await deleteBaseQuery.eq("device_id", deviceId).is("user_id", null);
+    if (deleteError) {
+      return json(res, 500, { ok: false, message: "체크리스트 초기화에 실패했습니다." });
+    }
+
+    if (checks.length > 0) {
+      const rows = checks.map((checkLabel, index) => ({
+        behavior_detail_id: detailId,
+        check_label: checkLabel,
+        sort_order: index,
+        user_id: user ? user.id : null,
+        device_id: user ? null : deviceId,
+      }));
+      const { error: insertError } = await supabase
+        .from("emotion_behavior_checks")
+        .insert(rows);
+      if (insertError) {
+        return json(res, 500, { ok: false, message: "체크리스트 저장에 실패했습니다." });
+      }
+    }
   }
 
   return json(res, 200, { ok: true });

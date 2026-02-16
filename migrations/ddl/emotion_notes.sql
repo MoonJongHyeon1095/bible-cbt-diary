@@ -3,10 +3,14 @@ create table public.emotion_notes (
   user_id uuid null default auth.uid (),
   title text not null,
   trigger_text text not null,
-  frequency integer not null default 1,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
   device_id text null,
+  emotion_tags text[] not null default '{}'::text[],
+  inner_belief text not null default ''::text,
+  error_label text not null default ''::text,
+  error_description text not null default ''::text,
+  alternative text not null default ''::text,
   constraint emotion_notes_pkey primary key (id),
   constraint emotion_notes_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
   constraint emotion_notes_owner_check check (
@@ -16,6 +20,8 @@ create table public.emotion_notes (
     )
   )
 ) TABLESPACE pg_default;
+
+create index IF not exists emotion_notes_emotion_tags_gin_idx on public.emotion_notes using gin (emotion_tags) TABLESPACE pg_default;
 
 create index IF not exists emotion_notes_device_id_idx on public.emotion_notes using btree (device_id) TABLESPACE pg_default;
 

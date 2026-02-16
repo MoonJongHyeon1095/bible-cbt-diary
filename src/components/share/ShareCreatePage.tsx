@@ -299,15 +299,6 @@ export default function ShareCreatePage() {
                 <p className={styles.itemText}>
                   {item.behavior_description || "-"}
                 </p>
-              {item.error_tags && item.error_tags.length > 0 ? (
-                <div className={styles.tagList}>
-                  {item.error_tags.map((tag) => (
-                    <span key={`${item.id}-${tag}`} className={styles.tagChip}>
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </div>
           </label>
         ))}

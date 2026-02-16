@@ -39,8 +39,7 @@ export const handleGetEmotionNoteList = async (
       created_at,
       emotion_tags,
       error_label,
-      emotion_flow_note_middles(flow_id),
-      emotion_behavior_details(behavior_label)
+      emotion_flow_note_middles(flow_id)
     `,
   );
 
@@ -71,13 +70,6 @@ export const handleGetEmotionNoteList = async (
     data?.map((note) => {
       const emotionLabels = Array.from(new Set((note.emotion_tags ?? []).filter(Boolean)));
       const errorLabels = note.error_label ? [note.error_label] : [];
-      const behaviorLabels = Array.from(
-        new Set(
-          (note.emotion_behavior_details ?? [])
-            .map((detail) => detail.behavior_label)
-            .filter(Boolean),
-        ),
-      );
       const flowIds = Array.from(
         new Set(
           (note.emotion_flow_note_middles ?? [])
@@ -93,7 +85,6 @@ export const handleGetEmotionNoteList = async (
         created_at: note.created_at,
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
-        behavior_labels: behaviorLabels,
         flow_ids: flowIds,
       };
     }) ?? [];

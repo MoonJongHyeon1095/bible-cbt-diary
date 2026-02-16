@@ -66,7 +66,7 @@ export const handlePostShareSnapshot = async (
         error_label,
         error_description,
         alternative,
-        emotion_behavior_details(id,behavior_label,behavior_description,error_tags,created_at)
+        emotion_behavior_details(id,behavior_label,behavior_description,created_at,emotion_behavior_checks(id,check_label,sort_order,created_at))
       `,
     )
     .eq("user_id", user.id)

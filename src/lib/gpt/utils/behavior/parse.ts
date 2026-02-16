@@ -3,6 +3,7 @@ import { parseJsonObject } from "../core/json";
 export type BehaviorSuggestionItem<TBehaviorId extends string> = {
   behaviorId?: TBehaviorId;
   suggestion?: string;
+  checks?: string[];
 };
 
 type BehaviorSuggestionsResponseShape<TBehaviorId extends string> = {

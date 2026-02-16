@@ -1,42 +1,6 @@
 [
   {
     "schema": "public",
-    "table": "emotion_alternative_details",
-    "policy_name": "emotion_alternative_details_delete_own",
-    "command": "DELETE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_alternative_details",
-    "policy_name": "emotion_alternative_details_insert_own",
-    "command": "INSERT",
-    "roles": "PUBLIC",
-    "using_expr": null,
-    "with_check_expr": "(auth.uid() = user_id)"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_alternative_details",
-    "policy_name": "emotion_alternative_details_select_own",
-    "command": "SELECT",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_alternative_details",
-    "policy_name": "emotion_alternative_details_update_own",
-    "command": "UPDATE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
     "table": "emotion_behavior_details",
     "policy_name": "emotion_behavior_details_delete_own",
     "command": "DELETE",
@@ -70,150 +34,6 @@
     "roles": "PUBLIC",
     "using_expr": "(auth.uid() = user_id)",
     "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_error_details",
-    "policy_name": "emotion_error_details_delete_own",
-    "command": "DELETE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_error_details",
-    "policy_name": "emotion_error_details_insert_own",
-    "command": "INSERT",
-    "roles": "PUBLIC",
-    "using_expr": null,
-    "with_check_expr": "(auth.uid() = user_id)"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_error_details",
-    "policy_name": "emotion_error_details_select_own",
-    "command": "SELECT",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_error_details",
-    "policy_name": "emotion_error_details_update_own",
-    "command": "UPDATE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_flows",
-    "policy_name": "emotion_note_groups_delete_own",
-    "command": "DELETE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_flows",
-    "policy_name": "emotion_note_groups_insert_own",
-    "command": "INSERT",
-    "roles": "PUBLIC",
-    "using_expr": null,
-    "with_check_expr": "(auth.uid() = user_id)"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_flows",
-    "policy_name": "emotion_note_groups_select_own",
-    "command": "SELECT",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_flows",
-    "policy_name": "emotion_note_groups_update_own",
-    "command": "UPDATE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": "(auth.uid() = user_id)"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_auto_thought_details",
-    "policy_name": "emotion_auto_thought_details_delete_own",
-    "command": "DELETE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_auto_thought_details",
-    "policy_name": "emotion_auto_thought_details_insert_own",
-    "command": "INSERT",
-    "roles": "PUBLIC",
-    "using_expr": null,
-    "with_check_expr": "(auth.uid() = user_id)"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_auto_thought_details",
-    "policy_name": "emotion_auto_thought_details_select_own",
-    "command": "SELECT",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_auto_thought_details",
-    "policy_name": "emotion_auto_thought_details_update_own",
-    "command": "UPDATE",
-    "roles": "PUBLIC",
-    "using_expr": "(auth.uid() = user_id)",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_note_middles",
-    "policy_name": "emotion_note_middles_delete_own",
-    "command": "DELETE",
-    "roles": "PUBLIC",
-    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_note_middles",
-    "policy_name": "emotion_note_middles_insert_own",
-    "command": "INSERT",
-    "roles": "PUBLIC",
-    "using_expr": null,
-    "with_check_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))"
-  },
-  {
-    "schema": "public",
-    "table": "emotion_note_middles",
-    "policy_name": "emotion_note_middles_select_own",
-    "command": "SELECT",
-    "roles": "PUBLIC",
-    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
-    "with_check_expr": null
-  },
-  {
-    "schema": "public",
-    "table": "emotion_note_middles",
-    "policy_name": "emotion_note_middles_update_own",
-    "command": "UPDATE",
-    "roles": "PUBLIC",
-    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
-    "with_check_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))"
   },
   {
     "schema": "public",
@@ -253,6 +73,42 @@
   },
   {
     "schema": "public",
+    "table": "emotion_flows",
+    "policy_name": "emotion_note_groups_delete_own",
+    "command": "DELETE",
+    "roles": "PUBLIC",
+    "using_expr": "(auth.uid() = user_id)",
+    "with_check_expr": null
+  },
+  {
+    "schema": "public",
+    "table": "emotion_flows",
+    "policy_name": "emotion_note_groups_insert_own",
+    "command": "INSERT",
+    "roles": "PUBLIC",
+    "using_expr": null,
+    "with_check_expr": "(auth.uid() = user_id)"
+  },
+  {
+    "schema": "public",
+    "table": "emotion_flows",
+    "policy_name": "emotion_note_groups_select_own",
+    "command": "SELECT",
+    "roles": "PUBLIC",
+    "using_expr": "(auth.uid() = user_id)",
+    "with_check_expr": null
+  },
+  {
+    "schema": "public",
+    "table": "emotion_flows",
+    "policy_name": "emotion_note_groups_update_own",
+    "command": "UPDATE",
+    "roles": "PUBLIC",
+    "using_expr": "(auth.uid() = user_id)",
+    "with_check_expr": "(auth.uid() = user_id)"
+  },
+  {
+    "schema": "public",
     "table": "emotion_montages",
     "policy_name": "emotion_montages_delete_own",
     "command": "DELETE",
@@ -286,6 +142,42 @@
     "roles": "PUBLIC",
     "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows flows\n  WHERE ((flows.id = emotion_montages.flow_id) AND (flows.user_id = auth.uid()))))",
     "with_check_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows flows\n  WHERE ((flows.id = emotion_montages.flow_id) AND (flows.user_id = auth.uid()))))"
+  },
+  {
+    "schema": "public",
+    "table": "emotion_note_middles",
+    "policy_name": "emotion_note_middles_delete_own",
+    "command": "DELETE",
+    "roles": "PUBLIC",
+    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
+    "with_check_expr": null
+  },
+  {
+    "schema": "public",
+    "table": "emotion_note_middles",
+    "policy_name": "emotion_note_middles_insert_own",
+    "command": "INSERT",
+    "roles": "PUBLIC",
+    "using_expr": null,
+    "with_check_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))"
+  },
+  {
+    "schema": "public",
+    "table": "emotion_note_middles",
+    "policy_name": "emotion_note_middles_select_own",
+    "command": "SELECT",
+    "roles": "PUBLIC",
+    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
+    "with_check_expr": null
+  },
+  {
+    "schema": "public",
+    "table": "emotion_note_middles",
+    "policy_name": "emotion_note_middles_update_own",
+    "command": "UPDATE",
+    "roles": "PUBLIC",
+    "using_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))",
+    "with_check_expr": "(EXISTS ( SELECT 1\n   FROM emotion_flows groups\n  WHERE ((groups.id = emotion_note_middles.flow_id) AND (groups.user_id = auth.uid()))))"
   },
   {
     "schema": "public",

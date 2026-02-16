@@ -41,8 +41,14 @@ export const handleGetEmotionNote = async (
           note_id,
           behavior_label,
           behavior_description,
-          error_tags,
-          created_at
+          created_at,
+          emotion_behavior_checks(
+            id,
+            behavior_detail_id,
+            check_label,
+            sort_order,
+            created_at
+          )
         )
       `,
     );

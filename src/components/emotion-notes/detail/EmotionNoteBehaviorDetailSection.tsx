@@ -40,10 +40,7 @@ export default function EmotionNoteBehaviorDetailSection(
           <p className={styles.emptyText}>아직 작성된 내용이 없습니다.</p>
         ) : (
           details.map((detail) => (
-            <div
-              key={detail.id}
-              className={styles.detailCard}
-            >
+            <div key={detail.id} className={styles.detailCard}>
               <EmotionNoteDetailSectionItem
                 badgeText={detail.behavior_label}
                 body={detail.behavior_description}
@@ -57,18 +54,6 @@ export default function EmotionNoteBehaviorDetailSection(
                   onOpenModal,
                 }}
               />
-              {detail.error_tags && detail.error_tags.length > 0 ? (
-                <div className={styles.detailTagList}>
-                  {detail.error_tags.map((tag) => (
-                    <span
-                      key={`${detail.id}-${tag}`}
-                      className={styles.detailErrorTag}
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
             </div>
           ))
         )}

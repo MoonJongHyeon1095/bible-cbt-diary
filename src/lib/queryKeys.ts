@@ -33,6 +33,12 @@ export const queryKeys = {
   },
   behaviorDetails: (access: AccessContext, noteId: number) =>
     ["emotion-behavior-details", accessKey(access), noteId] as const,
+  behaviorLibrary: (access: AccessContext) =>
+    ["emotion-behavior-library", accessKey(access)] as const,
+  behaviorDetail: (access: AccessContext, behaviorDetailId: number) =>
+    ["emotion-behavior-detail", accessKey(access), behaviorDetailId] as const,
+  behaviorHistory: (access: AccessContext, behaviorDetailId?: number | null) =>
+    ["emotion-behavior-history", accessKey(access), behaviorDetailId ?? null] as const,
   sessionHistory: {
     all: ["session-history"] as const,
     list: (access: AccessContext) =>

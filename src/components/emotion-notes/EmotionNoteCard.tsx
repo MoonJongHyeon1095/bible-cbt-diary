@@ -63,7 +63,6 @@ export default function EmotionNoteCard({
   });
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
-  const behaviorTags = note.behavior_labels ?? [];
   const flowIds = note.flow_ids ?? [];
   const sortedFlowIds = [...flowIds].sort((a, b) => b - a);
   const primaryFlowId = sortedFlowIds[0] ?? null;
@@ -244,9 +243,7 @@ export default function EmotionNoteCard({
           <span className={styles.noteTime}>{timeLabel}</span>
         </div>
       </div>
-      {(emotionTags.length > 0 ||
-        errorTags.length > 0 ||
-        behaviorTags.length > 0) && (
+      {(emotionTags.length > 0 || errorTags.length > 0) && (
         <div className={styles.noteTags}>
           {emotionTags.map((tag) => (
             <span key={`emotion-${tag}`} className={styles.tagEmotion}>
@@ -255,11 +252,6 @@ export default function EmotionNoteCard({
           ))}
           {errorTags.map((tag) => (
             <span key={`error-${tag}`} className={styles.tagError}>
-              {tag}
-            </span>
-          ))}
-          {behaviorTags.map((tag) => (
-            <span key={`behavior-${tag}`} className={styles.tagBehavior}>
               {tag}
             </span>
           ))}

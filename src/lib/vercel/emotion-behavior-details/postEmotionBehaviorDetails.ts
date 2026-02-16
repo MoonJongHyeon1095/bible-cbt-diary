@@ -11,10 +11,10 @@ export const handlePostEmotionBehaviorDetails = async (
 ) => {
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const payload = await readJson<{
-    note_id?: number;
+    note_id?: number | null;
     behavior_label?: string;
     behavior_description?: string;
-    error_tags?: string[];
+    checks?: string[];
     created_at?: string;
     deviceId?: string;
   }>(req);
@@ -24,15 +24,19 @@ export const handlePostEmotionBehaviorDetails = async (
     return json(res, 401, { ok: false, message: "로그인이 필요합니다." });
   }
 
-  const noteId = Number(payload.note_id ?? "");
-  if (Number.isNaN(noteId)) {
-    return json(res, 400, { ok: false, message: "note_id가 필요합니다." });
+  const hasNoteId = payload.note_id !== undefined && payload.note_id !== null;
+  const noteId = hasNoteId ? Number(payload.note_id) : null;
+  if (hasNoteId && (noteId == null || Number.isNaN(noteId))) {
+    return json(res, 400, { ok: false, message: "note_id가 올바르지 않습니다." });
   }
 
   const behaviorLabel = String(payload.behavior_label ?? "").trim();
   const behaviorDescription = String(payload.behavior_description ?? "").trim();
-  const errorTags = Array.isArray(payload.error_tags)
-    ? payload.error_tags.map((tag) => String(tag))
+  const checks = Array.isArray(payload.checks)
+    ? payload.checks
+        .map((item) => String(item ?? "").trim())
+        .filter((item) => item.length > 0)
+        .slice(0, 3)
     : [];
 
   if (!behaviorLabel || !behaviorDescription) {
@@ -43,16 +47,14 @@ export const handlePostEmotionBehaviorDetails = async (
   const insertPayload: {
     user_id?: string | null;
     device_id?: string | null;
-    note_id: number;
+    note_id: number | null;
     behavior_label: string;
     behavior_description: string;
-    error_tags: string[];
     created_at?: string;
   } = {
     note_id: noteId,
     behavior_label: behaviorLabel,
     behavior_description: behaviorDescription,
-    error_tags: errorTags,
   };
 
   if (user) {
@@ -66,13 +68,31 @@ export const handlePostEmotionBehaviorDetails = async (
     insertPayload.created_at = payload.created_at;
   }
 
-  const { error } = await supabase
+  const { data: inserted, error } = await supabase
     .from("emotion_behavior_details")
-    .insert(insertPayload);
+    .insert(insertPayload)
+    .select("id")
+    .maybeSingle();
 
-  if (error) {
+  if (error || !inserted) {
     return json(res, 500, { ok: false, message: "행동 상세 저장에 실패했습니다." });
   }
 
-  return json(res, 200, { ok: true });
+  if (checks.length > 0) {
+    const rows = checks.map((checkLabel, index) => ({
+      behavior_detail_id: inserted.id,
+      check_label: checkLabel,
+      sort_order: index,
+      user_id: user ? user.id : null,
+      device_id: user ? null : deviceId,
+    }));
+    const { error: checkError } = await supabase
+      .from("emotion_behavior_checks")
+      .insert(rows);
+    if (checkError) {
+      return json(res, 500, { ok: false, message: "체크리스트 저장에 실패했습니다." });
+    }
+  }
+
+  return json(res, 200, { ok: true, id: inserted.id });
 };

@@ -159,19 +159,6 @@ export default function SharePublicPage() {
                                       {(data.behavior_description as string) ||
                                         "-"}
                                     </p>
-                                    {Array.isArray(data.error_tags) &&
-                                    data.error_tags.length > 0 ? (
-                                      <div className={styles.tagList}>
-                                        {data.error_tags.map((tag) => (
-                                          <span
-                                            key={`${key}-${tag}`}
-                                            className={styles.tagChip}
-                                          >
-                                            {tag}
-                                          </span>
-                                        ))}
-                                      </div>
-                                    ) : null}
                                   </>
                                 ) : null}
                               </div>

@@ -8,8 +8,15 @@ import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 // GET /api/emotion-behavior-details
 // emotion-behavior-details 상세 조회
 export const fetchBehaviorDetails = async (
-  noteId: number,
   access: AccessContext,
+  options?: {
+    noteId?: number;
+    detailId?: number;
+    query?: string;
+    sort?: "created_desc" | "recorded_desc";
+    limit?: number;
+    offset?: number;
+  },
 ) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
@@ -19,8 +26,16 @@ export const fetchBehaviorDetails = async (
     };
   }
 
+  const query = new URLSearchParams();
+  if (options?.noteId != null) query.set("note_id", String(options.noteId));
+  if (options?.detailId != null) query.set("detail_id", String(options.detailId));
+  if (options?.query) query.set("q", options.query);
+  if (options?.sort) query.set("sort", options.sort);
+  if (options?.limit != null) query.set("limit", String(options.limit));
+  if (options?.offset != null) query.set("offset", String(options.offset));
+
   const url = appendQuery(
-    buildApiUrl(`/api/emotion-behavior-details?note_id=${noteId}`),
+    buildApiUrl(`/api/emotion-behavior-details${query.toString() ? `?${query.toString()}` : ""}`),
     resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {},
   );
 
@@ -29,7 +44,12 @@ export const fetchBehaviorDetails = async (
   });
 
   const data = response.ok
-    ? ((await response.json()) as { details: EmotionNoteBehaviorDetail[] })
-    : { details: [] };
+    ? ((await response.json()) as {
+        details: EmotionNoteBehaviorDetail[];
+        total?: number;
+        limit?: number;
+        offset?: number;
+      })
+    : { details: [], total: 0, limit: 0, offset: 0 };
   return { response, data };
 };

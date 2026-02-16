@@ -50,11 +50,43 @@ export type EmotionNoteAlternativeDetail = {
 
 export type EmotionNoteBehaviorDetail = {
   id: number;
-  note_id: number;
+  note_id: number | null;
   behavior_label: string;
   behavior_description: string;
-  error_tags: string[] | null;
+  latest_tracked_on?: string | null;
   created_at: string;
+  checks?: EmotionBehaviorCheck[];
+};
+
+export type EmotionBehaviorCheck = {
+  id: number;
+  behavior_detail_id: number;
+  check_label: string;
+  sort_order: number;
+  created_at: string;
+};
+
+export type EmotionBehaviorHistoryCheck = {
+  id: number;
+  history_id: number;
+  check_id: number;
+  is_done: boolean;
+  check_label?: string;
+  created_at: string;
+};
+
+export type EmotionBehaviorHistory = {
+  id: number;
+  behavior_detail_id: number;
+  note_id: number | null;
+  tracked_on: string;
+  comments: string;
+  created_at: string;
+  checks: EmotionBehaviorHistoryCheck[];
+  behavior_detail?: Pick<
+    EmotionNoteBehaviorDetail,
+    "id" | "behavior_label" | "behavior_description"
+  > | null;
 };
 
 export type EmotionNoteMiddle = {

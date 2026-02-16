@@ -8,10 +8,10 @@ import { resolveAccess } from "@/lib/api/_helpers";
 // emotion-behavior-details 등록
 export const createBehaviorDetail = async (
   payload: {
-    note_id: number;
+    note_id?: number | null;
     behavior_label: string;
     behavior_description: string;
-    error_tags?: string[] | null;
+    checks?: string[] | null;
   },
   access: AccessContext,
 ) => {

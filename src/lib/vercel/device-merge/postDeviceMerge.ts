@@ -26,6 +26,8 @@ export const handlePostDeviceMerge = async (
     const tables = [
       "emotion_notes",
       "emotion_behavior_details",
+      "emotion_behavior_checks",
+      "emotion_behavior_history",
       "session_history",
       "emotion_flows",
     ];

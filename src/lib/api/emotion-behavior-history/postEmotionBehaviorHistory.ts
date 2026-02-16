@@ -1,17 +1,16 @@
 "use client";
 
 import type { AccessContext } from "@/lib/types/access";
-import { buildApiUrl } from "@/lib/utils/apiBase";
 import { resolveAccess } from "@/lib/api/_helpers";
+import { buildApiUrl } from "@/lib/utils/apiBase";
 
-// PATCH /api/emotion-behavior-details
-// emotion-behavior-details 수정
-export const updateBehaviorDetail = async (
+export const createBehaviorHistory = async (
   payload: {
-    id: number;
-    behavior_label: string;
-    behavior_description: string;
-    checks?: string[] | null;
+    behavior_detail_id: number;
+    note_id?: number | null;
+    tracked_on: string;
+    comments?: string;
+    checks: Array<{ check_id: number; is_done: boolean }>;
   },
   access: AccessContext,
 ) => {
@@ -25,8 +24,8 @@ export const updateBehaviorDetail = async (
       ? { ...payload, deviceId: resolved.deviceId }
       : payload;
 
-  return fetch(buildApiUrl("/api/emotion-behavior-details"), {
-    method: "PATCH",
+  return fetch(buildApiUrl("/api/emotion-behavior-history"), {
+    method: "POST",
     headers: {
       "Content-Type": "application/json",
       ...(resolved.kind === "auth" ? resolved.headers : {}),

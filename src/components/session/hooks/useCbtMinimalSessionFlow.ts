@@ -39,7 +39,7 @@ type DistortionPayload = {
 const buildInitialState = (step: MinimalStep): FlowState => ({
   step,
   userInput: "",
-  selectedEmotion: "",
+  selectedEmotions: [],
   noteTitle: "",
   emotionThoughtPairs: [],
   selectedCognitiveErrors: [],
@@ -72,8 +72,8 @@ export function useCbtMinimalSessionFlow() {
       setStep: (step: MinimalStep) => dispatch({ type: "SET_STEP", step }),
       setUserInput: (value: string) =>
         dispatch({ type: "SET_USER_INPUT", value }),
-      setSelectedEmotion: (value: string) =>
-        dispatch({ type: "SET_SELECTED_EMOTION", value }),
+      setSelectedEmotions: (value: string[]) =>
+        dispatch({ type: "SET_SELECTED_EMOTIONS", value }),
       setNoteTitle: (value: string) =>
         dispatch({ type: "SET_NOTE_TITLE", value }),
       setDistortion: (

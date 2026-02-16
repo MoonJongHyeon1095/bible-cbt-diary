@@ -195,15 +195,16 @@ export default function FlowDetailSectionView({
         {selectedNote ? (
           <>
             <FloatingActionButton
-              label="삭제"
-              helperText="삭제"
-              icon={<Trash2 size={20} />}
-              className={styles.fabPrimary}
-              onClick={onOpenDeleteConfirm}
+              label="Go Deeper"
+              helperText="Go Deeper"
+              icon={<Route size={20} />}
+              className={`${styles.deepFab} ${styles.fabPrimary}`}
+              onClick={onGoDeeper}
+              loadingRing={isGoDeeperLoading}
               style={{
-                backgroundColor: "#e14a4a",
+                backgroundColor: "#121417",
                 color: "#fff",
-                borderColor: "#b93333",
+                borderColor: "rgba(255, 255, 255, 0.35)",
               }}
             />
             <FloatingActionButton
@@ -214,16 +215,15 @@ export default function FlowDetailSectionView({
               onClick={() => onOpenDetail(selectedNote.id)}
             />
             <FloatingActionButton
-              label="Go Deeper"
-              helperText="Go Deeper"
-              icon={<Route size={20} />}
-              className={`${styles.deepFab} ${styles.fabTertiary}`}
-              onClick={onGoDeeper}
-              loadingRing={isGoDeeperLoading}
+              label="삭제"
+              helperText="삭제"
+              icon={<Trash2 size={20} />}
+              className={styles.fabTertiary}
+              onClick={onOpenDeleteConfirm}
               style={{
-                backgroundColor: "#121417",
+                backgroundColor: "#e14a4a",
                 color: "#fff",
-                borderColor: "rgba(255, 255, 255, 0.35)",
+                borderColor: "#b93333",
               }}
             />
           </>

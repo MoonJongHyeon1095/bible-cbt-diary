@@ -9,7 +9,7 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { useEffect, useRef, useState } from "react";
 
 type DeepFlowActions = {
-  setSelectedEmotion: (value: string) => void;
+  setSelectedEmotions: (value: string[]) => void;
   setUserInput: (value: string) => void;
   setStep: (step: "incident") => void;
 };
@@ -67,7 +67,7 @@ export function useDeepSessionRestore({
       return;
     }
 
-    actions.setSelectedEmotion(restoreDraft.selectedEmotion);
+    actions.setSelectedEmotions(restoreDraft.selectedEmotions);
     actions.setUserInput(restoreDraft.incident);
     actions.setStep("incident");
 

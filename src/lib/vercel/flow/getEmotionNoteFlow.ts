@@ -109,6 +109,11 @@ export const handleGetEmotionNoteFlow = async (
         title: string;
         trigger_text: string;
         created_at: string;
+        emotion_tags: string[];
+        inner_belief: string;
+        error_label: string;
+        error_description: string;
+        alternative: string;
         emotion_labels: string[];
         error_labels: string[];
         behavior_labels: string[];
@@ -128,9 +133,11 @@ export const handleGetEmotionNoteFlow = async (
         title,
         trigger_text,
         created_at,
-        emotion_auto_thought_details(id,note_id,automatic_thought,emotion,created_at),
-        emotion_error_details(id,note_id,error_label,error_description,created_at),
-        emotion_alternative_details(id,note_id,alternative,created_at),
+        emotion_tags,
+        inner_belief,
+        error_label,
+        error_description,
+        alternative,
         emotion_behavior_details(
           id,
           note_id,
@@ -162,20 +169,18 @@ export const handleGetEmotionNoteFlow = async (
 
     mappedNotes =
       notes?.map((note) => {
+        const rawEmotionTags = Array.isArray(note.emotion_tags)
+          ? note.emotion_tags
+          : [];
         const emotionLabels = Array.from(
           new Set(
-            (note.emotion_auto_thought_details ?? [])
-              .map((detail) => detail.emotion)
-              .filter(Boolean),
+            rawEmotionTags.filter(
+              (value: unknown): value is string =>
+                typeof value === "string" && value.length > 0,
+            ),
           ),
         );
-        const errorLabels = Array.from(
-          new Set(
-            (note.emotion_error_details ?? [])
-              .map((detail) => detail.error_label)
-              .filter(Boolean),
-          ),
-        );
+        const errorLabels = note.error_label ? [note.error_label] : [];
         const behaviorLabels = Array.from(
           new Set(
             (note.emotion_behavior_details ?? [])
@@ -189,12 +194,46 @@ export const handleGetEmotionNoteFlow = async (
           title: note.title,
           trigger_text: note.trigger_text,
           created_at: note.created_at,
+          emotion_tags: note.emotion_tags ?? [],
+          inner_belief: note.inner_belief ?? "",
+          error_label: note.error_label ?? "",
+          error_description: note.error_description ?? "",
+          alternative: note.alternative ?? "",
           emotion_labels: emotionLabels,
           error_labels: errorLabels,
           behavior_labels: behaviorLabels,
-          thought_details: note.emotion_auto_thought_details ?? [],
-          error_details: note.emotion_error_details ?? [],
-          alternative_details: note.emotion_alternative_details ?? [],
+          thought_details: note.inner_belief
+            ? [
+                {
+                  id: note.id,
+                  note_id: note.id,
+                  automatic_thought: note.inner_belief,
+                  emotion: (note.emotion_tags ?? []).join(", "),
+                  created_at: note.created_at,
+                },
+              ]
+            : [],
+          error_details: note.error_label || note.error_description
+            ? [
+                {
+                  id: note.id,
+                  note_id: note.id,
+                  error_label: note.error_label ?? "",
+                  error_description: note.error_description ?? "",
+                  created_at: note.created_at,
+                },
+              ]
+            : [],
+          alternative_details: note.alternative
+            ? [
+                {
+                  id: note.id,
+                  note_id: note.id,
+                  alternative: note.alternative,
+                  created_at: note.created_at,
+                },
+              ]
+            : [],
           behavior_details: note.emotion_behavior_details ?? [],
         };
       }) ?? [];

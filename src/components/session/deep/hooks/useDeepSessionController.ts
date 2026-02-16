@@ -55,11 +55,17 @@ export function useDeepSessionController() {
   const mainIdParam = searchParams.get("mainId") ?? "";
   const flowIdParam = searchParams.get("flowId") ?? "";
   const subIdsParam = searchParams.get("subIds") ?? "";
-  const emotionIdParam = searchParams.get("emotionId");
-  const preselectedEmotion = useMemo(() => {
-    if (!emotionIdParam) return "";
-    return ALL_EMOTIONS.find((item) => item.id === emotionIdParam)?.label ?? "";
-  }, [emotionIdParam]);
+  const emotionIdsParam = searchParams.get("emotionIds");
+  const preselectedEmotions = useMemo(() => {
+    const ids = (emotionIdsParam ?? "")
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0)
+      .slice(0, 2);
+    return ids
+      .map((id) => ALL_EMOTIONS.find((item) => item.id === id)?.label ?? "")
+      .filter((label) => label.length > 0);
+  }, [emotionIdsParam]);
 
   const {
     flowId,
@@ -96,7 +102,7 @@ export function useDeepSessionController() {
       shouldSelectSubNotes
         ? [
             ...DEEP_NOTE_SELECT_STEPS,
-            ...(flow.selectedEmotion
+            ...(flow.selectedEmotions.length > 0
               ? []
               : [...DEEP_MOOD_STEPS, ...DEEP_EMOTION_SELECT_STEPS]),
             ...DEEP_INCIDENT_STEPS,
@@ -104,14 +110,14 @@ export function useDeepSessionController() {
             ...DEEP_ALTERNATIVE_STEPS,
           ]
         : [
-            ...(flow.selectedEmotion
+            ...(flow.selectedEmotions.length > 0
               ? []
               : [...DEEP_MOOD_STEPS, ...DEEP_EMOTION_SELECT_STEPS]),
             ...DEEP_INCIDENT_STEPS,
             ...DEEP_DISTORTION_STEPS,
             ...DEEP_ALTERNATIVE_STEPS,
           ],
-    [flow.selectedEmotion, shouldSelectSubNotes],
+    [flow.selectedEmotions.length, shouldSelectSubNotes],
   );
   const currentStepIndex = stepOrder.indexOf(flow.step);
 
@@ -122,6 +128,7 @@ export function useDeepSessionController() {
         title: string;
         trigger_text: string;
         emotion: string;
+        emotions?: string[];
         automatic_thought: string;
         selected_cognitive_error: SelectedCognitiveError | null;
         selected_alternative_thought: string;
@@ -157,7 +164,7 @@ export function useDeepSessionController() {
     flowId,
     subNotes,
     actions: {
-      setSelectedEmotion: actions.setSelectedEmotion,
+      setSelectedEmotions: actions.setSelectedEmotions,
       setUserInput: actions.setUserInput,
       setStep: (step) => actions.setStep(step),
     },
@@ -174,15 +181,18 @@ export function useDeepSessionController() {
   });
 
   useEffect(() => {
-    if (!preselectedEmotion) return;
-    if (flow.selectedEmotion !== preselectedEmotion) {
-      actions.setSelectedEmotion(preselectedEmotion);
+    if (preselectedEmotions.length === 0) return;
+    const same =
+      flow.selectedEmotions.length === preselectedEmotions.length &&
+      flow.selectedEmotions.every((value, index) => value === preselectedEmotions[index]);
+    if (!same) {
+      actions.setSelectedEmotions(preselectedEmotions);
       return;
     }
     if (flow.step === "mood" || flow.step === "emotion") {
       actions.setStep("incident");
     }
-  }, [actions, flow.selectedEmotion, flow.step, preselectedEmotion]);
+  }, [actions, flow.selectedEmotions, flow.step, preselectedEmotions]);
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -197,9 +207,7 @@ export function useDeepSessionController() {
 
   const previousAlternatives = useMemo(() => {
     const notes = mainNote ? [mainNote, ...subNotes] : subNotes;
-    const alternatives = notes.flatMap((note) =>
-      (note.alternative_details ?? []).map((detail) => detail.alternative),
-    );
+    const alternatives = notes.map((note) => note.alternative ?? "");
     return alternatives.filter(Boolean);
   }, [mainNote, subNotes]);
 
@@ -251,7 +259,7 @@ export function useDeepSessionController() {
   useDeepSessionResumeDraft({
     mainNote,
     flowId,
-    selectedEmotion: flow.selectedEmotion,
+    selectedEmotions: flow.selectedEmotions,
     userInput: flow.userInput,
     subNotes,
     resolvedInternalContext,
@@ -289,12 +297,12 @@ export function useDeepSessionController() {
   const { handleConfirmSelection } = useDeepSessionSelectionHandlers({
     confirmSelection,
     setStep: actions.setStep,
-    nextStep: flow.selectedEmotion ? "incident" : "mood",
+    nextStep: flow.selectedEmotions.length > 0 ? "incident" : "mood",
   });
 
   const handleProceedFromIncident = () => {
     const incident = flow.userInput;
-    const emotion = flow.selectedEmotion;
+    const emotion = flow.selectedEmotions.join(", ");
     const fallbackTitle = buildSessionNoteTitle({
       emotion,
       incident,
@@ -350,8 +358,8 @@ export function useDeepSessionController() {
   };
 
   const { moodType, handleSelectMood } = useSessionMoodController({
-    selectedEmotion: flow.selectedEmotion,
-    setSelectedEmotion: actions.setSelectedEmotion,
+    selectedEmotions: flow.selectedEmotions,
+    setSelectedEmotions: actions.setSelectedEmotions,
     positiveEmotions: POSITIVE_EMOTIONS,
     negativeEmotions: NEGATIVE_EMOTIONS,
   });

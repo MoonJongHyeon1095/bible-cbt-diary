@@ -10,6 +10,7 @@ type DeepPayload = {
   title?: string;
   trigger_text?: string;
   emotion?: string;
+  emotions?: string[];
   automatic_thought?: string;
   selected_cognitive_error?: { title?: string; detail?: string } | null;
   selected_alternative_thought?: string;
@@ -24,6 +25,7 @@ type MinimalPayload = {
   title?: string;
   triggerText?: string;
   emotion?: string;
+  emotions?: string[];
   automaticThought?: string;
   alternativeThought?: string;
   cognitiveError?: { title?: string; detail?: string } | null;

@@ -37,7 +37,7 @@ type DistortionPayload = {
 const buildInitialState = (step: DeepStep): FlowState => ({
   step,
   userInput: "",
-  selectedEmotion: "",
+  selectedEmotions: [],
   noteTitle: "",
   autoThought: "",
   selectedCognitiveErrors: [],
@@ -70,8 +70,8 @@ export function useCbtDeepSessionFlow(initialStep: DeepStep) {
       setStep: (step: DeepStep) => dispatch({ type: "SET_STEP", step }),
       setUserInput: (value: string) =>
         dispatch({ type: "SET_USER_INPUT", value }),
-      setSelectedEmotion: (value: string) =>
-        dispatch({ type: "SET_SELECTED_EMOTION", value }),
+      setSelectedEmotions: (value: string[]) =>
+        dispatch({ type: "SET_SELECTED_EMOTIONS", value }),
       setNoteTitle: (value: string) =>
         dispatch({ type: "SET_NOTE_TITLE", value }),
       setDistortion: (

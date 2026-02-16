@@ -30,10 +30,12 @@ export const handleGetEmotionNote = async (
         title,
         trigger_text,
         created_at,
+        emotion_tags,
+        inner_belief,
+        error_label,
+        error_description,
+        alternative,
         emotion_flow_note_middles(flow_id),
-        emotion_auto_thought_details(id,note_id,automatic_thought,emotion,created_at),
-        emotion_error_details(id,note_id,error_label,error_description,created_at),
-        emotion_alternative_details(id,note_id,alternative,created_at),
         emotion_behavior_details(
           id,
           note_id,
@@ -51,18 +53,6 @@ export const handleGetEmotionNote = async (
 
   const { data, error } = await scopedQuery
     .eq("id", noteId)
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_auto_thought_details",
-    })
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_error_details",
-    })
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_alternative_details",
-    })
     .order("created_at", {
       ascending: true,
       foreignTable: "emotion_behavior_details",
@@ -88,6 +78,13 @@ export const handleGetEmotionNote = async (
         title: data.title,
         trigger_text: data.trigger_text,
         created_at: data.created_at,
+        emotion_tags: data.emotion_tags ?? [],
+        inner_belief: data.inner_belief ?? "",
+        error_label: data.error_label ?? "",
+        error_description: data.error_description ?? "",
+        alternative: data.alternative ?? "",
+        emotion_labels: data.emotion_tags ?? [],
+        error_labels: data.error_label ? [data.error_label] : [],
         flow_ids: Array.from(
           new Set(
             (data.emotion_flow_note_middles ?? [])
@@ -95,9 +92,38 @@ export const handleGetEmotionNote = async (
               .filter((id) => Number.isFinite(id)),
           ),
         ),
-        thought_details: data.emotion_auto_thought_details ?? [],
-        error_details: data.emotion_error_details ?? [],
-        alternative_details: data.emotion_alternative_details ?? [],
+        thought_details: data.inner_belief
+          ? [
+              {
+                id: data.id,
+                note_id: data.id,
+                automatic_thought: data.inner_belief,
+                emotion: (data.emotion_tags ?? []).join(", "),
+                created_at: data.created_at,
+              },
+            ]
+          : [],
+        error_details: data.error_label || data.error_description
+          ? [
+              {
+                id: data.id,
+                note_id: data.id,
+                error_label: data.error_label ?? "",
+                error_description: data.error_description ?? "",
+                created_at: data.created_at,
+              },
+            ]
+          : [],
+        alternative_details: data.alternative
+          ? [
+              {
+                id: data.id,
+                note_id: data.id,
+                alternative: data.alternative,
+                created_at: data.created_at,
+              },
+            ]
+          : [],
         behavior_details: data.emotion_behavior_details ?? [],
       }
     : null;

@@ -3,7 +3,7 @@ import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 export type SessionFlowBaseState<TStep extends string> = {
   step: TStep;
   userInput: string;
-  selectedEmotion: string;
+  selectedEmotions: string[];
   noteTitle: string;
   selectedCognitiveErrors: SelectedCognitiveError[];
   alternativeSeed: number;
@@ -19,9 +19,9 @@ type SetUserInputAction = {
   value: string;
 };
 
-type SetSelectedEmotionAction = {
-  type: "SET_SELECTED_EMOTION";
-  value: string;
+type SetSelectedEmotionsAction = {
+  type: "SET_SELECTED_EMOTIONS";
+  value: string[];
 };
 
 type SetNoteTitleAction = {
@@ -44,7 +44,7 @@ type ResetAction<TStep extends string> = {
 export type SessionFlowCoreAction<TStep extends string, TPayload> =
   | SetStepAction<TStep>
   | SetUserInputAction
-  | SetSelectedEmotionAction
+  | SetSelectedEmotionsAction
   | SetNoteTitleAction
   | ApplyDistortionAction<TPayload>
   | ResetAction<TStep>;
@@ -82,8 +82,11 @@ export function createSessionFlowReducer<
         return { ...state, step: action.step };
       case "SET_USER_INPUT":
         return { ...state, userInput: action.value };
-      case "SET_SELECTED_EMOTION":
-        return { ...state, selectedEmotion: action.value };
+      case "SET_SELECTED_EMOTIONS":
+        return {
+          ...state,
+          selectedEmotions: action.value,
+        };
       case "SET_NOTE_TITLE":
         return { ...state, noteTitle: action.value };
       case "APPLY_DISTORTION":
@@ -100,4 +103,3 @@ export function createSessionFlowReducer<
     }
   };
 }
-

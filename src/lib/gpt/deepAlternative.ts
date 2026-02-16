@@ -12,7 +12,7 @@ import { buildDeepCognitiveAnalysisInternal } from "./utils/deep/analysisPrompt"
 const SYSTEM_PROMPT = `
 You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
-Based on the user's [Situation], [Emotion], [Negative Automatic Thought], [Identified Cognitive Distortions], [Internal Context - English],
+Based on the user's [Situation], [Emotions], [Negative Automatic Thought], [Identified Cognitive Distortions], [Internal Context - English],
 and [Previous Alternatives], generate exactly ONE alternative thought for each of the three techniques below.
 
 [Internal Context - English format]
@@ -36,7 +36,7 @@ and [Previous Alternatives], generate exactly ONE alternative thought for each o
 - Write 3–5 Korean sentences.
 
 [Output rules]
-- You MUST reflect the user's situation, emotion, negative automatic thought, cognitive distortions, and internal context.
+- You MUST reflect the user's situation, emotions, negative automatic thought, cognitive distortions, and internal context.
 - You MUST reference or adapt prior alternatives, but do NOT copy them verbatim.
 - Use Internal Context as the PRIMARY anchor. Use Situation/Thought as SECONDARY support.
 - Do NOT introduce new assumptions beyond Internal Context + Notes.
@@ -80,7 +80,7 @@ export async function generateDeepAlternativeThoughts(
 
   const prompt = buildPrompt([
     { title: "Situation", body: situation },
-    { title: "Emotion", body: emotion },
+    { title: "Emotions", body: emotion },
     { title: "Negative Automatic Thought", body: thought },
     {
       title: "Internal Context - English (DO NOT IGNORE)",

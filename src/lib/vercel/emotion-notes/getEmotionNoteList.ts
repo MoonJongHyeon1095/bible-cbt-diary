@@ -37,9 +37,9 @@ export const handleGetEmotionNoteList = async (
       title,
       trigger_text,
       created_at,
+      emotion_tags,
+      error_label,
       emotion_flow_note_middles(flow_id),
-      emotion_auto_thought_details(emotion),
-      emotion_error_details(error_label),
       emotion_behavior_details(behavior_label)
     `,
   );
@@ -69,20 +69,8 @@ export const handleGetEmotionNoteList = async (
 
   const notes =
     data?.map((note) => {
-      const emotionLabels = Array.from(
-        new Set(
-          (note.emotion_auto_thought_details ?? [])
-            .map((detail) => detail.emotion)
-            .filter(Boolean),
-        ),
-      );
-      const errorLabels = Array.from(
-        new Set(
-          (note.emotion_error_details ?? [])
-            .map((detail) => detail.error_label)
-            .filter(Boolean),
-        ),
-      );
+      const emotionLabels = Array.from(new Set((note.emotion_tags ?? []).filter(Boolean)));
+      const errorLabels = note.error_label ? [note.error_label] : [];
       const behaviorLabels = Array.from(
         new Set(
           (note.emotion_behavior_details ?? [])

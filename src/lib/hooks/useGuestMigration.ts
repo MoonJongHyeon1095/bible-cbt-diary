@@ -86,11 +86,6 @@ export const useGuestMigration = () => {
       }));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all }),
-        queryClient.invalidateQueries({ queryKey: ["emotion-auto-thought-details"] }),
-        queryClient.invalidateQueries({ queryKey: ["emotion-error-details"] }),
-        queryClient.invalidateQueries({
-          queryKey: ["emotion-alternative-details"],
-        }),
         queryClient.invalidateQueries({ queryKey: ["emotion-behavior-details"] }),
         queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all }),
         queryClient.invalidateQueries({ queryKey: queryKeys.flow.all }),

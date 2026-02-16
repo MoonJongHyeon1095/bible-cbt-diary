@@ -14,22 +14,34 @@ import styles from "../MinimalStyles.module.css";
 interface CbtMinimalEmotionSectionProps {
   moodType: SessionMoodType | null;
   onSelectMood: (moodType: SessionMoodType) => void;
-  selectedEmotion: string;
-  onSelectEmotion: (emotion: string) => void;
+  selectedEmotions: string[];
+  onSelectEmotion: (emotion: string[]) => void;
   onNext: () => void;
 }
 
 export function CbtMinimalEmotionSection({
   moodType,
   onSelectMood,
-  selectedEmotion,
+  selectedEmotions,
   onSelectEmotion,
   onNext,
 }: CbtMinimalEmotionSectionProps) {
   const emotions = moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
   const selectedEmotionData = emotions.find(
-    (emotion) => emotion.label === selectedEmotion,
+    (emotion) => emotion.label === selectedEmotions[selectedEmotions.length - 1],
   );
+
+  const toggleEmotion = (emotion: string) => {
+    const isSelected = selectedEmotions.includes(emotion);
+    if (isSelected) {
+      onSelectEmotion(selectedEmotions.filter((value) => value !== emotion));
+      return;
+    }
+    if (selectedEmotions.length >= 2) {
+      return;
+    }
+    onSelectEmotion([...selectedEmotions, emotion]);
+  };
 
   return (
     <div className={styles.section}>
@@ -41,13 +53,13 @@ export function CbtMinimalEmotionSection({
         <div className={styles.emotionGridWrap} data-tour="emotion-grid">
           <CbtMinimalEmotionList
             emotions={emotions}
-            selectedEmotion={selectedEmotion}
-            onSelectEmotion={onSelectEmotion}
+            selectedEmotions={selectedEmotions}
+            onSelectEmotion={toggleEmotion}
           />
         </div>
         <CbtMinimalEmotionDetailsSection
           emotion={selectedEmotionData}
-          isVisible={Boolean(selectedEmotion)}
+          isVisible={selectedEmotions.length > 0}
           onNext={onNext}
         />
       </div>

@@ -1,19 +1,17 @@
 "use client";
 
 import EmotionNoteDetailSectionItem from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItem";
-import type {
-  EmotionNoteAlternativeDetail,
-  EmotionNoteDetail,
-  EmotionNoteErrorDetail,
-} from "@/lib/types/emotionNoteTypes";
 import { Brain, Lightbulb } from "lucide-react";
 import styles from "./EmotionNoteDetailPage.module.css";
 import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 
 type EmotionNoteAlternativeDetailSectionProps = {
-  details: EmotionNoteAlternativeDetail[];
-  thoughtDetails: EmotionNoteDetail[];
-  errorDetails: EmotionNoteErrorDetail[];
+  alternative: string;
+  innerBelief: string;
+  emotionTags: string[];
+  errorLabel: string;
+  errorDescription: string;
+  createdAt: string;
   formatDateTime: (value: string) => string;
   onCopyText?: (text: string) => void;
   onOpenModal?: (
@@ -27,43 +25,22 @@ export default function EmotionNoteAlternativeDetailSection(
   props: EmotionNoteAlternativeDetailSectionProps,
 ) {
   const {
-    details,
-    thoughtDetails,
-    errorDetails,
+    alternative,
+    innerBelief,
+    emotionTags,
+    errorLabel,
+    errorDescription,
+    createdAt,
     formatDateTime,
     onCopyText,
     onOpenModal,
   } = props;
-  const latestAlternative = [...details].sort((a, b) =>
-    b.created_at.localeCompare(a.created_at),
-  )[0];
-  const latestThought = [...thoughtDetails]
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .find((item) => item.automatic_thought.trim());
-  const latestErrorWithDescription = [...errorDetails]
-    .sort((a, b) => b.created_at.localeCompare(a.created_at))
-    .find((item) => item.error_description.trim());
-  const emotionTags = Array.from(
-    new Set(
-      thoughtDetails
-        .map((item) => item.emotion.trim())
-        .filter((emotion) => emotion.length > 0),
-    ),
+  const normalizedEmotionTags = Array.from(
+    new Set((emotionTags ?? []).map((tag) => tag.trim()).filter((tag) => tag.length > 0)),
   );
-  const errorLabelTags = Array.from(
-    new Set(
-      errorDetails
-        .map((item) => item.error_label.trim())
-        .filter((label) => label.length > 0),
-    ),
-  );
-  const innerBeliefText =
-    latestThought?.automatic_thought?.trim() || "기록 없음";
-  const analysisText =
-    latestErrorWithDescription?.error_description?.trim() ||
-    (errorLabelTags.length > 0
-      ? `주요 인지오류: ${errorLabelTags.join(", ")}`
-      : "기록 없음");
+  const errorLabelTags = errorLabel.trim() ? [errorLabel.trim()] : [];
+  const innerBeliefText = innerBelief.trim() || "기록 없음";
+  const analysisText = errorDescription.trim() || (errorLabelTags[0] ? `주요 인지오류: ${errorLabelTags[0]}` : "기록 없음");
 
   return (
     <div className={styles.alternativeDistortionLayout}>
@@ -73,7 +50,7 @@ export default function EmotionNoteAlternativeDetailSection(
         title="대안 사고"
         hint="하나의 문장으로 정리한 리프레임"
       >
-        {!latestAlternative ? (
+        {!alternative.trim() ? (
           <div className={styles.detailList}>
             <p className={styles.emptyText}>아직 작성된 내용이 없습니다.</p>
           </div>
@@ -81,13 +58,13 @@ export default function EmotionNoteAlternativeDetailSection(
           <>
             <p className={styles.mainTextLabel}>Alternative Text</p>
             <EmotionNoteDetailSectionItem
-              body={latestAlternative.alternative}
+              body={alternative}
               actions={{
-                copyText: `대안 사고: ${latestAlternative.alternative}`,
+                copyText: `대안 사고: ${alternative}`,
                 modalTitle: "대안 사고",
-                modalBody: latestAlternative.alternative,
+                modalBody: alternative,
                 modalBadgeText: null,
-                timeText: formatDateTime(latestAlternative.created_at),
+                timeText: formatDateTime(createdAt),
                 onCopyText,
                 onOpenModal,
               }}
@@ -96,8 +73,6 @@ export default function EmotionNoteAlternativeDetailSection(
         )}
       </EmotionNoteDetailSectionCard>
 
-      <div className={styles.distortionBranch} aria-hidden />
-
       <EmotionNoteDetailSectionCard
         className={`${styles.sectionDistortion} ${styles.sectionPastelDistortion}`}
         icon={<Brain size={18} />}
@@ -105,7 +80,7 @@ export default function EmotionNoteAlternativeDetailSection(
         hint="Inner Belief · Analysis"
       >
         <div className={styles.distortionTagsInline}>
-          {emotionTags.map((tag) => (
+          {normalizedEmotionTags.map((tag) => (
             <span
               key={`emotion-${tag}`}
               className={`${styles.noteTag} ${styles.noteTagEmotion}`}

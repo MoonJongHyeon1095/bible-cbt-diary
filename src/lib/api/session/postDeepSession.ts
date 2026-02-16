@@ -13,6 +13,7 @@ export async function saveDeepSessionAPI(
     title: string;
     trigger_text: string;
     emotion: string;
+    emotions?: string[];
     automatic_thought: string;
     selected_cognitive_error: SelectedCognitiveError | null;
     selected_alternative_thought: string;

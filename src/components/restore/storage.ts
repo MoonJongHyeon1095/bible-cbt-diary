@@ -25,7 +25,7 @@ const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
   if (!value || typeof value !== "object") return null;
   const source = value as {
     kind?: unknown;
-    selectedEmotion?: unknown;
+    selectedEmotions?: unknown;
     incident?: unknown;
     savedAt?: unknown;
     date?: unknown;
@@ -35,15 +35,20 @@ const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
     internalContext?: unknown;
   };
   const kind = String(source.kind ?? "").trim();
-  const selectedEmotion = String(source.selectedEmotion ?? "").trim();
+  const selectedEmotions = Array.isArray(source.selectedEmotions)
+    ? source.selectedEmotions
+        .map((item) => String(item ?? "").trim())
+        .filter((item) => item.length > 0)
+        .slice(0, 2)
+    : [];
   const incident = String(source.incident ?? "");
   const savedAt = String(source.savedAt ?? "").trim() || new Date().toISOString();
-  if (!selectedEmotion) return null;
+  if (selectedEmotions.length === 0) return null;
 
   if (kind === "minimal") {
     return {
       kind: "minimal",
-      selectedEmotion,
+      selectedEmotions,
       incident,
       date: isValidDate(source.date) ? source.date : undefined,
       savedAt,
@@ -59,7 +64,7 @@ const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
     }
     return {
       kind: "deep",
-      selectedEmotion,
+      selectedEmotions,
       incident,
       mainId,
       flowId,

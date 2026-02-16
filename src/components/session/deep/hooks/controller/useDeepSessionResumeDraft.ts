@@ -6,7 +6,7 @@ import { useEffect } from "react";
 type UseDeepSessionResumeDraftParams = {
   mainNote: EmotionNote | null;
   flowId: number | null;
-  selectedEmotion: string;
+  selectedEmotions: string[];
   userInput: string;
   subNotes: EmotionNote[];
   resolvedInternalContext: DeepInternalContext | null;
@@ -15,22 +15,25 @@ type UseDeepSessionResumeDraftParams = {
 export function useDeepSessionResumeDraft({
   mainNote,
   flowId,
-  selectedEmotion,
+  selectedEmotions,
   userInput,
   subNotes,
   resolvedInternalContext,
 }: UseDeepSessionResumeDraftParams) {
   useEffect(() => {
     if (!mainNote || !flowId) return;
-    const emotion = selectedEmotion.trim();
+    const emotions = selectedEmotions
+      .map((emotion) => emotion.trim())
+      .filter((emotion) => emotion.length > 0)
+      .slice(0, 2);
     const incident = userInput.trim();
-    if (!emotion || !incident) {
+    if (emotions.length === 0 || !incident) {
       clearSessionResumeDraft();
       return;
     }
     saveSessionResumeDraft({
       kind: "deep",
-      selectedEmotion: emotion,
+      selectedEmotions: emotions,
       incident: userInput,
       mainId: mainNote.id,
       flowId,
@@ -38,6 +41,5 @@ export function useDeepSessionResumeDraft({
       internalContext: resolvedInternalContext ?? undefined,
       savedAt: new Date().toISOString(),
     });
-  }, [flowId, mainNote, resolvedInternalContext, selectedEmotion, subNotes, userInput]);
+  }, [flowId, mainNote, resolvedInternalContext, selectedEmotions, subNotes, userInput]);
 }
-

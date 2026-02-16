@@ -17,7 +17,7 @@ type UseDeepSessionSaveHandlersParams = {
   flow: {
     step: DeepStep;
     userInput: string;
-    selectedEmotion: string;
+    selectedEmotions: string[];
     noteTitle: string;
     autoThought: string;
     selectedCognitiveErrors: SelectedCognitiveError[];
@@ -36,6 +36,7 @@ type UseDeepSessionSaveHandlersParams = {
       title: string;
       trigger_text: string;
       emotion: string;
+      emotions?: string[];
       automatic_thought: string;
       selected_cognitive_error: SelectedCognitiveError | null;
       selected_alternative_thought: string;
@@ -82,11 +83,12 @@ export function useDeepSessionSaveHandlers({
             title:
               flow.noteTitle ||
               buildSessionNoteTitle({
-                emotion: flow.selectedEmotion,
+                emotion: flow.selectedEmotions.join(", "),
                 incident: flow.userInput,
               }),
             trigger_text: flow.userInput,
-            emotion: flow.selectedEmotion,
+            emotion: flow.selectedEmotions.join(", "),
+            emotions: flow.selectedEmotions,
             automatic_thought: flow.autoThought,
             selected_cognitive_error: flow.selectedCognitiveErrors[0] ?? null,
             selected_alternative_thought: thought,
@@ -126,7 +128,7 @@ export function useDeepSessionSaveHandlers({
       }
     },
     [
-      flow.selectedEmotion,
+      flow.selectedEmotions,
       flow.noteTitle,
       flow.userInput,
       flow.autoThought,

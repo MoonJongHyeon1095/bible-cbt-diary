@@ -54,7 +54,7 @@ export type { AlternativeThought, TechniqueType } from "./utils/alternatives/met
 const SYSTEM_PROMPT = `
 You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
-Based on the user's [Situation], [Emotion], [Negative Automatic Thought], and [Identified Cognitive Distortions],
+Based on the user's [Situation], [Emotions], [Negative Automatic Thought], and [Identified Cognitive Distortions],
 generate exactly ONE alternative thought for each of the three techniques below.
 
 [Techniques]
@@ -75,7 +75,7 @@ generate exactly ONE alternative thought for each of the three techniques below.
 
 [Output rules]
 - Do NOT simply repeat what was pointed out in [Identified Cognitive Distortions]. Instead, write an alternative claim in the form of a statement.
-- You MUST reflect the user's situation, emotion, negative automatic thought, and cognitive distortions.
+- You MUST reflect the user's situation, emotions, negative automatic thought, and cognitive distortions.
 - No baseless optimism or exaggerated positivity.
 - Avoid content overlap across techniques (each should feel meaningfully different).
 - Output must be JSON only.
@@ -117,7 +117,7 @@ export async function generateContextualAlternativeThoughts(
 
   const prompt = buildPrompt([
     { title: "Situation", body: situation },
-    { title: "Emotion", body: emotion },
+    { title: "Emotions", body: emotion },
     { title: "Negative Automatic Thought", body: thought },
     { title: "Identified Cognitive Distortions", body: cognitiveErrorText },
   ]);

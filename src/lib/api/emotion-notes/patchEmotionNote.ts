@@ -7,7 +7,16 @@ import { resolveAccess } from "@/lib/api/_helpers";
 // PATCH /api/emotion-notes
 // emotion-notes 수정
 export const updateEmotionNote = async (
-  payload: { id: number; title?: string; trigger_text?: string },
+  payload: {
+    id: number;
+    title?: string;
+    trigger_text?: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
+  },
   access: AccessContext,
 ): Promise<{
   response: Response;

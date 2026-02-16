@@ -123,8 +123,8 @@ function CbtDeepSessionPageContent() {
           <CbtMinimalEmotionSection
             moodType={moodType}
             onSelectMood={handleSelectMood}
-            selectedEmotion={flow.selectedEmotion}
-            onSelectEmotion={actions.setSelectedEmotion}
+            selectedEmotions={flow.selectedEmotions}
+            onSelectEmotion={actions.setSelectedEmotions}
             onNext={() => {
               actions.setStep("incident");
             }}
@@ -134,7 +134,7 @@ function CbtDeepSessionPageContent() {
         {flow.step === "distortion" && (
           <CbtDeepDistortionSection
             userInput={flow.userInput}
-            emotion={flow.selectedEmotion}
+            emotion={flow.selectedEmotions.join(", ")}
             internalContext={internalContext}
             onSelect={handleSelectDistortion}
           />
@@ -143,7 +143,7 @@ function CbtDeepSessionPageContent() {
         {flow.step === "alternative" && (
           <CbtDeepAlternativeThoughtSection
             userInput={flow.userInput}
-            emotion={flow.selectedEmotion}
+            emotion={flow.selectedEmotions.join(", ")}
             autoThought={flow.autoThought}
             internalContext={internalContext}
             selectedCognitiveErrors={flow.selectedCognitiveErrors}

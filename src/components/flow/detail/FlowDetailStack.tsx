@@ -16,7 +16,7 @@ type ModalContent = {
   badgeText?: string | null;
 } | null;
 
-type SectionKey = "alternative" | "distortion" | "behavior";
+type SectionKey = "alternative" | "innerBelief" | "analysis" | "behavior";
 
 type FlowDetailStackProps = {
   selectedNote: EmotionNote | null;
@@ -28,9 +28,6 @@ export default function FlowDetailStack({
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 
-  const thoughtDetails = selectedNote?.thought_details ?? [];
-  const errorDetails = selectedNote?.error_details ?? [];
-  const alternativeDetails = selectedNote?.alternative_details ?? [];
   const behaviorDetails = selectedNote?.behavior_details ?? [];
 
   useEffect(() => {
@@ -44,41 +41,57 @@ export default function FlowDetailStack({
       label: "대안 사고",
       color: "#36d94a",
       icon: <Lightbulb size={18} />,
-      items: alternativeDetails.map((detail) => ({
-        id: `alternative-${detail.id}`,
-        title: detail.alternative,
-        body: detail.alternative,
-        modalTitle: "대안 사고",
-        modalColor: "#36d94a",
-        modalIcon: <Lightbulb size={18} />,
-        badgeText: null,
-      })),
+      items: selectedNote?.alternative
+        ? [
+            {
+              id: `alternative-${selectedNote.id}`,
+              title: selectedNote.alternative,
+              body: selectedNote.alternative,
+              modalTitle: "대안 사고",
+              modalColor: "#36d94a",
+              modalIcon: <Lightbulb size={18} />,
+              badgeText: null,
+            },
+          ]
+        : [],
     },
     {
-      key: "distortion" as const,
-      label: "Distortion",
-      color: "#ff4fd8",
+      key: "innerBelief" as const,
+      label: "Inner Belief",
+      color: "#ffd300",
       icon: <Brain size={18} />,
-      items: [
-        ...thoughtDetails.map((detail) => ({
-          id: `thought-${detail.id}`,
-          title: detail.automatic_thought,
-          body: detail.automatic_thought,
-          modalTitle: "Inner Belief",
-          modalColor: "#ffd300",
-          modalIcon: <Brain size={18} />,
-          badgeText: detail.emotion || null,
-        })),
-        ...errorDetails.map((detail) => ({
-          id: `error-${detail.id}`,
-          title: detail.error_description,
-          body: detail.error_description,
-          modalTitle: "Analysis",
-          modalColor: "#ff4fd8",
-          modalIcon: <AlertCircle size={18} />,
-          badgeText: detail.error_label,
-        })),
-      ],
+      items: selectedNote?.inner_belief
+        ? [
+            {
+              id: `thought-${selectedNote.id}`,
+              title: selectedNote.inner_belief,
+              body: selectedNote.inner_belief,
+              modalTitle: "Inner Belief",
+              modalColor: "#ffd300",
+              modalIcon: <Brain size={18} />,
+              badgeText: (selectedNote.emotion_tags ?? []).join(", ") || null,
+            },
+          ]
+        : [],
+    },
+    {
+      key: "analysis" as const,
+      label: "Analysis",
+      color: "#ff4fd8",
+      icon: <AlertCircle size={18} />,
+      items: selectedNote?.error_description || selectedNote?.error_label
+        ? [
+            {
+              id: `error-${selectedNote.id}`,
+              title: selectedNote.error_description || selectedNote.error_label || "",
+              body: selectedNote.error_description || selectedNote.error_label || "",
+              modalTitle: "Analysis",
+              modalColor: "#ff4fd8",
+              modalIcon: <AlertCircle size={18} />,
+              badgeText: selectedNote.error_label || null,
+            },
+          ]
+        : [],
     },
     {
       key: "behavior" as const,

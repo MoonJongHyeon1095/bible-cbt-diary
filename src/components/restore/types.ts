@@ -1,7 +1,7 @@
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 
 type SessionResumeDraftBase = {
-  selectedEmotion: string;
+  selectedEmotions: string[];
   incident: string;
   savedAt: string;
 };

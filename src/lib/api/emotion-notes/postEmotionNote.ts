@@ -7,7 +7,15 @@ import { resolveAccess } from "@/lib/api/_helpers";
 // POST /api/emotion-notes
 // emotion-notes 등록
 export const createEmotionNote = async (
-  payload: { title: string; trigger_text: string },
+  payload: {
+    title: string;
+    trigger_text: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
+  },
   access: AccessContext,
 ): Promise<{
   response: Response;

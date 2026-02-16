@@ -60,26 +60,17 @@ export const handlePostShareSnapshot = async (
         id,
         title,
         trigger_text,
-        emotion_auto_thought_details(id,automatic_thought,emotion,created_at),
-        emotion_error_details(id,error_label,error_description,created_at),
-        emotion_alternative_details(id,alternative,created_at),
+        created_at,
+        emotion_tags,
+        inner_belief,
+        error_label,
+        error_description,
+        alternative,
         emotion_behavior_details(id,behavior_label,behavior_description,error_tags,created_at)
       `,
     )
     .eq("user_id", user.id)
     .eq("id", noteId)
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_auto_thought_details",
-    })
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_error_details",
-    })
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_alternative_details",
-    })
     .order("created_at", {
       ascending: true,
       foreignTable: "emotion_behavior_details",
@@ -100,15 +91,35 @@ export const handlePostShareSnapshot = async (
     return json(res, 404, { ok: false, message: "노트를 찾을 수 없습니다." });
   }
 
-  const thoughtItems = (data.emotion_auto_thought_details ?? []).filter((item) =>
-    selectedThoughtIds.includes(item.id),
-  );
-  const errorItems = (data.emotion_error_details ?? []).filter((item) =>
-    selectedErrorIds.includes(item.id),
-  );
-  const alternativeItems = (data.emotion_alternative_details ?? []).filter(
-    (item) => selectedAlternativeIds.includes(item.id),
-  );
+  const thoughtItem =
+    data.inner_belief && selectedThoughtIds.includes(data.id)
+      ? {
+          id: data.id,
+          automatic_thought: data.inner_belief,
+          emotion: (data.emotion_tags ?? []).join(", "),
+          created_at: data.created_at,
+        }
+      : null;
+  const errorItem =
+    (data.error_label || data.error_description) && selectedErrorIds.includes(data.id)
+      ? {
+          id: data.id,
+          error_label: data.error_label ?? "",
+          error_description: data.error_description ?? "",
+          created_at: data.created_at,
+        }
+      : null;
+  const alternativeItem =
+    data.alternative && selectedAlternativeIds.includes(data.id)
+      ? {
+          id: data.id,
+          alternative: data.alternative,
+          created_at: data.created_at,
+        }
+      : null;
+  const thoughtItems = thoughtItem ? [thoughtItem] : [];
+  const errorItems = errorItem ? [errorItem] : [];
+  const alternativeItems = alternativeItem ? [alternativeItem] : [];
   const behaviorItems = (data.emotion_behavior_details ?? []).filter((item) =>
     selectedBehaviorIds.includes(item.id),
   );

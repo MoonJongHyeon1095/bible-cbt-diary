@@ -15,6 +15,11 @@ export const handlePatchEmotionNote = async (
     id?: number;
     title?: string;
     trigger_text?: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
     deviceId?: string;
   }>(req);
 
@@ -31,6 +36,11 @@ export const handlePatchEmotionNote = async (
   const updatePayload: {
     title?: string;
     trigger_text?: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
     updated_at?: string;
   } = {
     updated_at: new Date().toISOString(),
@@ -41,6 +51,25 @@ export const handlePatchEmotionNote = async (
   }
   if (payload.trigger_text !== undefined) {
     updatePayload.trigger_text = String(payload.trigger_text).trim();
+  }
+  if (payload.emotion_tags !== undefined) {
+    updatePayload.emotion_tags = Array.isArray(payload.emotion_tags)
+      ? payload.emotion_tags
+          .map((value) => String(value).trim())
+          .filter((value) => value.length > 0)
+      : [];
+  }
+  if (payload.inner_belief !== undefined) {
+    updatePayload.inner_belief = String(payload.inner_belief).trim();
+  }
+  if (payload.error_label !== undefined) {
+    updatePayload.error_label = String(payload.error_label).trim();
+  }
+  if (payload.error_description !== undefined) {
+    updatePayload.error_description = String(payload.error_description).trim();
+  }
+  if (payload.alternative !== undefined) {
+    updatePayload.alternative = String(payload.alternative).trim();
   }
 
   const supabase = createSupabaseAdminClient();

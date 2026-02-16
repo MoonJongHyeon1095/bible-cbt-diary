@@ -229,17 +229,6 @@
   color: rgba(187, 239, 215, 0.82);
 }
 
-.distortionBranch {
-  width: 2px;
-  height: 36px;
-  margin-left: 20px;
-  background: linear-gradient(
-    180deg,
-    rgba(200, 220, 255, 0.94),
-    rgba(132, 173, 255, 0.25)
-  );
-}
-
 .sectionDistortion,
 .sectionPastelDistortion {
   background: linear-gradient(

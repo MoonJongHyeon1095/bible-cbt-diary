@@ -2,31 +2,34 @@ import { clearSessionResumeDraft, saveSessionResumeDraft } from "@/components/re
 import { useEffect } from "react";
 
 type UseMinimalSessionResumeDraftParams = {
-  selectedEmotion: string;
+  selectedEmotions: string[];
   userInput: string;
   hasDateParam: boolean;
   dateParam: string | null;
 };
 
 export function useMinimalSessionResumeDraft({
-  selectedEmotion,
+  selectedEmotions,
   userInput,
   hasDateParam,
   dateParam,
 }: UseMinimalSessionResumeDraftParams) {
   useEffect(() => {
-    const emotion = selectedEmotion.trim();
+    const emotions = selectedEmotions
+      .map((emotion) => emotion.trim())
+      .filter((emotion) => emotion.length > 0)
+      .slice(0, 2);
     const incident = userInput.trim();
-    if (!emotion || !incident) {
+    if (emotions.length === 0 || !incident) {
       clearSessionResumeDraft();
       return;
     }
     saveSessionResumeDraft({
       kind: "minimal",
-      selectedEmotion: emotion,
+      selectedEmotions: emotions,
       incident: userInput,
       date: hasDateParam ? dateParam ?? undefined : undefined,
       savedAt: new Date().toISOString(),
     });
-  }, [dateParam, hasDateParam, selectedEmotion, userInput]);
+  }, [dateParam, hasDateParam, selectedEmotions, userInput]);
 }

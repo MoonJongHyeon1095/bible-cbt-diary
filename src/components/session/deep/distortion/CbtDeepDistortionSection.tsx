@@ -2,14 +2,14 @@ import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDeepDistortionCards } from "@/components/session/deep/hooks/useCbtDeepDistortionCards";
-import { validateUserText } from "@/components/session/utils/validation";
-import type { DistortionCard } from "@/components/session/types/distortion";
 import { CbtDistortionCard } from "@/components/session/minimal/distortion/CbtDistortionCard";
+import styles from "@/components/session/minimal/MinimalStyles.module.css";
+import type { DistortionCard } from "@/components/session/types/distortion";
+import { validateUserText } from "@/components/session/utils/validation";
 import SafeButton from "@/components/ui/SafeButton";
 import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
 import { useMemo, useState } from "react";
-import styles from "@/components/session/minimal/MinimalStyles.module.css";
 
 type CbtDeepDistortionSectionProps = {
   userInput: string;
@@ -18,8 +18,16 @@ type CbtDeepDistortionSectionProps = {
   onSelect: (thought: string, error: SelectedCognitiveError) => void;
 };
 
-const TITLE = "왜곡된 해석의 축을 드러내 보겠습니다.";
-const DESCRIPTION = "내면의 규칙을 먼저 보여주고, 같은 카드 안에서 왜곡 분석을 이어갑니다.";
+const TITLE = "어쩌면 지긋지긋한 생각일지 모릅니다.";
+const HEADER_TITLE = (
+  <>
+    어쩌면 지긋지긋한{" "}
+    <br className={styles.mobileOnlyBreak} />
+    생각일지 모릅니다.
+  </>
+);
+const DESCRIPTION =
+  "어떤 생각은 반복적으로 우리를 어디론가 데려갑니다. 우리 의사와 상관 없이요.";
 
 export function CbtDeepDistortionSection({
   userInput,
@@ -83,7 +91,7 @@ export function CbtDeepDistortionSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
-          <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
+          <CbtStepHeaderSection title={HEADER_TITLE} description={DESCRIPTION} />
         </div>
 
         {!hasCards ? (

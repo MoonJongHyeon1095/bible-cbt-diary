@@ -6,7 +6,7 @@ import type { SessionResumeDraft } from "@/components/restore/types";
 import { useEffect, useRef, useState } from "react";
 
 type MinimalFlowActions = {
-  setSelectedEmotion: (value: string) => void;
+  setSelectedEmotions: (value: string[]) => void;
   setUserInput: (value: string) => void;
   setStep: (step: "incident") => void;
 };
@@ -29,7 +29,7 @@ export function useMinimalSessionRestore({ actions }: UseMinimalSessionRestorePa
     const restoreDraft = pendingRestoreDraftRef.current;
     if (!restoreDraft || restoreDraft.kind !== "minimal") return;
 
-    actions.setSelectedEmotion(restoreDraft.selectedEmotion);
+    actions.setSelectedEmotions(restoreDraft.selectedEmotions);
     actions.setUserInput(restoreDraft.incident);
     actions.setStep("incident");
     pendingRestoreDraftRef.current = null;

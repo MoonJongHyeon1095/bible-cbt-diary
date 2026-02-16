@@ -4,13 +4,13 @@ import styles from "../MinimalStyles.module.css";
 
 interface CbtMinimalEmotionListProps {
   emotions: EmotionOption[];
-  selectedEmotion: string;
+  selectedEmotions: string[];
   onSelectEmotion: (emotion: string) => void;
 }
 
 export function CbtMinimalEmotionList({
   emotions,
-  selectedEmotion,
+  selectedEmotions,
   onSelectEmotion,
 }: CbtMinimalEmotionListProps) {
   return (
@@ -19,7 +19,7 @@ export function CbtMinimalEmotionList({
         <CbtMinimalEmotionItem
           key={emotion.id}
           emotion={emotion}
-          isSelected={selectedEmotion === emotion.label}
+          isSelected={selectedEmotions.includes(emotion.label)}
           onSelect={onSelectEmotion}
         />
       ))}

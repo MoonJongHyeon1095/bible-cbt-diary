@@ -10,6 +10,7 @@ export type MinimalSavePayload = {
   title: string;
   triggerText: string;
   emotion: string;
+  emotions?: string[];
   automaticThought: string;
   alternativeThought: string;
   cognitiveError?: SelectedCognitiveError | null;
@@ -29,6 +30,12 @@ export async function saveMinimalPatternAPI(
   const triggerText = payload.triggerText.trim();
   const automaticThought = payload.automaticThought.trim();
   const emotion = payload.emotion.trim();
+  const emotions = Array.isArray(payload.emotions)
+    ? payload.emotions
+        .map((value) => String(value).trim())
+        .filter((value) => value.length > 0)
+        .slice(0, 2)
+    : [];
   const alternativeThought = payload.alternativeThought.trim();
   const title =
     payload.title.trim() ||
@@ -41,6 +48,7 @@ export async function saveMinimalPatternAPI(
     title,
     triggerText,
     emotion,
+    emotions,
     automaticThought,
     alternativeThought,
     cognitiveError: errorTitle

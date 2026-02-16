@@ -8,6 +8,7 @@ type MinimalPayload = {
   title?: string;
   triggerText?: string;
   emotion?: string;
+  emotions?: string[];
   automaticThought?: string;
   alternativeThought?: string;
   cognitiveError?: { title?: string; detail?: string } | null;
@@ -33,13 +34,25 @@ export const handlePostMinimalSession = async (
 
   const title = String(payload.title ?? "").trim();
   const triggerText = String(payload.triggerText ?? "").trim();
+  const emotions = Array.isArray(payload.emotions)
+    ? payload.emotions
+        .map((value) => String(value ?? "").trim())
+        .filter((value) => value.length > 0)
+        .slice(0, 2)
+    : [];
   const emotion = String(payload.emotion ?? "").trim();
+  const normalizedEmotions =
+    emotions.length > 0
+      ? emotions
+      : emotion
+        ? [emotion]
+        : [];
   const automaticThought = String(payload.automaticThought ?? "").trim();
   const alternativeThought = String(payload.alternativeThought ?? "").trim();
   const errorTitle = String(payload.cognitiveError?.title ?? "").trim();
   const errorDescription = String(payload.cognitiveError?.detail ?? "").trim();
 
-  if (!title || !triggerText || !emotion || !automaticThought || !alternativeThought) {
+  if (!title || !triggerText || normalizedEmotions.length === 0 || !automaticThought || !alternativeThought) {
     return json(res, 400, { ok: false, message: "필수 입력값이 누락되었습니다." });
   }
 
@@ -52,6 +65,11 @@ export const handlePostMinimalSession = async (
         ...owner,
         title,
         trigger_text: triggerText,
+        emotion_tags: normalizedEmotions,
+        inner_belief: automaticThought,
+        error_label: errorTitle,
+        error_description: errorDescription,
+        alternative: alternativeThought,
       })
       .select("id")
       .single();
@@ -61,45 +79,6 @@ export const handlePostMinimalSession = async (
     }
 
     const noteId = note.id;
-
-    const { error: detailError } = await supabase
-      .from("emotion_auto_thought_details")
-      .insert({
-        ...owner,
-        note_id: noteId,
-        automatic_thought: automaticThought,
-        emotion,
-      });
-
-    if (detailError) {
-      throw new Error(detailError.message || "detail_create_failed");
-    }
-
-    if (errorTitle) {
-      const { error: errorDetail } = await supabase
-        .from("emotion_error_details")
-        .insert({
-          ...owner,
-          note_id: noteId,
-          error_label: errorTitle,
-          error_description: errorDescription,
-        });
-      if (errorDetail) {
-        throw new Error(errorDetail.message || "error_create_failed");
-      }
-    }
-
-    const { error: alternativeError } = await supabase
-      .from("emotion_alternative_details")
-      .insert({
-        ...owner,
-        note_id: noteId,
-        alternative: alternativeThought,
-      });
-
-    if (alternativeError) {
-      throw new Error(alternativeError.message || "alternative_create_failed");
-    }
 
     return json(res, 200, { ok: true, noteId });
   } catch (error) {

@@ -3,6 +3,11 @@ export type EmotionNote = {
   title: string;
   trigger_text: string;
   created_at: string;
+  emotion_tags?: string[];
+  inner_belief?: string;
+  error_label?: string;
+  error_description?: string;
+  alternative?: string;
   emotion_labels?: string[];
   error_labels?: string[];
   behavior_labels?: string[];

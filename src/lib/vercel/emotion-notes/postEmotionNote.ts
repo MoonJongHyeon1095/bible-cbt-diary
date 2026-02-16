@@ -14,6 +14,11 @@ export const handlePostEmotionNote = async (
   const payload = await readJson<{
     title?: string;
     trigger_text?: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
     created_at?: string;
     deviceId?: string;
   }>(req);
@@ -39,10 +44,24 @@ export const handlePostEmotionNote = async (
     device_id?: string | null;
     title: string;
     trigger_text: string;
+    emotion_tags?: string[];
+    inner_belief?: string;
+    error_label?: string;
+    error_description?: string;
+    alternative?: string;
     created_at?: string;
   } = {
     title,
     trigger_text: triggerText,
+    emotion_tags: Array.isArray(payload.emotion_tags)
+      ? payload.emotion_tags
+          .map((value) => String(value).trim())
+          .filter((value) => value.length > 0)
+      : [],
+    inner_belief: String(payload.inner_belief ?? "").trim(),
+    error_label: String(payload.error_label ?? "").trim(),
+    error_description: String(payload.error_description ?? "").trim(),
+    alternative: String(payload.alternative ?? "").trim(),
   };
 
   if (user) {

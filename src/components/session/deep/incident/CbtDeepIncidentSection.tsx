@@ -58,10 +58,8 @@ export function CbtDeepIncidentSection({
   };
 
   const buildNoteLines = (note: EmotionNote) => {
-    const thought = note.thought_details?.[0]?.automatic_thought;
-    const errorDetail = note.error_details?.[0];
-    const errorText =
-      errorDetail?.error_description || errorDetail?.error_label || "";
+    const thought = note.inner_belief;
+    const errorText = note.error_description || note.error_label || "";
     return [note.trigger_text, thought, errorText].filter(
       (value): value is string => Boolean(value?.trim()),
     );
@@ -116,11 +114,10 @@ export function CbtDeepIncidentSection({
       .map((note, index) => {
         const trigger = note.trigger_text?.trim() ?? "";
         if (!trigger) return null;
-        const thought = note.thought_details?.[0]?.automatic_thought?.trim();
-        const errorDetail = note.error_details?.[0];
+        const thought = note.inner_belief?.trim();
         const errorText =
-          errorDetail?.error_description?.trim() ||
-          errorDetail?.error_label?.trim() ||
+          note.error_description?.trim() ||
+          note.error_label?.trim() ||
           "";
         const lines = [
           { label: "상황", text: trigger },

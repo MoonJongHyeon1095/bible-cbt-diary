@@ -8,6 +8,7 @@ type DeepPayload = {
   title?: string;
   trigger_text?: string;
   emotion?: string;
+  emotions?: string[];
   automatic_thought?: string;
   selected_cognitive_error?: { title?: string; detail?: string } | null;
   selected_alternative_thought?: string;
@@ -36,7 +37,19 @@ export const handlePostDeepSession = async (
 
   const title = String(payload.title ?? "").trim();
   const triggerText = String(payload.trigger_text ?? "").trim();
+  const emotions = Array.isArray(payload.emotions)
+    ? payload.emotions
+        .map((value) => String(value ?? "").trim())
+        .filter((value) => value.length > 0)
+        .slice(0, 2)
+    : [];
   const emotion = String(payload.emotion ?? "").trim();
+  const normalizedEmotions =
+    emotions.length > 0
+      ? emotions
+      : emotion
+        ? [emotion]
+        : [];
   const automaticThought = String(payload.automatic_thought ?? "").trim();
   const alternativeThought = String(payload.selected_alternative_thought ?? "").trim();
   const mainId = Number(payload.main_id ?? "");
@@ -48,8 +61,10 @@ export const handlePostDeepSession = async (
   const rawFlowId = payload.flow_id;
   const parsedFlowId =
     rawFlowId === null || rawFlowId === undefined ? null : Number(rawFlowId);
+  const errorTitle = String(payload.selected_cognitive_error?.title ?? "").trim();
+  const errorDetail = String(payload.selected_cognitive_error?.detail ?? "").trim();
 
-  if (!title || !triggerText || !emotion || !automaticThought || !alternativeThought) {
+  if (!title || !triggerText || normalizedEmotions.length === 0 || !automaticThought || !alternativeThought) {
     return json(res, 400, { ok: false, message: "필수 입력값이 누락되었습니다." });
   }
 
@@ -105,6 +120,11 @@ export const handlePostDeepSession = async (
         ...owner,
         title,
         trigger_text: triggerText,
+        emotion_tags: normalizedEmotions,
+        inner_belief: automaticThought,
+        error_label: errorTitle,
+        error_description: errorDetail,
+        alternative: alternativeThought,
       })
       .select("id")
       .single();
@@ -114,9 +134,6 @@ export const handlePostDeepSession = async (
     }
 
     const noteId = note.id;
-    const errorTitle = String(payload.selected_cognitive_error?.title ?? "").trim();
-    const errorDetail = String(payload.selected_cognitive_error?.detail ?? "").trim();
-
     const middlePayload = uniqueIds.map((fromId) => ({
       flow_id: flowId,
       from_note_id: fromId,
@@ -129,25 +146,6 @@ export const handlePostDeepSession = async (
         note_id: noteIdValue,
       }));
 
-    const detailInsert = supabase.from("emotion_auto_thought_details").insert({
-      ...owner,
-      note_id: noteId,
-      automatic_thought: automaticThought,
-      emotion,
-    });
-    const errorInsert = errorTitle
-      ? supabase.from("emotion_error_details").insert({
-          ...owner,
-          note_id: noteId,
-          error_label: errorTitle,
-          error_description: errorDetail,
-        })
-      : Promise.resolve({ error: null });
-    const alternativeInsert = supabase.from("emotion_alternative_details").insert({
-      ...owner,
-      note_id: noteId,
-      alternative: alternativeThought,
-    });
     const middleInsert =
       middlePayload.length > 0
         ? supabase
@@ -161,30 +159,10 @@ export const handlePostDeepSession = async (
             .upsert(flowNotePayload, { onConflict: "flow_id,note_id" })
         : Promise.resolve({ error: null });
 
-    const [
-      detailResult,
-      errorResult,
-      alternativeResult,
-      middleResult,
-      flowNoteResult,
-    ] =
-      await Promise.all([
-        detailInsert,
-        errorInsert,
-        alternativeInsert,
-        middleInsert,
-        flowNoteInsert,
-      ]);
-
-    if (detailResult.error) {
-      return json(res, 500, { ok: false, message: "상세 기록을 저장하지 못했습니다." });
-    }
-    if (errorResult.error) {
-      return json(res, 500, { ok: false, message: "인지오류를 저장하지 못했습니다." });
-    }
-    if (alternativeResult.error) {
-      return json(res, 500, { ok: false, message: "대안사고를 저장하지 못했습니다." });
-    }
+    const [middleResult, flowNoteResult] = await Promise.all([
+      middleInsert,
+      flowNoteInsert,
+    ]);
     if (middleResult.error) {
       return json(res, 500, { ok: false, message: "연결 정보를 저장하지 못했습니다." });
     }

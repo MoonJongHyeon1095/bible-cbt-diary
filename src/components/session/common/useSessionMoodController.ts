@@ -6,41 +6,42 @@ type EmotionOption = {
 };
 
 type UseSessionMoodControllerParams = {
-  selectedEmotion: string;
-  setSelectedEmotion: (value: string) => void;
+  selectedEmotions: string[];
+  setSelectedEmotions: (value: string[]) => void;
   positiveEmotions: readonly EmotionOption[];
   negativeEmotions: readonly EmotionOption[];
 };
 
 export function useSessionMoodController({
-  selectedEmotion,
-  setSelectedEmotion,
+  selectedEmotions,
+  setSelectedEmotions,
   positiveEmotions,
   negativeEmotions,
 }: UseSessionMoodControllerParams) {
   const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
 
   useEffect(() => {
-    if (!selectedEmotion) return;
+    const firstEmotion = selectedEmotions[0];
+    if (!firstEmotion) return;
     const inPositive = positiveEmotions.some(
-      (emotion) => emotion.label === selectedEmotion,
+      (emotion) => emotion.label === firstEmotion,
     );
     setMoodType(inPositive ? "positive" : "negative");
-  }, [positiveEmotions, selectedEmotion]);
+  }, [positiveEmotions, selectedEmotions]);
 
   const handleSelectMood = useCallback(
     (nextMood: SessionMoodType) => {
       setMoodType(nextMood);
-      if (!selectedEmotion) return;
+      if (selectedEmotions.length === 0) return;
       const nextPool = nextMood === "positive" ? positiveEmotions : negativeEmotions;
-      const hasSelectedEmotion = nextPool.some(
-        (emotion) => emotion.label === selectedEmotion,
+      const nextSelected = selectedEmotions.filter((selected) =>
+        nextPool.some((emotion) => emotion.label === selected),
       );
-      if (!hasSelectedEmotion) {
-        setSelectedEmotion("");
+      if (nextSelected.length !== selectedEmotions.length) {
+        setSelectedEmotions(nextSelected);
       }
     },
-    [negativeEmotions, positiveEmotions, selectedEmotion, setSelectedEmotion],
+    [negativeEmotions, positiveEmotions, selectedEmotions, setSelectedEmotions],
   );
 
   return {

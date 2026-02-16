@@ -3,19 +3,17 @@
 import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
-import ResumePromptModal from "@/components/restore/ResumePromptModal";
-import { useSessionResume } from "@/components/restore/useSessionResume";
 import {
   UNIFIED_TOUR_BASE_TOTAL,
   UNIFIED_TOUR_STORAGE_KEY,
   getMinimalTourOffset,
 } from "@/components/onboarding/unifiedOnboarding";
 import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
+import ResumePromptModal from "@/components/restore/ResumePromptModal";
+import { useSessionResume } from "@/components/restore/useSessionResume";
 import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css";
-import {
-  NEGATIVE_EMOTIONS,
-  POSITIVE_EMOTIONS,
-} from "@/lib/constants/emotions";
+import SafeButton from "@/components/ui/SafeButton";
+import { NEGATIVE_EMOTIONS, POSITIVE_EMOTIONS } from "@/lib/constants/emotions";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -37,7 +35,7 @@ export default function EmotionNoteHomePage() {
     redirectTo: null,
   });
   const [isStartLoading, setIsStartLoading] = useState(false);
-  const [loadingEmotionId, setLoadingEmotionId] = useState<string | null>(null);
+  const [selectedEmotionIds, setSelectedEmotionIds] = useState<string[]>([]);
   const [step, setStep] = useState<"mood" | "emotion">("mood");
   const [moodType, setMoodType] = useState<HomeMoodType | null>(null);
   const emotions = useMemo(
@@ -53,6 +51,7 @@ export default function EmotionNoteHomePage() {
       }),
     [],
   );
+  const selectedCount = selectedEmotionIds.length;
   const titleText =
     step === "mood"
       ? "지금 어떤 기분인가요?"
@@ -61,10 +60,7 @@ export default function EmotionNoteHomePage() {
     () => HOME_ONBOARDING_STEPS_BY_STEP[step],
     [step],
   );
-  const homeTourOffset = useMemo(
-    () => getMinimalTourOffset(step),
-    [step],
-  );
+  const homeTourOffset = useMemo(() => getMinimalTourOffset(step), [step]);
   const tourProgress = useMemo(
     () => ({
       offset: homeTourOffset,
@@ -144,8 +140,8 @@ export default function EmotionNoteHomePage() {
     const handleHomeTabReset = () => {
       setStep("mood");
       setMoodType(null);
+      setSelectedEmotionIds([]);
       setIsStartLoading(false);
-      setLoadingEmotionId(null);
     };
     window.addEventListener("app:home-tab-reset", handleHomeTabReset);
     return () => {
@@ -153,8 +149,8 @@ export default function EmotionNoteHomePage() {
     };
   }, []);
 
-  const startSession = async (emotionId: string) => {
-    if (!emotionId) {
+  const startSession = async (emotionIds: string[]) => {
+    if (emotionIds.length === 0) {
       return false;
     }
     try {
@@ -163,7 +159,7 @@ export default function EmotionNoteHomePage() {
         return false;
       }
       const next = new URLSearchParams();
-      next.set("emotionId", emotionId);
+      next.set("emotionIds", emotionIds.slice(0, 2).join(","));
       router.push(`/session?${next.toString()}`);
       return true;
     } catch {
@@ -171,8 +167,23 @@ export default function EmotionNoteHomePage() {
     }
   };
 
-  const handleSelectEmotion = async (emotionId: string) => {
+  const handleSelectEmotion = (emotionId: string) => {
     if (isStartLoading) {
+      return;
+    }
+    setSelectedEmotionIds((prev) => {
+      if (prev.includes(emotionId)) {
+        return prev.filter((id) => id !== emotionId);
+      }
+      if (prev.length >= 2) {
+        return prev;
+      }
+      return [...prev, emotionId];
+    });
+  };
+
+  const handleStartWithSelectedEmotions = async () => {
+    if (selectedEmotionIds.length === 0 || isStartLoading) {
       return;
     }
     if (safeLocalStorage.isAvailable() && isTourOpen && step === "emotion") {
@@ -197,15 +208,13 @@ export default function EmotionNoteHomePage() {
       );
       setIsTourOpen(false);
     }
-    setLoadingEmotionId(emotionId);
     setIsStartLoading(true);
     await new Promise<void>((resolve) =>
       requestAnimationFrame(() => resolve()),
     );
-    const started = await startSession(emotionId);
+    const started = await startSession(selectedEmotionIds);
     if (!started) {
       setIsStartLoading(false);
-      setLoadingEmotionId(null);
     }
   };
 
@@ -225,6 +234,7 @@ export default function EmotionNoteHomePage() {
                     value={moodType}
                     onChange={(next) => {
                       setMoodType(next);
+                      setSelectedEmotionIds([]);
                       setStep("emotion");
                     }}
                     disabled={isStartLoading}
@@ -235,18 +245,38 @@ export default function EmotionNoteHomePage() {
                   <HomeTitle text={titleText} />
                   <HomeMoodToggle
                     value={moodType}
-                    onChange={setMoodType}
+                    onChange={(next) => {
+                      setMoodType(next);
+                      setSelectedEmotionIds([]);
+                    }}
                     disabled={isStartLoading}
                     prompt="감정군을 선택하세요"
                   />
                   <HomeEmotionGrid
                     emotions={emotions}
-                    loadingEmotionId={loadingEmotionId}
+                    selectedEmotionIds={selectedEmotionIds}
                     isStartLoading={isStartLoading}
                     onSelectEmotion={(emotionId) => {
-                      void handleSelectEmotion(emotionId);
+                      handleSelectEmotion(emotionId);
                     }}
                   />
+                  {!isStartLoading ? (
+                    <SafeButton
+                      type="button"
+                      variant="unstyled"
+                      className={homeStyles.startButton}
+                      onClick={() => {
+                        void handleStartWithSelectedEmotions();
+                      }}
+                      disabled={selectedCount === 0}
+                    >
+                      {selectedCount === 0
+                        ? "감정을 선택해 주세요"
+                        : selectedCount === 1
+                        ? "선택한 감정으로 시작"
+                        : "2개 감정으로 시작"}
+                    </SafeButton>
+                  ) : null}
                 </div>
               )}
             </section>

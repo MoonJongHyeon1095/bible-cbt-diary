@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Lightbulb, NotebookPen, Route, Share2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import EmotionNoteAlternativeDetailSection from "./EmotionNoteAlternativeDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
@@ -51,13 +51,6 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
 
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [isGoDeeperLoading, setIsGoDeeperLoading] = useState(false);
-  const latestAlternative = useMemo(
-    () =>
-      [...(note?.alternative_details ?? [])].sort((a, b) =>
-        b.created_at.localeCompare(a.created_at),
-      )[0] ?? null,
-    [note?.alternative_details],
-  );
 
   const createModalHandler =
     (color: string, icon: ReactNode) =>
@@ -108,9 +101,12 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
 
           <section className={styles.sectionView}>
             <EmotionNoteAlternativeDetailSection
-              details={note?.alternative_details ?? []}
-              thoughtDetails={note?.thought_details ?? []}
-              errorDetails={note?.error_details ?? []}
+              alternative={note?.alternative ?? ""}
+              innerBelief={note?.inner_belief ?? ""}
+              emotionTags={note?.emotion_tags ?? []}
+              errorLabel={note?.error_label ?? ""}
+              errorDescription={note?.error_description ?? ""}
+              createdAt={note?.created_at ?? new Date().toISOString()}
               formatDateTime={formatDateTime}
               onCopyText={handleCopyText}
               onOpenModal={createModalHandler("#36d94a", <Lightbulb size={18} />)}
@@ -194,8 +190,8 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
 
       <EmotionNoteDetailSectionItemModal
         isOpen={Boolean(modalContent)}
-        title={modalContent?.title ?? (latestAlternative ? "대안 사고" : "")}
-        body={modalContent?.body ?? latestAlternative?.alternative ?? ""}
+        title={modalContent?.title ?? (note?.alternative ? "대안 사고" : "")}
+        body={modalContent?.body ?? note?.alternative ?? ""}
         accentColor={modalContent?.color ?? "#fff"}
         icon={modalContent?.icon ?? null}
         badgeText={modalContent?.badgeText ?? null}

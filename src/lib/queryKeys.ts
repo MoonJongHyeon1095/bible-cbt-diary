@@ -31,12 +31,6 @@ export const queryKeys = {
     detail: (access: AccessContext, noteId: number) =>
       ["emotion-notes", "detail", accessKey(access), noteId] as const,
   },
-  thoughtDetails: (access: AccessContext, noteId: number) =>
-    ["emotion-auto-thought-details", accessKey(access), noteId] as const,
-  errorDetails: (access: AccessContext, noteId: number) =>
-    ["emotion-error-details", accessKey(access), noteId] as const,
-  alternativeDetails: (access: AccessContext, noteId: number) =>
-    ["emotion-alternative-details", accessKey(access), noteId] as const,
   behaviorDetails: (access: AccessContext, noteId: number) =>
     ["emotion-behavior-details", accessKey(access), noteId] as const,
   sessionHistory: {

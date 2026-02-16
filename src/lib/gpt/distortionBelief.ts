@@ -33,7 +33,7 @@ You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
 You will receive:
 - [Situation]
-- [Emotion]
+- [Emotions]
 - [Selected Distortion]
 - [Selected Distortion Description]
 - optional [User Hint]
@@ -69,8 +69,8 @@ Rules for analysis:
 
 Rules for emotionReason:
 - Korean only, exactly 1 sentence.
-- Explain why the above innerBelief creates the current emotion.
-- Must reference the selected emotion label explicitly.
+- Explain why the above innerBelief creates the current emotions.
+- Must reference at least one selected emotion label explicitly.
 - Write only as supporting explanation for understanding the belief.
 
 Output JSON only:
@@ -86,7 +86,7 @@ You are a CBT (Cognitive Behavioral Therapy) counselor who answers in Korean.
 
 You will receive:
 - [Situation]
-- [Emotion]
+- [Emotions]
 - [Selected Distortion]
 - [Selected Distortion Description]
 - optional [User Hint]
@@ -128,8 +128,8 @@ Rules for analysis:
 
 Rules for emotionReason:
 - Korean only, exactly 1 sentence.
-- Explain why the above innerBelief creates the current emotion.
-- Must reference the selected emotion label explicitly.
+- Explain why the above innerBelief creates the current emotions.
+- Must reference at least one selected emotion label explicitly.
 - Write only as supporting explanation for understanding the belief.
 
 Output JSON only:
@@ -160,8 +160,37 @@ function sanitizeInnerBelief(
 
 function parseDistortionCard(raw: string): DistortionCardGenerationResult | null {
   const parsed = parseJsonObject<RawResponse>(raw);
-  if (!parsed) return null;
-  const obj = parsed.result ?? parsed;
+  let obj: RawResponse["result"] | RawResponse | null = parsed
+    ? (parsed.result ?? parsed)
+    : null;
+
+  if (!obj) {
+    const normalized = raw.replace(/\r\n/g, "\n");
+    const keyBlock = (
+      key: "innerBelief" | "inner_belief" | "analysis" | "emotionReason" | "emotion_reason",
+    ) => {
+      const pattern = new RegExp(
+        `(?:^|\\n)\\s*["']?${key}["']?\\s*[:：]\\s*([\\s\\S]*?)(?=\\n\\s*["']?(?:innerBelief|inner_belief|analysis|emotionReason|emotion_reason)["']?\\s*[:：]|$)`,
+        "i",
+      );
+      const match = normalized.match(pattern);
+      if (!match) return "";
+      return normalizeTextValue(
+        match[1]
+          .trim()
+          .replace(/^["'`]+/, "")
+          .replace(/["'`]+$/, ""),
+      );
+    };
+
+    const innerBelief = keyBlock("innerBelief") || keyBlock("inner_belief");
+    const analysis = keyBlock("analysis");
+    const emotionReason = keyBlock("emotionReason") || keyBlock("emotion_reason");
+
+    if (!innerBelief || !analysis || !emotionReason) return null;
+    obj = { innerBelief, analysis, emotionReason };
+  }
+
   return {
     innerBelief: normalizeTextValue(obj.innerBelief ?? obj.inner_belief),
     analysis: normalizeTextValue(obj.analysis),
@@ -178,7 +207,7 @@ export async function generateDistortionCard(
   const meta = COGNITIVE_ERRORS.find((item) => item.title === distortionTitle);
   const prompt = buildPrompt([
     { title: "Situation", body: situation },
-    { title: "Emotion", body: emotion },
+    { title: "Emotions", body: emotion },
     { title: "Selected Distortion", body: distortionTitle },
     {
       title: "Selected Distortion Description",
@@ -199,8 +228,16 @@ export async function generateDistortionCard(
       model: "gpt-4o-mini",
       parse: parseDistortionCard,
       tag: "distortionCard",
-      requireParsed: true,
+      requireParsed: false,
     });
+
+    if (!parsed) {
+      return markAiFallback({
+        innerBelief: buildFallbackInnerBelief(emotion),
+        analysis: buildFallbackAnalysis(distortionTitle),
+        emotionReason: buildFallbackEmotionReason(emotion),
+      });
+    }
 
     const innerBelief = sanitizeInnerBelief(
       parsed.innerBelief.trim(),
@@ -238,7 +275,7 @@ export async function generateDeepDistortionCard(
   const meta = COGNITIVE_ERRORS.find((item) => item.title === distortionTitle);
   const prompt = buildPrompt([
     { title: "Situation", body: situation },
-    { title: "Emotion", body: emotion },
+    { title: "Emotions", body: emotion },
     { title: "Selected Distortion", body: distortionTitle },
     {
       title: "Selected Distortion Description",
@@ -263,8 +300,16 @@ export async function generateDeepDistortionCard(
       model: "gpt-4o-mini",
       parse: parseDistortionCard,
       tag: "deepDistortionCard",
-      requireParsed: true,
+      requireParsed: false,
     });
+
+    if (!parsed) {
+      return markAiFallback({
+        innerBelief: buildFallbackInnerBelief(emotion),
+        analysis: buildFallbackAnalysis(distortionTitle),
+        emotionReason: buildFallbackEmotionReason(emotion),
+      });
+    }
 
     const innerBelief = sanitizeInnerBelief(
       parsed.innerBelief.trim(),

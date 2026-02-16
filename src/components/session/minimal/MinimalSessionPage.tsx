@@ -80,8 +80,8 @@ function MinimalSessionPageContent() {
           <CbtMinimalEmotionSection
             moodType={moodType}
             onSelectMood={handleSelectMood}
-            selectedEmotion={flow.selectedEmotion}
-            onSelectEmotion={actions.setSelectedEmotion}
+            selectedEmotions={flow.selectedEmotions}
+            onSelectEmotion={actions.setSelectedEmotions}
             onNext={() => {
               actions.setStep("incident");
             }}
@@ -91,7 +91,7 @@ function MinimalSessionPageContent() {
         {flow.step === "distortion" && (
           <CbtMinimalDistortionSection
             userInput={flow.userInput}
-            emotion={flow.selectedEmotion}
+            emotion={flow.selectedEmotions.join(", ")}
             onSelect={handleSelectDistortion}
           />
         )}

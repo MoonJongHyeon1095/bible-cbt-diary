@@ -57,50 +57,66 @@ export const handleGetEmotionBehaviorHistory = async (
     return json(res, 500, { histories: [], message: "행동 기록을 불러오지 못했습니다." });
   }
 
-  const normalized = (data ?? []).map(
-    (
-      row: {
-        emotion_behavior_details?: {
-          id: number;
-          behavior_label: string;
-          behavior_description: string;
-        } | null;
-        emotion_behavior_history_checks?: Array<{
-          id: number;
-          history_id: number;
-          check_id: number;
-          is_done: boolean;
-          created_at: string;
-          emotion_behavior_checks?: {
-            check_label: string;
-          } | null;
-        }>;
-        [key: string]: unknown;
-      },
-    ) => {
-      const checks = Array.isArray(row.emotion_behavior_history_checks)
-        ? row.emotion_behavior_history_checks.map((check) => ({
+  const normalized = (data ?? []).map((row) => {
+    const rowAny = row as {
+      emotion_behavior_details?:
+        | {
+            id: number;
+            behavior_label: string;
+            behavior_description: string;
+          }
+        | Array<{
+            id: number;
+            behavior_label: string;
+            behavior_description: string;
+          }>
+        | null;
+      emotion_behavior_history_checks?: Array<{
+        id: number;
+        history_id: number;
+        check_id: number;
+        is_done: boolean;
+        created_at: string;
+        emotion_behavior_checks?:
+          | {
+              check_label: string;
+            }
+          | Array<{
+              check_label: string;
+            }>
+          | null;
+      }> | null;
+      [key: string]: unknown;
+    };
+
+    const checks = Array.isArray(rowAny.emotion_behavior_history_checks)
+      ? rowAny.emotion_behavior_history_checks.map((check) => {
+          const checkRef = Array.isArray(check.emotion_behavior_checks)
+            ? check.emotion_behavior_checks[0]
+            : check.emotion_behavior_checks;
+          return {
             id: check.id,
             history_id: check.history_id,
             check_id: check.check_id,
             is_done: check.is_done,
             created_at: check.created_at,
-            check_label: check.emotion_behavior_checks?.check_label,
-          }))
-        : [];
-      const behaviorDetail =
-        row.emotion_behavior_details && typeof row.emotion_behavior_details === "object"
-          ? row.emotion_behavior_details
-          : null;
-      return {
-        ...row,
-        behavior_detail: behaviorDetail,
-        checks,
-        emotion_behavior_details: undefined,
-        emotion_behavior_history_checks: undefined,
-      };
-    },
-  );
+            check_label: checkRef?.check_label,
+          };
+        })
+      : [];
+
+    const behaviorRef = Array.isArray(rowAny.emotion_behavior_details)
+      ? rowAny.emotion_behavior_details[0]
+      : rowAny.emotion_behavior_details;
+
+    return {
+      ...rowAny,
+      behavior_detail: behaviorRef ?? null,
+      checks,
+      emotion_behavior_details: undefined,
+      emotion_behavior_history_checks: undefined,
+    };
+  });
 
   return json(res, 200, { histories: normalized });
 };

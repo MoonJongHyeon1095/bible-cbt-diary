@@ -24,14 +24,20 @@ export const handleDeleteEmotionBehaviorHistory = async (
   }
 
   const supabase = createSupabaseAdminClient();
-  const ownerQuery = supabase
-    .from("emotion_behavior_history")
-    .select("id")
-    .eq("id", historyId)
-    .maybeSingle();
   const { data: ownerRow, error: ownerError } = user
-    ? await ownerQuery.eq("user_id", user.id)
-    : await ownerQuery.eq("device_id", deviceId).is("user_id", null);
+    ? await supabase
+        .from("emotion_behavior_history")
+        .select("id")
+        .eq("id", historyId)
+        .eq("user_id", user.id)
+        .maybeSingle()
+    : await supabase
+        .from("emotion_behavior_history")
+        .select("id")
+        .eq("id", historyId)
+        .eq("device_id", deviceId)
+        .is("user_id", null)
+        .maybeSingle();
   if (ownerError || !ownerRow) {
     return json(res, 404, { ok: false, message: "삭제할 기록을 찾을 수 없습니다." });
   }

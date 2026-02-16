@@ -16,4 +16,5 @@ export const useFlowListQuery = (access: AccessContext) =>
       return data.flows ?? [];
     },
     enabled: access.mode !== "blocked",
+    staleTime: 60_000,
   });

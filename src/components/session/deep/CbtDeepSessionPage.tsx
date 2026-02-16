@@ -1,8 +1,7 @@
 "use client";
 
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
-import { CbtFloatingBackButton } from "@/components/session/common/CbtFloatingBackButton";
-import { CbtFloatingHomeButton } from "@/components/session/common/CbtFloatingHomeButton";
+import AppHeader from "@/components/header/AppHeader";
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
 import { CbtSavingModal } from "@/components/session/common/CbtSavingModal";
 import { CbtMinimalEmotionSection } from "@/components/session/minimal/emotion-select/CbtMinimalEmotionSection";
@@ -72,16 +71,16 @@ function CbtDeepSessionPageContent() {
     <div className={styles.page}>
       <div className={styles.bgWaves} />
       <div className={styles.content}>
-        <div className={styles.mobileSafeTopInset} aria-hidden />
         <CbtSavingModal open={isSaving} />
-        {canGoBack && (
-          <div className={`${styles.floatingNav} ${styles.left}`}>
-            <CbtFloatingBackButton onClick={handleBack} />
-          </div>
-        )}
-        <div className={`${styles.floatingNav} ${styles.right}`}>
-          <CbtFloatingHomeButton onClick={handleGoHome} />
-        </div>
+        <AppHeader
+          variant="session"
+          showDisclaimer={false}
+          sessionNav={{
+            canGoBack,
+            onBack: handleBack,
+            onHome: handleGoHome,
+          }}
+        />
 
         {flow.step === "mood" && (
           <CbtMinimalMoodSection

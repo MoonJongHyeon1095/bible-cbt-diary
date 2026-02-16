@@ -70,7 +70,6 @@
   align-items: center;
   gap: 10px;
   padding: 20px 24px 20px;
-  min-height: 126px;
 }
 
 .disclaimerPlaceholder {
@@ -89,7 +88,7 @@
 
 .disclaimerTitle {
   margin: 0 0 6px;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: #f6e6c6;
 }
@@ -133,10 +132,74 @@
   width: 34px;
   height: 34px;
   background: var(--surface-muted);
+  color: var(--text);
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.iconButton svg {
+  display: block;
+  stroke: currentColor;
+}
+
+.sessionSafeTopInset {
+  height: env(safe-area-inset-top);
+  pointer-events: none;
+}
+
+.sessionFloatingMiniButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(80, 92, 112, 0.6);
+  background: rgba(15, 18, 24, 0.85);
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.sessionFloatingMiniButton:hover {
+  transform: scale(1.08);
+  border-color: rgba(140, 160, 196, 0.8);
+}
+
+.sessionFloatingMiniIcon {
+  width: 20px;
+  height: 20px;
+  flex: 0 0 auto;
+  display: block;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.sessionFloatingNav {
+  position: fixed;
+  top: calc(24px + env(safe-area-inset-top));
+  z-index: 20;
+}
+
+.sessionLeft {
+  left: calc(24px + env(safe-area-inset-left));
+}
+
+.sessionRight {
+  right: calc(24px + env(safe-area-inset-right));
+}
+
+@media (min-width: 980px) {
+  .sessionLeft {
+    left: calc(50% - 360px - 24px);
+  }
+
+  .sessionRight {
+    right: calc(50% - 360px - 24px);
+  }
 }
 
 @media (max-width: 900px) {
@@ -164,6 +227,5 @@
 
   .disclaimerWrap {
     padding: 20px 16px 20px;
-    min-height: 118px;
   }
 }

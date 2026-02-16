@@ -28,9 +28,16 @@ export default function GuestMigrationModal({
   return (
     <div className={styles.backdrop} role="presentation">
       <div
-        className={styles.modal}
+        className={`${styles.modal} ${isUploading ? styles.modalUploading : ""}`}
+        aria-busy={isUploading || undefined}
         onClick={(event) => event.stopPropagation()}
       >
+        {isUploading ? (
+          <div className={styles.loadingOverlay} aria-live="polite">
+            <span className={styles.loader} aria-hidden />
+            <p className={styles.loadingText}>이전 중입니다...</p>
+          </div>
+        ) : null}
         <div className={styles.header}>
           <h2 className={styles.title}>
             로그인 전 작성하신 기록이 있습니다.

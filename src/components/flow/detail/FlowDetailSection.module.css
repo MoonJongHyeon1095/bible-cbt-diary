@@ -13,21 +13,123 @@
   padding: 4px 4px 0;
 }
 
+.headerMain {
+  min-width: 0;
+  width: min(680px, 100%);
+}
+
 .label {
-  margin: 0 0 6px;
+  margin: 0 0 8px;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
 .title {
   margin: 0;
-  font-size: 1.4rem;
+  font-size: 1.45rem;
 }
 
 .hint {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.titleRow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.metaEditButton {
+  border: 1px solid rgba(166, 180, 205, 0.45);
+  background: rgba(24, 30, 40, 0.55);
+  color: #dfe8f7;
+  border-radius: 999px;
+  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.metaEditButton:hover {
+  border-color: rgba(194, 208, 232, 0.68);
+}
+
+.metaEditButton:disabled {
+  opacity: 0.6;
+}
+
+.metaEditor {
+  display: grid;
+  gap: 8px;
+  max-width: min(760px, 100%);
+}
+
+.metaTitleInput,
+.metaDescriptionInput {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(152, 169, 194, 0.45);
+  background: rgba(19, 24, 31, 0.72);
+  color: #edf3ff;
   font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.metaTitleInput {
+  height: 38px;
+  padding: 8px 10px;
+  font-weight: 600;
+}
+
+.metaDescriptionInput {
+  padding: 8px 10px;
+  resize: vertical;
+  min-height: 68px;
+  max-height: 132px;
+}
+
+.metaTitleInput:focus,
+.metaDescriptionInput:focus {
+  outline: none;
+  border-color: rgba(197, 212, 238, 0.75);
+}
+
+.metaEditorActions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.metaActionButton {
+  border-radius: 8px;
+  border: 1px solid rgba(166, 180, 205, 0.45);
+  background: rgba(24, 30, 40, 0.55);
+  color: #dfe8f7;
+  padding: 6px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  line-height: 1;
+}
+
+.metaActionButton:disabled {
+  opacity: 0.5;
+}
+
+.metaActionPrimary {
+  border-color: rgba(190, 208, 238, 0.8);
+  background: rgba(60, 93, 138, 0.45);
+  color: #f2f7ff;
 }
 
 .flowCanvas {
@@ -206,25 +308,52 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
+  gap: 14px;
 }
 
 .axisTick::before {
   content: "";
-  width: 2px;
-  height: 10px;
-  background: rgba(103, 112, 125, 0.6);
+  width: 1px;
+  height: 20px;
+  background: rgba(214, 226, 244, 0.55);
 }
 
 .axisLabel {
-  font-size: 0.62rem;
-  color: rgba(45, 55, 72, 0.95);
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.axisLabel::after {
+  content: none;
+}
+
+.axisLabelPrimary {
+  font-size: 0.8rem;
+  color: #f3f7ff;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  background: rgba(255, 255, 255, 0.92);
-  padding: 2px 6px;
-  border-radius: 999px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+  letter-spacing: 0;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+.axisLabelSecondary {
+  font-size: 0.66rem;
+  color: rgba(222, 232, 247, 0.92);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .flow :global(.react-flow__edges) {
@@ -456,12 +585,19 @@
 }
 
 .nodeMetaDateEmphasis {
-  color: #3567a3;
+  color: #eaf2ff;
   display: block;
   width: 100%;
   text-align: center;
-  font-size: 0.84rem;
-  font-weight: 700;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  font-family:
+    "Pretendard",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
 }
 
 .nodeTooltip {
@@ -1289,6 +1425,11 @@
 .fabPrimary {
   --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
   --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
+}
+
+.fabImportTop {
+  --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabSecondary {

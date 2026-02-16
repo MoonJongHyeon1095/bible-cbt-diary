@@ -89,9 +89,8 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
     <div className={`${pageStyles.page} ${styles.root}`}>
       <AppHeader showDisclaimer={false} />
       <main className={`${pageStyles.main} ${styles.pageMain}`}>
-        <div className={pageStyles.shell}>
+        <div className={`${pageStyles.shell} ${styles.contentShell}`}>
           <section className={styles.noteForm}>
-            <div className={styles.notePin} aria-hidden />
             <div className={styles.noteHeader}>
               <span className={styles.noteHeaderIcon} aria-hidden>
                 <NotebookPen size={16} />
@@ -117,10 +116,6 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
               onOpenModal={createModalHandler("#36d94a", <Lightbulb size={18} />)}
             />
           </section>
-
-          {note?.created_at ? (
-            <p className={styles.footerMeta}>마지막 저장: {formatDateTime(note.created_at)}</p>
-          ) : null}
         </div>
       </main>
 

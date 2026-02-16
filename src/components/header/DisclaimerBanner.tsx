@@ -8,6 +8,7 @@ type DisclaimerBannerProps = {
   detailsClassName: string;
   titleClassName: string;
   textClassName: string;
+  onDismiss?: () => void;
 };
 
 export const DISCLAIMER_TEXT = "이 앱은 치료/진단용이 아닙니다.";
@@ -21,6 +22,7 @@ export default function DisclaimerBanner({
   detailsClassName,
   titleClassName,
   textClassName,
+  onDismiss,
 }: DisclaimerBannerProps) {
   const [isDismissed, setIsDismissed] = useState(() => {
     return safeSessionStorage.getItem(DISCLAIMER_BANNER_DISMISS_KEY) === "true";
@@ -29,6 +31,7 @@ export default function DisclaimerBanner({
   const handleDismiss = () => {
     safeSessionStorage.setItem(DISCLAIMER_BANNER_DISMISS_KEY, "true");
     setIsDismissed(true);
+    onDismiss?.();
   };
 
   if (isDismissed) return null;

@@ -1207,26 +1207,48 @@
 .hintInlinePanel {
   display: grid;
   gap: 12px;
-  padding: 14px;
-  border-radius: 16px;
-  border: 1px solid rgba(96, 116, 146, 0.45);
-  background: linear-gradient(
-    155deg,
-    rgba(20, 26, 38, 0.9) 0%,
-    rgba(16, 21, 32, 0.95) 100%
-  );
-  box-shadow: inset 0 1px 0 rgba(180, 204, 240, 0.08);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.hintPanelHeader {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.hintPanelMeta {
+  margin: 0;
+  font-size: 0.76rem;
+  color: rgba(178, 194, 220, 0.82);
 }
 
 .hintTextarea {
-  min-height: 108px;
-  border-radius: 12px;
-  border: 1px solid rgba(98, 114, 140, 0.62);
-  background: rgba(10, 14, 22, 0.82);
+  min-height: 96px;
+  border-radius: 14px;
+  border: 1px solid rgba(82, 102, 136, 0.82) !important;
+  background: rgba(6, 10, 18, 0.94) !important;
   padding: 12px 14px;
-  font-size: 0.96rem;
-  line-height: 1.65;
-  color: #eef3ff;
+  font-size: 0.9rem;
+  line-height: 1.58;
+  color: #f2f6ff !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: inset 0 1px 0 rgba(140, 162, 196, 0.08);
+}
+
+.hintTextarea::placeholder {
+  color: rgba(146, 166, 200, 0.8);
+}
+
+.hintTextarea:focus {
+  outline: none !important;
+  border-color: rgba(136, 176, 230, 0.95);
+  box-shadow:
+    0 0 0 3px rgba(60, 102, 162, 0.34),
+    inset 0 1px 0 rgba(160, 188, 228, 0.12);
 }
 
 .hintActionRow {
@@ -1245,9 +1267,8 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.78rem;
-  letter-spacing: 0.03em;
-  text-transform: lowercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
   transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease, color 0.2s ease;
 }
 
@@ -1266,6 +1287,7 @@
 .distortionHintIcon {
   width: 14px;
   height: 14px;
+  color: inherit;
 }
 
 .distortionHintLabel {

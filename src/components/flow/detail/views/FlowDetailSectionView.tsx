@@ -2,7 +2,7 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SafeButton from "@/components/ui/SafeButton";
-import { BookSearch, Download, LayoutDashboard, Route, Trash2 } from "lucide-react";
+import { BookSearch, Check, Download, LayoutDashboard, PencilLine, Route, Trash2, X } from "lucide-react";
 import type { AccessContext } from "@/lib/types/access";
 import FlowDetailCanvas from "../FlowDetailCanvas";
 import FlowDetailStack from "../FlowDetailStack";
@@ -34,8 +34,17 @@ type FlowDetailSectionViewProps = {
   isImportOpen: boolean;
   confirmDelete: boolean;
   isDeleting: boolean;
+  isMetaEditing: boolean;
+  isMetaSaving: boolean;
+  metaTitleDraft: string;
+  metaDescriptionDraft: string;
   layoutKey: string;
   onBackToList: () => void;
+  onStartMetaEdit: () => void;
+  onCancelMetaEdit: () => void;
+  onSaveMeta: () => void;
+  onChangeMetaTitle: (value: string) => void;
+  onChangeMetaDescription: (value: string) => void;
   onOpenDeleteConfirm: () => void;
   onCloseDeleteConfirm: () => void;
   onDeleteNote: () => void;
@@ -69,8 +78,17 @@ export default function FlowDetailSectionView({
   isImportOpen,
   confirmDelete,
   isDeleting,
+  isMetaEditing,
+  isMetaSaving,
+  metaTitleDraft,
+  metaDescriptionDraft,
   layoutKey,
   onBackToList,
+  onStartMetaEdit,
+  onCancelMetaEdit,
+  onSaveMeta,
+  onChangeMetaTitle,
+  onChangeMetaDescription,
   onOpenDeleteConfirm,
   onCloseDeleteConfirm,
   onDeleteNote,
@@ -85,28 +103,81 @@ export default function FlowDetailSectionView({
 }: FlowDetailSectionViewProps) {
   const trimmedTitle = flowTitle?.trim() ?? "";
   const trimmedDescription = flowDescription?.trim() ?? "";
-  const headerTitle =
-    trimmedTitle.length > 0
-      ? trimmedTitle
-      : `${noteCount}개의 감정 기록이 있습니다`;
+  const headerCount = `${noteCount}개의 감정 기록이 있습니다`;
+  const headerTitle = trimmedTitle.length > 0 ? trimmedTitle : "제목 없는 플로우";
   const headerHint =
-    trimmedDescription.length > 0
-      ? trimmedDescription
-      : trimmedTitle.length > 0
-        ? `${noteCount}개의 감정 기록이 있습니다`
-        : "";
+    trimmedDescription.length > 0 ? trimmedDescription : "설명이 아직 없습니다.";
+  const isMetaSaveDisabled = metaTitleDraft.trim().length === 0 || isMetaSaving;
 
   return (
     <section className={styles.section}>
       <div className={styles.header}>
-        <div>
-          <h2 className={styles.title}>{headerTitle}</h2>
-          {headerHint ? <p className={styles.hint}>{headerHint}</p> : null}
+        <div className={styles.headerMain}>
+          <p className={styles.label}>{headerCount}</p>
+          {!isMetaEditing ? (
+            <>
+              <div className={styles.titleRow}>
+                <h2 className={styles.title}>{headerTitle}</h2>
+                {flowId ? (
+                  <SafeButton
+                    mode="native"
+                    type="button"
+                    className={styles.metaEditButton}
+                    onClick={onStartMetaEdit}
+                    aria-label="플로우 제목 및 설명 수정"
+                  >
+                    <PencilLine size={14} />
+                    수정
+                  </SafeButton>
+                ) : null}
+              </div>
+              <p className={styles.hint}>{headerHint}</p>
+            </>
+          ) : (
+            <div className={styles.metaEditor}>
+              <input
+                type="text"
+                value={metaTitleDraft}
+                onChange={(event) => onChangeMetaTitle(event.target.value)}
+                className={styles.metaTitleInput}
+                placeholder="플로우 제목"
+                maxLength={60}
+                disabled={isMetaSaving}
+              />
+              <textarea
+                value={metaDescriptionDraft}
+                onChange={(event) => onChangeMetaDescription(event.target.value)}
+                className={styles.metaDescriptionInput}
+                placeholder="플로우 설명"
+                maxLength={180}
+                rows={2}
+                disabled={isMetaSaving}
+              />
+              <div className={styles.metaEditorActions}>
+                <SafeButton
+                  mode="native"
+                  type="button"
+                  className={styles.metaActionButton}
+                  onClick={onCancelMetaEdit}
+                  disabled={isMetaSaving}
+                >
+                  <X size={14} />
+                  취소
+                </SafeButton>
+                <SafeButton
+                  mode="native"
+                  type="button"
+                  className={`${styles.metaActionButton} ${styles.metaActionPrimary}`.trim()}
+                  onClick={onSaveMeta}
+                  disabled={isMetaSaveDisabled}
+                >
+                  <Check size={14} />
+                  저장
+                </SafeButton>
+              </div>
+            </div>
+          )}
         </div>
-        <SafeButton type="button" variant="ghost" onClick={onBackToList}>
-          <LayoutDashboard size={18} />
-          노트 플로우 목록보기
-        </SafeButton>
       </div>
       <FlowDetailCanvas
         flowKey={layoutKey}
@@ -157,13 +228,22 @@ export default function FlowDetailSectionView({
             />
           </>
         ) : flowId ? (
-          <FloatingActionButton
-            label="Import"
-            helperText="Import"
-            icon={<Download size={20} />}
-            className={styles.fabPrimary}
-            onClick={onOpenImport}
-          />
+          <>
+            <FloatingActionButton
+              label="목록보기"
+              helperText="목록보기"
+              icon={<LayoutDashboard size={20} />}
+              className={styles.fabImportTop}
+              onClick={onBackToList}
+            />
+            <FloatingActionButton
+              label="Import"
+              helperText="Import"
+              icon={<Download size={20} />}
+              className={styles.fabPrimary}
+              onClick={onOpenImport}
+            />
+          </>
         ) : null}
         {selectedNote ? (
           <div className={styles.detailStackWrap}>

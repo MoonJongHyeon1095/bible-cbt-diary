@@ -28,7 +28,6 @@ type FlowListSectionViewProps = {
   selectedFlowId: number | null;
   selectedFlow: { id: number } | null;
   selectedNode: GroupNode | null;
-  isSimulating: boolean;
   totalCount: number;
   confirmDelete: boolean;
   isDeleting: boolean;
@@ -51,7 +50,6 @@ export default function FlowListSectionView({
   selectedFlowId,
   selectedFlow,
   selectedNode,
-  isSimulating,
   totalCount,
   confirmDelete,
   isDeleting,
@@ -106,7 +104,7 @@ export default function FlowListSectionView({
                   type="button"
                   className={`${styles.node} ${
                     selectedFlowId === node.id ? styles.nodeSelected : ""
-                  } ${isSimulating ? styles.nodeNoTransition : ""}`}
+                  }`}
                   style={
                     {
                       width: node.radius * 2,

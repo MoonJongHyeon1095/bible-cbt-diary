@@ -70,10 +70,11 @@ export function CbtDistortionCard({
           className={styles.distortionHintButton}
           onClick={onOpenHint}
           disabled={card.isGenerating}
-          aria-label="user hint 입력"
+          aria-label="생성 가이드 입력"
+          aria-expanded={hintOpen}
         >
           <Sparkles className={styles.distortionHintIcon} />
-          <span className={styles.distortionHintLabel}>user hint</span>
+          <span className={styles.distortionHintLabel}>User Hint</span>
         </SafeButton>
         <SafeButton
           type="button"
@@ -88,12 +89,16 @@ export function CbtDistortionCard({
       </div>
 
       {hintOpen && (
-        <div className={styles.hintInlinePanel}>
+        <>
+          <div className={styles.hintPanelHeader}>
+            <p className={styles.hintPanelMeta}>{hintText.trim().length}/160</p>
+          </div>
           <Textarea
             value={hintText}
             onChange={(event) => onChangeHint(event.target.value)}
             rows={3}
-            placeholder="원하는 방향이나 강조하고 싶은 문장을 적어주세요."
+            maxLength={160}
+            placeholder="원하는 느낌이나 방향을 짧게 알려주세요."
             className={styles.hintTextarea}
           />
           <div className={styles.hintActionRow}>
@@ -114,7 +119,7 @@ export function CbtDistortionCard({
               재생성
             </SafeButton>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

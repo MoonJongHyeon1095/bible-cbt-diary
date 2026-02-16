@@ -7,17 +7,32 @@
   --mint-border: #46745f;
   --branch: #b6ccff;
   min-height: 100%;
-  background:
-    radial-gradient(1200px 520px at 8% -10%, rgba(102, 79, 56, 0.28), transparent 70%),
-    radial-gradient(900px 440px at 100% 0%, rgba(44, 86, 104, 0.24), transparent 68%),
-    radial-gradient(700px 360px at 20% 100%, rgba(77, 106, 128, 0.2), transparent 74%),
+  background: radial-gradient(
+      1200px 520px at 8% -10%,
+      rgba(102, 79, 56, 0.28),
+      transparent 70%
+    ),
+    radial-gradient(
+      900px 440px at 100% 0%,
+      rgba(44, 86, 104, 0.24),
+      transparent 68%
+    ),
+    radial-gradient(
+      700px 360px at 20% 100%,
+      rgba(77, 106, 128, 0.2),
+      transparent 74%
+    ),
     #0d1216;
   font-family: var(--font-noto-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic",
     sans-serif;
 }
 
 .pageMain {
-  padding-top: 40px;
+  padding-top: 44px;
+}
+
+.contentShell {
+  padding-bottom: calc(40px + var(--app-bottom-tab-offset, 0px));
 }
 
 @media (max-width: 900px) {
@@ -28,52 +43,30 @@
   .pageMain {
     padding-top: 30px;
   }
+
+  .contentShell {
+    padding-bottom: calc(40px + var(--app-bottom-tab-offset, 0px));
+  }
 }
 
 .noteForm {
   position: relative;
-  margin-bottom: 24px;
+  margin-bottom: 38px;
   border: 1px solid rgba(165, 141, 111, 0.38);
   border-radius: 18px;
-  padding: 20px 20px 18px;
-  background:
-    linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0 / 100% 32px,
+  padding: 28px 28px 26px;
+  background: linear-gradient(var(--paper-line) 1px, transparent 1px) 0 0 / 100%
+      32px,
     var(--paper);
-  box-shadow:
-    0 22px 44px rgba(3, 7, 11, 0.52),
+  box-shadow: 0 22px 44px rgba(3, 7, 11, 0.52),
     inset 0 1px 0 rgba(255, 244, 226, 0.08);
-}
-
-.noteForm::before {
-  content: "";
-  position: absolute;
-  top: 16px;
-  left: 10px;
-  bottom: 16px;
-  width: 18px;
-  background:
-    radial-gradient(circle, rgba(10, 12, 15, 0.85) 0 4px, transparent 4.2px) 50% 0 / 18px 30px;
-  opacity: 0.55;
-  pointer-events: none;
-}
-
-.notePin {
-  position: absolute;
-  top: -10px;
-  right: 18px;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  border: 2px solid rgba(218, 200, 128, 0.55);
-  background: radial-gradient(circle at 35% 35%, #f2d06f 0 38%, #916d22 39% 100%);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.38);
 }
 
 .noteHeader {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-bottom: 14px;
+  gap: 12px;
+  margin-bottom: 20px;
 }
 
 .noteHeaderIcon {
@@ -98,7 +91,8 @@
 
 .noteTitle {
   margin: 3px 0 0;
-  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
+    serif;
   font-size: clamp(1.15rem, 2.5vw, 1.58rem);
   font-weight: 600;
   color: #f7ede3;
@@ -110,7 +104,7 @@
 .field {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 }
 
 .label {
@@ -127,7 +121,7 @@
   font-size: 1.03rem;
   font-weight: 400;
   color: #f2e7da;
-  line-height: 1.86;
+  line-height: 1.96;
   letter-spacing: -0.005em;
   max-width: 72ch;
   text-wrap: pretty;
@@ -135,15 +129,19 @@
 }
 
 .sectionView {
-  margin-bottom: 18px;
+  margin-bottom: 30px;
 }
 
 .sectionCard {
   position: relative;
   border-radius: 20px;
-  padding: 18px 16px 16px;
+  padding: 26px 24px 24px;
   border: 1px solid rgba(112, 137, 176, 0.44);
-  background: linear-gradient(180deg, rgba(25, 34, 50, 0.96), rgba(19, 27, 42, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(25, 34, 50, 0.96),
+    rgba(19, 27, 42, 0.96)
+  );
   box-shadow: 0 14px 28px rgba(4, 10, 8, 0.48);
   overflow: hidden;
 }
@@ -165,9 +163,9 @@
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 14px;
   margin-top: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 18px;
 }
 
 .sectionTitle {
@@ -178,7 +176,8 @@
 
 .sectionTitle h3 {
   margin: 0;
-  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo",
+    serif;
   font-size: 1.11rem;
   font-weight: 600;
   letter-spacing: -0.01em;
@@ -207,18 +206,22 @@
 
 .sectionAlt,
 .sectionPastelAlt {
-  background: linear-gradient(180deg, rgba(29, 38, 55, 0.97), rgba(20, 29, 43, 0.96));
+  background: linear-gradient(
+    180deg,
+    rgba(29, 38, 55, 0.97),
+    rgba(20, 29, 43, 0.96)
+  );
   border-color: rgba(113, 145, 202, 0.48);
 }
 
 .alternativeDistortionLayout {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 26px;
 }
 
 .mainTextLabel {
-  margin: 0 0 8px;
+  margin: 0 0 16px;
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -228,29 +231,37 @@
 
 .distortionBranch {
   width: 2px;
-  height: 22px;
+  height: 36px;
   margin-left: 20px;
-  background: linear-gradient(180deg, rgba(200, 220, 255, 0.94), rgba(132, 173, 255, 0.25));
+  background: linear-gradient(
+    180deg,
+    rgba(200, 220, 255, 0.94),
+    rgba(132, 173, 255, 0.25)
+  );
 }
 
 .sectionDistortion,
 .sectionPastelDistortion {
-  background: linear-gradient(180deg, rgba(39, 38, 66, 0.96), rgba(27, 28, 54, 0.95));
+  background: linear-gradient(
+    180deg,
+    rgba(39, 38, 66, 0.96),
+    rgba(27, 28, 54, 0.95)
+  );
   border-color: rgba(137, 151, 220, 0.52);
 }
 
 .distortionTagsInline {
   display: flex;
   flex-wrap: wrap;
-  gap: 7px;
-  margin-bottom: 10px;
+  gap: 10px;
+  margin-bottom: 20px;
 }
 
 .noteTag {
   font-size: 0.74rem;
   font-weight: 700;
   line-height: 1;
-  padding: 6px 10px;
+  padding: 7px 12px;
   border-radius: 999px;
   border: 1px solid transparent;
 }
@@ -270,8 +281,14 @@
 .distortionEntry {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin-top: 8px;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.distortionEntry + .distortionEntry {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(164, 184, 235, 0.28);
 }
 
 .distortionEntryTitle {
@@ -286,7 +303,7 @@
 .distortionEntryText {
   margin: 0;
   font-size: 0.96rem;
-  line-height: 1.72;
+  line-height: 1.82;
   letter-spacing: -0.003em;
   max-width: 70ch;
   text-wrap: pretty;
@@ -297,21 +314,21 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
 }
 
 .detailText {
-  margin: 0;
+  margin: 0 0 8px;
   color: #eaf2ff;
   font-size: 1.01rem;
-  line-height: 1.82;
+  line-height: 1.9;
   letter-spacing: -0.003em;
   max-width: 70ch;
   text-wrap: pretty;
 }
 
 .detailEmotion {
-  margin: 0;
+  margin: 0 0 4px;
   color: rgba(196, 213, 241, 0.82);
   font-size: 0.8rem;
   font-weight: 500;
@@ -322,8 +339,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  margin-top: 8px;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .detailFooterLeft {
@@ -333,8 +350,8 @@
 }
 
 .miniIconButton {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 10px;
   border: 1px solid rgba(157, 178, 214, 0.4);
   background: rgba(40, 53, 75, 0.92);
@@ -361,12 +378,6 @@
   margin: 0;
   color: rgba(189, 207, 238, 0.74);
   font-size: 0.9rem;
-}
-
-.footerMeta {
-  margin: 0;
-  color: rgba(187, 204, 233, 0.72);
-  font-size: 0.8rem;
 }
 
 .fab {
@@ -406,7 +417,7 @@
 .detailList {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 20px;
 }
 
 .detailCard {
@@ -439,15 +450,12 @@
 
 @media (max-width: 720px) {
   .noteForm {
-    padding: 18px 14px 14px;
-  }
-
-  .notePin {
-    right: 12px;
+    margin-bottom: 30px;
+    padding: 22px 18px 18px;
   }
 
   .sectionCard {
-    padding: 16px 12px 12px;
+    padding: 20px 16px 16px;
   }
 
   .sectionHeader {
@@ -460,6 +468,6 @@
   }
 
   .sectionDistortion {
-    padding: 10px;
+    padding: 20px 16px 16px;
   }
 }

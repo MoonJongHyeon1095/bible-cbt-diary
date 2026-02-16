@@ -2,12 +2,13 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { ElkNode } from "elkjs/lib/elk-api";
 import type { Node } from "reactflow";
 import type { FlowDetailNodeData } from "../../nodes/FlowDetailNode";
+import { formatFlowDateLabel } from "./formatFlowDateLabel";
 
 const BASE_NODE_SIZE = 130;
 const NODE_SIZE_STEP = 14;
 const NODE_SIZE_MAX_EXTRA = 120;
 const SLOPE_STEP = 90;
-const TIME_AXIS_STEP = 320;
+const TIME_AXIS_STEP = 420;
 const FLOW_PADDING = 12;
 const INDIGO: [number, number, number] = [79, 70, 229];
 const BASE_BLUE: [number, number, number] = [230, 232, 246];
@@ -56,15 +57,6 @@ const mixColor = (
 const toRgba = (rgb: string, alpha: number) =>
   rgb.replace("rgb(", "rgba(").replace(")", `, ${alpha})`);
 
-const formatFlowDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const yyyy = String(date.getFullYear());
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yyyy}.${mm}.${dd}`;
-};
-
 export const buildFlowNodes = ({
   elkChildren,
   notesById,
@@ -96,7 +88,7 @@ export const buildFlowNodes = ({
     const titleText = note.title?.trim() || "감정 노트";
     const triggerText = note.trigger_text?.trim() || "트리거가 없습니다.";
     const labelText = note.title?.trim() || note.trigger_text?.trim() || "감정 노트";
-    const dateText = formatFlowDate(note.created_at);
+    const dateText = formatFlowDateLabel(note.created_at);
     const spreadY = spreadOffsets.get(child.id) ?? 0;
     const timeOffset = (timeIndex.get(child.id) ?? 0) * SLOPE_STEP;
     const isIsolated = !connectedNodeIds.has(child.id);

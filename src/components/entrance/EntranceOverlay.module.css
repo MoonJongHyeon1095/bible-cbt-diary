@@ -123,10 +123,18 @@
   position: absolute;
   left: 0;
   right: 0;
-  bottom: 30vh;
+  bottom: 27vh;
   z-index: 8;
   padding: 0 20px;
   pointer-events: none;
+}
+
+.narrationTwoLines {
+  bottom: 24vh;
+}
+
+.narrationThreeLines {
+  bottom: 21vh;
 }
 
 .narrationCard {
@@ -135,7 +143,6 @@
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 16px;
   background: rgba(8, 11, 16, 0.86);
-  backdrop-filter: blur(4px);
   padding: 14px 18px;
 }
 
@@ -212,7 +219,6 @@
   margin: 0;
   opacity: 0;
   transform: translateY(7px);
-  filter: blur(1.4px);
   animation: scene2SpeakIn 0.46s ease forwards;
   animation-delay: calc(var(--line-i, 0) * 240ms + 120ms);
 }
@@ -281,13 +287,11 @@
   0%,
   100% {
     transform: translate(0, 0) rotate(0deg);
-    filter: blur(0px);
     opacity: 0.85;
   }
   50% {
     transform: translateX(calc((var(--char-i, 0) - 18) * 0.02px))
       translateY(-0.6px) rotate(0.5deg);
-    filter: blur(0.2px);
     opacity: 1;
   }
 }
@@ -331,12 +335,10 @@
   from {
     opacity: 0;
     transform: translateY(10px);
-    filter: blur(2px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
-    filter: blur(0);
   }
 }
 
@@ -344,30 +346,6 @@
   0% {
     opacity: 0;
     transform: translateY(7px);
-    filter: blur(1.4px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-    filter: blur(0);
-  }
-}
-
-@keyframes introFadeUpNoBlur {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes scene2SpeakInNoBlur {
-  0% {
-    opacity: 0;
-    transform: translateY(7px);
   }
   100% {
     opacity: 1;
@@ -375,45 +353,40 @@
   }
 }
 
-@supports (-webkit-touch-callout: none) {
-  @media (hover: none) and (pointer: coarse) {
-    .overlay::before {
-      animation: none;
-      background-size: 150% 150%;
-      opacity: 0.92;
-    }
+@media (hover: none) and (pointer: coarse) {
+  .overlay::before {
+    animation: none;
+    background-size: 150% 150%;
+    opacity: 0.92;
+  }
 
-    .introTextGroup {
-      animation: introFadeUpNoBlur 620ms ease forwards;
-    }
+  .introTextGroup {
+    animation: introFadeUp 620ms ease forwards;
+  }
 
-    .shakyChar {
-      animation: none;
-      opacity: 1;
-    }
+  .shakyChar {
+    animation: none;
+    opacity: 1;
+  }
 
-    .narrationCard {
-      -webkit-backdrop-filter: none;
-      backdrop-filter: none;
-      background: rgba(8, 11, 16, 0.92);
-    }
+  .narrationCard {
+    background: rgba(8, 11, 16, 0.92);
+  }
 
-    .deepFab {
-      animation: none;
-      box-shadow:
-        0 12px 24px rgba(0, 0, 0, 0.22),
-        0 0 0 8px rgba(126, 163, 220, 0.18);
-    }
+  .deepFab {
+    animation: none;
+    box-shadow:
+      0 12px 24px rgba(0, 0, 0, 0.22),
+      0 0 0 8px rgba(126, 163, 220, 0.18);
+  }
 
-    .deepHint {
-      animation: none;
-    }
+  .deepHint {
+    animation: none;
+  }
 
-    .scene2Line {
-      filter: none;
-      animation: scene2SpeakInNoBlur 0.34s ease forwards;
-      animation-delay: calc(var(--line-i, 0) * 180ms + 90ms);
-    }
+  .scene2Line {
+    animation: scene2SpeakIn 0.34s ease forwards;
+    animation-delay: calc(var(--line-i, 0) * 180ms + 90ms);
   }
 }
 
@@ -472,11 +445,19 @@
       );
     background-size: 172% 172%;
     opacity: 0.98;
-    animation-duration: 8s;
+    animation: none;
   }
 
   .narration {
-    bottom: 26vh;
+    bottom: 23vh;
+  }
+
+  .narrationTwoLines {
+    bottom: 20vh;
+  }
+
+  .narrationThreeLines {
+    bottom: 17vh;
   }
 
   .deepFab {

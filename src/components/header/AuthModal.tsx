@@ -18,7 +18,8 @@ type SessionUser = {
 type AuthModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSignedIn: (user: SessionUser) => void;
+  onSignedIn: (payload: { user: SessionUser; accessToken: string }) => void;
+  migrationCheckKey: string;
 };
 
 const isInAppBrowserUserAgent = (userAgent: string) => {
@@ -60,6 +61,7 @@ export default function AuthModal({
   isOpen,
   onClose,
   onSignedIn,
+  migrationCheckKey,
 }: AuthModalProps) {
   useModalOpen(isOpen);
 
@@ -81,11 +83,14 @@ export default function AuthModal({
       if (!session) {
         return;
       }
-      if (event !== "SIGNED_IN" && event !== "TOKEN_REFRESHED") {
+      if (event !== "SIGNED_IN") {
         return;
       }
 
-      onSignedIn({ id: session.user.id, email: session.user.email ?? null });
+      onSignedIn({
+        user: { id: session.user.id, email: session.user.email ?? null },
+        accessToken: session.access_token,
+      });
       onClose();
     });
 
@@ -106,6 +111,9 @@ export default function AuthModal({
     setIsSubmitting(true);
     setMessage("");
     setError("");
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(migrationCheckKey, "1");
+    }
     const redirectTo = getOAuthRedirectTo();
     if (isNativePlatform) {
       // 네이티브 앱에서는 OAuth URL만 받아 시스템 브라우저로 연다.
@@ -128,6 +136,9 @@ export default function AuthModal({
       setIsSubmitting(false);
 
       if (error || !data?.url) {
+        if (typeof window !== "undefined") {
+          window.sessionStorage.removeItem(migrationCheckKey);
+        }
         setError("소셜 로그인을 시작하지 못했습니다.");
       }
       return;
@@ -149,6 +160,9 @@ export default function AuthModal({
     setIsSubmitting(false);
 
     if (error) {
+      if (typeof window !== "undefined") {
+        window.sessionStorage.removeItem(migrationCheckKey);
+      }
       setError("소셜 로그인을 시작하지 못했습니다.");
     }
   };

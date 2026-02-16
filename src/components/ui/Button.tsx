@@ -43,9 +43,6 @@ export default function Button({
   const content = loading
     ? loadingText ?? (hideContent ? null : children)
     : children;
-  const contentClass =
-    variant === "unstyled" ? styles.unstyledContent : styles.content;
-
   return (
     <button
       type={rest.type ?? "button"}
@@ -56,9 +53,11 @@ export default function Button({
     >
       {loading && <span className={styles.spinner} aria-hidden />}
       {!loading && icon && iconPosition === "left" ? icon : null}
-      {content !== null && content !== undefined ? (
-        <span className={contentClass}>{content}</span>
-      ) : null}
+      {content !== null && content !== undefined
+        ? variant === "unstyled"
+          ? content
+          : <span className={styles.content}>{content}</span>
+        : null}
       {!loading && icon && iconPosition === "right" ? icon : null}
     </button>
   );

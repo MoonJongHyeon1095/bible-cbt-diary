@@ -45,7 +45,7 @@ const AxisLayer = ({ axisLabels, axisY, viewport }: AxisLayerProps) => {
   if (axisY === null || axisLabels.length === 0) {
     return null;
   }
-  const axisPadding = 36;
+  const axisPadding = 52;
   const { x, y, zoom } = viewport;
   const screenPoints = axisLabels
     .map((item) => ({
@@ -72,15 +72,23 @@ const AxisLayer = ({ axisLabels, axisY, viewport }: AxisLayerProps) => {
           width: lineWidth + axisPadding * 2,
         }}
       />
-      {screenPoints.map((item) => (
-        <div
-          key={item.id}
-          className={styles.axisTick}
-          style={{ left: item.x }}
-        >
-          <span className={styles.axisLabel}>{item.label}</span>
-        </div>
-      ))}
+      {screenPoints.map((item) => {
+        const [primary, secondary] = item.label.split("\n");
+        return (
+          <div
+            key={item.id}
+            className={styles.axisTick}
+            style={{ left: item.x }}
+          >
+            <span className={styles.axisLabel}>
+              <span className={styles.axisLabelPrimary}>{primary}</span>
+              {secondary ? (
+                <span className={styles.axisLabelSecondary}>{secondary}</span>
+              ) : null}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 };

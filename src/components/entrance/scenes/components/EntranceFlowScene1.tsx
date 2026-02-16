@@ -12,6 +12,7 @@ type EntranceFlowSceneProps = {
   scene: EntranceScene;
   nodes: Node<FlowDetailNodeData>[];
   edges: Edge[];
+  isGoDeeperVisible: boolean;
   onGoDeeper: () => void;
 };
 
@@ -19,8 +20,18 @@ export default function EntranceFlowScene1({
   scene,
   nodes,
   edges,
+  isGoDeeperVisible,
   onGoDeeper,
 }: EntranceFlowSceneProps) {
+  const narrationLineCount = scene.narration.split("\n").length;
+  const narrationLineClassName =
+    narrationLineCount >= 3
+      ? styles.narrationThreeLines
+      : narrationLineCount === 2
+        ? styles.narrationTwoLines
+        : "";
+  const shouldHideNarration = scene.showGoDeeper && isGoDeeperVisible;
+
   return (
     <div className={styles.sceneWrap}>
       <div className={styles.canvasArea}>
@@ -32,7 +43,7 @@ export default function EntranceFlowScene1({
           cameraSignal={scene.id}
         />
 
-        {scene.showGoDeeper ? (
+        {scene.showGoDeeper && isGoDeeperVisible ? (
           <>
             <div className={styles.deepHint}>Go Deeper를 눌러주세요.</div>
             <FloatingActionButton
@@ -51,11 +62,13 @@ export default function EntranceFlowScene1({
         ) : null}
       </div>
 
-      <div className={styles.narration}>
-        <div className={styles.narrationCard}>
-          <p className={styles.narrationText}>{scene.narration}</p>
+      {!shouldHideNarration ? (
+        <div className={`${styles.narration} ${narrationLineClassName}`.trim()}>
+          <div className={styles.narrationCard}>
+            <p className={styles.narrationText}>{scene.narration}</p>
+          </div>
         </div>
-      </div>
+      ) : null}
     </div>
   );
 }

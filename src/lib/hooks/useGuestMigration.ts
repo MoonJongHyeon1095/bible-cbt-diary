@@ -1,9 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
-import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { queryKeys } from "@/lib/queryKeys";
 import { mergeDeviceData } from "@/lib/api/device-merge/postDeviceMerge";
@@ -16,7 +15,6 @@ type GuestMigrationState = {
 };
 
 export const useGuestMigration = () => {
-  const supabase = useMemo(() => getSupabaseBrowserClient(), []);
   const router = useRouter();
   const queryClient = useQueryClient();
   const { pushToast } = useCbtToast();
@@ -30,21 +28,39 @@ export const useGuestMigration = () => {
   const mergedRef = useRef(false);
   const declinedRef = useRef(false);
   const checkSeqRef = useRef(0);
+  const lastCheckedAccessTokenRef = useRef<string | null>(null);
 
-  const runCheck = useCallback(async () => {
+  const checkMigrationCandidate = useCallback(async (accessToken: string) => {
+    const prevAccessToken = accessTokenRef.current;
+    if (prevAccessToken && prevAccessToken !== accessToken) {
+      mergingRef.current = false;
+      mergedRef.current = false;
+      declinedRef.current = false;
+      setState((prev) => ({
+        ...prev,
+        isPromptOpen: false,
+        isUploading: false,
+        error: null,
+      }));
+    }
+    accessTokenRef.current = accessToken;
+    if (lastCheckedAccessTokenRef.current === accessToken) {
+      return;
+    }
     if (mergingRef.current || mergedRef.current || declinedRef.current) {
       return;
     }
-    const accessToken = accessTokenRef.current;
-    if (!accessToken) return;
-
     const seq = ++checkSeqRef.current;
     const result = await checkDeviceData(accessToken);
     if (seq !== checkSeqRef.current) return;
     if (mergingRef.current || mergedRef.current || declinedRef.current) {
       return;
     }
-    if (!result.response.ok || !result.data?.hasData) {
+    if (!result.response.ok) {
+      return;
+    }
+    lastCheckedAccessTokenRef.current = accessToken;
+    if (!result.data?.hasData) {
       return;
     }
 
@@ -62,7 +78,12 @@ export const useGuestMigration = () => {
     const result = await mergeDeviceData(accessToken);
     if (result.response.ok) {
       mergedRef.current = true;
-      setState((prev) => ({ ...prev, isUploading: false, error: null }));
+      setState((prev) => ({
+        ...prev,
+        isPromptOpen: false,
+        isUploading: false,
+        error: null,
+      }));
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all }),
         queryClient.invalidateQueries({ queryKey: ["emotion-auto-thought-details"] }),
@@ -82,44 +103,14 @@ export const useGuestMigration = () => {
 
     mergingRef.current = false;
     mergedRef.current = false;
-    setState((prev) => ({ ...prev, isUploading: false, error: null }));
+    setState((prev) => ({
+      ...prev,
+      isPromptOpen: true,
+      isUploading: false,
+      error: "이전에 실패했습니다. 잠시 후 다시 시도해주세요.",
+    }));
     pushToast("이전에 실패했습니다. 잠시 후 다시 시도해주세요.", "error");
   }, [pushToast, queryClient, router]);
-
-  useEffect(() => {
-    const resolveSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      accessTokenRef.current = data.session?.access_token ?? null;
-      if (accessTokenRef.current) {
-        runCheck();
-      }
-    };
-
-    resolveSession();
-    const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (!session?.access_token) {
-          accessTokenRef.current = null;
-          mergedRef.current = false;
-          mergingRef.current = false;
-          declinedRef.current = false;
-          setState((prev) => ({
-            ...prev,
-            isPromptOpen: false,
-            isUploading: false,
-          }));
-          return;
-        }
-
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
-          accessTokenRef.current = session.access_token;
-          runCheck();
-        }
-      },
-    );
-
-    return () => authListener.subscription.unsubscribe();
-  }, [runCheck, supabase]);
 
   const declineMigration = useCallback(() => {
     declinedRef.current = true;
@@ -127,7 +118,6 @@ export const useGuestMigration = () => {
   }, []);
 
   const confirmMigration = useCallback(async () => {
-    setState((prev) => ({ ...prev, isPromptOpen: false }));
     await runMerge();
   }, [runMerge]);
 
@@ -135,6 +125,7 @@ export const useGuestMigration = () => {
     isPromptOpen: state.isPromptOpen,
     isUploading: state.isUploading,
     error: state.error,
+    checkMigrationCandidate,
     confirmMigration,
     declineMigration,
   };

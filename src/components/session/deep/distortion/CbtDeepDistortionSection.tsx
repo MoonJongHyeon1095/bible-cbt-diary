@@ -46,9 +46,9 @@ export function CbtDeepDistortionSection({
       pushToast("힌트를 1자 이상 입력해주세요.", "error");
       return;
     }
-    await regenerateCard(cardId, hint);
     setOpenHintCardId(null);
     setHintDraft("");
+    await regenerateCard(cardId, hint);
   };
 
   const handleSelect = (card: DistortionCard) => {
@@ -95,6 +95,11 @@ export function CbtDeepDistortionSection({
                   hintOpen={hintOpen}
                   hintText={hintOpen ? hintDraft : ""}
                   onOpenHint={() => {
+                    if (hintOpen) {
+                      setOpenHintCardId(null);
+                      setHintDraft("");
+                      return;
+                    }
                     setOpenHintCardId(card.cardId);
                     setHintDraft("");
                   }}

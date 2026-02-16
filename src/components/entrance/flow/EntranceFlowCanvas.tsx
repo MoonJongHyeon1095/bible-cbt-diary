@@ -21,6 +21,7 @@ const centerOnNode = (
   instance: ReactFlowInstance,
   nodes: Node<FlowDetailNodeData>[],
   nodeId: string,
+  duration: number,
 ) => {
   const node = nodes.find((item) => item.id === nodeId);
   if (!node) return;
@@ -36,7 +37,7 @@ const centerOnNode = (
   const height = Number.isFinite(rawHeight) ? rawHeight : 0;
   instance.setCenter(node.position.x + width / 2, node.position.y + height / 2, {
     zoom: 1.04,
-    duration: 760,
+    duration,
   });
 };
 
@@ -48,13 +49,14 @@ export default function EntranceFlowCanvas({
   cameraSignal,
 }: EntranceFlowCanvasProps) {
   const instanceRef = useRef<ReactFlowInstance | null>(null);
+  const isInitialScene = cameraSignal === "1-1";
   const applyCamera = useCallback(
     (instance: ReactFlowInstance) => {
       if (cameraMode === "overview") {
         requestAnimationFrame(() => {
           requestAnimationFrame(() => {
             instance.fitView({
-              duration: 920,
+              duration: isInitialScene ? 0 : 920,
               padding: 0.42,
               maxZoom: 0.74,
               nodes: nodes.map((node) => ({ id: node.id })),
@@ -66,11 +68,11 @@ export default function EntranceFlowCanvas({
 
       if (cameraMode === "center" && cameraNodeId) {
         requestAnimationFrame(() => {
-          centerOnNode(instance, nodes, cameraNodeId);
+          centerOnNode(instance, nodes, cameraNodeId, isInitialScene ? 0 : 760);
         });
       }
     },
-    [cameraMode, cameraNodeId, nodes],
+    [cameraMode, cameraNodeId, isInitialScene, nodes],
   );
 
   useEffect(() => {

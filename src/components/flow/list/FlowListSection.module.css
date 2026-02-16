@@ -76,10 +76,6 @@
   overflow: visible;
 }
 
-.nodeNoTransition {
-  transition: none;
-}
-
 .nodeSelected {
   transform: translate(var(--tx), var(--ty)) scale(1.05);
   box-shadow:
@@ -242,8 +238,10 @@
   padding: 0 4px;
 }
 
-.node:hover {
-  transform: translate(var(--tx), var(--ty)) scale(1.02);
+@media (hover: hover) and (pointer: fine) {
+  .node:hover {
+    transform: translate(var(--tx), var(--ty)) scale(1.02);
+  }
 }
 
 .nodeCount {
@@ -297,4 +295,19 @@
   color: rgba(240, 243, 248, 0.88);
   white-space: pre-wrap;
   word-break: keep-all;
+}
+
+@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+  .canvasLayer {
+    transition: none;
+  }
+
+  .nodeSelected::after {
+    animation: none;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35);
+  }
+
+  .nodeSelected::before {
+    content: none;
+  }
 }

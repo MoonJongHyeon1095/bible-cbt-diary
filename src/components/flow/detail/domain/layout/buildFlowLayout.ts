@@ -7,9 +7,10 @@ import type { Edge, Node } from "reactflow";
 import type { FlowDetailNodeData } from "../../nodes/FlowDetailNode";
 import { buildFlowEdges } from "./buildFlowEdges";
 import { buildFlowNodes } from "./buildFlowNodes";
+import { formatFlowAxisDateLabel } from "./formatFlowDateLabel";
 
 const SPREAD_STEP = 140;
-const DATE_JITTER_STEP = 160;
+const DATE_JITTER_STEP = 210;
 const INDIGO: [number, number, number] = [79, 70, 229];
 
 type PositionedElkNode = ElkNode & { x: number; y: number };
@@ -35,15 +36,6 @@ const buildOutDegreeMap = (middles: EmotionNoteMiddle[]) => {
     map.set(middle.from_note_id, count + 1);
   });
   return map;
-};
-
-const formatFlowDate = (value: string) => {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const yy = String(date.getFullYear()).slice(-2);
-  const mm = String(date.getMonth() + 1).padStart(2, "0");
-  const dd = String(date.getDate()).padStart(2, "0");
-  return `${yy}.${mm}.${dd}`;
 };
 
 const createTimeIndex = (notes: EmotionNote[]) => {
@@ -240,7 +232,7 @@ export const buildFlowLayout = ({
     .map((node) => {
       const note = notesById.get(node.id);
       if (!note) return null;
-      const dateText = formatFlowDate(note.created_at);
+      const dateText = formatFlowAxisDateLabel(note.created_at);
       if (!dateText) return null;
       const width = Number(node.style?.width ?? 0) || 0;
       return {

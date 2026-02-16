@@ -3,6 +3,7 @@
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useModalOpen } from "@/components/common/useModalOpen";
 import { deleteEmotionNoteFlowNote } from "@/lib/api/flow/deleteEmotionNoteFlowNote";
+import { patchEmotionNoteFlowMeta } from "@/lib/api/flow/patchEmotionNoteFlowMeta";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
@@ -48,6 +49,10 @@ export default function FlowDetailSection({
   const [autoCenterNodeId, setAutoCenterNodeId] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isMetaEditing, setIsMetaEditing] = useState(false);
+  const [metaTitleDraft, setMetaTitleDraft] = useState("");
+  const [metaDescriptionDraft, setMetaDescriptionDraft] = useState("");
+  const [isMetaSaving, setIsMetaSaving] = useState(false);
 
   const { flow, notes, middles, montages, isLoading } = useFlowDetailData({
     access,
@@ -112,6 +117,13 @@ export default function FlowDetailSection({
   useEffect(() => {
     setActiveMontage(null);
   }, [flowId]);
+
+  useEffect(() => {
+    if (!flow) return;
+    if (isMetaEditing) return;
+    setMetaTitleDraft(flow.title ?? "");
+    setMetaDescriptionDraft(flow.description ?? "");
+  }, [flow, isMetaEditing]);
 
   useEffect(() => {
     if (!autoCenterNodeId) return;
@@ -181,6 +193,53 @@ export default function FlowDetailSection({
     setIsDeleting(false);
   };
 
+  const handleStartMetaEdit = () => {
+    setMetaTitleDraft(flow?.title ?? "");
+    setMetaDescriptionDraft(flow?.description ?? "");
+    setIsMetaEditing(true);
+  };
+
+  const handleCancelMetaEdit = () => {
+    setMetaTitleDraft(flow?.title ?? "");
+    setMetaDescriptionDraft(flow?.description ?? "");
+    setIsMetaEditing(false);
+  };
+
+  const handleSaveMeta = async () => {
+    if (!flowId) return;
+    if (access.mode === "blocked") {
+      pushToast("플로우를 수정할 수 없습니다.", "error");
+      return;
+    }
+
+    const nextTitle = metaTitleDraft.trim();
+    const nextDescription = metaDescriptionDraft.trim();
+
+    if (!nextTitle) {
+      pushToast("플로우 제목을 입력해주세요.", "error");
+      return;
+    }
+
+    setIsMetaSaving(true);
+    const { response, data } = await patchEmotionNoteFlowMeta(access, {
+      flow_id: flowId,
+      title: nextTitle,
+      description: nextDescription.length > 0 ? nextDescription : null,
+    });
+
+    if (!response.ok || !data.ok) {
+      setIsMetaSaving(false);
+      pushToast(data.message ?? "플로우 정보를 저장하지 못했습니다.", "error");
+      return;
+    }
+
+    await invalidateFlowDetailQuery(queryClient, access, flowId);
+    await invalidateFlowListQueries(queryClient, access);
+    setIsMetaEditing(false);
+    setIsMetaSaving(false);
+    pushToast("플로우 정보를 저장했습니다.", "success");
+  };
+
   return (
     <FlowDetailSectionView
       access={access}
@@ -202,8 +261,17 @@ export default function FlowDetailSection({
       isImportOpen={isImportOpen}
       confirmDelete={confirmDelete}
       isDeleting={isDeleting}
+      isMetaEditing={isMetaEditing}
+      isMetaSaving={isMetaSaving}
+      metaTitleDraft={metaTitleDraft}
+      metaDescriptionDraft={metaDescriptionDraft}
       layoutKey={layoutKey}
       onBackToList={() => router.push(flowRoutes.root())}
+      onStartMetaEdit={handleStartMetaEdit}
+      onCancelMetaEdit={handleCancelMetaEdit}
+      onSaveMeta={handleSaveMeta}
+      onChangeMetaTitle={setMetaTitleDraft}
+      onChangeMetaDescription={setMetaDescriptionDraft}
       onOpenDeleteConfirm={() => setConfirmDelete(true)}
       onCloseDeleteConfirm={() => setConfirmDelete(false)}
       onDeleteNote={handleDeleteNote}

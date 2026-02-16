@@ -34,10 +34,11 @@ type PointerDownState = {
 };
 
 const INTRO_SUBTEXT = `
-If we were drawn as a flow graph—
-the self within the self within the self,
-the one on this side…
-and the self beyond me… (ugh)`;
+나 자신을 Flow 그래프로 표현한다면...
+나 안의 나 안의 나...
+그 나에게서 저 쪽에 있는 나...
+저 나에게서 이쪽에 있는 나... 
+(으악!)`;
 const SCENE_ADVANCE_LOCK_MS = 300;
 const SCENE_1_1_MIN_STAY_MS = 900;
 
@@ -53,6 +54,7 @@ const formatEntranceDate = (value: string) => {
 export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
   const [sequenceStep, setSequenceStep] = useState(0);
   const [sceneIndex, setSceneIndex] = useState(0);
+  const [isGoDeeperVisible, setIsGoDeeperVisible] = useState(false);
   const pointerDownRef = useRef<PointerDownState | null>(null);
   const suppressNextClickRef = useRef(false);
   const transitionLockUntilRef = useRef(0);
@@ -76,6 +78,7 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
     ENTRANCE_SAMPLE_NOTES,
     ENTRANCE_SAMPLE_MIDDLES,
     themeColor,
+    { enabled: sequenceStep > 0 },
   );
 
   const { displayNodes: baseNodes, displayEdges: baseEdges } =
@@ -136,7 +139,8 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
     });
   }, [baseEdges, scene.highlightNodeId, visibleSet]);
 
-  const canAdvanceByClick = sequenceStep === 0 || !scene.showGoDeeper;
+  const canAdvanceByClick =
+    sequenceStep === 0 || !scene.showGoDeeper || !isGoDeeperVisible;
   const scene2Lines = useMemo(
     () =>
       Scene2_1.narration
@@ -152,6 +156,7 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
     sceneTokenRef.current += 1;
     pointerDownRef.current = null;
     suppressNextClickRef.current = false;
+    setIsGoDeeperVisible(false);
   }, [sceneIndex, sequenceStep]);
 
   const handlePointerDownCapture = (event: PointerEvent<HTMLDivElement>) => {
@@ -179,7 +184,8 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
       suppressNextClickRef.current = false;
       return;
     }
-    if (!pointerDown || pointerDown.sceneToken !== sceneTokenRef.current) return;
+    if (!pointerDown || pointerDown.sceneToken !== sceneTokenRef.current)
+      return;
     const now = Date.now();
     if (now < transitionLockUntilRef.current) return;
     const target = event.target as HTMLElement | null;
@@ -196,6 +202,10 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
       return;
     }
     if (sceneIndex >= SCENE_1.length) return;
+    if (scene.showGoDeeper && !isGoDeeperVisible) {
+      setIsGoDeeperVisible(true);
+      return;
+    }
     if (!canAdvanceByClick) return;
     if (
       sceneIndex === 0 &&
@@ -221,6 +231,7 @@ export default function EntranceOverlay({ onComplete }: EntranceOverlayProps) {
           scene={scene}
           nodes={displayNodes}
           edges={displayEdges}
+          isGoDeeperVisible={isGoDeeperVisible}
           onGoDeeper={() => setSceneIndex(SCENE_1.length)}
         />
       ) : null}

@@ -132,7 +132,9 @@
   position: absolute;
   inset: 4px;
   border-radius: 50%;
+  border: 1px solid currentColor;
   border: 1px solid color-mix(in srgb, currentColor 30%, transparent);
+  opacity: 0.35;
   pointer-events: none;
 }
 
@@ -145,10 +147,13 @@
   position: absolute;
   inset: -4px;
   border-radius: 50%;
+  border: 2px solid currentColor;
   border: 2px solid color-mix(in srgb, currentColor 86%, transparent);
   border-right-color: transparent;
   border-bottom-color: transparent;
+  box-shadow: 0 0 10px currentColor;
   box-shadow: 0 0 10px color-mix(in srgb, currentColor 42%, transparent);
+  opacity: 0.85;
   animation: homeChipOrbit 0.68s linear infinite;
   pointer-events: none;
 }
@@ -169,6 +174,10 @@
 @keyframes homeChipSparkle {
   0% {
     box-shadow:
+      0 0 0 1px currentColor,
+      0 0 9px currentColor,
+      inset 0 0 8px currentColor;
+    box-shadow:
       0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
       0 0 9px color-mix(in srgb, currentColor 26%, transparent),
       inset 0 0 8px color-mix(in srgb, currentColor 16%, transparent);
@@ -176,12 +185,20 @@
 
   50% {
     box-shadow:
+      0 0 0 1px currentColor,
+      0 0 18px currentColor,
+      inset 0 0 14px currentColor;
+    box-shadow:
       0 0 0 1px color-mix(in srgb, currentColor 72%, transparent),
       0 0 18px color-mix(in srgb, currentColor 52%, transparent),
       inset 0 0 14px color-mix(in srgb, currentColor 24%, transparent);
   }
 
   100% {
+    box-shadow:
+      0 0 0 1px currentColor,
+      0 0 9px currentColor,
+      inset 0 0 8px currentColor;
     box-shadow:
       0 0 0 1px color-mix(in srgb, currentColor 34%, transparent),
       0 0 9px color-mix(in srgb, currentColor 26%, transparent),

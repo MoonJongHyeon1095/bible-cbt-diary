@@ -6,6 +6,7 @@ import {
   handleDeleteEmotionFlow,
   handleDeleteEmotionFlowNote,
 } from "../src/lib/vercel/flow/deleteEmotionNoteFlow.js";
+import { handlePatchEmotionNoteFlowMeta } from "../src/lib/vercel/flow/patchEmotionNoteFlowMeta.js";
 import {
   getQueryParam,
   handleCors,
@@ -40,6 +41,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (action === "note") {
       return handleDeleteEmotionFlowNote(req, res);
+    }
+    return json(res, 400, { ok: false, message: "지원하지 않는 action입니다." });
+  }
+
+  if (req.method === "PATCH") {
+    const action = getQueryParam(req, "action");
+    if (action === "meta") {
+      return handlePatchEmotionNoteFlowMeta(req, res);
     }
     return json(res, 400, { ok: false, message: "지원하지 않는 action입니다." });
   }

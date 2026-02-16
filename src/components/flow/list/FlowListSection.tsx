@@ -115,7 +115,6 @@ export default function FlowListSection({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [isSimulating, setIsSimulating] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -171,12 +170,9 @@ export default function FlowListSection({
 
   useEffect(() => {
     if (nodes.length === 0 || size.width === 0 || size.height === 0) {
-      setIsSimulating(false);
       return;
     }
 
-    let isActive = true;
-    setIsSimulating(true);
     const simNodes = nodesRef.current.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
       .force("charge", forceManyBody().strength(-8))
@@ -188,29 +184,15 @@ export default function FlowListSection({
       .alpha(0.9)
       .alphaMin(0.06)
       .alphaDecay(0.12);
-
-    let rafId: number | null = null;
-    const tick = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(() => {
-        setNodes(simNodes.map((node) => ({ ...node })));
-        rafId = null;
-      });
-    };
-
-    simulation.on("tick", tick);
-    simulation.on("end", () => {
-      if (isActive) {
-        setIsSimulating(false);
-      }
-    });
+    simulation.stop();
+    // iOS Safari에서 frame마다 전체 노드 리렌더링이 느려질 수 있어 고정 tick 계산으로 마무리합니다.
+    for (let index = 0; index < 120; index += 1) {
+      simulation.tick();
+    }
+    setNodes(simNodes.map((node) => ({ ...node })));
 
     return () => {
-      isActive = false;
       simulation.stop();
-      if (rafId !== null) {
-        window.cancelAnimationFrame(rafId);
-      }
     };
   }, [nodes.length, size.height, size.width]);
 
@@ -280,7 +262,6 @@ export default function FlowListSection({
       selectedFlowId={selectedFlowId}
       selectedFlow={selectedFlow}
       selectedNode={selectedNode}
-      isSimulating={isSimulating}
       totalCount={totalCount}
       confirmDelete={confirmDelete}
       isDeleting={isDeleting}

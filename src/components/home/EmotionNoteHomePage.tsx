@@ -247,7 +247,7 @@ export default function EmotionNoteHomePage() {
     <div className={sessionStyles.page}>
       <div className={sessionStyles.bgWaves} />
       <div className={`${sessionStyles.content} ${homeStyles.content}`}>
-        <AppHeader />
+        <AppHeader preserveDisclaimerGap />
         <main className={homeStyles.main}>
           <div className={homeStyles.shell}>
             <section className={homeStyles.card}>

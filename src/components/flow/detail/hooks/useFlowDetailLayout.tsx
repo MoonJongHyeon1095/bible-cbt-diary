@@ -50,7 +50,7 @@ const buildElkSpec = (
     layoutOptions: {
       "elk.algorithm": "mrtree",
       "elk.direction": "RIGHT",
-      "elk.spacing.nodeNode": "320",
+      "elk.spacing.nodeNode": "420",
       "elk.spacing.edgeNode": "220",
       "elk.edgeRouting": "SPLINES",
     },
@@ -63,6 +63,9 @@ export const useFlowDetailLayout = (
   notes: EmotionNote[],
   middles: EmotionNoteMiddle[],
   themeColor?: [number, number, number],
+  options?: {
+    enabled?: boolean;
+  },
 ) => {
   const [elkNodes, setElkNodes] = useState<Node<FlowDetailNodeData>[]>([]);
   const [elkEdges, setElkEdges] = useState<Edge[]>([]);
@@ -73,6 +76,17 @@ export const useFlowDetailLayout = (
 
   useEffect(() => {
     let cancelled = false;
+    const enabled = options?.enabled ?? true;
+
+    if (!enabled) {
+      setElkNodes([]);
+      setElkEdges([]);
+      setAxisLabels([]);
+      setAxisY(null);
+      return () => {
+        cancelled = true;
+      };
+    }
 
     const layout = async () => {
       if (notes.length === 0) {
@@ -107,7 +121,7 @@ export const useFlowDetailLayout = (
     return () => {
       cancelled = true;
     };
-  }, [middles, notes, themeColor]);
+  }, [middles, notes, options?.enabled, themeColor]);
 
   return { elkNodes, elkEdges, axisLabels, axisY };
 };

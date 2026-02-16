@@ -142,6 +142,9 @@ export default function FlowListSection({
     originX: 0,
     originY: 0,
   });
+  const panRafRef = useRef<number | null>(null);
+  const pendingPanRef = useRef({ x: 0, y: 0 });
+  const panRef = useRef({ x: 0, y: 0 });
 
   const [nodes, setNodes] = useState<GroupNode[]>([]);
   const [selectedFlowId, setSelectedFlowId] = useState<number | null>(null);
@@ -158,13 +161,42 @@ export default function FlowListSection({
   useModalOpen(confirmDelete);
 
   useEffect(() => {
+    panRef.current = pan;
+  }, [pan]);
+
+  useEffect(
+    () => () => {
+      if (panRafRef.current !== null) {
+        cancelAnimationFrame(panRafRef.current);
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
     if (!containerRef.current) return;
+    let rafId: number | null = null;
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setSize({ width, height });
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+      rafId = requestAnimationFrame(() => {
+        setSize((prev) =>
+          Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
+            ? prev
+            : { width, height },
+        );
+        rafId = null;
+      });
     });
     observer.observe(containerRef.current);
-    return () => observer.disconnect();
+    return () => {
+      observer.disconnect();
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+      }
+    };
   }, []);
 
   const flowsQuery = useFlowListQuery(access, noteId);
@@ -254,7 +286,11 @@ export default function FlowListSection({
       .alphaDecay(0.12);
     simulation.stop();
     // iOS Safari에서 frame마다 전체 노드 리렌더링이 느려질 수 있어 고정 tick 계산으로 마무리합니다.
-    for (let index = 0; index < 120; index += 1) {
+    const tickCount = Math.min(
+      120,
+      Math.max(42, Math.round(1600 / Math.max(simNodes.length, 6))),
+    );
+    for (let index = 0; index < tickCount; index += 1) {
       simulation.tick();
     }
     setNodes(simNodes.map((node) => ({ ...node })));
@@ -281,8 +317,8 @@ export default function FlowListSection({
     setIsPanning(true);
     panStateRef.current.startX = event.clientX;
     panStateRef.current.startY = event.clientY;
-    panStateRef.current.originX = pan.x;
-    panStateRef.current.originY = pan.y;
+    panStateRef.current.originX = panRef.current.x;
+    panStateRef.current.originY = panRef.current.y;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -290,9 +326,14 @@ export default function FlowListSection({
     if (!panStateRef.current.isPanning) return;
     const dx = event.clientX - panStateRef.current.startX;
     const dy = event.clientY - panStateRef.current.startY;
-    setPan({
+    pendingPanRef.current = {
       x: panStateRef.current.originX + dx,
       y: panStateRef.current.originY + dy,
+    };
+    if (panRafRef.current !== null) return;
+    panRafRef.current = requestAnimationFrame(() => {
+      panRafRef.current = null;
+      setPan(pendingPanRef.current);
     });
   };
 
@@ -300,6 +341,11 @@ export default function FlowListSection({
     if (!panStateRef.current.isPanning) return;
     panStateRef.current.isPanning = false;
     setIsPanning(false);
+    if (panRafRef.current !== null) {
+      cancelAnimationFrame(panRafRef.current);
+      panRafRef.current = null;
+    }
+    setPan(pendingPanRef.current);
     event.currentTarget.releasePointerCapture(event.pointerId);
   };
 

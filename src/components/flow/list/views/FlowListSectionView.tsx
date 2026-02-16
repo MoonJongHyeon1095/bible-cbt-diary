@@ -9,6 +9,7 @@ import type {
   WheelEvent as ReactWheelEvent,
 } from "react";
 import type { LegacyRef } from "react";
+import { useMemo } from "react";
 import styles from "../FlowListSection.module.css";
 
 type GroupNode = {
@@ -102,6 +103,45 @@ export default function FlowListSectionView({
         ? noteTitle
         : "선택한 노트의 플로우 목록"
     : "감정 노트 플로우";
+  const nodeElements = useMemo(
+    () =>
+      nodes.map((node) => {
+        const displayTitle = node.title.trim() || `플로우 ${node.id}`;
+        return (
+          <SafeButton
+            mode="native"
+            key={node.id}
+            type="button"
+            className={`${styles.node} ${
+              selectedFlowId === node.id ? styles.nodeSelected : ""
+            }`}
+            style={
+              {
+                width: node.radius * 2,
+                height: node.radius * 2,
+                backgroundColor: node.color,
+                "--tx": `${node.x - node.radius}px`,
+                "--ty": `${node.y - node.radius}px`,
+                "--node-r": node.rgb[0],
+                "--node-g": node.rgb[1],
+                "--node-b": node.rgb[2],
+              } as CSSProperties
+            }
+            onClick={() => onSelectFlow(node.id)}
+          >
+            <span className={styles.nodeGroup}>
+              <Waypoints size={12} className={styles.nodeGroupIcon} />
+              #{node.id}
+            </span>
+            <span className={styles.nodeTitle}>{displayTitle}</span>
+            <span className={styles.nodeCountLine}>
+              <span className={styles.nodeCount}>{node.noteCount}</span> 개의 기록
+            </span>
+          </SafeButton>
+        );
+      }),
+    [nodes, onSelectFlow, selectedFlowId],
+  );
 
   return (
     <section className={styles.section}>
@@ -143,41 +183,7 @@ export default function FlowListSectionView({
               } as CSSProperties
             }
           >
-            {nodes.map((node) => {
-              const displayTitle = node.title.trim() || `플로우 ${node.id}`;
-              return (
-                <SafeButton
-                  mode="native"
-                  key={node.id}
-                  type="button"
-                  className={`${styles.node} ${
-                    selectedFlowId === node.id ? styles.nodeSelected : ""
-                  }`}
-                  style={
-                    {
-                      width: node.radius * 2,
-                      height: node.radius * 2,
-                      backgroundColor: node.color,
-                      "--tx": `${node.x - node.radius}px`,
-                      "--ty": `${node.y - node.radius}px`,
-                      "--node-r": node.rgb[0],
-                      "--node-g": node.rgb[1],
-                      "--node-b": node.rgb[2],
-                    } as CSSProperties
-                  }
-                  onClick={() => onSelectFlow(node.id)}
-                >
-                  <span className={styles.nodeGroup}>
-                    <Waypoints size={12} className={styles.nodeGroupIcon} />
-                    #{node.id}
-                  </span>
-                  <span className={styles.nodeTitle}>{displayTitle}</span>
-                  <span className={styles.nodeCountLine}>
-                    <span className={styles.nodeCount}>{node.noteCount}</span> 개의 기록
-                  </span>
-                </SafeButton>
-              );
-            })}
+            {nodeElements}
             {selectedNode ? (
               <div
                 className={styles.nodeTooltip}

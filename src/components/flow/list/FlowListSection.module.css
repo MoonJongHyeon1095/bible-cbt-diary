@@ -98,7 +98,7 @@
   position: absolute;
   inset: 0;
   transform: translate(var(--pan-x), var(--pan-y));
-  transition: transform 0.04s linear;
+  will-change: transform;
 }
 
 .node {
@@ -386,9 +386,14 @@
   gap: 8px;
 }
 
-@media (max-width: 900px), (prefers-reduced-motion: reduce) {
+@media (max-width: 900px), (hover: none), (pointer: coarse), (prefers-reduced-motion: reduce) {
   .canvasLayer {
     transition: none;
+  }
+
+  .node {
+    text-shadow: none;
+    box-shadow: inset 0 0 0 2px rgba(var(--node-r), var(--node-g), var(--node-b), 0.3);
   }
 
   .nodeSelected::after {

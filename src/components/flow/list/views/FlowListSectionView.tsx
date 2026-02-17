@@ -26,7 +26,9 @@ type GroupNode = {
 
 type FlowListSectionViewProps = {
   containerRef: LegacyRef<HTMLDivElement>;
+  canvasLayerRef: LegacyRef<HTMLDivElement>;
   isPanning: boolean;
+  isLowPerfMode: boolean;
   isLoading: boolean;
   nodes: GroupNode[];
   pan: { x: number; y: number };
@@ -61,7 +63,9 @@ type FlowListSectionViewProps = {
 
 export default function FlowListSectionView({
   containerRef,
+  canvasLayerRef,
   isPanning,
+  isLowPerfMode,
   isLoading,
   nodes,
   pan,
@@ -162,7 +166,9 @@ export default function FlowListSectionView({
 
       <div
         ref={containerRef}
-        className={`${styles.canvas} ${isPanning ? styles.canvasPanning : ""}`}
+        className={`${styles.canvas} ${isPanning ? styles.canvasPanning : ""} ${
+          isLowPerfMode ? styles.canvasLowPerf : ""
+        }`}
         onPointerDown={onCanvasPointerDown}
         onPointerMove={onCanvasPointerMove}
         onPointerUp={onCanvasPointerUp}
@@ -175,6 +181,7 @@ export default function FlowListSectionView({
           <div className={styles.placeholder}>아직 플로우가 없습니다.</div>
         ) : (
           <div
+            ref={canvasLayerRef}
             className={styles.canvasLayer}
             style={
               {

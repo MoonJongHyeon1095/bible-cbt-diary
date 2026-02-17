@@ -126,6 +126,52 @@ const seedNodes = (
   });
 };
 
+const layoutNodesInRings = (
+  sourceNodes: GroupNode[],
+  size: { width: number; height: number },
+) => {
+  if (sourceNodes.length === 0) {
+    return [];
+  }
+
+  const centerX = (size.width || 320) / 2;
+  const centerY = (size.height || 520) / 2;
+  const sortedNodes = [...sourceNodes].sort((a, b) => b.noteCount - a.noteCount);
+  const minGap = 18;
+  const baseRadius = 56;
+  const ringStep = 84;
+  let ringIndex = 0;
+  let nodeIndex = 0;
+  const positioned: GroupNode[] = [];
+
+  while (nodeIndex < sortedNodes.length) {
+    const ringRadius = baseRadius + ringIndex * ringStep;
+    const circumference = Math.max(1, 2 * Math.PI * ringRadius);
+    const capacity = Math.max(
+      6,
+      Math.floor(
+        circumference / (Math.max(58, sortedNodes[nodeIndex]?.radius ?? 58) + minGap),
+      ),
+    );
+    const count = Math.min(capacity, sortedNodes.length - nodeIndex);
+
+    for (let slot = 0; slot < count; slot += 1) {
+      const angle = (Math.PI * 2 * slot) / count + ringIndex * 0.35;
+      const original = sortedNodes[nodeIndex + slot];
+      positioned.push({
+        ...original,
+        x: centerX + Math.cos(angle) * ringRadius,
+        y: centerY + Math.sin(angle) * ringRadius,
+      });
+    }
+
+    nodeIndex += count;
+    ringIndex += 1;
+  }
+
+  return positioned;
+};
+
 export default function FlowListSection({
   access,
   noteId = null,
@@ -134,6 +180,7 @@ export default function FlowListSection({
   const queryClient = useQueryClient();
   const { pushToast } = useCbtToast();
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const canvasLayerRef = useRef<HTMLDivElement | null>(null);
   const nodesRef = useRef<GroupNode[]>([]);
   const panStateRef = useRef({
     isPanning: false,
@@ -151,6 +198,7 @@ export default function FlowListSection({
   const [size, setSize] = useState({ width: 0, height: 0 });
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
+  const [isLowPerfMode, setIsLowPerfMode] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isMetaEditing, setIsMetaEditing] = useState(false);
@@ -174,6 +222,20 @@ export default function FlowListSection({
   );
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const userAgent = window.navigator.userAgent || "";
+    const hasTouchOnMac =
+      userAgent.includes("Macintosh") &&
+      typeof document !== "undefined" &&
+      "ontouchend" in document;
+    const isIOSDevice = /iPad|iPhone|iPod/i.test(userAgent) || hasTouchOnMac;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
+    setIsLowPerfMode(isIOSDevice || prefersReducedMotion);
+  }, []);
+
+  useEffect(() => {
     if (!containerRef.current) return;
     let rafId: number | null = null;
     const observer = new ResizeObserver(([entry]) => {
@@ -183,7 +245,7 @@ export default function FlowListSection({
       }
       rafId = requestAnimationFrame(() => {
         setSize((prev) =>
-          Math.abs(prev.width - width) < 1 && Math.abs(prev.height - height) < 1
+          Math.abs(prev.width - width) < 8 && Math.abs(prev.height - height) < 8
             ? prev
             : { width, height },
         );
@@ -200,7 +262,7 @@ export default function FlowListSection({
   }, []);
 
   const flowsQuery = useFlowListQuery(access, noteId);
-  const isLoading = flowsQuery.isPending || flowsQuery.isFetching;
+  const isLoading = flowsQuery.isPending;
   const flows = useMemo(() => flowsQuery.data ?? [], [flowsQuery.data]);
   const filterNoteQuery = useQuery({
     queryKey:
@@ -269,26 +331,35 @@ export default function FlowListSection({
   }, [nodes]);
 
   useEffect(() => {
-    if (nodes.length === 0 || size.width === 0 || size.height === 0) {
+    const width = size.width;
+    const height = size.height;
+    if (nodes.length === 0 || width === 0 || height === 0) {
+      return;
+    }
+
+    if (isLowPerfMode && nodes.length > 36) {
+      setNodes(layoutNodesInRings(nodesRef.current, { width, height }));
       return;
     }
 
     const simNodes = nodesRef.current.map((node) => ({ ...node }));
     const simulation = forceSimulation(simNodes)
-      .force("charge", forceManyBody().strength(-8))
-      .force("center", forceCenter(size.width / 2, size.height / 2))
+      .force("charge", forceManyBody().strength(isLowPerfMode ? -6 : -8))
+      .force("center", forceCenter(width / 2, height / 2))
       .force(
         "collide",
         forceCollide().radius((node) => (node as GroupNode).radius * 0.92),
       )
-      .alpha(0.9)
-      .alphaMin(0.06)
-      .alphaDecay(0.12);
+      .alpha(isLowPerfMode ? 0.7 : 0.9)
+      .alphaMin(isLowPerfMode ? 0.1 : 0.06)
+      .alphaDecay(isLowPerfMode ? 0.2 : 0.12);
     simulation.stop();
-    // iOS Safari에서 frame마다 전체 노드 리렌더링이 느려질 수 있어 고정 tick 계산으로 마무리합니다.
     const tickCount = Math.min(
-      120,
-      Math.max(42, Math.round(1600 / Math.max(simNodes.length, 6))),
+      isLowPerfMode ? 56 : 120,
+      Math.max(
+        isLowPerfMode ? 16 : 42,
+        Math.round((isLowPerfMode ? 700 : 1600) / Math.max(simNodes.length, 6)),
+      ),
     );
     for (let index = 0; index < tickCount; index += 1) {
       simulation.tick();
@@ -298,7 +369,7 @@ export default function FlowListSection({
     return () => {
       simulation.stop();
     };
-  }, [nodes.length, size.height, size.width]);
+  }, [isLowPerfMode, nodes.length, size.height, size.width]);
 
   const totalCount = useMemo(
     () => nodes.reduce((sum, node) => sum + node.noteCount, 0),
@@ -333,7 +404,12 @@ export default function FlowListSection({
     if (panRafRef.current !== null) return;
     panRafRef.current = requestAnimationFrame(() => {
       panRafRef.current = null;
-      setPan(pendingPanRef.current);
+      const next = pendingPanRef.current;
+      panRef.current = next;
+      if (canvasLayerRef.current) {
+        canvasLayerRef.current.style.setProperty("--pan-x", `${next.x}px`);
+        canvasLayerRef.current.style.setProperty("--pan-y", `${next.y}px`);
+      }
     });
   };
 
@@ -427,7 +503,9 @@ export default function FlowListSection({
   return (
     <FlowListSectionView
       containerRef={containerRef}
+      canvasLayerRef={canvasLayerRef}
       isPanning={isPanning}
+      isLowPerfMode={isLowPerfMode}
       isLoading={isLoading}
       nodes={nodes}
       pan={pan}

@@ -20,4 +20,5 @@ export const useFlowListQuery = (
     },
     enabled: access.mode !== "blocked",
     staleTime: 60_000,
+    refetchOnWindowFocus: false,
   });

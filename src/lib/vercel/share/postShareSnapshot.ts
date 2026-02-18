@@ -51,7 +51,6 @@ export const handlePostShareSnapshot = async (
   const selectedThoughtIds = normalizeIds(payload.selectedThoughtIds);
   const selectedErrorIds = normalizeIds(payload.selectedErrorIds);
   const selectedAlternativeIds = normalizeIds(payload.selectedAlternativeIds);
-  const selectedBehaviorIds = normalizeIds(payload.selectedBehaviorIds);
 
   const { data, error } = await supabase
     .from("emotion_notes")
@@ -65,16 +64,11 @@ export const handlePostShareSnapshot = async (
         inner_belief,
         error_label,
         error_description,
-        alternative,
-        emotion_behavior_details(id,behavior_label,behavior_description,created_at,emotion_behavior_checks(id,check_label,sort_order,created_at))
+        alternative
       `,
     )
     .eq("user_id", user.id)
     .eq("id", noteId)
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_behavior_details",
-    })
     .maybeSingle();
 
   if (error) {
@@ -120,9 +114,7 @@ export const handlePostShareSnapshot = async (
   const thoughtItems = thoughtItem ? [thoughtItem] : [];
   const errorItems = errorItem ? [errorItem] : [];
   const alternativeItems = alternativeItem ? [alternativeItem] : [];
-  const behaviorItems = (data.emotion_behavior_details ?? []).filter((item) =>
-    selectedBehaviorIds.includes(item.id),
-  );
+  const behaviorItems: unknown[] = [];
 
   const totalSelected =
     thoughtItems.length +

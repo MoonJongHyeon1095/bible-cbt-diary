@@ -122,7 +122,6 @@ export default function BehaviorTrackPage() {
       const response = await createBehaviorHistory(
         {
           behavior_detail_id: detailQuery.data.id,
-          note_id: detailQuery.data.note_id,
           tracked_on: selectedDateKey,
           comments,
           checks,

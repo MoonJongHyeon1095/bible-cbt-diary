@@ -4,9 +4,9 @@ import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SafeButton from "@/components/ui/SafeButton";
 import { LayoutDashboard, Route, Trash2 } from "lucide-react";
 import type { MouseEvent as ReactMouseEvent } from "react";
+import styles from "../FlowListSection.module.css";
 import type { FlowListNodeViewModel } from "../nodes/FlowListNode";
 import FlowListNode from "../nodes/FlowListNode";
-import styles from "../FlowListSection.module.css";
 
 type FlowSortMode = "latest" | "size";
 
@@ -54,9 +54,9 @@ export default function FlowListSectionView({
     ? isFilterNoteLoading
       ? "노트 제목을 불러오는 중..."
       : noteTitle.length > 0
-        ? noteTitle
-        : "선택한 노트의 플로우 목록"
-    : "감정 노트 플로우";
+      ? noteTitle
+      : "선택한 노트의 플로우 목록"
+    : "플로우 목록";
 
   const handleSectionClickCapture = (event: ReactMouseEvent<HTMLElement>) => {
     const target = event.target as HTMLElement;
@@ -72,14 +72,19 @@ export default function FlowListSectionView({
   };
 
   return (
-    <section className={styles.section} onClickCapture={handleSectionClickCapture}>
+    <section
+      className={styles.section}
+      onClickCapture={handleSectionClickCapture}
+    >
       <header className={styles.header}>
         <div className={styles.headerMain}>
           <div className={styles.headerLabelRow}>
             <span className={styles.headerIconWrap} aria-hidden>
               <LayoutDashboard size={16} />
             </span>
-            {hasNoteFilter ? <p className={styles.label}>감정 노트 플로우</p> : null}
+            {hasNoteFilter ? (
+              <p className={styles.label}>감정 노트 플로우</p>
+            ) : null}
           </div>
           <h2 className={styles.title}>{headerTitle}</h2>
           <p className={styles.filterLabel}>{summaryText}</p>
@@ -131,7 +136,7 @@ export default function FlowListSectionView({
             label="삭제"
             helperText="삭제"
             icon={<Trash2 size={20} />}
-            className={styles.fabPrimary}
+            className={styles.fabSecondary}
             onClick={onOpenDeleteConfirm}
             style={{
               backgroundColor: "#e14a4a",
@@ -143,7 +148,7 @@ export default function FlowListSectionView({
             label="Flow"
             helperText="flow로 이동"
             icon={<Route size={20} />}
-            className={styles.fabSecondary}
+            className={styles.fabPrimary}
             onClick={() => onOpenFlow(selectedFlow.id)}
             style={{
               backgroundColor: "#121417",
@@ -190,7 +195,6 @@ export default function FlowListSectionView({
           </div>
         </div>
       ) : null}
-
     </section>
   );
 }

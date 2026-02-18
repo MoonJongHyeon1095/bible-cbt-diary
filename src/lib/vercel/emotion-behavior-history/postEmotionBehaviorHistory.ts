@@ -11,7 +11,6 @@ export const handlePostEmotionBehaviorHistory = async (
 ) => {
   const payload = await readJson<{
     behavior_detail_id?: number;
-    note_id?: number | null;
     tracked_on?: string;
     comments?: string;
     checks?: Array<{ check_id: number; is_done: boolean }>;
@@ -43,20 +42,11 @@ export const handlePostEmotionBehaviorHistory = async (
         .filter((item) => Number.isFinite(item.check_id))
     : [];
 
-  const noteId =
-    payload.note_id === null || payload.note_id === undefined
-      ? null
-      : Number(payload.note_id);
-  if (noteId !== null && !Number.isFinite(noteId)) {
-    return json(res, 400, { ok: false, message: "note_id가 올바르지 않습니다." });
-  }
-
   const supabase = createSupabaseAdminClient();
   const { data: inserted, error } = await supabase
     .from("emotion_behavior_history")
     .insert({
       behavior_detail_id: behaviorDetailId,
-      note_id: noteId,
       tracked_on: trackedOn,
       comments,
       user_id: user ? user.id : null,

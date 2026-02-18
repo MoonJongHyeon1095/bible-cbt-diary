@@ -2,7 +2,6 @@
 
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
-import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { Waypoints } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
@@ -45,11 +44,6 @@ export default function EmotionNoteCard({
   const [isPressing, setIsPressing] = useState(false);
   const [pressProgress, setPressProgress] = useState(0);
   const [isTriggered, setIsTriggered] = useState(false);
-  const { checkUsage } = useAiUsageGuard({
-    enabled: false,
-    cache: true,
-    redirectTo: null,
-  });
   const { openAuthModal } = useAuthModal();
   const { pushToast } = useCbtToast();
   const { accessMode, accessToken } = useAccessContext();
@@ -156,14 +150,6 @@ export default function EmotionNoteCard({
         navigator.vibrate(20);
       }
       const go = async () => {
-        const allowed = await checkUsage();
-        if (!allowed) {
-          longPressTriggeredRef.current = false;
-          setIsTriggered(false);
-          setPressProgress(0);
-          setIsPressing(false);
-          return;
-        }
         const access = { mode: accessMode, accessToken };
         if (access.mode === "blocked") {
           pushToast("플로우를 준비할 수 없습니다.", "error");

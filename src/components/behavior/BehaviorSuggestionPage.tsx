@@ -123,7 +123,6 @@ export default function BehaviorSuggestionPage() {
     try {
       const response = await createBehaviorDetail(
         {
-          note_id: null,
           behavior_label: item.label,
           behavior_description: item.suggestion,
           checks: item.checks,

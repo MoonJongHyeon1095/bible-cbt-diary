@@ -1,4 +1,5 @@
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
+import { CbtSessionDisclaimerBanner } from "@/components/session/common/CbtSessionDisclaimerBanner";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDistortionCards } from "@/components/session/hooks/useCbtDistortionCards";
@@ -80,6 +81,9 @@ export function CbtMinimalDistortionSection({
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.disclaimerBannerWrap}>
+            <CbtSessionDisclaimerBanner />
+          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
 

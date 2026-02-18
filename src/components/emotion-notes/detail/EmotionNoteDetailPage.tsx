@@ -7,12 +7,11 @@ import AppHeader from "@/components/header/AppHeader";
 import { useAuthModal } from "@/components/header/AuthModalProvider";
 import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import { useCbtToast } from "@/components/session/common/CbtToast";
-import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { formatKoreanDateTime } from "@/lib/utils/time";
 import { useQueryClient } from "@tanstack/react-query";
-import { Lightbulb, NotebookPen, Route, Share2, Sparkles } from "lucide-react";
+import { Lightbulb, NotebookPen, Route, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { ReactNode } from "react";
 import { useState } from "react";
@@ -50,7 +49,6 @@ export default function EmotionNoteDetailPage({
   const { note, isLoading, detailAccessMode } = useEmotionNoteDetail(noteId);
   const { pushToast } = useCbtToast();
   const { openAuthModal } = useAuthModal();
-  const { checkUsage } = useAiUsageGuard({ enabled: false, cache: true, redirectTo: null });
   const { accessMode: accessStateMode, accessToken, isBlocked } = useAccessContext();
 
   const [modalContent, setModalContent] = useState<ModalContent>(null);
@@ -135,22 +133,6 @@ export default function EmotionNoteDetailPage({
               borderColor: "rgba(18, 20, 23, 0.35)",
             }}
           />
-          <FloatingActionButton
-            label="행동 제안"
-            icon={<Sparkles size={22} />}
-            helperText="행동 제안"
-            onClick={() => router.push(`/behavior/new?noteId=${note.id}`)}
-            className={[styles.fabBehavior, hideFloatingActions ? styles.fabHidden : ""]
-              .filter(Boolean)
-              .join(" ")}
-            style={{
-              left: "24px",
-              right: "auto",
-              backgroundColor: "#121417",
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.35)",
-            }}
-          />
           <div className={styles.flowFabTourTarget}>
             <FloatingActionButton
               label="Flow"
@@ -160,11 +142,6 @@ export default function EmotionNoteDetailPage({
               onClick={async () => {
                 setIsGoDeeperLoading(true);
                 await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-                const allowed = await checkUsage();
-                if (!allowed) {
-                  setIsGoDeeperLoading(false);
-                  return;
-                }
                 if (isBlocked) {
                   openAuthModal();
                   setIsGoDeeperLoading(false);

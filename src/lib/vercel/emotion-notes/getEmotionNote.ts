@@ -35,21 +35,7 @@ export const handleGetEmotionNote = async (
         error_label,
         error_description,
         alternative,
-        emotion_flow_note_middles(flow_id),
-        emotion_behavior_details(
-          id,
-          note_id,
-          behavior_label,
-          behavior_description,
-          created_at,
-          emotion_behavior_checks(
-            id,
-            behavior_detail_id,
-            check_label,
-            sort_order,
-            created_at
-          )
-        )
+        emotion_flow_note_middles(flow_id)
       `,
     );
 
@@ -59,10 +45,6 @@ export const handleGetEmotionNote = async (
 
   const { data, error } = await scopedQuery
     .eq("id", noteId)
-    .order("created_at", {
-      ascending: true,
-      foreignTable: "emotion_behavior_details",
-    })
     .maybeSingle();
 
   if (error) {
@@ -130,7 +112,7 @@ export const handleGetEmotionNote = async (
               },
             ]
           : [],
-        behavior_details: data.emotion_behavior_details ?? [],
+        behavior_details: [],
       }
     : null;
 

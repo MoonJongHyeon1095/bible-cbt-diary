@@ -98,8 +98,7 @@ export default function BehaviorDateHistoryPage() {
                   return (
                     <article key={history.id} className={styles.dateHistoryCard}>
                       <p className={styles.dateHistoryTitle}>
-                        {history.behavior_detail?.behavior_label ??
-                          `행동 #${history.behavior_detail_id}`}
+                        {`행동 #${history.behavior_detail_id}`}
                       </p>
                       <p className={styles.dateHistoryInfo}>
                         {formatKoreanDateTime(history.created_at, {

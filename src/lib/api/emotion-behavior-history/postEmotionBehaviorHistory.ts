@@ -7,7 +7,6 @@ import { buildApiUrl } from "@/lib/utils/apiBase";
 export const createBehaviorHistory = async (
   payload: {
     behavior_detail_id: number;
-    note_id?: number | null;
     tracked_on: string;
     comments?: string;
     checks: Array<{ check_id: number; is_done: boolean }>;

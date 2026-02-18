@@ -1,10 +1,5 @@
-import BehaviorTrackPage from "@/components/behavior/BehaviorTrackPage";
-import { Suspense } from "react";
+import { redirect } from "next/navigation";
 
 export default function BehaviorTrackRoutePage() {
-  return (
-    <Suspense fallback={<div />}>
-      <BehaviorTrackPage />
-    </Suspense>
-  );
+  redirect("/behavior");
 }

@@ -1421,7 +1421,7 @@
 
   .detailStackWrap {
     right: 84px;
-    bottom: calc(2px + var(--app-bottom-tab-offset, 0px));
+    bottom: calc(-28px + var(--app-bottom-tab-offset, 0px));
     width: min(240px, calc(100vw - 16px - 84px));
   }
 }
@@ -1466,22 +1466,22 @@
 
 .fabPrimary {
   --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(68px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(18px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabImportTop {
   --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(176px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(126px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabSecondary {
   --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(176px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(126px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabTertiary {
   --fab-bottom: calc(312px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(284px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(234px + var(--app-bottom-tab-offset, 0px));
 }
 
 @media (max-width: 720px) {

@@ -3,13 +3,6 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getQueryParam, json } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 
-const parseNoteId = (req: VercelRequest) => {
-  const noteIdParam = getQueryParam(req, "note_id");
-  if (noteIdParam == null || noteIdParam === "") return null;
-  const noteId = Number(noteIdParam ?? "");
-  return Number.isNaN(noteId) ? null : noteId;
-};
-
 const parseDetailId = (req: VercelRequest) => {
   const detailIdParam = getQueryParam(req, "detail_id");
   if (detailIdParam == null || detailIdParam === "") return null;
@@ -40,7 +33,6 @@ export const handleGetEmotionBehaviorDetails = async (
     return json(res, 401, { details: [] });
   }
 
-  const noteId = parseNoteId(req);
   const detailId = parseDetailId(req);
   const limit = parseLimit(req);
   const offset = parseOffset(req);
@@ -53,7 +45,7 @@ export const handleGetEmotionBehaviorDetails = async (
 
   const supabase = createSupabaseAdminClient();
 
-  const isListMode = noteId == null && detailId == null;
+  const isListMode = detailId == null;
 
   let count: number | null = null;
   let countError: unknown = null;
@@ -85,19 +77,16 @@ export const handleGetEmotionBehaviorDetails = async (
     ? supabase
         .from("emotion_behavior_details")
         .select(
-          "id,note_id,behavior_label,behavior_description,latest_tracked_on,created_at,emotion_behavior_checks(id,behavior_detail_id,check_label,sort_order,created_at)",
+          "id,behavior_label,behavior_description,latest_tracked_on,created_at,emotion_behavior_checks(id,behavior_detail_id,check_label,sort_order,created_at)",
         )
         .eq("user_id", user.id)
     : supabase
         .from("emotion_behavior_details")
         .select(
-          "id,note_id,behavior_label,behavior_description,latest_tracked_on,created_at,emotion_behavior_checks(id,behavior_detail_id,check_label,sort_order,created_at)",
+          "id,behavior_label,behavior_description,latest_tracked_on,created_at,emotion_behavior_checks(id,behavior_detail_id,check_label,sort_order,created_at)",
         )
         .eq("device_id", deviceId)
         .is("user_id", null);
-  if (noteId != null) {
-    scopedQuery = scopedQuery.eq("note_id", noteId);
-  }
   if (detailId != null) {
     scopedQuery = scopedQuery.eq("id", detailId);
   }

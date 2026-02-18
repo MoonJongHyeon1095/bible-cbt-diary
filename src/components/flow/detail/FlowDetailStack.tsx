@@ -2,7 +2,7 @@
 
 import EmotionNoteDetailSectionItemModal from "@/components/emotion-notes/detail/common/EmotionNoteDetailSectionItemModal";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { AlertCircle, Brain, Footprints, Lightbulb } from "lucide-react";
+import { AlertCircle, Brain, Lightbulb } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import styles from "./FlowDetailSection.module.css";
@@ -16,7 +16,7 @@ type ModalContent = {
   badgeText?: string | null;
 } | null;
 
-type SectionKey = "alternative" | "innerBelief" | "analysis" | "behavior";
+type SectionKey = "alternative" | "innerBelief" | "analysis";
 
 type FlowDetailStackProps = {
   selectedNote: EmotionNote | null;
@@ -27,8 +27,6 @@ export default function FlowDetailStack({
 }: FlowDetailStackProps) {
   const [modalContent, setModalContent] = useState<ModalContent>(null);
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
-
-  const behaviorDetails = selectedNote?.behavior_details ?? [];
 
   useEffect(() => {
     setModalContent(null);
@@ -92,21 +90,6 @@ export default function FlowDetailStack({
             },
           ]
         : [],
-    },
-    {
-      key: "behavior" as const,
-      label: "행동 반응",
-      color: "#26e0ff",
-      icon: <Footprints size={18} />,
-      items: behaviorDetails.map((detail) => ({
-        id: `behavior-${detail.id}`,
-        title: detail.behavior_description,
-        body: detail.behavior_description,
-        modalTitle: "행동 반응",
-        modalColor: "#26e0ff",
-        modalIcon: <Footprints size={18} />,
-        badgeText: detail.behavior_label,
-      })),
     },
   ].filter((section) => section.items.length > 0);
 

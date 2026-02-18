@@ -11,7 +11,6 @@ export const handlePostEmotionBehaviorDetails = async (
 ) => {
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const payload = await readJson<{
-    note_id?: number | null;
     behavior_label?: string;
     behavior_description?: string;
     checks?: string[];
@@ -22,12 +21,6 @@ export const handlePostEmotionBehaviorDetails = async (
   const deviceId = normalizeDeviceId(payload.deviceId);
   if (!user && !deviceId) {
     return json(res, 401, { ok: false, message: "로그인이 필요합니다." });
-  }
-
-  const hasNoteId = payload.note_id !== undefined && payload.note_id !== null;
-  const noteId = hasNoteId ? Number(payload.note_id) : null;
-  if (hasNoteId && (noteId == null || Number.isNaN(noteId))) {
-    return json(res, 400, { ok: false, message: "note_id가 올바르지 않습니다." });
   }
 
   const behaviorLabel = String(payload.behavior_label ?? "").trim();
@@ -47,12 +40,10 @@ export const handlePostEmotionBehaviorDetails = async (
   const insertPayload: {
     user_id?: string | null;
     device_id?: string | null;
-    note_id: number | null;
     behavior_label: string;
     behavior_description: string;
     created_at?: string;
   } = {
-    note_id: noteId,
     behavior_label: behaviorLabel,
     behavior_description: behaviorDescription,
   };

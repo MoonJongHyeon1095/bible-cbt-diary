@@ -36,7 +36,7 @@ export const handleGetEmotionBehaviorHistory = async (
   let baseQuery = supabase
     .from("emotion_behavior_history")
     .select(
-      "id,behavior_detail_id,note_id,tracked_on,comments,created_at,emotion_behavior_details(id,behavior_label,behavior_description),emotion_behavior_history_checks(id,history_id,check_id,is_done,created_at,emotion_behavior_checks(check_label))",
+      "id,behavior_detail_id,tracked_on,comments,created_at,emotion_behavior_history_checks(id,history_id,check_id,is_done,created_at,emotion_behavior_checks(check_label))",
     )
     .order("tracked_on", { ascending: false })
     .order("created_at", { ascending: false });
@@ -59,18 +59,6 @@ export const handleGetEmotionBehaviorHistory = async (
 
   const normalized = (data ?? []).map((row) => {
     const rowAny = row as {
-      emotion_behavior_details?:
-        | {
-            id: number;
-            behavior_label: string;
-            behavior_description: string;
-          }
-        | Array<{
-            id: number;
-            behavior_label: string;
-            behavior_description: string;
-          }>
-        | null;
       emotion_behavior_history_checks?: Array<{
         id: number;
         history_id: number;
@@ -105,15 +93,9 @@ export const handleGetEmotionBehaviorHistory = async (
         })
       : [];
 
-    const behaviorRef = Array.isArray(rowAny.emotion_behavior_details)
-      ? rowAny.emotion_behavior_details[0]
-      : rowAny.emotion_behavior_details;
-
     return {
       ...rowAny,
-      behavior_detail: behaviorRef ?? null,
       checks,
-      emotion_behavior_details: undefined,
       emotion_behavior_history_checks: undefined,
     };
   });

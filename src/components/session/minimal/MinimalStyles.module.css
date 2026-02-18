@@ -858,6 +858,10 @@
   padding: 0;
 }
 
+.disclaimerBannerWrap {
+  margin-bottom: 10px;
+}
+
 .headerPrompt {
   display: flex;
   margin-bottom: 10px;

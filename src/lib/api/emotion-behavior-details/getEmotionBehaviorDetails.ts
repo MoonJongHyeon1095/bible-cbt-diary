@@ -10,7 +10,6 @@ import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 export const fetchBehaviorDetails = async (
   access: AccessContext,
   options?: {
-    noteId?: number;
     detailId?: number;
     query?: string;
     sort?: "created_desc" | "recorded_desc";
@@ -27,7 +26,6 @@ export const fetchBehaviorDetails = async (
   }
 
   const query = new URLSearchParams();
-  if (options?.noteId != null) query.set("note_id", String(options.noteId));
   if (options?.detailId != null) query.set("detail_id", String(options.detailId));
   if (options?.query) query.set("q", options.query);
   if (options?.sort) query.set("sort", options.sort);

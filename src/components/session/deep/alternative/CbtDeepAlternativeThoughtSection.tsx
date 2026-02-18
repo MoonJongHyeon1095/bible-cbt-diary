@@ -1,4 +1,5 @@
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
+import { CbtSessionDisclaimerBanner } from "@/components/session/common/CbtSessionDisclaimerBanner";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { CbtMinimalFloatingNextButton } from "@/components/session/minimal/common/CbtMinimalFloatingNextButton";
 import styles from "@/components/session/minimal/MinimalStyles.module.css";
@@ -70,73 +71,67 @@ export function CbtDeepAlternativeThoughtSection({
     [alternativeThoughts, selectedIndex],
   );
 
-  if (thoughtsLoading) {
-    return (
-      <CbtLoadingState
-        title={TITLE}
-        description={DESCRIPTION}
-        message="새로운 목소리를 찾아보고 있어요."
-        variant="page"
-      />
-    );
-  }
-
-  if (thoughtsError) {
-    return (
-      <CbtMinimalAlternativeThoughtErrorState
-        error={thoughtsError}
-        onRetry={() => void generateAlternatives({ force: true })}
-      />
-    );
-  }
-
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.disclaimerBannerWrap}>
+            <CbtSessionDisclaimerBanner />
+          </div>
           <CbtStepHeaderSection title={TITLE} description={DESCRIPTION} />
         </div>
-        {isFallback && (
-          <AiFallbackNotice
+        {thoughtsLoading ? (
+          <CbtLoadingState message="새로운 목소리를 찾아보고 있어요." />
+        ) : thoughtsError ? (
+          <CbtMinimalAlternativeThoughtErrorState
+            error={thoughtsError}
             onRetry={() => void generateAlternatives({ force: true })}
           />
+        ) : (
+          <>
+            {isFallback && (
+              <AiFallbackNotice
+                onRetry={() => void generateAlternatives({ force: true })}
+              />
+            )}
+
+            <div className={styles.cardList}>
+              {alternativeThoughts.map((thought, index) => {
+                const isSelected = selectedIndex === index;
+                return (
+                  <SafeButton
+                    key={`${thought.thought}-${index}`}
+                    type="button"
+                    variant="unstyled"
+                    onClick={() => setSelectedIndex(index)}
+                    aria-pressed={isSelected}
+                    className={`${styles.selectableCard} ${
+                      isSelected ? styles.selectableCardSelected : ""
+                    }`}
+                  >
+                    <div className={styles.inlineCard}>
+                      <CbtMinimalAlternativeThoughtBodySection
+                        thought={thought.thought ?? ""}
+                        technique={thought.technique}
+                        fallback="대안사고를 불러오는 중입니다."
+                      />
+                    </div>
+                  </SafeButton>
+                );
+              })}
+            </div>
+
+            <div className={styles.formStack}>
+              <CbtMinimalFloatingNextButton
+                onClick={() =>
+                  selectedThought?.thought && onSelect(selectedThought.thought)
+                }
+                ariaLabel="이 생각으로 진행"
+                disabled={!selectedThought?.thought}
+              />
+            </div>
+          </>
         )}
-
-        <div className={styles.cardList}>
-          {alternativeThoughts.map((thought, index) => {
-            const isSelected = selectedIndex === index;
-            return (
-              <SafeButton
-                key={`${thought.thought}-${index}`}
-                type="button"
-                variant="unstyled"
-                onClick={() => setSelectedIndex(index)}
-                aria-pressed={isSelected}
-                className={`${styles.selectableCard} ${
-                  isSelected ? styles.selectableCardSelected : ""
-                }`}
-              >
-                <div className={styles.inlineCard}>
-                <CbtMinimalAlternativeThoughtBodySection
-                  thought={thought.thought ?? ""}
-                  technique={thought.technique}
-                  fallback="대안사고를 불러오는 중입니다."
-                />
-                </div>
-              </SafeButton>
-            );
-          })}
-        </div>
-
-        <div className={styles.formStack}>
-          <CbtMinimalFloatingNextButton
-            onClick={() =>
-              selectedThought?.thought && onSelect(selectedThought.thought)
-            }
-            ariaLabel="이 생각으로 진행"
-            disabled={!selectedThought?.thought}
-          />
-        </div>
       </div>
     </div>
   );

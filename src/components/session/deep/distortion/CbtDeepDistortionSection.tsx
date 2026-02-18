@@ -1,4 +1,5 @@
 import { CbtLoadingState } from "@/components/session/common/CbtLoadingState";
+import { CbtSessionDisclaimerBanner } from "@/components/session/common/CbtSessionDisclaimerBanner";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtDeepDistortionCards } from "@/components/session/deep/hooks/useCbtDeepDistortionCards";
@@ -18,7 +19,6 @@ type CbtDeepDistortionSectionProps = {
   onSelect: (thought: string, error: SelectedCognitiveError) => void;
 };
 
-const TITLE = "어쩌면 지긋지긋한 생각일지 모릅니다.";
 const HEADER_TITLE = (
   <>
     어쩌면 지긋지긋한{" "}
@@ -76,25 +76,19 @@ export function CbtDeepDistortionSection({
     onSelect(card.innerBelief.trim(), toSelectedError(card));
   };
 
-  if (!internalContext) {
-    return (
-      <CbtLoadingState
-        title={TITLE}
-        description={DESCRIPTION}
-        message="심화 맥락을 준비하고 있어요."
-        variant="page"
-      />
-    );
-  }
-
   return (
     <div className={styles.section}>
       <div className={styles.sectionInner}>
         <div className={styles.headerInset}>
+          <div className={styles.disclaimerBannerWrap}>
+            <CbtSessionDisclaimerBanner />
+          </div>
           <CbtStepHeaderSection title={HEADER_TITLE} description={DESCRIPTION} />
         </div>
 
-        {!hasCards ? (
+        {!internalContext ? (
+          <CbtLoadingState message="심화 맥락을 준비하고 있어요." />
+        ) : !hasCards ? (
           <CbtLoadingState message="첫 distortion 카드를 준비하고 있어요." />
         ) : (
           <div className={styles.cardList}>

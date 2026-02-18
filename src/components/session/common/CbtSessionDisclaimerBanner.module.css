@@ -1,0 +1,33 @@
+.banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(130, 150, 186, 0.45);
+  background: rgba(14, 20, 30, 0.72);
+  color: rgba(214, 224, 241, 0.92);
+  font-size: 0.78rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.icon {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  opacity: 0.9;
+}
+
+.text {
+  display: block;
+}
+
+@media (max-width: 640px) {
+  .banner {
+    font-size: 0.74rem;
+    padding: 7px 11px;
+  }
+}

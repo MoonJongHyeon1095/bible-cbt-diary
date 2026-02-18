@@ -1,7 +1,6 @@
 create table public.emotion_behavior_history (
   id bigserial not null,
   behavior_detail_id bigint not null,
-  note_id bigint null,
   tracked_on date not null default CURRENT_DATE,
   comments text not null default ''::text,
   created_at timestamp with time zone not null default now(),
@@ -9,7 +8,6 @@ create table public.emotion_behavior_history (
   device_id text null,
   constraint emotion_behavior_history_pkey primary key (id),
   constraint emotion_behavior_history_behavior_detail_id_fkey foreign key (behavior_detail_id) references public.emotion_behavior_details (id) on delete cascade,
-  constraint emotion_behavior_history_note_id_fkey foreign key (note_id) references public.emotion_notes (id) on delete set null,
   constraint emotion_behavior_history_user_id_fkey foreign key (user_id) references auth.users (id) on delete cascade,
   constraint emotion_behavior_history_owner_check check (
     (

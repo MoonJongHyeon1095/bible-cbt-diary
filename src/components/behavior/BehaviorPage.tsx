@@ -26,7 +26,6 @@ import {
   ClipboardPen,
   Pin,
   PinOff,
-  Plus,
   Trash2,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -111,6 +110,7 @@ export default function BehaviorPage() {
   const selectedDateKey = formatKoreanDateKey(selectedDate);
   const todayKey = formatKoreanDateKey(new Date());
   const selectedDayLabel = formatKoreanDateTime(selectedDate, {
+    year: "numeric",
     month: "numeric",
     day: "numeric",
   });
@@ -197,12 +197,6 @@ export default function BehaviorPage() {
     }
     return set;
   }, [suggestionChecks]);
-
-  const recordedCheckIdSet = useMemo(
-    () =>
-      new Set((selectedHistory?.checks ?? []).map((check) => check.check_id)),
-    [selectedHistory],
-  );
 
   useEffect(() => {
     const nextSyncKey = `${selectedDateKey}:${selectedHistory?.id ?? "none"}:${
@@ -364,12 +358,8 @@ export default function BehaviorPage() {
           <section className={styles.heroPanel}>
             <div className={styles.heroHeader}>
               <div>
-                <p className={styles.heroEyebrow}>Behavior Care</p>
+                <p className={styles.heroEyebrow}>Behavior Tracking</p>
                 <h2 className={styles.heroTitle}>행동 루틴 트래커</h2>
-                <p className={styles.heroText}>
-                  고정 행동은 매일 유지되고, 비고정 행동은 생성된 날짜
-                  기준으로만 제안됩니다.
-                </p>
               </div>
               <div className={styles.heroMetricStack}>
                 <div className={styles.metricCircleCard}>
@@ -418,13 +408,17 @@ export default function BehaviorPage() {
                 </div>
               </div>
             </div>
-            <div className={styles.sectionHeader}>
-              <h3 className={styles.sectionTitle}>주간 날짜 선택</h3>
-              <p className={styles.sectionHint}>{selectedDateKey}</p>
+            <div
+              className={`${styles.sectionHeader} ${styles.trackerDateHeader}`}
+            >
+              <h3 className={`${styles.sectionTitle} ${styles.trackerDateTitle}`}>
+                {selectedDateKey}
+              </h3>
             </div>
             <div className={styles.weekHeatRow}>
               {weekCells.map((cell) => {
                 const completion = getCompletion(historyByDate.get(cell.key));
+                const isSelected = cell.key === selectedDateKey;
                 const level =
                   completion.rate >= 80
                     ? 4
@@ -442,7 +436,7 @@ export default function BehaviorPage() {
                       type="button"
                       className={`${styles.weekHeatCell} ${
                         styles[`heatLevel${level}`]
-                      }`}
+                      } ${isSelected ? styles.weekHeatCellSelected : ""}`}
                       onClick={() =>
                         setSelectedDate(new Date(`${cell.key}T00:00:00`))
                       }
@@ -464,7 +458,6 @@ export default function BehaviorPage() {
                 <ClipboardPen size={16} />
                 {`${selectedDayLabel} 행동기록`}
               </h3>
-              <p className={styles.sectionHint}>{selectedDateKey}</p>
             </div>
             {includedChecks.length === 0 ? (
               <p className={styles.empty}>
@@ -482,17 +475,37 @@ export default function BehaviorPage() {
                     />
                     <span className={styles.checkIcon} aria-hidden>
                       {doneCheckIds.has(check.checkId) ? (
-                        <CheckCircle2 size={16} />
+                        <CheckCircle2
+                          size={18}
+                          className={styles.checkStateIconDone}
+                        />
                       ) : (
-                        <Circle size={16} />
+                        <Circle size={18} className={styles.checkStateIcon} />
                       )}
                     </span>
-                    <span>
-                      {check.label}
-                      <small className={styles.inlineMuted}>
-                        {check.isPinned ? " · 고정 행동" : " · 선택 추가"}
-                      </small>
+                    <span className={styles.checkLabelWrap}>
+                      <span>{check.label}</span>
+                      {check.isPinned ? (
+                        <span className={styles.checkPinnedBadge}>
+                          <Pin size={12} />
+                          고정
+                        </span>
+                      ) : null}
                     </span>
+                    {!check.isPinned ? (
+                      <SafeButton
+                        variant="unstyled"
+                        className={styles.checkRemoveButton}
+                        aria-label="체크 제거"
+                        onClick={(event) => {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          toggleOptionalCheck(check.checkId);
+                        }}
+                      >
+                        <Trash2 size={15} />
+                      </SafeButton>
+                    ) : null}
                   </label>
                 ))}
               </div>
@@ -516,10 +529,11 @@ export default function BehaviorPage() {
           <section className={`${styles.section} ${styles.librarySection}`}>
             <div className={styles.sectionHeader}>
               <h3 className={styles.sectionTitle}>오늘의 행동 제안</h3>
-              <p className={styles.sectionHint}>
-                고정되지 않은 행동은 날짜가 지나면 자동으로 제거됩니다.
-              </p>
             </div>
+            <p className={`${styles.sectionHint} ${styles.libraryNotice}`}>
+              미고정 행동은 날짜가 지나면 자동으로 제거됩니다.
+            </p>
+            <div className={styles.libraryNoticeDivider} aria-hidden />
             {suggestionQuery.isLoading ? (
               <p className={styles.empty}>불러오는 중...</p>
             ) : (suggestionQuery.data ?? []).length === 0 ? (
@@ -528,13 +542,18 @@ export default function BehaviorPage() {
               <div className={styles.cardList}>
                 {(suggestionQuery.data ?? []).map((detail) => (
                   <article key={detail.id} className={styles.behaviorCard}>
-                    <div className={styles.row}>
+                    <div className={`${styles.row} ${styles.behaviorCardHeader}`}>
                       <h4 className={styles.behaviorTitle}>
                         {detail.behavior_label}
                       </h4>
                       <SafeButton
                         size="sm"
-                        variant="ghost"
+                        variant="unstyled"
+                        className={`${styles.pinToggleButton} ${
+                          detail.is_pinned
+                            ? styles.pinToggleButtonActive
+                            : styles.pinToggleButtonInactive
+                        }`}
                         loading={Boolean(pinLoadingByDetailId[detail.id])}
                         onClick={() =>
                           void handleTogglePin(
@@ -548,7 +567,7 @@ export default function BehaviorPage() {
                         ) : (
                           <PinOff size={14} />
                         )}
-                        {detail.is_pinned ? "고정됨" : "고정"}
+                        {detail.is_pinned ? "고정됨" : "미고정"}
                       </SafeButton>
                     </div>
                     <p className={styles.behaviorDesc}>
@@ -557,51 +576,54 @@ export default function BehaviorPage() {
                     <div className={styles.checkList}>
                       {(detail.checks ?? []).map((check) => {
                         const included = includedCheckIds.has(check.id);
-                        const recorded = recordedCheckIdSet.has(check.id);
                         const isPinned = Boolean(detail.is_pinned);
+                        const isDone = doneCheckIds.has(check.id);
                         return (
                           <div
                             key={check.id}
                             className={styles.checkSuggestionRow}
                           >
-                            <span
-                              className={`${styles.checkItem} ${
-                                recorded
-                                  ? styles.checkItemRecorded
-                                  : included
-                                  ? styles.checkItemIncluded
-                                  : ""
-                              }`}
-                            >
-                              {recorded ? (
-                                <CheckCircle2 size={14} />
-                              ) : (
-                                <Circle size={14} />
-                              )}
-                              {check.check_label}
-                            </span>
                             {isPinned ? (
-                              <span className={styles.inlineBadge}>
-                                기본 포함
+                              <span
+                                className={`${styles.checkItem} ${
+                                  included ? styles.checkItemOptionalIncluded : ""
+                                }`}
+                              >
+                                {isDone ? (
+                                  <CheckCircle2
+                                    size={16}
+                                    className={styles.checkStateIconDone}
+                                  />
+                                ) : (
+                                  <Circle
+                                    size={16}
+                                    className={styles.checkStateIcon}
+                                  />
+                                )}
+                                {check.check_label}
                               </span>
                             ) : (
-                              <SafeButton
-                                size="sm"
-                                variant={included ? "ghost" : "primary"}
+                              <button
+                                type="button"
+                                className={`${styles.checkItem} ${
+                                  included ? styles.checkItemOptionalIncluded : ""
+                                } ${styles.checkItemToggle}`}
+                                aria-pressed={included}
                                 onClick={() => toggleOptionalCheck(check.id)}
                               >
-                                {included ? (
-                                  <>
-                                    <Trash2 size={14} />
-                                    제거
-                                  </>
+                                {isDone ? (
+                                  <CheckCircle2
+                                    size={16}
+                                    className={styles.checkStateIconDone}
+                                  />
                                 ) : (
-                                  <>
-                                    <Plus size={14} />
-                                    기록에 추가
-                                  </>
+                                  <Circle
+                                    size={16}
+                                    className={styles.checkStateIcon}
+                                  />
                                 )}
-                              </SafeButton>
+                                {check.check_label}
+                              </button>
                             )}
                           </div>
                         );

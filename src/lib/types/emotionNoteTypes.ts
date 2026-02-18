@@ -52,6 +52,7 @@ export type EmotionNoteBehaviorDetail = {
   id: number;
   behavior_label: string;
   behavior_description: string;
+  is_pinned: boolean;
   latest_tracked_on?: string | null;
   created_at: string;
   checks?: EmotionBehaviorCheck[];
@@ -76,7 +77,6 @@ export type EmotionBehaviorHistoryCheck = {
 
 export type EmotionBehaviorHistory = {
   id: number;
-  behavior_detail_id: number;
   tracked_on: string;
   comments: string;
   created_at: string;

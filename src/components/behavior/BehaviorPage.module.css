@@ -44,8 +44,15 @@
 
 .heroMetricStack {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 10px;
+}
+
+.metricCircleCard {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
 }
 
 .heroEyebrow {
@@ -237,6 +244,30 @@
   color: #d8d2ff;
 }
 
+.noteSection {
+  border-color: rgba(247, 222, 169, 0.5);
+  background: linear-gradient(
+    180deg,
+    rgba(52, 43, 20, 0.88),
+    rgba(33, 27, 12, 0.9)
+  );
+}
+
+.notePaper {
+  border: 1px solid rgba(240, 218, 172, 0.42);
+  border-radius: 14px;
+  padding: 16px;
+  background:
+    repeating-linear-gradient(
+      180deg,
+      rgba(243, 230, 199, 0.08) 0px,
+      rgba(243, 230, 199, 0.08) 27px,
+      rgba(75, 66, 41, 0.56) 27px,
+      rgba(75, 66, 41, 0.56) 28px
+    ),
+    rgba(24, 20, 9, 0.86);
+}
+
 .sectionHeader {
   display: flex;
   align-items: center;
@@ -412,6 +443,38 @@
   background: rgba(21, 38, 60, 0.9);
   color: #c4d5ef;
   font-size: 0.86rem;
+}
+
+.checkItemIncluded {
+  border-color: rgba(107, 184, 255, 0.52);
+  background: rgba(28, 55, 90, 0.95);
+  color: #d6e7ff;
+}
+
+.checkItemRecorded {
+  border-color: rgba(112, 214, 170, 0.6);
+  background: rgba(18, 54, 45, 0.9);
+  color: #d4f4e8;
+}
+
+.checkSuggestionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.inlineBadge {
+  border: 1px solid rgba(124, 191, 248, 0.4);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: #b4d9ff;
+  font-size: 0.75rem;
+  background: rgba(22, 39, 62, 0.9);
+}
+
+.inlineMuted {
+  color: #8da4c8;
 }
 
 .checkCardList {
@@ -640,7 +703,7 @@
   line-height: 1;
   display: grid;
   justify-items: center;
-  gap: 3px;
+  gap: 8px;
 }
 
 .weekHeatCount {

@@ -22,6 +22,43 @@ export const handlePostDeviceMerge = async (
 
   try {
     const supabase = createSupabaseAdminClient();
+    const { data: deviceHistoryRows, error: deviceHistoryError } = await supabase
+      .from("emotion_behavior_history")
+      .select("id,tracked_on")
+      .eq("device_id", deviceId)
+      .is("user_id", null);
+    if (deviceHistoryError) {
+      return json(res, 500, { ok: false, message: "데이터 병합에 실패했습니다." });
+    }
+
+    const { data: userHistoryRows, error: userHistoryError } = await supabase
+      .from("emotion_behavior_history")
+      .select("id,tracked_on")
+      .eq("user_id", user.id);
+    if (userHistoryError) {
+      return json(res, 500, { ok: false, message: "데이터 병합에 실패했습니다." });
+    }
+
+    const userHistoryKeys = new Set(
+      (userHistoryRows ?? []).map(
+        (row) => row.tracked_on,
+      ),
+    );
+    const conflictDeviceHistoryIds = (deviceHistoryRows ?? [])
+      .filter((row) =>
+        userHistoryKeys.has(row.tracked_on),
+      )
+      .map((row) => row.id);
+
+    if (conflictDeviceHistoryIds.length > 0) {
+      const { error: deleteConflictError } = await supabase
+        .from("emotion_behavior_history")
+        .delete()
+        .in("id", conflictDeviceHistoryIds);
+      if (deleteConflictError) {
+        return json(res, 500, { ok: false, message: "데이터 병합에 실패했습니다." });
+      }
+    }
 
     const tables = [
       "emotion_notes",

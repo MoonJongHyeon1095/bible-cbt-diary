@@ -8,7 +8,6 @@ import { buildApiUrl } from "@/lib/utils/apiBase";
 export const fetchBehaviorHistory = async (
   access: AccessContext,
   options?: {
-    behaviorDetailId?: number;
     trackedOn?: string;
   },
 ) => {
@@ -21,9 +20,6 @@ export const fetchBehaviorHistory = async (
   }
 
   const query = new URLSearchParams();
-  if (options?.behaviorDetailId != null) {
-    query.set("behavior_detail_id", String(options.behaviorDetailId));
-  }
   if (options?.trackedOn) {
     query.set("tracked_on", options.trackedOn);
   }

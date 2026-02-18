@@ -15,6 +15,7 @@ export const handlePatchEmotionBehaviorDetails = async (
     behavior_label?: string;
     behavior_description?: string;
     checks?: string[];
+    is_pinned?: boolean;
     deviceId?: string;
   }>(req);
 
@@ -31,6 +32,7 @@ export const handlePatchEmotionBehaviorDetails = async (
   const updatePayload: {
     behavior_label?: string;
     behavior_description?: string;
+    is_pinned?: boolean;
   } = {};
 
   if (payload.behavior_label !== undefined) {
@@ -38,6 +40,9 @@ export const handlePatchEmotionBehaviorDetails = async (
   }
   if (payload.behavior_description !== undefined) {
     updatePayload.behavior_description = String(payload.behavior_description).trim();
+  }
+  if (payload.is_pinned !== undefined) {
+    updatePayload.is_pinned = Boolean(payload.is_pinned);
   }
   const checks =
     payload.checks === undefined

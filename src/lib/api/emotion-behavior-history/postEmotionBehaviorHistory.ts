@@ -4,9 +4,8 @@ import type { AccessContext } from "@/lib/types/access";
 import { resolveAccess } from "@/lib/api/_helpers";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 
-export const createBehaviorHistory = async (
+export const upsertBehaviorHistory = async (
   payload: {
-    behavior_detail_id: number;
     tracked_on: string;
     comments?: string;
     checks: Array<{ check_id: number; is_done: boolean }>;

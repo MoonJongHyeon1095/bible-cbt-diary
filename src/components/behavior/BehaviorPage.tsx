@@ -3,21 +3,47 @@
 import pageStyles from "@/app/page.module.css";
 import styles from "@/components/behavior/BehaviorPage.module.css";
 import AppHeader from "@/components/header/AppHeader";
+import { useCbtToast } from "@/components/session/common/CbtToast";
+import SafeButton from "@/components/ui/SafeButton";
+import { fetchBehaviorDetails } from "@/lib/api/emotion-behavior-details/getEmotionBehaviorDetails";
+import { updateBehaviorDetail } from "@/lib/api/emotion-behavior-details/patchEmotionBehaviorDetails";
 import { fetchBehaviorHistory } from "@/lib/api/emotion-behavior-history/getEmotionBehaviorHistory";
+import { upsertBehaviorHistory } from "@/lib/api/emotion-behavior-history/postEmotionBehaviorHistory";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import { queryKeys } from "@/lib/queryKeys";
-import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
-import { useQuery } from "@tanstack/react-query";
 import {
-  Activity,
+  formatKoreanDateKey,
+  formatKoreanDateTime,
+  getKstDayRange,
+} from "@/lib/utils/time";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  CalendarDays,
   CalendarHeart,
-  CalendarRange,
-  CheckCheck,
-  Clock3,
+  CheckCircle2,
+  Circle,
+  ClipboardPen,
+  Pin,
+  PinOff,
+  Plus,
+  Trash2,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
+
+type CheckMeta = {
+  checkId: number;
+  label: string;
+  isPinned: boolean;
+};
+
+type BehaviorHistoryRow = {
+  id: number;
+  tracked_on: string;
+  comments: string;
+  created_at: string;
+  checks?: Array<{ check_id: number; is_done: boolean }>;
+};
 
 const toDateKey = (date: Date) => {
   const y = date.getFullYear();
@@ -28,6 +54,7 @@ const toDateKey = (date: Date) => {
 
 const buildCurrentWeekCells = (base: Date) => {
   const start = new Date(base);
+  start.setHours(0, 0, 0, 0);
   start.setDate(base.getDate() - base.getDay());
   const weekday = ["일", "월", "화", "수", "목", "금", "토"];
   return Array.from({ length: 7 }).map((_, index) => {
@@ -41,16 +68,51 @@ const buildCurrentWeekCells = (base: Date) => {
   });
 };
 
+const getCompletion = (
+  history:
+    | {
+        checks?: Array<{ check_id: number; is_done: boolean }>;
+      }
+    | null
+    | undefined,
+) => {
+  const checks = history?.checks ?? [];
+  const done = checks.filter((check) => check.is_done).length;
+  const total = checks.length;
+  const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+  return { done, total, rate };
+};
+
 export default function BehaviorPage() {
-  const router = useRouter();
   const { accessMode, accessToken, isLoading } = useAccessContext();
   const access = useMemo(
     () => ({ mode: accessMode, accessToken }),
     [accessMode, accessToken],
   );
+  const { pushToast } = useCbtToast();
+  const queryClient = useQueryClient();
+
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [selectedOptionalCheckIds, setSelectedOptionalCheckIds] = useState<
+    Set<number>
+  >(new Set());
+  const [doneCheckIds, setDoneCheckIds] = useState<Set<number>>(new Set());
+  const [comments, setComments] = useState("");
+  const [syncKey, setSyncKey] = useState<string>("");
+  const [isSavingRecord, setIsSavingRecord] = useState(false);
+  const [pinLoadingByDetailId, setPinLoadingByDetailId] = useState<
+    Record<number, boolean>
+  >({});
 
   useStorageBlockedRedirect({
     enabled: !isLoading && accessMode === "blocked",
+  });
+
+  const selectedDateKey = formatKoreanDateKey(selectedDate);
+  const todayKey = formatKoreanDateKey(new Date());
+  const selectedDayLabel = formatKoreanDateTime(selectedDate, {
+    month: "numeric",
+    day: "numeric",
   });
 
   const historyQuery = useQuery({
@@ -63,49 +125,235 @@ export default function BehaviorPage() {
     enabled: !isLoading && accessMode !== "blocked",
   });
 
-  const todayKey = formatKoreanDateKey(new Date());
-  const historyCount = historyQuery.data?.length ?? 0;
-  const todayHistories = useMemo(
-    () =>
-      historyQuery.data?.filter((history) => history.tracked_on === todayKey) ??
-      [],
-    [historyQuery.data, todayKey],
-  );
+  const dayRange = useMemo(() => getKstDayRange(selectedDate), [selectedDate]);
+  const suggestionQuery = useQuery({
+    queryKey: [
+      ...queryKeys.behaviorLibrary(access),
+      "daily",
+      selectedDateKey,
+      dayRange.startIso,
+      dayRange.endIso,
+    ],
+    queryFn: async () => {
+      const { response, data } = await fetchBehaviorDetails(access, {
+        createdFrom: dayRange.startIso,
+        createdTo: dayRange.endIso,
+        includePinned: true,
+        sort: "created_desc",
+        limit: 200,
+        offset: 0,
+      });
+      if (!response.ok) throw new Error("behavior detail fetch failed");
+      return data.details;
+    },
+    enabled: !isLoading && accessMode !== "blocked",
+  });
 
-  const todayCompletion = useMemo(() => {
-    let done = 0;
-    let total = 0;
-    for (const history of todayHistories) {
-      const checks = history.checks ?? [];
-      done += checks.filter((item) => item.is_done).length;
-      total += checks.length;
-    }
-    return { done, total };
-  }, [todayHistories]);
-
-  const completionRate =
-    todayCompletion.total > 0
-      ? Math.round((todayCompletion.done / todayCompletion.total) * 100)
-      : 0;
-
-  const trackedCountsByDate = useMemo(() => {
-    const map = new Map<string, number>();
+  const historyByDate = useMemo(() => {
+    const map = new Map<string, BehaviorHistoryRow>();
     for (const history of historyQuery.data ?? []) {
-      const key = history.tracked_on;
-      map.set(key, (map.get(key) ?? 0) + 1);
+      map.set(history.tracked_on, history);
     }
     return map;
   }, [historyQuery.data]);
 
-  const weekCells = useMemo(() => buildCurrentWeekCells(new Date()), []);
-  const weekHistoryCount = useMemo(
-    () => weekCells.reduce((sum, cell) => sum + (trackedCountsByDate.get(cell.key) ?? 0), 0),
-    [trackedCountsByDate, weekCells],
+  const selectedHistory = historyByDate.get(selectedDateKey) ?? null;
+  const todayHistory = historyByDate.get(todayKey) ?? null;
+
+  const suggestionChecks = useMemo(() => {
+    const rows: CheckMeta[] = [];
+    for (const detail of suggestionQuery.data ?? []) {
+      for (const check of detail.checks ?? []) {
+        rows.push({
+          checkId: check.id,
+          label: check.check_label,
+          isPinned: Boolean(detail.is_pinned),
+        });
+      }
+    }
+    return rows;
+  }, [suggestionQuery.data]);
+
+  const checkMetaById = useMemo(() => {
+    const map = new Map<number, CheckMeta>();
+    for (const check of suggestionChecks) {
+      map.set(check.checkId, check);
+    }
+    return map;
+  }, [suggestionChecks]);
+
+  const pinnedCheckIds = useMemo(() => {
+    const set = new Set<number>();
+    for (const check of suggestionChecks) {
+      if (check.isPinned) set.add(check.checkId);
+    }
+    return set;
+  }, [suggestionChecks]);
+
+  const optionalCheckIds = useMemo(() => {
+    const set = new Set<number>();
+    for (const check of suggestionChecks) {
+      if (!check.isPinned) set.add(check.checkId);
+    }
+    return set;
+  }, [suggestionChecks]);
+
+  const recordedCheckIdSet = useMemo(
+    () =>
+      new Set((selectedHistory?.checks ?? []).map((check) => check.check_id)),
+    [selectedHistory],
   );
 
-  const recentHistories = (historyQuery.data ?? []).slice(0, 3);
-  const goToDateHistory = (dateKey: string) => {
-    router.push(`/behavior/history?date=${dateKey}`);
+  useEffect(() => {
+    const nextSyncKey = `${selectedDateKey}:${selectedHistory?.id ?? "none"}:${
+      suggestionChecks.length
+    }`;
+    if (syncKey === nextSyncKey) return;
+
+    const nextOptional = new Set<number>();
+    const nextDone = new Set<number>();
+    for (const check of selectedHistory?.checks ?? []) {
+      if (check.is_done) nextDone.add(check.check_id);
+      if (optionalCheckIds.has(check.check_id))
+        nextOptional.add(check.check_id);
+    }
+
+    setSelectedOptionalCheckIds(nextOptional);
+    setDoneCheckIds(nextDone);
+    setComments(selectedHistory?.comments ?? "");
+    setSyncKey(nextSyncKey);
+  }, [
+    optionalCheckIds,
+    selectedDateKey,
+    selectedHistory,
+    suggestionChecks.length,
+    syncKey,
+  ]);
+
+  const includedCheckIds = useMemo(() => {
+    const set = new Set<number>(pinnedCheckIds);
+    for (const checkId of selectedOptionalCheckIds) {
+      if (optionalCheckIds.has(checkId)) set.add(checkId);
+    }
+    return set;
+  }, [optionalCheckIds, pinnedCheckIds, selectedOptionalCheckIds]);
+
+  const includedChecks = useMemo(() => {
+    const rows = Array.from(includedCheckIds)
+      .map((checkId) => checkMetaById.get(checkId))
+      .filter((row): row is CheckMeta => Boolean(row));
+    rows.sort((a, b) => {
+      if (a.isPinned !== b.isPinned) return a.isPinned ? -1 : 1;
+      return a.label.localeCompare(b.label, "ko-KR");
+    });
+    return rows;
+  }, [checkMetaById, includedCheckIds]);
+
+  const todayCompletion = getCompletion(todayHistory);
+  const weekCells = useMemo(
+    () => buildCurrentWeekCells(selectedDate),
+    [selectedDate],
+  );
+  const weeklyCompletion = useMemo(() => {
+    let done = 0;
+    let total = 0;
+    for (const cell of weekCells) {
+      const completion = getCompletion(historyByDate.get(cell.key));
+      done += completion.done;
+      total += completion.total;
+    }
+    const rate = total > 0 ? Math.round((done / total) * 100) : 0;
+    return { done, total, rate };
+  }, [historyByDate, weekCells]);
+
+  const toggleOptionalCheck = (checkId: number) => {
+    setSelectedOptionalCheckIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(checkId)) {
+        next.delete(checkId);
+        setDoneCheckIds((current) => {
+          const updated = new Set(current);
+          updated.delete(checkId);
+          return updated;
+        });
+      } else {
+        next.add(checkId);
+      }
+      return next;
+    });
+  };
+
+  const toggleDoneCheck = (checkId: number) => {
+    setDoneCheckIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(checkId)) next.delete(checkId);
+      else next.add(checkId);
+      return next;
+    });
+  };
+
+  const handleSaveRecord = async () => {
+    const checks = includedChecks.map((check) => ({
+      check_id: check.checkId,
+      is_done: doneCheckIds.has(check.checkId),
+    }));
+    setIsSavingRecord(true);
+    try {
+      const response = await upsertBehaviorHistory(
+        {
+          tracked_on: selectedDateKey,
+          comments,
+          checks,
+        },
+        access,
+      );
+      if (!response.ok) {
+        pushToast("행동 기록 저장에 실패했습니다.", "error");
+        return;
+      }
+      pushToast("행동 기록을 저장했습니다.", "success");
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.behaviorHistory(access),
+      });
+      setSyncKey("");
+    } finally {
+      setIsSavingRecord(false);
+    }
+  };
+
+  const handleTogglePin = async (detailId: number, isPinned: boolean) => {
+    setPinLoadingByDetailId((prev) => ({ ...prev, [detailId]: true }));
+    try {
+      const response = await updateBehaviorDetail(
+        {
+          id: detailId,
+          is_pinned: !isPinned,
+        },
+        access,
+      );
+      if (!response.ok) {
+        pushToast("핀 상태 변경에 실패했습니다.", "error");
+        return;
+      }
+      pushToast(
+        !isPinned ? "행동을 고정했습니다." : "행동 고정을 해제했습니다.",
+        "success",
+      );
+      await queryClient.invalidateQueries({
+        queryKey: [
+          ...queryKeys.behaviorLibrary(access),
+          "daily",
+          selectedDateKey,
+          dayRange.startIso,
+          dayRange.endIso,
+        ],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.behaviorLibrary(access),
+      });
+    } finally {
+      setPinLoadingByDetailId((prev) => ({ ...prev, [detailId]: false }));
+    }
   };
 
   return (
@@ -119,124 +367,247 @@ export default function BehaviorPage() {
                 <p className={styles.heroEyebrow}>Behavior Care</p>
                 <h2 className={styles.heroTitle}>행동 루틴 트래커</h2>
                 <p className={styles.heroText}>
-                  오늘 루틴 달성률을 확인하고 날짜별로 체크하세요.
+                  고정 행동은 매일 유지되고, 비고정 행동은 생성된 날짜
+                  기준으로만 제안됩니다.
                 </p>
               </div>
               <div className={styles.heroMetricStack}>
-                <div
-                  className={styles.progressCircle}
-                  style={{
-                    background: `conic-gradient(#5ce4b3 0deg, #56a8ff ${
-                      Math.max(0, Math.min(100, completionRate)) * 3.6
-                    }deg, #1b2439 ${
-                      Math.max(0, Math.min(100, completionRate)) * 3.6
-                    }deg)`,
-                  }}
-                  aria-label={`오늘 완료율 ${completionRate}%`}
-                >
-                  <div className={styles.progressInner}>
-                    <strong>{completionRate}%</strong>
-                    <span>today</span>
+                <div className={styles.metricCircleCard}>
+                  <div
+                    className={styles.progressCircle}
+                    style={{
+                      background: `conic-gradient(#5ce4b3 0deg, #56a8ff ${
+                        Math.max(0, Math.min(100, todayCompletion.rate)) * 3.6
+                      }deg, #1b2439 ${
+                        Math.max(0, Math.min(100, todayCompletion.rate)) * 3.6
+                      }deg)`,
+                    }}
+                    aria-label={`오늘 완료율 ${todayCompletion.rate}%`}
+                  >
+                    <div className={styles.progressInner}>
+                      <strong>{todayCompletion.rate}%</strong>
+                      <span>today</span>
+                    </div>
                   </div>
+                  <span className={styles.metaBadge}>
+                    <CalendarHeart size={14} />
+                    오늘 {todayCompletion.done}/{todayCompletion.total}
+                  </span>
                 </div>
-                <span className={styles.metaBadge}>
-                  <CalendarHeart size={14} />
-                  오늘 기록 {todayHistories.length}건
-                </span>
+                <div className={styles.metricCircleCard}>
+                  <div
+                    className={styles.progressCircle}
+                    style={{
+                      background: `conic-gradient(#75e39a 0deg, #58cbcc ${
+                        Math.max(0, Math.min(100, weeklyCompletion.rate)) * 3.6
+                      }deg, #1b2439 ${
+                        Math.max(0, Math.min(100, weeklyCompletion.rate)) * 3.6
+                      }deg)`,
+                    }}
+                    aria-label={`주간 완료율 ${weeklyCompletion.rate}%`}
+                  >
+                    <div className={styles.progressInner}>
+                      <strong>{weeklyCompletion.rate}%</strong>
+                      <span>weekly</span>
+                    </div>
+                  </div>
+                  <span className={styles.metaBadge}>
+                    <CalendarDays size={14} />
+                    이번 주 {weeklyCompletion.done}/{weeklyCompletion.total}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className={styles.statGrid}>
-              <article className={styles.statCard}>
-                <span className={styles.statIcon}>
-                  <CheckCheck size={14} />
-                </span>
-                <p className={styles.statLabel}>오늘 완료</p>
-                <p className={styles.statValue}>
-                  {todayCompletion.done}/{todayCompletion.total}
-                </p>
-              </article>
-              <article className={styles.statCard}>
-                <span className={styles.statIcon}>
-                  <Activity size={14} />
-                </span>
-                <p className={styles.statLabel}>누적 기록</p>
-                <p className={styles.statValue}>{historyCount}건</p>
-              </article>
-              <article className={styles.statCard}>
-                <span className={styles.statIcon}>
-                  <CalendarRange size={14} />
-                </span>
-                <p className={styles.statLabel}>이번 주 기록</p>
-                <p className={styles.statValue}>{weekHistoryCount}건</p>
-              </article>
+            <div className={styles.sectionHeader}>
+              <h3 className={styles.sectionTitle}>주간 날짜 선택</h3>
+              <p className={styles.sectionHint}>{selectedDateKey}</p>
+            </div>
+            <div className={styles.weekHeatRow}>
+              {weekCells.map((cell) => {
+                const completion = getCompletion(historyByDate.get(cell.key));
+                const level =
+                  completion.rate >= 80
+                    ? 4
+                    : completion.rate >= 60
+                    ? 3
+                    : completion.rate >= 30
+                    ? 2
+                    : completion.rate > 0
+                    ? 1
+                    : 0;
+                return (
+                  <div key={cell.key} className={styles.weekHeatCellWrap}>
+                    <span className={styles.weekHeatLabel}>{cell.label}</span>
+                    <button
+                      type="button"
+                      className={`${styles.weekHeatCell} ${
+                        styles[`heatLevel${level}`]
+                      }`}
+                      onClick={() =>
+                        setSelectedDate(new Date(`${cell.key}T00:00:00`))
+                      }
+                    >
+                      <span className={styles.weekHeatDay}>{cell.day}</span>
+                      <span className={styles.weekHeatCount}>
+                        {completion.done}/{completion.total}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           </section>
 
-          <section className={`${styles.section} ${styles.recentSection}`}>
+          <section>
             <div className={styles.sectionHeader}>
-              <h3 className={styles.sectionTitle}>최근 기록</h3>
-              <p className={styles.sectionHint}>마지막 활동 타임라인</p>
+              <h3 className={styles.sectionTitle}>
+                <ClipboardPen size={16} />
+                {`${selectedDayLabel} 행동기록`}
+              </h3>
+              <p className={styles.sectionHint}>{selectedDateKey}</p>
             </div>
-            <aside className={styles.heatmapPanel}>
-              <p className={styles.heatmapTitle}>
-                <CalendarRange size={14} />
-                이번 주 기록
+            {includedChecks.length === 0 ? (
+              <p className={styles.empty}>
+                기록에 포함된 체크가 없습니다. 제안에서 체크를 추가하세요.
               </p>
-              <div className={styles.weekHeatRow}>
-                {weekCells.map((cell) => {
-                  const count = trackedCountsByDate.get(cell.key) ?? 0;
-                  const level = count >= 4 ? 4 : count;
-                  return (
-                    <div key={cell.key} className={styles.weekHeatCellWrap}>
-                      <span className={styles.weekHeatLabel}>{cell.label}</span>
-                      <button
-                        type="button"
-                        className={`${styles.weekHeatCell} ${styles[`heatLevel${level}`]}`}
-                        title={`${cell.key} · ${count}건`}
-                        aria-label={`${cell.key} 기록 ${count}건`}
-                        onClick={() => goToDateHistory(cell.key)}
-                      >
-                        <span className={styles.weekHeatDay}>{cell.day}</span>
-                        <span className={styles.weekHeatCount}>{count}</span>
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            </aside>
-            {recentHistories.length === 0 ? (
-              <p className={styles.empty}>아직 기록된 루틴이 없습니다.</p>
             ) : (
-              <div className={styles.timeline}>
-                {recentHistories.map((history) => (
-                  <button
-                    key={history.id}
-                    type="button"
-                    className={`${styles.timelineItem} ${styles.timelineActionCard}`}
-                    onClick={() => goToDateHistory(history.tracked_on)}
-                  >
-                    <p className={styles.timelineTitle}>
-                      <Clock3 size={14} />
-                      {history.tracked_on}
+              <div className={styles.checkCardList}>
+                {includedChecks.map((check) => (
+                  <label key={check.checkId} className={styles.checkCardItem}>
+                    <input
+                      type="checkbox"
+                      className={styles.checkInput}
+                      checked={doneCheckIds.has(check.checkId)}
+                      onChange={() => toggleDoneCheck(check.checkId)}
+                    />
+                    <span className={styles.checkIcon} aria-hidden>
+                      {doneCheckIds.has(check.checkId) ? (
+                        <CheckCircle2 size={16} />
+                      ) : (
+                        <Circle size={16} />
+                      )}
+                    </span>
+                    <span>
+                      {check.label}
+                      <small className={styles.inlineMuted}>
+                        {check.isPinned ? " · 고정 행동" : " · 선택 추가"}
+                      </small>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            )}
+            <div className={styles.formRow}>
+              <textarea
+                className={styles.textArea}
+                value={comments}
+                placeholder="느낀점을 기록하세요."
+                onChange={(event) => setComments(event.target.value)}
+              />
+              <SafeButton
+                loading={isSavingRecord}
+                onClick={() => void handleSaveRecord()}
+              >
+                기록 저장
+              </SafeButton>
+            </div>
+          </section>
+
+          <section className={`${styles.section} ${styles.librarySection}`}>
+            <div className={styles.sectionHeader}>
+              <h3 className={styles.sectionTitle}>오늘의 행동 제안</h3>
+              <p className={styles.sectionHint}>
+                고정되지 않은 행동은 날짜가 지나면 자동으로 제거됩니다.
+              </p>
+            </div>
+            {suggestionQuery.isLoading ? (
+              <p className={styles.empty}>불러오는 중...</p>
+            ) : (suggestionQuery.data ?? []).length === 0 ? (
+              <p className={styles.empty}>제안된 행동이 없습니다.</p>
+            ) : (
+              <div className={styles.cardList}>
+                {(suggestionQuery.data ?? []).map((detail) => (
+                  <article key={detail.id} className={styles.behaviorCard}>
+                    <div className={styles.row}>
+                      <h4 className={styles.behaviorTitle}>
+                        {detail.behavior_label}
+                      </h4>
+                      <SafeButton
+                        size="sm"
+                        variant="ghost"
+                        loading={Boolean(pinLoadingByDetailId[detail.id])}
+                        onClick={() =>
+                          void handleTogglePin(
+                            detail.id,
+                            Boolean(detail.is_pinned),
+                          )
+                        }
+                      >
+                        {detail.is_pinned ? (
+                          <Pin size={14} />
+                        ) : (
+                          <PinOff size={14} />
+                        )}
+                        {detail.is_pinned ? "고정됨" : "고정"}
+                      </SafeButton>
+                    </div>
+                    <p className={styles.behaviorDesc}>
+                      {detail.behavior_description}
                     </p>
-                    <p className={styles.timelineText}>
-                      체크{" "}
-                      {
-                        (history.checks ?? []).filter((item) => item.is_done)
-                          .length
-                      }
-                      /{(history.checks ?? []).length}
-                      {history.comments ? ` · ${history.comments}` : ""}
-                    </p>
-                    <p className={styles.timelineMeta}>
-                      {formatKoreanDateTime(history.created_at, {
-                        month: "numeric",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
+                    <div className={styles.checkList}>
+                      {(detail.checks ?? []).map((check) => {
+                        const included = includedCheckIds.has(check.id);
+                        const recorded = recordedCheckIdSet.has(check.id);
+                        const isPinned = Boolean(detail.is_pinned);
+                        return (
+                          <div
+                            key={check.id}
+                            className={styles.checkSuggestionRow}
+                          >
+                            <span
+                              className={`${styles.checkItem} ${
+                                recorded
+                                  ? styles.checkItemRecorded
+                                  : included
+                                  ? styles.checkItemIncluded
+                                  : ""
+                              }`}
+                            >
+                              {recorded ? (
+                                <CheckCircle2 size={14} />
+                              ) : (
+                                <Circle size={14} />
+                              )}
+                              {check.check_label}
+                            </span>
+                            {isPinned ? (
+                              <span className={styles.inlineBadge}>
+                                기본 포함
+                              </span>
+                            ) : (
+                              <SafeButton
+                                size="sm"
+                                variant={included ? "ghost" : "primary"}
+                                onClick={() => toggleOptionalCheck(check.id)}
+                              >
+                                {included ? (
+                                  <>
+                                    <Trash2 size={14} />
+                                    제거
+                                  </>
+                                ) : (
+                                  <>
+                                    <Plus size={14} />
+                                    기록에 추가
+                                  </>
+                                )}
+                              </SafeButton>
+                            )}
+                          </div>
+                        );
                       })}
-                    </p>
-                  </button>
+                    </div>
+                  </article>
                 ))}
               </div>
             )}

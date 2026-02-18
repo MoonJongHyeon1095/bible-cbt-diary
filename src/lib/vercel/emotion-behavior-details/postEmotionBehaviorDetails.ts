@@ -14,6 +14,7 @@ export const handlePostEmotionBehaviorDetails = async (
     behavior_label?: string;
     behavior_description?: string;
     checks?: string[];
+    is_pinned?: boolean;
     created_at?: string;
     deviceId?: string;
   }>(req);
@@ -42,10 +43,12 @@ export const handlePostEmotionBehaviorDetails = async (
     device_id?: string | null;
     behavior_label: string;
     behavior_description: string;
+    is_pinned: boolean;
     created_at?: string;
   } = {
     behavior_label: behaviorLabel,
     behavior_description: behaviorDescription,
+    is_pinned: Boolean(payload.is_pinned),
   };
 
   if (user) {

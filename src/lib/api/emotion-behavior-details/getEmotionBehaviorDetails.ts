@@ -15,6 +15,9 @@ export const fetchBehaviorDetails = async (
     sort?: "created_desc" | "recorded_desc";
     limit?: number;
     offset?: number;
+    createdFrom?: string;
+    createdTo?: string;
+    includePinned?: boolean;
   },
 ) => {
   const resolved = resolveAccess(access);
@@ -31,6 +34,9 @@ export const fetchBehaviorDetails = async (
   if (options?.sort) query.set("sort", options.sort);
   if (options?.limit != null) query.set("limit", String(options.limit));
   if (options?.offset != null) query.set("offset", String(options.offset));
+  if (options?.createdFrom) query.set("created_from", options.createdFrom);
+  if (options?.createdTo) query.set("created_to", options.createdTo);
+  if (options?.includePinned) query.set("include_pinned", "true");
 
   const url = appendQuery(
     buildApiUrl(`/api/emotion-behavior-details${query.toString() ? `?${query.toString()}` : ""}`),

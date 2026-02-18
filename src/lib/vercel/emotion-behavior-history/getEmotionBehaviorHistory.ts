@@ -3,13 +3,6 @@ import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getQueryParam, json } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 
-const parseBehaviorDetailId = (req: VercelRequest) => {
-  const raw = getQueryParam(req, "behavior_detail_id");
-  if (raw == null || raw === "") return null;
-  const value = Number(raw);
-  return Number.isFinite(value) ? value : null;
-};
-
 const parseTrackedOn = (req: VercelRequest) => {
   const raw = getQueryParam(req, "tracked_on");
   if (!raw) return null;
@@ -29,21 +22,17 @@ export const handleGetEmotionBehaviorHistory = async (
     return json(res, 401, { histories: [] });
   }
 
-  const behaviorDetailId = parseBehaviorDetailId(req);
   const trackedOn = parseTrackedOn(req);
 
   const supabase = createSupabaseAdminClient();
   let baseQuery = supabase
     .from("emotion_behavior_history")
     .select(
-      "id,behavior_detail_id,tracked_on,comments,created_at,emotion_behavior_history_checks(id,history_id,check_id,is_done,created_at,emotion_behavior_checks(check_label))",
+      "id,tracked_on,comments,created_at,emotion_behavior_history_checks(id,history_id,check_id,is_done,created_at,emotion_behavior_checks(check_label))",
     )
     .order("tracked_on", { ascending: false })
     .order("created_at", { ascending: false });
 
-  if (behaviorDetailId != null) {
-    baseQuery = baseQuery.eq("behavior_detail_id", behaviorDetailId);
-  }
   if (trackedOn) {
     baseQuery = baseQuery.eq("tracked_on", trackedOn);
   }

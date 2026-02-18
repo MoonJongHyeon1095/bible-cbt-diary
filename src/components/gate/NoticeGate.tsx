@@ -9,6 +9,7 @@ import {
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { useGate } from "@/components/gate/GateProvider";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import styles from "./NoticeGate.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
@@ -18,6 +19,7 @@ export default function NoticeGate() {
   const [notice, setNotice] = useState<NoticeItem | null>(null);
   const pathname = usePathname();
   const { status, setNoticeState } = useGate();
+  useModalOpen(Boolean(notice));
 
   const applyNoticeState = useCallback(
     (nextNotice: NoticeItem | null, ready: boolean) => {

@@ -9,6 +9,7 @@ type EmotionNoteDetailSectionCardProps = {
   title: string;
   hint: string;
   children: ReactNode;
+  dataTour?: string;
 };
 
 export default function EmotionNoteDetailSectionCard({
@@ -16,9 +17,13 @@ export default function EmotionNoteDetailSectionCard({
   icon,
   title,
   children,
+  dataTour,
 }: EmotionNoteDetailSectionCardProps) {
   return (
-    <div className={`${styles.sectionCard} ${className ?? ""}`.trim()}>
+    <div
+      className={`${styles.sectionCard} ${className ?? ""}`.trim()}
+      data-tour={dataTour}
+    >
       <div className={styles.sectionTape} aria-hidden />
       <div className={styles.sectionHeader}>
         <div className={styles.sectionTitle}>

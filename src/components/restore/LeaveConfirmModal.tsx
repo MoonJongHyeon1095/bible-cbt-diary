@@ -1,5 +1,6 @@
 "use client";
 
+import { useModalOpen } from "@/components/common/useModalOpen";
 import SafeButton from "@/components/ui/SafeButton";
 import { Save } from "lucide-react";
 import styles from "./RestoreModal.module.css";
@@ -15,6 +16,8 @@ export default function LeaveConfirmModal({
   onCancel,
   onConfirm,
 }: LeaveConfirmModalProps) {
+  useModalOpen(open);
+
   if (!open) return null;
 
   return (

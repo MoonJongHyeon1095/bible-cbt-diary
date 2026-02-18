@@ -11,6 +11,7 @@ type FloatingActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   helperText?: string;
   loading?: boolean;
   loadingRing?: boolean;
+  sparkleRing?: boolean;
   loadingText?: ButtonProps["loadingText"];
   loadingBehavior?: ButtonProps["loadingBehavior"];
 };
@@ -21,6 +22,7 @@ export default function FloatingActionButton({
   helperText,
   loading,
   loadingRing,
+  sparkleRing,
   loadingText,
   loadingBehavior,
   className,
@@ -33,6 +35,7 @@ export default function FloatingActionButton({
       className={[
         styles.button,
         loadingRing ? styles.hasLoadingRing : "",
+        sparkleRing ? styles.hasSparkleRing : "",
         className,
       ]
         .filter(Boolean)
@@ -46,7 +49,13 @@ export default function FloatingActionButton({
       {loadingRing ? (
         <span className={styles.loadingRing} aria-hidden />
       ) : null}
-      {icon ?? label}
+      {sparkleRing ? (
+        <span className={styles.sparkleRingFrame} aria-hidden>
+          <span className={styles.sparkleRing} />
+          <span className={styles.sparkleRingMask} />
+        </span>
+      ) : null}
+      <span className={styles.contentLayer}>{icon ?? label}</span>
       {helperText ? (
         <span className={styles.helperText}>{helperText}</span>
       ) : null}

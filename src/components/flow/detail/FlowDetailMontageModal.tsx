@@ -1,6 +1,7 @@
 "use client";
 
 import CharacterPrompt from "@/components/ui/CharacterPrompt";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import SafeButton from "@/components/ui/SafeButton";
 import type { EmotionMontage } from "@/lib/types/emotionNoteTypes";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
@@ -21,6 +22,8 @@ export default function FlowDetailMontageModal({
   montage,
   onClose,
 }: FlowDetailMontageModalProps) {
+  useModalOpen(true);
+
   const [activePage, setActivePage] = useState(0);
   const [showAtoms, setShowAtoms] = useState(false);
   const atoms = ensureArray<{

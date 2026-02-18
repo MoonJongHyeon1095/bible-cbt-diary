@@ -2,11 +2,12 @@ import type { Alignment, Side } from "driver.js";
 import type { Dispatch, SetStateAction } from "react";
 
 export type OnboardingStep = {
-  selector: string;
+  selector?: string;
   content: string;
   side?: Side;
   align?: Alignment;
   completeOnTargetClick?: boolean;
+  hidePopoverDuringScroll?: boolean;
 };
 
 export type OnboardingProgress = {

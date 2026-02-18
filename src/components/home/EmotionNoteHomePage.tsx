@@ -4,11 +4,12 @@ import { useGate } from "@/components/gate/GateProvider";
 import AppHeader from "@/components/header/AppHeader";
 import OnboardingTour from "@/components/onboarding/OnboardingTour";
 import {
+  readUnifiedTourProgress,
   UNIFIED_TOUR_BASE_TOTAL,
-  UNIFIED_TOUR_STORAGE_KEY,
+  persistUnifiedTourProgress,
   getMinimalTourOffset,
 } from "@/components/onboarding/unifiedOnboarding";
-import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
+import { useUnifiedOnboardingSegment } from "@/components/onboarding/hooks/useUnifiedOnboardingSegment";
 import ResumePromptModal from "@/components/restore/ResumePromptModal";
 import { useSessionResume } from "@/components/restore/useSessionResume";
 import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css";
@@ -70,71 +71,21 @@ export default function EmotionNoteHomePage() {
   );
   const {
     isOpen: isTourOpen,
-    setIsOpen: setIsTourOpen,
+    setIsOpen: setTourOpen,
     currentStep,
     setCurrentStep,
     onFinish,
     onClose,
     onMaskClick,
-  } = useOnboardingTourControls({
-    onPersist: (stepIndex) => {
-      if (!safeLocalStorage.isAvailable()) return;
-      safeLocalStorage.setItem(
-        UNIFIED_TOUR_STORAGE_KEY,
-        JSON.stringify({
-          lastStep: Math.max(0, homeTourOffset + stepIndex),
-          lastTotal: UNIFIED_TOUR_BASE_TOTAL,
-        }),
-      );
-    },
+  } = useUnifiedOnboardingSegment({
+    steps: homeTourSteps,
+    offset: homeTourOffset,
+    canShow: canShowOnboarding,
+    blocked: Boolean(blocker),
   });
   const { showResumeModal, dismissResume, resume } = useSessionResume({
     navigate: router.push,
   });
-
-  useEffect(() => {
-    if (blocker && isTourOpen) {
-      setIsTourOpen(false);
-    }
-  }, [blocker, isTourOpen, setIsTourOpen]);
-
-  useEffect(() => {
-    if (!safeLocalStorage.isAvailable()) return;
-    if (!canShowOnboarding) return;
-    if (isTourOpen) return;
-    if (homeTourSteps.length === 0) return;
-    const maxGlobalStepIndex = UNIFIED_TOUR_BASE_TOTAL - 1;
-    const targetGlobalStep = homeTourOffset;
-    const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
-
-    if (!stored) {
-      if (targetGlobalStep !== 0) return;
-      setCurrentStep(0);
-      setIsTourOpen(true);
-      return;
-    }
-
-    type TourProgress = { lastStep: number; lastTotal: number };
-    let progress: TourProgress | null = null;
-    try {
-      progress = JSON.parse(stored) as TourProgress;
-    } catch {
-      progress = null;
-    }
-    if (!progress) return;
-    if (progress.lastStep >= maxGlobalStepIndex) return;
-    if (progress.lastStep >= targetGlobalStep) return;
-    if (progress.lastStep + 1 !== targetGlobalStep) return;
-    setCurrentStep(0);
-    setIsTourOpen(true);
-  }, [
-    canShowOnboarding,
-    homeTourOffset,
-    homeTourSteps.length,
-    isTourOpen,
-    setCurrentStep,
-    setIsTourOpen,
-  ]);
 
   useEffect(() => {
     const handleHomeTabReset = () => {
@@ -188,25 +139,12 @@ export default function EmotionNoteHomePage() {
     }
     if (safeLocalStorage.isAvailable() && isTourOpen && step === "emotion") {
       const emotionGlobalStep = getMinimalTourOffset("emotion");
-      const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
-      let previousLastStep = -1;
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored) as { lastStep?: number };
-          previousLastStep =
-            typeof parsed.lastStep === "number" ? parsed.lastStep : -1;
-        } catch {
-          previousLastStep = -1;
-        }
-      }
-      safeLocalStorage.setItem(
-        UNIFIED_TOUR_STORAGE_KEY,
-        JSON.stringify({
-          lastStep: Math.max(previousLastStep, emotionGlobalStep),
-          lastTotal: UNIFIED_TOUR_BASE_TOTAL,
-        }),
+      const previousLastStep = readUnifiedTourProgress()?.lastStep ?? -1;
+      persistUnifiedTourProgress(
+        Math.max(previousLastStep, emotionGlobalStep),
+        UNIFIED_TOUR_BASE_TOTAL,
       );
-      setIsTourOpen(false);
+      setTourOpen(false);
     }
     setIsStartLoading(true);
     await new Promise<void>((resolve) =>
@@ -286,7 +224,7 @@ export default function EmotionNoteHomePage() {
       <OnboardingTour
         steps={homeTourSteps}
         isOpen={isTourOpen}
-        setIsOpen={setIsTourOpen}
+        setIsOpen={setTourOpen}
         currentStep={currentStep}
         setCurrentStep={setCurrentStep}
         progress={tourProgress}

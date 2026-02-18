@@ -15,14 +15,16 @@ import {
 } from "@/components/restore/storage";
 import { useGate } from "@/components/gate/GateProvider";
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
+import { useUnifiedOnboardingSegment } from "@/components/onboarding/hooks/useUnifiedOnboardingSegment";
 import {
   EMOTION_NOTE_STARTED_KEY,
 } from "@/lib/storage/keys/onboarding";
 import {
+  markDetailConfettiPending,
+  MINIMAL_TOUR_TOTAL,
   MINIMAL_TOUR_STEPS_BY_FLOW,
+  readUnifiedTourProgress,
   UNIFIED_TOUR_BASE_TOTAL,
-  UNIFIED_TOUR_STORAGE_KEY,
   getMinimalTourOffset,
 } from "@/components/onboarding/unifiedOnboarding";
 import {
@@ -51,11 +53,6 @@ import {
 import { useSessionMoodController } from "@/components/session/common/useSessionMoodController";
 import { useMinimalSessionRestore } from "./controller/useMinimalSessionRestore";
 import { useMinimalSessionResumeDraft } from "./controller/useMinimalSessionResumeDraft";
-
-type TourProgress = {
-  lastStep: number;
-  lastTotal: number;
-};
 
 export function useMinimalSessionController() {
   const router = useRouter();
@@ -183,20 +180,6 @@ export function useMinimalSessionController() {
     }) => saveSessionHistoryAPI(args.access, args.payload),
   });
 
-  const persistTourProgress = useCallback(
-    (stepIndex: number) => {
-      if (!safeLocalStorage.isAvailable()) return;
-      safeLocalStorage.setItem(
-        UNIFIED_TOUR_STORAGE_KEY,
-        JSON.stringify({
-          lastStep: tourGlobalOffset + stepIndex,
-          lastTotal: UNIFIED_TOUR_BASE_TOTAL,
-        }),
-      );
-    },
-    [tourGlobalOffset],
-  );
-
   const {
     isOpen: isTourOpen,
     setIsOpen: setIsTourOpen,
@@ -205,7 +188,12 @@ export function useMinimalSessionController() {
     onFinish: handleTourFinish,
     onClose: handleTourClose,
     onMaskClick: handleTourMaskClick,
-  } = useOnboardingTourControls({ onPersist: persistTourProgress });
+  } = useUnifiedOnboardingSegment({
+    steps: tourSteps,
+    offset: tourGlobalOffset,
+    canShow: canShowOnboarding && accessMode !== "blocked" && !isAccessLoading,
+    blocked: Boolean(blocker),
+  });
 
   useEffect(() => {
     const handlePageHide = () => {
@@ -217,52 +205,6 @@ export function useMinimalSessionController() {
       void flushTokenSessionUsage();
     };
   }, []);
-
-  useEffect(() => {
-    if (blocker && isTourOpen) {
-      setIsTourOpen(false);
-    }
-  }, [blocker, isTourOpen, setIsTourOpen]);
-
-  useEffect(() => {
-    if (accessMode === "blocked" || isAccessLoading) return;
-    if (!canShowOnboarding) return;
-    if (isTourOpen) return;
-    if (tourSteps.length === 0) return;
-    if (!safeLocalStorage.isAvailable()) return;
-    const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
-    const maxGlobalStepIndex = UNIFIED_TOUR_BASE_TOTAL - 1;
-    let progress: TourProgress | null = null;
-    if (stored) {
-      try {
-        progress = JSON.parse(stored) as TourProgress;
-      } catch {
-        progress = null;
-      }
-    }
-
-    if (!progress) return;
-    if (progress.lastStep >= maxGlobalStepIndex) return;
-
-    const nextGlobalStep = Math.max(
-      0,
-      Math.min(progress.lastStep + 1, maxGlobalStepIndex),
-    );
-    const localIndex = nextGlobalStep - tourGlobalOffset;
-    if (localIndex < 0 || localIndex >= tourSteps.length) return;
-    setTourStep(localIndex);
-    setIsTourOpen(true);
-  }, [
-    accessMode,
-    isAccessLoading,
-    isTourOpen,
-    canShowOnboarding,
-    flow.step,
-    tourSteps.length,
-    tourGlobalOffset,
-    setIsTourOpen,
-    setTourStep,
-  ]);
 
   const handleBack = useCallback(() => {
     if (currentStepIndex <= 0) return;
@@ -386,6 +328,10 @@ export function useMinimalSessionController() {
         const noteId = payload?.noteId;
         if (!noteId) {
           throw new Error("note_id_missing");
+        }
+        const unifiedProgress = readUnifiedTourProgress();
+        if (unifiedProgress && unifiedProgress.lastStep >= MINIMAL_TOUR_TOTAL - 1) {
+          markDetailConfettiPending();
         }
 
         clearSessionResumeDraft();

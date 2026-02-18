@@ -1,8 +1,114 @@
 import type { OnboardingStep } from "@/components/onboarding/OnboardingTour";
 import type { MinimalStep } from "@/components/session/hooks/useCbtMinimalSessionFlow";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { UNIFIED_TOUR_STORAGE_KEY as UNIFIED_ONBOARDING_KEY } from "@/lib/storage/keys/onboarding";
 
 export const UNIFIED_TOUR_STORAGE_KEY = UNIFIED_ONBOARDING_KEY;
+
+export type UnifiedTourProgress = {
+  lastStep: number;
+  lastTotal: number;
+  detailConfettiPending?: boolean;
+  detailConfettiShown?: boolean;
+};
+
+export const readUnifiedTourProgress = (): UnifiedTourProgress | null => {
+  if (!safeLocalStorage.isAvailable()) return null;
+  const stored = safeLocalStorage.getItem(UNIFIED_TOUR_STORAGE_KEY);
+  if (!stored) return null;
+  try {
+    const parsed = JSON.parse(stored) as Partial<UnifiedTourProgress>;
+    if (
+      typeof parsed.lastStep !== "number" ||
+      Number.isNaN(parsed.lastStep) ||
+      typeof parsed.lastTotal !== "number" ||
+      Number.isNaN(parsed.lastTotal)
+    ) {
+      return null;
+    }
+    return {
+      lastStep: parsed.lastStep,
+      lastTotal: parsed.lastTotal,
+      detailConfettiPending: Boolean(parsed.detailConfettiPending),
+      detailConfettiShown: Boolean(parsed.detailConfettiShown),
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const writeUnifiedTourProgress = (next: UnifiedTourProgress) => {
+  if (!safeLocalStorage.isAvailable()) return;
+  safeLocalStorage.setItem(UNIFIED_TOUR_STORAGE_KEY, JSON.stringify(next));
+};
+
+export const persistUnifiedTourProgress = (
+  lastStep: number,
+  lastTotal: number,
+) => {
+  const prev = readUnifiedTourProgress();
+  const nextStep = Math.max(
+    prev?.lastStep ?? -1,
+    Math.max(0, Math.floor(lastStep)),
+  );
+  const nextTotal = Math.max(
+    prev?.lastTotal ?? 0,
+    Math.max(0, Math.floor(lastTotal)),
+  );
+  writeUnifiedTourProgress({
+    lastStep: nextStep,
+    lastTotal: nextTotal,
+    detailConfettiPending: prev?.detailConfettiPending ?? false,
+    detailConfettiShown: prev?.detailConfettiShown ?? false,
+  });
+};
+
+export const resolveUnifiedSegmentStartStep = (
+  offset: number,
+  stepCount: number,
+) => {
+  if (stepCount <= 0) return null;
+  const progress = readUnifiedTourProgress();
+  if (!progress) {
+    return offset === 0 ? 0 : null;
+  }
+  if (progress.lastStep >= UNIFIED_TOUR_BASE_TOTAL - 1) return null;
+  const nextGlobalStep = Math.max(
+    0,
+    Math.min(progress.lastStep + 1, UNIFIED_TOUR_BASE_TOTAL - 1),
+  );
+  const localStep = nextGlobalStep - offset;
+  if (localStep < 0 || localStep >= stepCount) return null;
+  return localStep;
+};
+
+export const markDetailConfettiPending = () => {
+  const prev = readUnifiedTourProgress();
+  if (!prev || prev.detailConfettiShown) return;
+  writeUnifiedTourProgress({
+    ...prev,
+    detailConfettiPending: true,
+  });
+};
+
+export const consumeDetailConfettiPending = () => {
+  const prev = readUnifiedTourProgress();
+  if (!prev) return false;
+  const shouldCelebrate =
+    !prev.detailConfettiShown &&
+    (prev.detailConfettiPending ||
+      prev.lastStep === UNIFIED_DETAIL_CELEBRATION_STEP ||
+      (prev.lastStep >= MINIMAL_TOUR_TOTAL - 1 &&
+        prev.lastStep < UNIFIED_DETAIL_TOUR_OFFSET));
+  if (!shouldCelebrate) return false;
+  writeUnifiedTourProgress({
+    ...prev,
+    lastStep: Math.max(prev.lastStep, UNIFIED_DETAIL_CELEBRATION_STEP),
+    detailConfettiPending: false,
+    detailConfettiShown: true,
+  });
+  return true;
+};
 
 export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
   "mood",
@@ -19,7 +125,7 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
         selector:
           "[data-tour='home-mood-toggle'], [data-tour='session-mood-toggle']",
         side: "bottom",
-        content: "표정을 먼저 고르면 다음 단계에서 감정을 선택할 수 있어요.",
+        content: "오늘 기분을 골라보죠. \n아주 단순하게 좋은지 나쁜지로.",
       },
     ],
     emotion: [
@@ -39,7 +145,7 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
       {
         selector: "[data-tour='minimal-incident-example']",
         side: "bottom",
-        content: "직접 쓰시거나 예시를 살짝 보실 수도 있어요.",
+        content: "직접 적을 수도, 예시를 볼 수도 있어요.",
       },
       {
         selector: "[data-tour='minimal-incident-next']",
@@ -56,7 +162,7 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
       {
         selector: "[data-tour='minimal-distortion-more']",
         side: "bottom",
-        content: "원하면 다른 distortion 카드도 더 볼 수 있어요.",
+        content: "다른 생각을 더 보려면 여기를 눌러보세요.",
       },
     ],
     alternative: [],
@@ -67,7 +173,37 @@ export const MINIMAL_TOUR_TOTAL = MINIMAL_TOUR_STEP_ORDER.reduce(
   0,
 );
 
-export const UNIFIED_TOUR_BASE_TOTAL = MINIMAL_TOUR_TOTAL;
+// Global step indices (0-based):
+// 0..6 minimal onboarding (display 1..7)
+// 7..10 detail onboarding (display 8..11)
+export const UNIFIED_DETAIL_CELEBRATION_STEP = 7;
+export const UNIFIED_DETAIL_TOUR_OFFSET = 7;
+export const DETAIL_TOUR_STEPS: OnboardingStep[] = [
+  {
+    content: "첫 노트 생성 축하드려요!",
+    side: "bottom",
+    align: "center",
+  },
+  {
+    selector: "[data-tour='detail-memory-box']",
+    side: "bottom",
+    content: "이 곳은 기억을 보관하는 방입니다.",
+  },
+  {
+    selector: "[data-tour='detail-alternative-box']",
+    side: "bottom",
+    content: "방금 고른 생각도 이곳에 저장되어 있네요.",
+    hidePopoverDuringScroll: true,
+  },
+  {
+    selector: "[data-tour='detail-flow-fab']",
+    side: "left",
+    content: "하지만 기억을 방에 넣어두기만 하면 \n무슨 소용이겠어요.",
+  },
+];
+
+export const UNIFIED_TOUR_BASE_TOTAL =
+  UNIFIED_DETAIL_TOUR_OFFSET + DETAIL_TOUR_STEPS.length;
 
 export const getMinimalTourOffset = (step: MinimalStep) => {
   let offset = 0;

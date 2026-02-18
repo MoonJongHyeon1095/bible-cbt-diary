@@ -49,6 +49,7 @@ export default function EmotionNoteAlternativeDetailSection(
         icon={<Lightbulb size={18} />}
         title="대안 사고"
         hint="하나의 문장으로 정리한 리프레임"
+        dataTour="detail-alternative-box"
       >
         {!alternative.trim() ? (
           <div className={styles.detailList}>

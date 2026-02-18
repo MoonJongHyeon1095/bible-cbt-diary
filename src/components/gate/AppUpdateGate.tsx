@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Capacitor } from "@capacitor/core";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import styles from "./NoticeGate.module.css";
 import { useGate } from "@/components/gate/GateProvider";
 import SafeButton from "@/components/ui/SafeButton";
@@ -13,6 +14,7 @@ export default function AppUpdateGate() {
   const [storeLabel, setStoreLabel] = useState("업데이트하기");
   const checkedRef = useRef(false);
   const { setUpdateStatus } = useGate();
+  useModalOpen(requiresUpdate);
 
   useEffect(() => {
     setUpdateStatus({ ready: false, blocking: false, failed: false });

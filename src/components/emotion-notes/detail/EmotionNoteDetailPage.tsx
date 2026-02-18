@@ -22,6 +22,7 @@ import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
+  hideFloatingActions?: boolean;
 };
 
 type ModalContent = {
@@ -40,7 +41,10 @@ const formatDateTime = (value: string) =>
     minute: "2-digit",
   });
 
-export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageProps) {
+export default function EmotionNoteDetailPage({
+  noteId,
+  hideFloatingActions = false,
+}: EmotionNoteDetailPageProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { note, isLoading, detailAccessMode } = useEmotionNoteDetail(noteId);
@@ -83,7 +87,7 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
       <AppHeader showDisclaimer={false} />
       <main className={`${pageStyles.main} ${styles.pageMain}`}>
         <div className={`${pageStyles.shell} ${styles.contentShell}`}>
-          <section className={styles.noteForm}>
+          <section className={styles.noteForm} data-tour="detail-memory-box">
             <div className={styles.noteHeader}>
               <span className={styles.noteHeaderIcon} aria-hidden>
                 <NotebookPen size={16} />
@@ -122,7 +126,9 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
             icon={<Share2 size={22} />}
             helperText="공유하기"
             onClick={() => router.push(`/share/create?id=${note.id}`)}
-            className={styles.fabSecondary}
+            className={[styles.fabSecondary, hideFloatingActions ? styles.fabHidden : ""]
+              .filter(Boolean)
+              .join(" ")}
             style={{
               backgroundColor: "#fff",
               color: "#121417",
@@ -134,7 +140,9 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
             icon={<Sparkles size={22} />}
             helperText="행동 제안"
             onClick={() => router.push(`/behavior/new?noteId=${note.id}`)}
-            className={styles.fabBehavior}
+            className={[styles.fabBehavior, hideFloatingActions ? styles.fabHidden : ""]
+              .filter(Boolean)
+              .join(" ")}
             style={{
               left: "24px",
               right: "auto",
@@ -143,47 +151,53 @@ export default function EmotionNoteDetailPage({ noteId }: EmotionNoteDetailPageP
               borderColor: "rgba(255, 255, 255, 0.35)",
             }}
           />
-          <FloatingActionButton
-            label="Flow"
-            icon={<Route size={22} />}
-            helperText="Flow"
-            onClick={async () => {
-              setIsGoDeeperLoading(true);
-              await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
-              const allowed = await checkUsage();
-              if (!allowed) {
-                setIsGoDeeperLoading(false);
-                return;
-              }
-              if (isBlocked) {
-                openAuthModal();
-                setIsGoDeeperLoading(false);
-                return;
-              }
-              const access = { mode: accessStateMode, accessToken };
-              const ok = await goToFlowForNote({
-                noteId: note.id,
-                flowIds: note.flow_ids,
-                access,
-                router,
-                onError: (message) => pushToast(message, "error"),
-                onCreated: () => {
-                  void queryClient.invalidateQueries({ queryKey: queryKeys.flow.all });
-                },
-              });
-              if (!ok) {
-                setIsGoDeeperLoading(false);
-                return;
-              }
-            }}
-            loadingRing={isGoDeeperLoading}
-            className={styles.fab}
-            style={{
-              backgroundColor: "#121417",
-              color: "#fff",
-              borderColor: "rgba(255, 255, 255, 0.35)",
-            }}
-          />
+          <div className={styles.flowFabTourTarget}>
+            <FloatingActionButton
+              label="Flow"
+              icon={<Route size={22} />}
+              helperText="Flow"
+              data-tour="detail-flow-fab"
+              onClick={async () => {
+                setIsGoDeeperLoading(true);
+                await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+                const allowed = await checkUsage();
+                if (!allowed) {
+                  setIsGoDeeperLoading(false);
+                  return;
+                }
+                if (isBlocked) {
+                  openAuthModal();
+                  setIsGoDeeperLoading(false);
+                  return;
+                }
+                const access = { mode: accessStateMode, accessToken };
+                const ok = await goToFlowForNote({
+                  noteId: note.id,
+                  flowIds: note.flow_ids,
+                  access,
+                  router,
+                  onError: (message) => pushToast(message, "error"),
+                  onCreated: () => {
+                    void queryClient.invalidateQueries({ queryKey: queryKeys.flow.all });
+                  },
+                });
+                if (!ok) {
+                  setIsGoDeeperLoading(false);
+                  return;
+                }
+              }}
+              loadingRing={isGoDeeperLoading}
+              sparkleRing
+              className={[styles.fab, hideFloatingActions ? styles.fabHidden : ""]
+                .filter(Boolean)
+                .join(" ")}
+              style={{
+                backgroundColor: "#121417",
+                color: "#fff",
+                borderColor: "rgba(255, 255, 255, 0.35)",
+              }}
+            />
+          </div>
         </>
       ) : null}
 

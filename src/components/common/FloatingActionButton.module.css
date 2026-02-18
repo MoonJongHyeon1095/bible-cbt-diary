@@ -21,6 +21,19 @@
   isolation: isolate;
 }
 
+.hasSparkleRing {
+  isolation: isolate;
+}
+
+.sparkleRingFrame {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .loadingRing {
   content: "";
   position: absolute;
@@ -34,6 +47,43 @@
   z-index: 1;
 }
 
+.sparkleRing {
+  position: absolute;
+  inset: -42%;
+  border-radius: 999px;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    rgba(242, 201, 109, 0.9) 40deg,
+    transparent 90deg,
+    rgba(150, 190, 255, 0.8) 140deg,
+    transparent 200deg
+  );
+  opacity: 0.55;
+  animation: fabSparkleRingSpin 5.5s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.sparkleRingMask {
+  position: absolute;
+  inset: 5px;
+  border-radius: 999px;
+  background: var(--fab-ring-inner-bg, rgba(16, 20, 28, 0.95));
+  border: 1px solid var(--fab-ring-inner-border, rgba(80, 92, 112, 0.6));
+  pointer-events: none;
+  z-index: 1;
+}
+
+.hasSparkleRing:hover .sparkleRing {
+  opacity: 0.85;
+}
+
+.hasSparkleRing:disabled .sparkleRing {
+  opacity: 0.2;
+  animation-play-state: paused;
+}
+
 .helperText {
   position: absolute;
   top: calc(100% + 10px);
@@ -45,6 +95,15 @@
   border-radius: 999px;
   white-space: nowrap;
   transform: translateX(-50%);
+  z-index: 4;
+}
+
+.contentLayer {
+  position: relative;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .button:disabled {
@@ -72,6 +131,15 @@
 
 @keyframes fabSpin {
   to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fabSparkleRingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
     transform: rotate(360deg);
   }
 }

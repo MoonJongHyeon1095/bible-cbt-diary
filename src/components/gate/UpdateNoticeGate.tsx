@@ -1,11 +1,13 @@
 "use client";
 
 import { useGate } from "@/components/gate/GateProvider";
+import { useModalOpen } from "@/components/common/useModalOpen";
 import styles from "./NoticeGate.module.css";
 import SafeButton from "@/components/ui/SafeButton";
 
 export default function UpdateNoticeGate() {
   const { status, setUpdateStatus } = useGate();
+  useModalOpen(status.update.failed);
 
   if (!status.update.failed) return null;
 

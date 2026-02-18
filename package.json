@@ -20,7 +20,6 @@
     "@supabase/supabase-js": "^2.91.1",
     "@tanstack/react-query": "^5.90.20",
     "canvas-confetti": "^1.9.4",
-    "d3-force": "^3.0.0",
     "driver.js": "^1.4.0",
     "elkjs": "^0.9.3",
     "embla-carousel": "^8.6.0",

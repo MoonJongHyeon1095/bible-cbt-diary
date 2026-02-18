@@ -2,59 +2,27 @@
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
 import SafeButton from "@/components/ui/SafeButton";
-import { LayoutDashboard, Route, Trash2, Waypoints } from "lucide-react";
-import type {
-  CSSProperties,
-  PointerEvent as ReactPointerEvent,
-  WheelEvent as ReactWheelEvent,
-} from "react";
-import type { LegacyRef } from "react";
-import { useMemo } from "react";
+import { LayoutDashboard, Route, Trash2 } from "lucide-react";
+import type { MouseEvent as ReactMouseEvent } from "react";
+import type { FlowListNodeViewModel } from "../nodes/FlowListNode";
+import FlowListNode from "../nodes/FlowListNode";
 import styles from "../FlowListSection.module.css";
 
-type GroupNode = {
-  id: number;
-  noteCount: number;
-  title: string;
-  description: string | null;
-  radius: number;
-  color: string;
-  rgb: [number, number, number];
-  x: number;
-  y: number;
-};
+type FlowSortMode = "latest" | "size";
 
 type FlowListSectionViewProps = {
-  containerRef: LegacyRef<HTMLDivElement>;
-  canvasLayerRef: LegacyRef<HTMLDivElement>;
-  isPanning: boolean;
-  isLowPerfMode: boolean;
   isLoading: boolean;
-  nodes: GroupNode[];
-  pan: { x: number; y: number };
-  selectedFlowId: number | null;
+  nodes: FlowListNodeViewModel[];
   selectedFlow: { id: number } | null;
-  selectedNode: GroupNode | null;
   totalCount: number;
+  sortMode: FlowSortMode;
+  onChangeSortMode: (mode: FlowSortMode) => void;
   filterNoteId: number | null;
   filterNoteTitle: string | null;
   isFilterNoteLoading: boolean;
   confirmDelete: boolean;
   isDeleting: boolean;
-  isMetaEditing: boolean;
-  isMetaSaving: boolean;
-  metaTitleDraft: string;
-  metaDescriptionDraft: string;
-  onCanvasPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onCanvasPointerMove: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onCanvasPointerUp: (event: ReactPointerEvent<HTMLDivElement>) => void;
-  onCanvasWheel: (event: ReactWheelEvent<HTMLDivElement>) => void;
-  onSelectFlow: (flowId: number) => void;
-  onStartMetaEdit: () => void;
-  onCancelMetaEdit: () => void;
-  onSaveMeta: () => void;
-  onChangeMetaTitle: (value: string) => void;
-  onChangeMetaDescription: (value: string) => void;
+  onSelectFlow: (flowId: number | null) => void;
   onOpenDeleteConfirm: () => void;
   onCloseDeleteConfirm: () => void;
   onDeleteFlow: () => void;
@@ -62,36 +30,18 @@ type FlowListSectionViewProps = {
 };
 
 export default function FlowListSectionView({
-  containerRef,
-  canvasLayerRef,
-  isPanning,
-  isLowPerfMode,
   isLoading,
   nodes,
-  pan,
-  selectedFlowId,
   selectedFlow,
-  selectedNode,
   totalCount,
+  sortMode,
+  onChangeSortMode,
   filterNoteId,
   filterNoteTitle,
   isFilterNoteLoading,
   confirmDelete,
   isDeleting,
-  isMetaEditing,
-  isMetaSaving,
-  metaTitleDraft,
-  metaDescriptionDraft,
-  onCanvasPointerDown,
-  onCanvasPointerMove,
-  onCanvasPointerUp,
-  onCanvasWheel,
   onSelectFlow,
-  onStartMetaEdit,
-  onCancelMetaEdit,
-  onSaveMeta,
-  onChangeMetaTitle,
-  onChangeMetaDescription,
   onOpenDeleteConfirm,
   onCloseDeleteConfirm,
   onDeleteFlow,
@@ -107,160 +57,74 @@ export default function FlowListSectionView({
         ? noteTitle
         : "선택한 노트의 플로우 목록"
     : "감정 노트 플로우";
-  const nodeElements = useMemo(
-    () =>
-      nodes.map((node) => {
-        const displayTitle = node.title.trim() || `플로우 ${node.id}`;
-        return (
-          <SafeButton
-            mode="native"
-            key={node.id}
-            type="button"
-            className={`${styles.node} ${
-              selectedFlowId === node.id ? styles.nodeSelected : ""
-            }`}
-            style={
-              {
-                width: node.radius * 2,
-                height: node.radius * 2,
-                backgroundColor: node.color,
-                "--tx": `${node.x - node.radius}px`,
-                "--ty": `${node.y - node.radius}px`,
-                "--node-r": node.rgb[0],
-                "--node-g": node.rgb[1],
-                "--node-b": node.rgb[2],
-              } as CSSProperties
-            }
-            onClick={() => onSelectFlow(node.id)}
-          >
-            <span className={styles.nodeGroup}>
-              <Waypoints size={12} className={styles.nodeGroupIcon} />
-              #{node.id}
-            </span>
-            <span className={styles.nodeTitle}>{displayTitle}</span>
-            <span className={styles.nodeCountLine}>
-              <span className={styles.nodeCount}>{node.noteCount}</span> 개의 기록
-            </span>
-          </SafeButton>
-        );
-      }),
-    [nodes, onSelectFlow, selectedFlowId],
-  );
+
+  const handleSectionClickCapture = (event: ReactMouseEvent<HTMLElement>) => {
+    const target = event.target as HTMLElement;
+    if (
+      target.closest(`.${styles.nodeWrap}`) ||
+      target.closest(`.${styles.confirmCard}`) ||
+      target.closest(`.${styles.fabPrimary}`) ||
+      target.closest(`.${styles.fabSecondary}`)
+    ) {
+      return;
+    }
+    onSelectFlow(null);
+  };
 
   return (
-    <section className={styles.section}>
+    <section className={styles.section} onClickCapture={handleSectionClickCapture}>
       <header className={styles.header}>
         <div className={styles.headerMain}>
           <div className={styles.headerLabelRow}>
             <span className={styles.headerIconWrap} aria-hidden>
               <LayoutDashboard size={16} />
             </span>
-            {hasNoteFilter ? (
-              <p className={styles.label}>감정 노트 플로우</p>
-            ) : null}
+            {hasNoteFilter ? <p className={styles.label}>감정 노트 플로우</p> : null}
           </div>
           <h2 className={styles.title}>{headerTitle}</h2>
           <p className={styles.filterLabel}>{summaryText}</p>
+          <div className={styles.sortRow}>
+            <SafeButton
+              size="sm"
+              variant={sortMode === "latest" ? "primary" : "outline"}
+              onClick={() => onChangeSortMode("latest")}
+            >
+              최신순
+            </SafeButton>
+            <SafeButton
+              size="sm"
+              variant={sortMode === "size" ? "primary" : "outline"}
+              onClick={() => onChangeSortMode("size")}
+            >
+              크기순
+            </SafeButton>
+          </div>
         </div>
       </header>
 
       <div
-        ref={containerRef}
-        className={`${styles.canvas} ${isPanning ? styles.canvasPanning : ""} ${
-          isLowPerfMode ? styles.canvasLowPerf : ""
-        }`}
-        onPointerDown={onCanvasPointerDown}
-        onPointerMove={onCanvasPointerMove}
-        onPointerUp={onCanvasPointerUp}
-        onPointerLeave={onCanvasPointerUp}
-        onWheel={onCanvasWheel}
+        className={styles.canvas}
+        onClick={(event) => {
+          if (event.target === event.currentTarget) {
+            onSelectFlow(null);
+          }
+        }}
       >
         {isLoading ? (
           <div className={styles.placeholder}>플로우를 불러오는 중...</div>
         ) : nodes.length === 0 ? (
           <div className={styles.placeholder}>아직 플로우가 없습니다.</div>
         ) : (
-          <div
-            ref={canvasLayerRef}
-            className={styles.canvasLayer}
-            style={
-              {
-                "--pan-x": `${pan.x}px`,
-                "--pan-y": `${pan.y}px`,
-              } as CSSProperties
-            }
-          >
-            {nodeElements}
-            {selectedNode ? (
-              <div
-                className={styles.nodeTooltip}
-                role="status"
-                style={
-                  {
-                    left: `${selectedNode.x}px`,
-                    top: `${selectedNode.y - selectedNode.radius - 18}px`,
-                  } as CSSProperties
-                }
-              >
-                {isMetaEditing ? (
-                  <>
-                    <input
-                      type="text"
-                      value={metaTitleDraft}
-                      onChange={(event) => onChangeMetaTitle(event.target.value)}
-                      className={styles.nodeTooltipInput}
-                      placeholder="플로우 제목"
-                      maxLength={40}
-                    />
-                    <textarea
-                      value={metaDescriptionDraft}
-                      onChange={(event) =>
-                        onChangeMetaDescription(event.target.value)
-                      }
-                      className={styles.nodeTooltipTextarea}
-                      placeholder="플로우 설명"
-                      rows={3}
-                      maxLength={40}
-                    />
-                    <div className={styles.nodeTooltipActions}>
-                      <SafeButton
-                        size="sm"
-                        variant="outline"
-                        onClick={onCancelMetaEdit}
-                        disabled={isMetaSaving}
-                      >
-                        취소
-                      </SafeButton>
-                      <SafeButton
-                        size="sm"
-                        onClick={onSaveMeta}
-                        loading={isMetaSaving}
-                        loadingText="저장 중..."
-                      >
-                        저장
-                      </SafeButton>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.nodeTooltipTitle}>
-                      {selectedNode.title.trim() || `플로우 ${selectedNode.id}`}
-                    </div>
-                    <div className={styles.nodeTooltipBody}>
-                      {selectedNode.description?.trim() || "설명이 아직 없습니다."}
-                    </div>
-                    <div className={styles.nodeTooltipActions}>
-                      <SafeButton size="sm" variant="outline" onClick={onStartMetaEdit}>
-                        수정
-                      </SafeButton>
-                    </div>
-                  </>
-                )}
+          <div className={styles.nodeGrid}>
+            {nodes.map((node) => (
+              <div key={node.id} className={styles.nodeCell}>
+                <FlowListNode {...node} />
               </div>
-            ) : null}
+            ))}
           </div>
         )}
       </div>
+
       {selectedFlow ? (
         <>
           <FloatingActionButton
@@ -289,6 +153,7 @@ export default function FlowListSectionView({
           />
         </>
       ) : null}
+
       {confirmDelete && selectedFlow ? (
         <div
           className={styles.confirmOverlay}
@@ -325,6 +190,7 @@ export default function FlowListSectionView({
           </div>
         </div>
       ) : null}
+
     </section>
   );
 }

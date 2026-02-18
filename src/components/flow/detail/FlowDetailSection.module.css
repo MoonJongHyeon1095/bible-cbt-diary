@@ -230,11 +230,6 @@
   flex: 1;
 }
 
-.detailStackCount {
-  font-size: 0.72rem;
-  color: rgba(245, 247, 250, 0.75);
-}
-
 .detailStackList {
   display: grid;
   gap: 6px;
@@ -1426,6 +1421,7 @@
 
   .detailStackWrap {
     right: 84px;
+    bottom: calc(2px + var(--app-bottom-tab-offset, 0px));
     width: min(240px, calc(100vw - 16px - 84px));
   }
 }
@@ -1449,9 +1445,6 @@
     width: min(220px, calc(100vw - 16px - 84px));
   }
 
-  .detailStackCount {
-    display: none;
-  }
 }
 
 @media (max-width: 520px) {
@@ -1473,22 +1466,22 @@
 
 .fabPrimary {
   --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(68px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabImportTop {
   --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(176px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabSecondary {
   --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(176px + var(--app-bottom-tab-offset, 0px));
 }
 
 .fabTertiary {
   --fab-bottom: calc(312px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(312px + var(--app-bottom-tab-offset, 0px));
+  --fab-bottom-mobile: calc(284px + var(--app-bottom-tab-offset, 0px));
 }
 
 @media (max-width: 720px) {

@@ -133,9 +133,6 @@ export default function FlowDetailStack({
                 style={{ backgroundColor: section.color }}
               />
               <span className={styles.detailStackLabel}>{section.label}</span>
-              <span className={styles.detailStackCount}>
-                {section.items.length}
-              </span>
             </SafeButton>
             {openSection === section.key ? (
               <div className={styles.detailStackList}>

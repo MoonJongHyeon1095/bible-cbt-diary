@@ -201,6 +201,7 @@ export default function FlowDetailSectionView({
               className={`${styles.deepFab} ${styles.fabPrimary}`}
               onClick={onGoDeeper}
               loadingRing={isGoDeeperLoading}
+              sparkleRing
               style={{
                 backgroundColor: "#121417",
                 color: "#fff",

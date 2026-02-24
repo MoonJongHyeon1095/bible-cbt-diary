@@ -8,6 +8,7 @@ import AppHeader from "@/components/header/AppHeader";
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import SafeButton from "@/components/ui/SafeButton";
 import { fetchBehaviorDetails } from "@/lib/api/emotion-behavior-details/getEmotionBehaviorDetails";
+import { updateBehaviorDetail } from "@/lib/api/emotion-behavior-details/patchEmotionBehaviorDetails";
 import { fetchBehaviorHistory } from "@/lib/api/emotion-behavior-history/getEmotionBehaviorHistory";
 import { upsertBehaviorHistory } from "@/lib/api/emotion-behavior-history/postEmotionBehaviorHistory";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
@@ -22,6 +23,8 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CalendarDays,
   CalendarHeart,
+  Bookmark,
+  BookmarkCheck,
   ChevronDown,
   ChevronUp,
   ChevronRight,
@@ -31,6 +34,7 @@ import {
   Disc3,
   Download,
   FolderOpen,
+  NotebookPen,
   Plus,
   Pin,
   RefreshCcw,
@@ -132,6 +136,9 @@ export default function BehaviorPage() {
   const [expandedModalDetailIds, setExpandedModalDetailIds] = useState<number[]>(
     [],
   );
+  const [pinLoadingByDetailId, setPinLoadingByDetailId] = useState<
+    Record<number, boolean>
+  >({});
 
   useModalOpen(isSavedSuggestionModalOpen);
 
@@ -154,7 +161,7 @@ export default function BehaviorPage() {
       if (!response.ok) throw new Error("behavior history fetch failed");
       return data.histories as BehaviorHistoryRow[];
     },
-    enabled: !isLoading && accessMode !== "blocked",
+    enabled: !isLoading && accessMode === "auth",
   });
 
   const dayRange = useMemo(() => getKstDayRange(selectedDate), [selectedDate]);
@@ -178,7 +185,7 @@ export default function BehaviorPage() {
       if (!response.ok) throw new Error("behavior detail fetch failed");
       return data.details as BehaviorDetailRow[];
     },
-    enabled: !isLoading && accessMode !== "blocked",
+    enabled: !isLoading && accessMode === "auth",
   });
 
   const historyByDate = useMemo(() => {
@@ -412,6 +419,41 @@ export default function BehaviorPage() {
     }
   };
 
+  const handleToggleSavedSuggestion = async (
+    detailId: number,
+    isSaved: boolean,
+  ) => {
+    setPinLoadingByDetailId((prev) => ({ ...prev, [detailId]: true }));
+    try {
+      const response = await updateBehaviorDetail(
+        {
+          id: detailId,
+          is_pinned: !isSaved,
+        },
+        access,
+      );
+      if (!response.ok) {
+        pushToast("저장 상태 변경에 실패했습니다.", "error");
+        return;
+      }
+      pushToast(!isSaved ? "행동 제안을 저장했습니다." : "저장을 해제했습니다.", "success");
+      await queryClient.invalidateQueries({
+        queryKey: [
+          ...queryKeys.behaviorLibrary(access),
+          "daily",
+          selectedDateKey,
+          dayRange.startIso,
+          dayRange.endIso,
+        ],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: queryKeys.behaviorLibrary(access),
+      });
+    } finally {
+      setPinLoadingByDetailId((prev) => ({ ...prev, [detailId]: false }));
+    }
+  };
+
   const toggleModalSuggestion = (detailId: number) => {
     setModalSelectedDetailIds((prev) =>
       prev.includes(detailId)
@@ -456,7 +498,26 @@ export default function BehaviorPage() {
             <Pin size={13} />
             불러온 행동
           </span>
-        ) : null}
+        ) : (
+          <SafeButton
+            size="sm"
+            variant="unstyled"
+            className={`${styles.saveIconToggleButton} ${
+              detail.is_pinned
+                ? styles.saveIconToggleButtonActive
+                : styles.saveIconToggleButtonInactive
+            }`}
+            aria-label={detail.is_pinned ? "저장 해제" : "저장"}
+            title={detail.is_pinned ? "저장됨" : "저장"}
+            loading={Boolean(pinLoadingByDetailId[detail.id])}
+            onClick={() =>
+              void handleToggleSavedSuggestion(detail.id, Boolean(detail.is_pinned))
+            }
+          >
+            {detail.is_pinned ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+            {detail.is_pinned ? "저장됨" : "저장"}
+          </SafeButton>
+        )}
       </div>
       <p className={styles.behaviorDesc}>{detail.behavior_description}</p>
       <div className={styles.checkList}>
@@ -548,6 +609,30 @@ export default function BehaviorPage() {
     );
   };
 
+  if (!isLoading && accessMode === "guest") {
+    return (
+      <div className={`${pageStyles.page} ${styles.pageRoot}`}>
+        <AppHeader />
+        <main className={pageStyles.main}>
+          <div className={`${pageStyles.shell} ${styles.shell} ${styles.guestShell}`}>
+            <section className={styles.suggestionStage}>
+              <div className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}>
+                <h3 className={`${styles.sectionTitle} ${styles.suggestionTitle}`}>
+                  <span className={styles.suggestionTitleIcon} aria-hidden>
+                    <NotebookPen size={14} />
+                  </span>
+                  오늘의 행동 제안
+                </h3>
+              </div>
+              <div className={styles.libraryNoticeDivider} aria-hidden />
+            </section>
+            <p className={styles.guestOnlyMessage}>로그인이 필요합니다</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className={`${pageStyles.page} ${styles.pageRoot}`}>
       <AppHeader />
@@ -613,14 +698,6 @@ export default function BehaviorPage() {
                   <h3 className={`${styles.sectionTitle} ${styles.trackerDateTitle}`}>
                     {selectedDateKey}
                   </h3>
-                  <SafeButton
-                    variant="ghost"
-                    className={styles.reselectButton}
-                    onClick={() => setIsSelectingSuggestion(true)}
-                  >
-                    <RefreshCcw size={14} />
-                    행동 제안 다시 선택
-                  </SafeButton>
                 </div>
 
                 <div className={styles.weekHeatRow}>
@@ -668,6 +745,16 @@ export default function BehaviorPage() {
                     <ClipboardPen size={16} />
                     {`${selectedDayLabel} 행동 기록`}
                   </h3>
+                </div>
+                <div className={styles.recordReselectRow}>
+                  <SafeButton
+                    variant="unstyled"
+                    className={styles.reselectButton}
+                    onClick={() => setIsSelectingSuggestion(true)}
+                  >
+                    <RefreshCcw size={14} />
+                    다시 선택
+                  </SafeButton>
                 </div>
                 {includedChecks.length === 0 ? (
                   <p className={styles.empty}>
@@ -724,7 +811,12 @@ export default function BehaviorPage() {
           ) : (
             <section className={styles.suggestionStage}>
               <div className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}>
-                <h3 className={styles.sectionTitle}>오늘의 행동 제안</h3>
+                <h3 className={`${styles.sectionTitle} ${styles.suggestionTitle}`}>
+                  <span className={styles.suggestionTitleIcon} aria-hidden>
+                    <NotebookPen size={14} />
+                  </span>
+                  오늘의 행동 제안
+                </h3>
                 <SafeButton
                   size="sm"
                   variant="unstyled"

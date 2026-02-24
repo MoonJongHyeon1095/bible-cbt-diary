@@ -318,12 +318,31 @@
   align-items: center;
   gap: 6px;
   border-radius: 999px;
-  border: 1px solid rgba(132, 192, 255, 0.42);
-  background: rgba(20, 34, 56, 0.72);
-  color: #d5e8ff;
+  border: 1px solid rgba(164, 183, 214, 0.44);
+  background: linear-gradient(
+    180deg,
+    rgba(40, 55, 82, 0.82),
+    rgba(31, 44, 66, 0.86)
+  );
+  color: #d2dff2;
   font-size: 0.8rem;
   font-weight: 600;
   padding: 7px 12px;
+  box-shadow: 0 4px 10px rgba(8, 12, 20, 0.2);
+  cursor: pointer;
+  transition: transform 0.16s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reselectButton:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.03);
+  box-shadow: 0 6px 12px rgba(8, 12, 20, 0.24);
+}
+
+.recordReselectRow {
+  margin: 0 0 14px;
+  display: flex;
+  justify-content: flex-start;
 }
 
 .sectionHint {
@@ -337,6 +356,21 @@
   color: #a8b4cc;
   font-size: 0.88rem;
   line-height: 1.6;
+}
+
+.guestOnlyMessage {
+  margin: 0;
+  flex: 1;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  color: #d8e6ff;
+  font-size: clamp(1rem, 2.1vw, 1.2rem);
+  font-weight: 700;
+}
+
+.guestShell {
+  min-height: calc(100vh - 220px);
 }
 
 .fabRight {
@@ -371,6 +405,38 @@
 .suggestionTitleRow .sectionTitle {
   min-width: 0;
   white-space: nowrap;
+}
+
+.suggestionTitle {
+  border: 1px solid rgba(169, 198, 236, 0.42);
+  border-radius: 12px;
+  padding: 8px 12px;
+  background:
+    linear-gradient(180deg, rgba(18, 34, 56, 0.84), rgba(12, 24, 41, 0.9)),
+    repeating-linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.04) 0px,
+      rgba(255, 255, 255, 0.04) 1px,
+      transparent 1px,
+      transparent 21px
+    );
+  box-shadow: 0 8px 16px rgba(4, 10, 20, 0.32);
+}
+
+.suggestionTitleIcon {
+  width: 22px;
+  height: 22px;
+  border-radius: 8px;
+  border: 1px solid rgba(161, 196, 241, 0.55);
+  background: linear-gradient(
+    180deg,
+    rgba(68, 102, 154, 0.9),
+    rgba(49, 77, 121, 0.92)
+  );
+  color: #e8f1ff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .savedSuggestionModalOverlay {
@@ -725,16 +791,23 @@
 .importedBehaviorBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  border: 1px solid rgba(150, 172, 223, 0.46);
+  gap: 6px;
+  margin-left: auto;
+  border: 1px solid rgba(157, 188, 242, 0.72);
   border-radius: 999px;
-  background: rgba(32, 45, 76, 0.72);
-  color: #cedbff;
-  padding: 5px 9px;
-  font-size: 0.74rem;
-  font-weight: 700;
+  background: linear-gradient(
+    180deg,
+    rgba(46, 70, 112, 0.92),
+    rgba(34, 53, 88, 0.95)
+  );
+  color: #e3eeff;
+  padding: 6px 11px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   line-height: 1;
   flex-shrink: 0;
+  box-shadow: 0 8px 14px rgba(5, 10, 21, 0.28);
 }
 
 .behaviorTitle {
@@ -937,52 +1010,61 @@
 .behaviorCardHeader {
   align-items: flex-start;
   flex-wrap: nowrap;
+  gap: 12px;
 }
 
-.pinToggleButton {
-  min-height: 36px;
-  min-width: 96px;
-  padding: 7px 13px;
+.saveIconToggleButton {
+  min-height: 34px;
+  min-width: 74px;
+  padding: 0 10px;
   border-radius: 999px;
-  border-width: 2px;
-  border-style: solid;
-  font-size: 0.82rem;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-  color: #24364d;
-  box-shadow: 0 8px 16px rgba(8, 14, 30, 0.28);
+  border: 1px solid rgba(152, 184, 236, 0.48);
+  color: #d5e5ff;
+  box-shadow: 0 6px 12px rgba(8, 14, 30, 0.2);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 7px;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
   cursor: pointer;
-  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease;
+  transition: transform 0.16s ease, box-shadow 0.2s ease, filter 0.2s ease,
+    border-color 0.2s ease, background 0.2s ease;
   flex-shrink: 0;
 }
 
-.pinToggleButton:hover {
+.saveIconToggleButton:hover {
   transform: translateY(-1px);
-  box-shadow: 0 12px 20px rgba(10, 17, 36, 0.34);
-  filter: saturate(1.04);
+  box-shadow: 0 10px 16px rgba(10, 17, 36, 0.28);
+  filter: brightness(1.06);
 }
 
-.pinToggleButton:disabled {
+.saveIconToggleButton:disabled {
   opacity: 0.62;
   cursor: not-allowed;
   transform: none;
   box-shadow: 0 6px 12px rgba(10, 17, 36, 0.2);
 }
 
-.pinToggleButtonActive {
-  border-color: #8ec5ff;
-  background: linear-gradient(180deg, #dff0ff, #cce8ff);
-  color: #274465;
+.saveIconToggleButtonActive {
+  border-color: rgba(245, 212, 127, 0.88);
+  background: linear-gradient(
+    180deg,
+    rgba(122, 92, 33, 0.9),
+    rgba(95, 70, 22, 0.92)
+  );
+  color: #ffeebd;
 }
 
-.pinToggleButtonInactive {
-  border-color: #e4b9d7;
-  background: linear-gradient(180deg, #fdeaff, #f7dbff);
-  color: #5e3b67;
+.saveIconToggleButtonInactive {
+  border-color: rgba(147, 180, 232, 0.48);
+  background: linear-gradient(
+    180deg,
+    rgba(34, 53, 85, 0.88),
+    rgba(25, 40, 67, 0.9)
+  );
+  color: #c7d9fa;
 }
 
 .meta {

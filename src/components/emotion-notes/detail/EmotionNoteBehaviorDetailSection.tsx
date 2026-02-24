@@ -9,12 +9,6 @@ import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 type EmotionNoteBehaviorDetailSectionProps = {
   details: EmotionNoteBehaviorDetail[];
   formatDateTime: (value: string) => string;
-  onCopyText?: (text: string) => void;
-  onOpenModal?: (
-    title: string,
-    body: string,
-    badgeText?: string | null,
-  ) => void;
 };
 
 export default function EmotionNoteBehaviorDetailSection(
@@ -22,9 +16,7 @@ export default function EmotionNoteBehaviorDetailSection(
 ) {
   const {
     details,
-    formatDateTime,
-    onCopyText,
-    onOpenModal,
+    formatDateTime
   } = props;
 
   return (
@@ -45,13 +37,7 @@ export default function EmotionNoteBehaviorDetailSection(
                 badgeText={detail.behavior_label}
                 body={detail.behavior_description}
                 actions={{
-                  copyText: `행동 반응: ${detail.behavior_label}\n${detail.behavior_description}`,
-                  modalTitle: "행동 반응",
-                  modalBody: detail.behavior_description,
-                  modalBadgeText: detail.behavior_label,
                   timeText: formatDateTime(detail.created_at),
-                  onCopyText,
-                  onOpenModal,
                 }}
               />
             </div>

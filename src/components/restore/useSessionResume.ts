@@ -18,6 +18,10 @@ export function useSessionResume({ navigate }: UseSessionResumeParams) {
     let timerId: number | null = null;
     const draft = readSessionResumeDraft();
     if (!draft) return;
+    if (draft.kind === "deep") {
+      clearSessionResumeDraft();
+      return;
+    }
     setResumeDraft(draft);
     timerId = window.setTimeout(() => {
       setShowResumeModal(true);
@@ -42,19 +46,8 @@ export function useSessionResume({ navigate }: UseSessionResumeParams) {
     setShowResumeModal(false);
     setResumeDraft(null);
 
-    if (resumeDraft.kind === "deep") {
-      const next = new URLSearchParams();
-      next.set("mainId", String(resumeDraft.mainId));
-      next.set("flowId", String(resumeDraft.flowId));
-      if (resumeDraft.subIds.length > 0) {
-        next.set("subIds", resumeDraft.subIds.join(","));
-      }
-      navigate(`/session/deep?${next.toString()}`);
-      return;
-    }
-
     const next = new URLSearchParams();
-    if (resumeDraft.date) {
+    if (resumeDraft.kind === "minimal" && resumeDraft.date) {
       next.set("date", resumeDraft.date);
     }
     navigate(`/session${next.toString() ? `?${next.toString()}` : ""}`);

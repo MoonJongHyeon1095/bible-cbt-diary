@@ -4,7 +4,6 @@ import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
 import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
 import { runSessionSavePostProcess } from "@/components/session/hooks/useSessionSavePostProcess";
-import { flowRoutes } from "@/components/flow/domain/navigation/flowRoutes";
 
 type AccessContext = {
   mode: "auth" | "guest" | "blocked";
@@ -107,16 +106,11 @@ export function useDeepSessionSaveHandlers({
           throw new Error("note_id_missing");
         }
         clearResumeDraft();
-        const resolvedFlowId = result.payload?.flowId ?? flowId;
-
         const moved = await runSessionSavePostProcess({
           queryClient,
           router,
-          nextPath: resolvedFlowId
-            ? flowRoutes.byFlowAndNote(resolvedFlowId, noteId)
-            : `/detail?id=${noteId}`,
+          nextPath: `/detail?id=${noteId}`,
           pushToast,
-          includeFlowQuery: true,
         });
         if (!moved) {
           setIsSaving(false);

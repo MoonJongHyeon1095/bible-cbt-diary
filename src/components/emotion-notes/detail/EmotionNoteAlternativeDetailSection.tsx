@@ -13,12 +13,6 @@ type EmotionNoteAlternativeDetailSectionProps = {
   errorDescription: string;
   createdAt: string;
   formatDateTime: (value: string) => string;
-  onCopyText?: (text: string) => void;
-  onOpenModal?: (
-    title: string,
-    body: string,
-    badgeText?: string | null,
-  ) => void;
 };
 
 export default function EmotionNoteAlternativeDetailSection(
@@ -32,8 +26,6 @@ export default function EmotionNoteAlternativeDetailSection(
     errorDescription,
     createdAt,
     formatDateTime,
-    onCopyText,
-    onOpenModal,
   } = props;
   const normalizedEmotionTags = Array.from(
     new Set((emotionTags ?? []).map((tag) => tag.trim()).filter((tag) => tag.length > 0)),
@@ -61,13 +53,7 @@ export default function EmotionNoteAlternativeDetailSection(
             <EmotionNoteDetailSectionItem
               body={alternative}
               actions={{
-                copyText: `대안 사고: ${alternative}`,
-                modalTitle: "대안 사고",
-                modalBody: alternative,
-                modalBadgeText: null,
                 timeText: formatDateTime(createdAt),
-                onCopyText,
-                onOpenModal,
               }}
             />
           </>

@@ -137,21 +137,7 @@ export const handleGetEmotionNoteFlow = async (
         inner_belief,
         error_label,
         error_description,
-        alternative,
-        emotion_behavior_details(
-          id,
-          note_id,
-          behavior_label,
-          behavior_description,
-          created_at,
-          emotion_behavior_checks(
-            id,
-            behavior_detail_id,
-            check_label,
-            sort_order,
-            created_at
-          )
-        )
+        alternative
       `,
       );
 
@@ -187,13 +173,7 @@ export const handleGetEmotionNoteFlow = async (
           ),
         );
         const errorLabels = note.error_label ? [note.error_label] : [];
-        const behaviorLabels = Array.from(
-          new Set(
-            (note.emotion_behavior_details ?? [])
-              .map((detail) => detail.behavior_label)
-              .filter(Boolean),
-          ),
-        );
+        const behaviorLabels: string[] = [];
 
         return {
           id: note.id,
@@ -240,7 +220,7 @@ export const handleGetEmotionNoteFlow = async (
                 },
               ]
             : [],
-          behavior_details: note.emotion_behavior_details ?? [],
+          behavior_details: [],
         };
       }) ?? [];
   }

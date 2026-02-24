@@ -4,7 +4,7 @@ import {
   FileText,
   ListChecks,
   Menu,
-  PlayCircle,
+  RotateCcw,
   ShieldCheck,
   SignalHigh,
   UserMinus,
@@ -14,8 +14,7 @@ import { useState } from "react";
 import styles from "./CompactNav.module.css";
 import { Drawer } from "./Drawer";
 import SafeButton from "@/components/ui/SafeButton";
-import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
-import { ENTRANCE_COMPLETED_KEY } from "@/lib/storage/keys/entrance";
+import { clearOnboardingStorage } from "@/lib/storage/onboarding/clearOnboardingStorage";
 
 const navItems = [
   {
@@ -56,14 +55,6 @@ const usageItems = [
   },
 ];
 
-const featureItems = [
-  {
-    id: "entrance-sequence",
-    label: "Entrance sequence",
-    icon: PlayCircle,
-  },
-];
-
 type CompactNavProps = {
   userEmail: string | null;
 };
@@ -72,6 +63,12 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+
+  const handleResetOnboarding = () => {
+    clearOnboardingStorage();
+    setOpen(false);
+    window.location.reload();
+  };
 
   return (
     <>
@@ -160,26 +157,15 @@ export default function CompactNav({ userEmail }: CompactNavProps) {
           </div>
           <div className={styles.drawerSection}>
             <span className={styles.drawerSectionTitle}>FEATURES</span>
-            {featureItems.map((item) => {
-              const Icon = item.icon;
-              return (
-                <SafeButton mode="native"
-                  key={item.id}
-                  type="button"
-                  className={styles.drawerItem}
-                  onClick={() => {
-                    if (safeLocalStorage.isAvailable()) {
-                      safeLocalStorage.removeItem(ENTRANCE_COMPLETED_KEY);
-                    }
-                    setOpen(false);
-                    router.push("/entrance");
-                  }}
-                >
-                  <Icon size={20} />
-                  <span>{item.label}</span>
-                </SafeButton>
-              );
-            })}
+            <SafeButton
+              mode="native"
+              type="button"
+              className={styles.drawerItem}
+              onClick={handleResetOnboarding}
+            >
+              <RotateCcw size={20} />
+              <span>온보딩 초기화</span>
+            </SafeButton>
           </div>
           <div className={styles.drawerSection}>
             <span className={styles.drawerSectionTitle}>POLICY</span>

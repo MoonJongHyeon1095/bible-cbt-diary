@@ -53,45 +53,7 @@
 }
 
 .searchField {
-  position: relative;
-  flex: 1;
-  width: 100%;
   min-width: 240px;
-}
-
-.searchInput {
-  flex: 1;
-  width: 100%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  border-radius: 999px;
-  padding: 10px 92px 10px 36px;
-  font-size: 0.95rem;
-  color: var(--text);
-}
-
-.searchIcon {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--muted);
-}
-
-.searchSubmit {
-  position: absolute;
-  right: 6px;
-  top: 50%;
-  transform: translateY(-50%);
-  height: 36px;
-  padding: 0 14px;
-  border-radius: 999px;
-  border: 1px solid var(--border-strong);
-  background: var(--text);
-  color: var(--surface);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
 }
 
 .filterPopover {
@@ -237,10 +199,6 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
-  }
-
-  .searchSubmit {
-    padding: 0 10px;
   }
 }
 

@@ -1,19 +1,14 @@
 "use client";
 
 import FloatingActionButton from "@/components/common/FloatingActionButton";
+import SearchInputField from "@/components/common/SearchInputField";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
-import { useGate } from "@/components/gate/GateProvider";
-import OnboardingTour from "@/components/onboarding/OnboardingTour";
-import { useOnboardingTourControls } from "@/components/onboarding/useOnboardingTourControls";
 import SafeButton from "@/components/ui/SafeButton";
-import { buildListTourSteps } from "@/components/list/onboarding/listOnboarding";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
-import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
-import { LIST_TOUR_STORAGE_KEY } from "@/lib/storage/keys/onboarding";
 import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateKey, formatKoreanDateTime } from "@/lib/utils/time";
-import { ChevronLeft, ChevronRight, CornerDownLeft, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styles from "./EmotionNoteListCalendarSection.module.css";
@@ -24,10 +19,6 @@ import { queryKeys } from "@/lib/queryKeys";
 type DayCell = {
   date: Date;
   inMonth: boolean;
-};
-type TourProgress = {
-  lastStep: number;
-  lastTotal: number;
 };
 
 const buildCalendar = (baseDate: Date): DayCell[] => {
@@ -61,7 +52,6 @@ export default function EmotionNoteListCalendarSection({
   access,
   initialSelectedDate = null,
 }: EmotionNoteListCalendarSectionProps) {
-  const { blocker, canShowOnboarding } = useGate();
   const router = useRouter();
   const { checkUsage } = useAiUsageGuard({
     enabled: false,
@@ -139,27 +129,6 @@ export default function EmotionNoteListCalendarSection({
 
   const notes = useMemo(() => notesQuery.data ?? [], [notesQuery.data]);
   const isLoading = notesQuery.isPending || notesQuery.isFetching;
-  const tourSteps = useMemo(() => buildListTourSteps(notes.length), [notes.length]);
-  const {
-    isOpen: isTourOpen,
-    setIsOpen: setIsTourOpen,
-    currentStep,
-    setCurrentStep,
-    onFinish,
-    onClose,
-    onMaskClick,
-  } = useOnboardingTourControls({
-    onPersist: (stepIndex) => {
-      if (!safeLocalStorage.isAvailable()) return;
-      safeLocalStorage.setItem(
-        LIST_TOUR_STORAGE_KEY,
-        JSON.stringify({
-          lastStep: stepIndex,
-          lastTotal: tourSteps.length,
-        }),
-      );
-    },
-  });
 
   const countsByDate = useMemo(() => {
     const counts = new Map<string, number>();
@@ -237,48 +206,6 @@ export default function EmotionNoteListCalendarSection({
       block: "center",
     });
   }, [normalizedQuery]);
-
-  useEffect(() => {
-    if (blocker && isTourOpen) {
-      setIsTourOpen(false);
-    }
-  }, [blocker, isTourOpen, setIsTourOpen]);
-
-  useEffect(() => {
-    if (access.mode === "blocked") return;
-    if (isLoading) return;
-    if (!canShowOnboarding) return;
-    if (isTourOpen) return;
-    if (tourSteps.length === 0) return;
-    if (!safeLocalStorage.isAvailable()) return;
-    const stored = safeLocalStorage.getItem(LIST_TOUR_STORAGE_KEY);
-    let progress: TourProgress | null = null;
-    if (stored) {
-      try {
-        progress = JSON.parse(stored) as TourProgress;
-      } catch {
-        progress = null;
-      }
-    }
-    if (!progress) {
-      setCurrentStep(0);
-      setIsTourOpen(true);
-      return;
-    }
-    const maxStepIndex = tourSteps.length - 1;
-    if (progress.lastStep >= maxStepIndex) return;
-    const nextStep = Math.max(0, Math.min(progress.lastStep + 1, maxStepIndex));
-    setCurrentStep(nextStep);
-    setIsTourOpen(true);
-  }, [
-    access.mode,
-    isLoading,
-    canShowOnboarding,
-    isTourOpen,
-    tourSteps.length,
-    setCurrentStep,
-    setIsTourOpen,
-  ]);
 
   useEffect(() => {
     if (access.mode === "blocked") {
@@ -416,33 +343,13 @@ export default function EmotionNoteListCalendarSection({
 
       <div className={styles.listSection}>
         <div className={styles.searchBar}>
-          <div className={styles.searchField}>
-            <Search size={16} aria-hidden className={styles.searchIcon} />
-            <input
-              id="calendar-search"
-              type="search"
-              placeholder={searchPlaceholder}
-              value={searchInput}
-              onChange={(event) => {
-                setSearchInput(event.target.value);
-              }}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  applySearch();
-                }
-              }}
-              className={styles.searchInput}
-            />
-            <SafeButton
-              type="button"
-              variant="unstyled"
-              className={styles.searchSubmit}
-              onClick={applySearch}
-              aria-label="검색"
-            >
-              <CornerDownLeft size={16} />
-            </SafeButton>
-          </div>
+          <SearchInputField
+            id="calendar-search"
+            value={searchInput}
+            placeholder={searchPlaceholder}
+            onChange={setSearchInput}
+            onSubmit={applySearch}
+          />
         </div>
         <EmotionNoteListSection
           title={selectedLabel}
@@ -467,6 +374,7 @@ export default function EmotionNoteListCalendarSection({
         label="기록 추가"
         icon={<Plus size={24} />}
         helperText="기록 추가"
+        placement="tab"
         loadingRing={isAddLoading}
         disabled={isAddLoading}
         onClick={async () => {
@@ -488,17 +396,6 @@ export default function EmotionNoteListCalendarSection({
           }
           router.push(`/session?date=${selectedKey}`);
         }}
-        className={styles.calendarFab}
-      />
-      <OnboardingTour
-        steps={tourSteps}
-        isOpen={isTourOpen}
-        setIsOpen={setIsTourOpen}
-        currentStep={currentStep}
-        setCurrentStep={setCurrentStep}
-        onFinish={onFinish}
-        onClose={onClose}
-        onMaskClick={onMaskClick}
       />
     </section>
   );

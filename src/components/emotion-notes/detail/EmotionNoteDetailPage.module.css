@@ -338,25 +338,6 @@
   gap: 8px;
 }
 
-.miniIconButton {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
-  border: 1px solid rgba(157, 178, 214, 0.4);
-  background: rgba(40, 53, 75, 0.92);
-  color: rgba(205, 222, 250, 0.82);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 0.16s ease, background-color 0.16s ease;
-}
-
-.miniIconButton:hover {
-  transform: translateY(-1px);
-  background: rgba(62, 79, 110, 0.98);
-}
-
 .detailTime {
   font-size: 0.7rem;
   letter-spacing: 0.02em;
@@ -369,50 +350,9 @@
   font-size: 0.9rem;
 }
 
-.fab {
-  --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
-}
-
 .fabHidden {
   opacity: 0 !important;
   pointer-events: none !important;
-}
-
-.fabSecondary {
-  --fab-bottom: calc(204px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(204px + var(--app-bottom-tab-offset, 0px));
-}
-
-.fabBehavior {
-  --fab-bottom: calc(96px + var(--app-bottom-tab-offset, 0px));
-  --fab-bottom-mobile: calc(96px + var(--app-bottom-tab-offset, 0px));
-}
-
-.flowFabTourTarget {
-  position: fixed;
-  right: 16px;
-  bottom: calc(76px + var(--app-bottom-tab-offset, 0px));
-  width: 88px;
-  height: 118px;
-  z-index: 29;
-  pointer-events: none;
-}
-
-.flowFabTourTarget :global(button) {
-  pointer-events: auto;
-}
-
-.srOnly {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 /* Legacy compatibility for currently-unused detail section variants */
@@ -479,10 +419,4 @@
     padding: 20px 16px 16px;
   }
 
-  .flowFabTourTarget {
-    right: 8px;
-    bottom: calc(72px + var(--app-bottom-tab-offset, 0px));
-    width: 84px;
-    height: 110px;
-  }
 }

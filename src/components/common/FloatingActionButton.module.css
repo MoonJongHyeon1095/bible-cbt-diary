@@ -17,6 +17,15 @@
   overflow: visible;
 }
 
+.placementTab {
+  --fab-bottom: calc(
+    96px + var(--app-bottom-tab-offset, calc(84px + env(safe-area-inset-bottom)))
+  );
+  --fab-bottom-mobile: calc(
+    96px + var(--app-bottom-tab-offset, calc(84px + env(safe-area-inset-bottom)))
+  );
+}
+
 .hasLoadingRing {
   isolation: isolate;
 }
@@ -111,7 +120,7 @@
   cursor: not-allowed;
 }
 
-:global(body[data-modal-open="true"]) .button {
+:global(body[data-modal-open="true"]) .hideWhenModalOpen {
   opacity: 0;
   pointer-events: none;
 }

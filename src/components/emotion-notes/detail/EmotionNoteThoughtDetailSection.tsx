@@ -9,20 +9,12 @@ import styles from "./EmotionNoteDetailPage.module.css";
 type EmotionNoteThoughtDetailSectionProps = {
   details: EmotionNoteDetail[];
   formatDateTime: (value: string) => string;
-  onCopyText?: (text: string) => void;
-  onOpenModal?: (
-    title: string,
-    body: string,
-    badgeText?: string | null,
-  ) => void;
 };
 
 export default function EmotionNoteThoughtDetailSection(props: EmotionNoteThoughtDetailSectionProps) {
   const {
     details,
-    formatDateTime,
-    onCopyText,
-    onOpenModal,
+    formatDateTime
   } = props;
 
   return (
@@ -46,13 +38,7 @@ export default function EmotionNoteThoughtDetailSection(props: EmotionNoteThough
                 badgeText={detail.emotion}
                 body={detail.automatic_thought}
                 actions={{
-                  copyText: `자동 사고: ${detail.automatic_thought}\n감정: ${detail.emotion}`,
-                  modalTitle: "자동 사고",
-                  modalBody: detail.automatic_thought,
-                  modalBadgeText: `${detail.emotion}`,
                   timeText: formatDateTime(detail.created_at),
-                  onCopyText,
-                  onOpenModal,
                 }}
               />
             </div>

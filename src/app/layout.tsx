@@ -1,4 +1,3 @@
-import EntranceGate from "@/components/gate/EntranceGate";
 import TermsGate from "@/components/gate/TermsGate";
 import "driver.js/dist/driver.css";
 import type { Metadata, Viewport } from "next";
@@ -73,7 +72,6 @@ export default function RootLayout({
       <body className={`${notoSansKr.variable} ${notoSerifKr.variable}`}>
         <Providers>
           <TermsGate />
-          <EntranceGate />
           {children}
         </Providers>
       </body>

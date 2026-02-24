@@ -137,12 +137,18 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+}
+
+.headerActionIcon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 auto;
+  display: block;
   transform: translateZ(0);
   -webkit-transform: translateZ(0);
 }
 
 .iconButton svg {
-  display: block;
   stroke: currentColor;
 }
 

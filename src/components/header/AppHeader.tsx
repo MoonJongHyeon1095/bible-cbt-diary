@@ -176,7 +176,12 @@ function DefaultAppHeader({
                 aria-label="로그아웃"
                 title="로그아웃"
               >
-                <LogOut size={18} />
+                <LogOut
+                  size={18}
+                  strokeWidth={2.2}
+                  absoluteStrokeWidth
+                  className={styles.headerActionIcon}
+                />
               </SafeButton>
             </div>
           ) : (
@@ -186,7 +191,12 @@ function DefaultAppHeader({
               className={styles.loginButton}
               onClick={() => openAuthModal()}
             >
-              <LogIn size={18} />
+              <LogIn
+                size={18}
+                strokeWidth={2.2}
+                absoluteStrokeWidth
+                className={styles.headerActionIcon}
+              />
               로그인
             </SafeButton>
           )}

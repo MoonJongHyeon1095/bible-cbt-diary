@@ -2,19 +2,11 @@
 
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
-import { Waypoints } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MouseEvent } from "react";
-import { useEffect, useRef, useState } from "react";
 import styles from "./EmotionNoteSection.module.css";
-import { useAuthModal } from "@/components/header/AuthModalProvider";
 import SafeButton from "@/components/ui/SafeButton";
-import { useCbtToast } from "@/components/session/common/CbtToast";
-import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { goToFlowForNote } from "@/components/flow/domain/navigation/goToFlowForNote";
 import EmotionNoteCardOverlay from "./EmotionNoteCardOverlay";
-import { queryKeys } from "@/lib/queryKeys";
-import { useQueryClient } from "@tanstack/react-query";
 
 type EmotionNoteCardProps = {
   note: EmotionNote;
@@ -34,154 +26,15 @@ export default function EmotionNoteCard({
   isImporting = false,
 }: EmotionNoteCardProps) {
   const router = useRouter();
-  const queryClient = useQueryClient();
-  const longPressTimeoutRef = useRef<number | null>(null);
-  const longPressTriggeredRef = useRef(false);
-  const longPressStartRef = useRef<number | null>(null);
-  const longPressRafRef = useRef<number | null>(null);
-  const longPressOverlayDelayRef = useRef<number | null>(null);
-  const longPressOverlayHoldRef = useRef<number | null>(null);
-  const [isPressing, setIsPressing] = useState(false);
-  const [pressProgress, setPressProgress] = useState(0);
-  const [isTriggered, setIsTriggered] = useState(false);
-  const { openAuthModal } = useAuthModal();
-  const { pushToast } = useCbtToast();
-  const { accessMode, accessToken } = useAccessContext();
+  void canGoDeeper;
   const isImportMode = Boolean(onImport);
 
-  const longPressDuration = 500;
-  const longPressOverlayDelay = 120;
   const timeLabel = formatKoreanDateTime(note.created_at, {
     hour: "2-digit",
     minute: "2-digit",
   });
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
-  const flowIds = note.flow_ids ?? [];
-  const sortedFlowIds = [...flowIds].sort((a, b) => b - a);
-  const primaryFlowId = sortedFlowIds[0] ?? null;
-  const extraFlowCount = Math.max(0, flowIds.length - (primaryFlowId ? 1 : 0));
-  const flowTitle =
-    flowIds.length > 0 ? `Flow: ${sortedFlowIds.join(", ")}` : undefined;
-
-  useEffect(() => {
-    return () => {
-      if (longPressTimeoutRef.current !== null) {
-        window.clearTimeout(longPressTimeoutRef.current);
-      }
-      if (longPressOverlayDelayRef.current !== null) {
-        window.clearTimeout(longPressOverlayDelayRef.current);
-      }
-      if (longPressOverlayHoldRef.current !== null) {
-        window.clearTimeout(longPressOverlayHoldRef.current);
-      }
-      if (longPressRafRef.current !== null) {
-        window.cancelAnimationFrame(longPressRafRef.current);
-      }
-    };
-  }, []);
-
-  const clearLongPressProgress = (hold = true) => {
-    if (longPressRafRef.current !== null) {
-      window.cancelAnimationFrame(longPressRafRef.current);
-      longPressRafRef.current = null;
-    }
-    longPressStartRef.current = null;
-    if (longPressOverlayHoldRef.current !== null) {
-      window.clearTimeout(longPressOverlayHoldRef.current);
-    }
-    if (!hold) {
-      setPressProgress(0);
-      setIsPressing(false);
-      return;
-    }
-    longPressOverlayHoldRef.current = window.setTimeout(() => {
-      setPressProgress(0);
-      setIsPressing(false);
-    }, 220);
-  };
-
-  const clearLongPress = (hold = true) => {
-    if (longPressTriggeredRef.current) {
-      return;
-    }
-    if (longPressTimeoutRef.current !== null) {
-      window.clearTimeout(longPressTimeoutRef.current);
-      longPressTimeoutRef.current = null;
-    }
-    if (longPressOverlayDelayRef.current !== null) {
-      window.clearTimeout(longPressOverlayDelayRef.current);
-      longPressOverlayDelayRef.current = null;
-    }
-    clearLongPressProgress(hold);
-  };
-
-  const handlePointerDown = () => {
-    if (isImportMode) return;
-    clearLongPress(false);
-    longPressTriggeredRef.current = false;
-    setIsTriggered(false);
-    longPressOverlayDelayRef.current = window.setTimeout(() => {
-      setIsPressing(true);
-    }, longPressOverlayDelay);
-    longPressStartRef.current = null;
-    const tick = (timestamp: number) => {
-      if (longPressStartRef.current === null) {
-        longPressStartRef.current = timestamp;
-      }
-      const elapsed = timestamp - longPressStartRef.current;
-      const progress = Math.min(elapsed / longPressDuration, 1);
-      setPressProgress(progress);
-      if (progress < 1 && longPressTimeoutRef.current !== null) {
-        longPressRafRef.current = window.requestAnimationFrame(tick);
-      }
-    };
-    longPressRafRef.current = window.requestAnimationFrame(tick);
-    longPressTimeoutRef.current = window.setTimeout(() => {
-      longPressTriggeredRef.current = true;
-      setIsTriggered(true);
-      setPressProgress(1);
-      setIsPressing(true);
-      if (!canGoDeeper) {
-        openAuthModal();
-        return;
-      }
-      if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-        navigator.vibrate(20);
-      }
-      const go = async () => {
-        const access = { mode: accessMode, accessToken };
-        if (access.mode === "blocked") {
-          pushToast("플로우를 준비할 수 없습니다.", "error");
-          longPressTriggeredRef.current = false;
-          setIsTriggered(false);
-          setPressProgress(0);
-          setIsPressing(false);
-          return;
-        }
-        const ok = await goToFlowForNote({
-          noteId: note.id,
-          flowIds: note.flow_ids,
-          access,
-          router,
-          onError: (message) => pushToast(message, "error"),
-          onCreated: () => {
-            void queryClient.invalidateQueries({
-              queryKey: queryKeys.flow.all,
-            });
-          },
-        });
-        if (!ok) {
-          longPressTriggeredRef.current = false;
-          setIsTriggered(false);
-          setPressProgress(0);
-          setIsPressing(false);
-          return;
-        }
-      };
-      void go();
-    }, longPressDuration);
-  };
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (isImportMode) {
@@ -190,11 +43,6 @@ export default function EmotionNoteCard({
       if (!isImporting) {
         onImport?.(note);
       }
-      return;
-    }
-    if (longPressTriggeredRef.current) {
-      event.preventDefault();
-      event.stopPropagation();
       return;
     }
     router.push(resolvedDetailHref);
@@ -208,24 +56,11 @@ export default function EmotionNoteCard({
       type="button"
       className={styles.noteCard}
       data-tour={isTourTarget ? "note-card" : undefined}
-      onPointerDown={handlePointerDown}
-      onPointerUp={() => clearLongPress()}
-      onPointerLeave={() => clearLongPress()}
-      onPointerCancel={() => clearLongPress()}
       onClick={handleClick}
-      onContextMenu={(event) => event.preventDefault()}
     >
       <div className={styles.noteHeader}>
         <h4 className={styles.noteTitle}>{note.title}</h4>
         <div className={styles.noteMeta}>
-          {primaryFlowId ? (
-            <span className={styles.flowBadge} title={flowTitle}>
-              <Waypoints size={12} className={styles.flowBadgeIcon} />
-              {`Flow #${primaryFlowId}${
-                extraFlowCount > 0 ? ` +${extraFlowCount} more` : ""
-              }`}
-            </span>
-          ) : null}
           <span className={styles.noteTime}>{timeLabel}</span>
         </div>
       </div>
@@ -250,15 +85,7 @@ export default function EmotionNoteCard({
           isActive={isImporting}
           isLoading={isImporting}
         />
-      ) : (
-        <EmotionNoteCardOverlay
-          mode="longPress"
-          isPressing={isPressing}
-          pressProgress={pressProgress}
-          isTriggered={isTriggered}
-          canGoDeeper={canGoDeeper}
-        />
-      )}
+      ) : null}
     </SafeButton>
   );
 }

@@ -9,6 +9,8 @@ type FloatingActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   label: string;
   icon?: ReactNode;
   helperText?: string;
+  placement?: "default" | "tab";
+  hideWhenModalOpen?: boolean;
   loading?: boolean;
   loadingRing?: boolean;
   sparkleRing?: boolean;
@@ -20,6 +22,8 @@ export default function FloatingActionButton({
   label,
   icon,
   helperText,
+  placement = "default",
+  hideWhenModalOpen = true,
   loading,
   loadingRing,
   sparkleRing,
@@ -34,6 +38,8 @@ export default function FloatingActionButton({
       variant="unstyled"
       className={[
         styles.button,
+        hideWhenModalOpen ? styles.hideWhenModalOpen : "",
+        placement === "tab" ? styles.placementTab : "",
         loadingRing ? styles.hasLoadingRing : "",
         sparkleRing ? styles.hasSparkleRing : "",
         className,

@@ -9,12 +9,6 @@ import EmotionNoteDetailSectionCard from "./EmotionNoteDetailSectionCard";
 type EmotionNoteErrorDetailSectionProps = {
   details: EmotionNoteErrorDetail[];
   formatDateTime: (value: string) => string;
-  onCopyText?: (text: string) => void;
-  onOpenModal?: (
-    title: string,
-    body: string,
-    badgeText?: string | null,
-  ) => void;
 };
 
 export default function EmotionNoteErrorDetailSection(
@@ -22,9 +16,7 @@ export default function EmotionNoteErrorDetailSection(
 ) {
   const {
     details,
-    formatDateTime,
-    onCopyText,
-    onOpenModal,
+    formatDateTime
   } = props;
 
   return (
@@ -48,13 +40,7 @@ export default function EmotionNoteErrorDetailSection(
                 badgeText={detail.error_label}
                 body={detail.error_description}
                 actions={{
-                  copyText: `인지 오류: ${detail.error_label}\n${detail.error_description}`,
-                  modalTitle: "인지 오류",
-                  modalBody: detail.error_description,
-                  modalBadgeText: detail.error_label,
                   timeText: formatDateTime(detail.created_at),
-                  onCopyText,
-                  onOpenModal,
                 }}
               />
             </div>

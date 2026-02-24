@@ -191,31 +191,6 @@
   color: var(--muted);
 }
 
-.flowBadge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 0.65rem;
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  color: #dbe8ff;
-  background: linear-gradient(
-    135deg,
-    rgba(78, 104, 176, 0.55),
-    rgba(34, 42, 66, 0.9)
-  );
-  border: 1px solid rgba(140, 176, 240, 0.45);
-  box-shadow: 0 6px 14px rgba(10, 14, 22, 0.35),
-    0 0 0 1px rgba(120, 160, 230, 0.12) inset;
-  white-space: nowrap;
-}
-
-.flowBadgeIcon {
-  flex: 0 0 auto;
-}
-
 .noteTrigger {
   margin: 0;
   font-size: 0.9rem;
@@ -224,35 +199,6 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
   overflow: hidden;
-}
-
-.longPressOverlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, 0.35);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  opacity: 0;
-  transform: scale(0.98);
-  transition: opacity 0.16s ease, transform 0.16s ease;
-  pointer-events: none;
-  color: #111318;
-}
-
-.longPressOverlayActive {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.longPressOverlay::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: rgba(255, 255, 255, var(--press-fill, 0.35));
-  transition: background 0.08s linear;
 }
 
 .importOverlay {

@@ -20,7 +20,16 @@ export const useFlowDetailQuery = (
         includeMiddles,
       });
       if (!response.ok) {
-        throw new Error("emotion_flow detail fetch failed");
+        let message = `emotion_flow detail fetch failed (${response.status})`;
+        try {
+          const payload = (await response.json()) as { message?: string };
+          if (payload?.message) {
+            message = `${message}: ${payload.message}`;
+          }
+        } catch {
+          // Keep default message when response body is not JSON.
+        }
+        throw new Error(message);
       }
       return {
         flow: data.flow ?? null,

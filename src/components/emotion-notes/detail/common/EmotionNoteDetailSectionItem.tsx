@@ -8,7 +8,7 @@ type EmotionNoteDetailSectionItemProps = {
   badgeText?: string | null;
   body: string;
   secondary?: string | null;
-  actions: DetailItemActionConfig;
+  actions?: DetailItemActionConfig;
 };
 
 export default function EmotionNoteDetailSectionItem({
@@ -26,7 +26,7 @@ export default function EmotionNoteDetailSectionItem({
       ) : null}
       <p className={styles.detailText}>{body}</p>
       {secondary ? <p className={styles.detailEmotion}>{secondary}</p> : null}
-      <EmotionNoteDetailItemActions actions={actions} />
+      {actions ? <EmotionNoteDetailItemActions actions={actions} /> : null}
     </>
   );
 }

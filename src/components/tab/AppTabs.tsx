@@ -1,8 +1,6 @@
 "use client";
 
-import { useAuthModal } from "@/components/header/AuthModalProvider";
-import { useAccessContext } from "@/lib/hooks/useAccessContext";
-import { CalendarDays, Footprints, Home, Waypoints, Search } from "lucide-react";
+import { CalendarDays, Footprints, Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, type MouseEvent } from "react";
@@ -10,13 +8,10 @@ import styles from "./AppTabs.module.css";
 
 export default function AppTabs() {
   const pathname = usePathname();
-  const { openAuthModal } = useAuthModal();
-  const { isBlocked } = useAccessContext();
   const bottomNavRef = useRef<HTMLElement | null>(null);
   const tabs = [
     { href: "/home", label: "홈", icon: Home },
     { href: "/list", label: "기록", icon: CalendarDays },
-    { href: "/flow/list", label: "Flow", icon: Waypoints },
     { href: "/behavior", label: "행동", icon: Footprints },
     { href: "/search", label: "검색", icon: Search },
   ];
@@ -50,11 +45,6 @@ export default function AppTabs() {
     };
   }, []);
   const handleTabClick = (href: string) => (event: MouseEvent) => {
-    if (href === "/flow/list" && isBlocked) {
-      event.preventDefault();
-      openAuthModal();
-      return;
-    }
     if (href === "/home" && (pathname === "/" || pathname === "/home")) {
       event.preventDefault();
       window.dispatchEvent(new CustomEvent("app:home-tab-reset"));
@@ -64,7 +54,6 @@ export default function AppTabs() {
   const isActiveTab = (href: string) => {
     if (href === "/home" && pathname === "/") return true;
     if (href === "/behavior") return pathname.startsWith("/behavior");
-    if (href === "/flow/list") return pathname.startsWith("/flow");
     return pathname === href;
   };
 

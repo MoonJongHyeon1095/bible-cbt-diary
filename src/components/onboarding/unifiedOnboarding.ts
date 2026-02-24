@@ -195,11 +195,6 @@ export const DETAIL_TOUR_STEPS: OnboardingStep[] = [
     content: "방금 고른 생각도 이곳에 저장되어 있네요.",
     hidePopoverDuringScroll: true,
   },
-  {
-    selector: "[data-tour='detail-flow-fab']",
-    side: "left",
-    content: "하지만 기억을 방에 넣어두기만 하면 \n무슨 소용이겠어요.",
-  },
 ];
 
 export const UNIFIED_TOUR_BASE_TOTAL =

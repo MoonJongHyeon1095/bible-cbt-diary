@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import type { DeepStep } from "@/components/session/hooks/useCbtDeepSessionFlow";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
-import { flowRoutes } from "@/components/flow/domain/navigation/flowRoutes";
 
 type UseDeepSessionNavigationHandlersParams = {
   flowStep: DeepStep;
@@ -22,10 +21,11 @@ export function useDeepSessionNavigationHandlers({
   setStep,
   router,
 }: UseDeepSessionNavigationHandlersParams) {
+  void flowId;
   const handleBack = useCallback(() => {
     if (flowStep === "select") {
-      if (flowId && mainNote) {
-        router.push(flowRoutes.byFlowAndNote(flowId, mainNote.id));
+      if (mainNote) {
+        router.push(`/detail?id=${mainNote.id}`);
       }
       return;
     }
@@ -33,7 +33,6 @@ export function useDeepSessionNavigationHandlers({
     setStep(stepOrder[currentStepIndex - 1]);
   }, [
     currentStepIndex,
-    flowId,
     flowStep,
     mainNote,
     router,

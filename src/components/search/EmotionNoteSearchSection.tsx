@@ -1,5 +1,6 @@
 "use client";
 
+import SearchInputField from "@/components/common/SearchInputField";
 import EmotionNoteListSection from "@/components/emotion-notes/EmotionNoteListSection";
 import SafeButton from "@/components/ui/SafeButton";
 import { fetchEmotionNoteSearchList } from "@/lib/api/search/getEmotionNoteSearchList";
@@ -8,7 +9,7 @@ import type { AccessContext } from "@/lib/types/access";
 import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime, getKstDayRange } from "@/lib/utils/time";
 import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, Search } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 import { useMemo, useState } from "react";
 import { type DateRange } from "react-day-picker";
 import styles from "./EmotionNoteSearchSection.module.css";
@@ -169,30 +170,13 @@ export default function EmotionNoteSearchSection({
       </div>
 
       <div className={styles.searchBar}>
-        <div className={styles.searchField}>
-          <Search size={16} aria-hidden className={styles.searchIcon} />
-          <input
-            type="search"
-            placeholder="검색어를 입력하세요"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            className={styles.searchInput}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                handleSearch();
-              }
-            }}
-          />
-          <SafeButton
-            mode="native"
-            type="button"
-            className={styles.searchSubmit}
-            onClick={handleSearch}
-          >
-            검색
-          </SafeButton>
-        </div>
+        <SearchInputField
+          value={searchInput}
+          placeholder="검색어를 입력하세요"
+          onChange={setSearchInput}
+          onSubmit={handleSearch}
+          className={styles.searchField}
+        />
       </div>
 
       <DateRangeFilterPopover

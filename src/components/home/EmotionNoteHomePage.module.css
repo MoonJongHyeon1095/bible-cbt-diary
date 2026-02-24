@@ -60,7 +60,8 @@
   width: 100%;
   font-size: clamp(1.2rem, 0.95rem + 1vw, 1.55rem);
   line-height: 1.25;
-  font-family: var(--font-noto-serif-kr), "Iropke Batang", "Nanum Myeongjo", serif;
+  font-family: var(--font-noto-sans-kr), "Apple SD Gothic Neo", "Malgun Gothic",
+    sans-serif;
   font-weight: 600;
   letter-spacing: -0.01em;
   white-space: nowrap;

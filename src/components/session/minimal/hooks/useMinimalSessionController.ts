@@ -47,8 +47,8 @@ import { runSessionSavePostProcess } from "@/components/session/hooks/useSession
 import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNoteTitle";
 import { generateSessionNoteTitle } from "@/lib/gpt/sessionTitle";
 import {
-  ALL_EMOTIONS,
-  NEGATIVE_EMOTIONS, POSITIVE_EMOTIONS,
+  formatEmotionIds,
+  mapEmotionIdsToLabels,
 } from "@/lib/constants/emotions";
 import { useSessionMoodController } from "@/components/session/common/useSessionMoodController";
 import { useMinimalSessionRestore } from "./controller/useMinimalSessionRestore";
@@ -75,15 +75,12 @@ export function useMinimalSessionController() {
   const hasDateParam = Boolean(
     dateParam && /^\d{4}-\d{2}-\d{2}$/.test(dateParam),
   );
-  const preselectedEmotions = useMemo(() => {
-    const ids = (emotionIdsParam ?? "")
+  const preselectedEmotionIds = useMemo(() => {
+    return (emotionIdsParam ?? "")
       .split(",")
       .map((id) => id.trim())
       .filter((id) => id.length > 0)
       .slice(0, 2);
-    return ids
-      .map((id) => ALL_EMOTIONS.find((item) => item.id === id)?.label ?? "")
-      .filter((label) => label.length > 0);
   }, [emotionIdsParam]);
   const dateLabel = hasDateParam
     ? formatKoreanDateTime(`${dateParam}T00:00:00+09:00`, {
@@ -132,18 +129,18 @@ export function useMinimalSessionController() {
   }, []);
 
   useEffect(() => {
-    if (preselectedEmotions.length === 0) return;
+    if (preselectedEmotionIds.length === 0) return;
     const same =
-      flow.selectedEmotions.length === preselectedEmotions.length &&
-      flow.selectedEmotions.every((value, index) => value === preselectedEmotions[index]);
+      flow.selectedEmotions.length === preselectedEmotionIds.length &&
+      flow.selectedEmotions.every((value, index) => value === preselectedEmotionIds[index]);
     if (!same) {
-      actions.setSelectedEmotions(preselectedEmotions);
+      actions.setSelectedEmotions(preselectedEmotionIds);
       return;
     }
     if (flow.step === "mood" || flow.step === "emotion") {
       actions.setStep("incident");
     }
-  }, [actions, flow.selectedEmotions, flow.step, preselectedEmotions]);
+  }, [actions, flow.selectedEmotions, flow.step, preselectedEmotionIds]);
 
   useMinimalSessionRestore({
     actions: {
@@ -154,7 +151,7 @@ export function useMinimalSessionController() {
   });
 
   useMinimalSessionResumeDraft({
-    selectedEmotions: flow.selectedEmotions,
+    selectedEmotionIds: flow.selectedEmotions,
     userInput: flow.userInput,
     hasDateParam,
     dateParam,
@@ -238,14 +235,19 @@ export function useMinimalSessionController() {
       if (seedBump) {
         lastDistortionKeyRef.current = nextKey;
       }
-      actions.setDistortion(thought, flow.selectedEmotions.join(", "), error, seedBump);
+      actions.setDistortion(
+        thought,
+        formatEmotionIds(flow.selectedEmotions),
+        error,
+        seedBump,
+      );
     },
     [actions, flow.selectedEmotions],
   );
 
   const handleProceedFromIncident = useCallback(() => {
     const incident = flow.userInput;
-    const emotion = flow.selectedEmotions.join(", ");
+    const emotion = formatEmotionIds(flow.selectedEmotions);
     const fallbackTitle = buildSessionNoteTitle({
       emotion,
       incident,
@@ -295,12 +297,12 @@ export function useMinimalSessionController() {
         title:
           flow.noteTitle ||
           buildSessionNoteTitle({
-            emotion: flow.selectedEmotions.join(", "),
+            emotion: formatEmotionIds(flow.selectedEmotions),
             incident: flow.userInput,
           }),
         triggerText: flow.userInput,
-        emotion: flow.selectedEmotions.join(", "),
-        emotions: flow.selectedEmotions,
+        emotion: formatEmotionIds(flow.selectedEmotions),
+        emotions: mapEmotionIdsToLabels(flow.selectedEmotions),
         automaticThought: flow.emotionThoughtPairs[0]?.thought ?? "",
         alternativeThought: thought,
         cognitiveError: flow.selectedCognitiveErrors[0] ?? null,
@@ -368,10 +370,8 @@ export function useMinimalSessionController() {
   );
 
   const { moodType, handleSelectMood } = useSessionMoodController({
-    selectedEmotions: flow.selectedEmotions,
-    setSelectedEmotions: actions.setSelectedEmotions,
-    positiveEmotions: POSITIVE_EMOTIONS,
-    negativeEmotions: NEGATIVE_EMOTIONS,
+    selectedEmotionIds: flow.selectedEmotions,
+    setSelectedEmotionIds: actions.setSelectedEmotions,
   });
 
   return {

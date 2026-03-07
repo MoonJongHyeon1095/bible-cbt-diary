@@ -34,8 +34,7 @@ export const handleGetEmotionNote = async (
         inner_belief,
         error_label,
         error_description,
-        alternative,
-        emotion_flow_note_middles(flow_id)
+        alternative
       `,
     );
 
@@ -73,13 +72,6 @@ export const handleGetEmotionNote = async (
         alternative: data.alternative ?? "",
         emotion_labels: data.emotion_tags ?? [],
         error_labels: data.error_label ? [data.error_label] : [],
-        flow_ids: Array.from(
-          new Set(
-            (data.emotion_flow_note_middles ?? [])
-              .map((detail) => Number(detail.flow_id))
-              .filter((id) => Number.isFinite(id)),
-          ),
-        ),
         thought_details: data.inner_belief
           ? [
               {

@@ -1,8 +1,5 @@
-import { COGNITIVE_ERRORS } from "@/lib/constants/errors";
+import { findCognitiveErrorByTitle } from "@/lib/constants/errors";
 import type { SelectedCognitiveError } from "@/lib/types/sessionTypes";
-
-const getMetaByTitle = (title: string) =>
-  COGNITIVE_ERRORS.find((error) => error.title === title);
 
 const parseStringItem = (raw: string): SelectedCognitiveError | null => {
   const value = raw.trim();
@@ -12,7 +9,7 @@ const parseStringItem = (raw: string): SelectedCognitiveError | null => {
     try {
       const parsed = JSON.parse(value);
       if (parsed && typeof parsed.title === "string") {
-        const meta = getMetaByTitle(parsed.title);
+        const meta = findCognitiveErrorByTitle(parsed.title);
         return {
           id: meta?.id,
           title: parsed.title,
@@ -27,7 +24,7 @@ const parseStringItem = (raw: string): SelectedCognitiveError | null => {
     }
   }
 
-  const meta = getMetaByTitle(value);
+  const meta = findCognitiveErrorByTitle(value);
   return {
     id: meta?.id,
     title: value,
@@ -49,7 +46,7 @@ export const normalizeSelectedCognitiveErrors = (
 
     if (item && typeof (item as { title?: string }).title === "string") {
       const typed = item as SelectedCognitiveError;
-      const meta = getMetaByTitle(typed.title);
+      const meta = findCognitiveErrorByTitle(typed.title);
       out.push({
         id: typed.id ?? meta?.id,
         title: typed.title,

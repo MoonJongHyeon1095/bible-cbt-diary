@@ -6,7 +6,7 @@ import SafeButton from "@/components/ui/SafeButton";
 interface CbtMinimalEmotionItemProps {
   emotion: EmotionOption;
   isSelected: boolean;
-  onSelect: (emotion: EmotionOption["label"]) => void;
+  onSelect: (emotionId: EmotionOption["id"]) => void;
 }
 
 export function CbtMinimalEmotionItem({
@@ -18,7 +18,7 @@ export function CbtMinimalEmotionItem({
     <SafeButton
       type="button"
       variant="unstyled"
-      onClick={() => onSelect(emotion.label)}
+      onClick={() => onSelect(emotion.id)}
       data-emotion={emotion.id}
       className={`${styles.emotionButton} ${
         isSelected ? styles.emotionButtonSelected : ""

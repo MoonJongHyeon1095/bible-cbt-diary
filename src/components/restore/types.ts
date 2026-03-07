@@ -1,5 +1,3 @@
-import type { DeepInternalContext } from "@/lib/gpt/deepContext";
-
 type SessionResumeDraftBase = {
   selectedEmotions: string[];
   incident: string;
@@ -11,12 +9,4 @@ export type MinimalSessionDraft = SessionResumeDraftBase & {
   date?: string;
 };
 
-export type DeepSessionDraft = SessionResumeDraftBase & {
-  kind: "deep";
-  mainId: number;
-  flowId: number;
-  subIds: number[];
-  internalContext?: DeepInternalContext;
-};
-
-export type SessionResumeDraft = MinimalSessionDraft | DeepSessionDraft;
+export type SessionResumeDraft = MinimalSessionDraft;

@@ -10,7 +10,6 @@ export type EmotionNoteSearchParams = {
   query?: string;
   start?: Date | null;
   end?: Date | null;
-  excludeFlowId?: number | null;
 };
 
 const buildKstRange = (start?: Date | null, end?: Date | null) => {
@@ -43,13 +42,10 @@ export const fetchEmotionNoteSearchList = async (
 
   const range = buildKstRange(params.start, params.end);
   const query = (params.query ?? "").trim();
-  const excludeFlowId =
-    typeof params.excludeFlowId === "number" ? params.excludeFlowId : null;
   const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
     action: "search",
     ...(query ? { query } : {}),
     ...(range ? { start: range.startIso, end: range.endIso } : {}),
-    ...(excludeFlowId ? { excludeFlowId: String(excludeFlowId) } : {}),
     ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),
   });
 

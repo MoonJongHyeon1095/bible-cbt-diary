@@ -9,10 +9,7 @@ import { resolveAccess } from "@/lib/api/_helpers";
 export const updateBehaviorDetail = async (
   payload: {
     id: number;
-    behavior_label?: string;
-    behavior_description?: string;
-    checks?: string[] | null;
-    is_pinned?: boolean;
+    is_pinned: boolean;
   },
   access: AccessContext,
 ) => {

@@ -29,7 +29,6 @@ export const handleGetDeviceMerge = async (
       "emotion_behavior_checks",
       "emotion_behavior_history",
       "session_history",
-      "emotion_flows",
     ];
 
     for (const table of tables) {

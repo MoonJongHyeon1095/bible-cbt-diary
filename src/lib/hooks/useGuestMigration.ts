@@ -88,7 +88,6 @@ export const useGuestMigration = () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.emotionNotes.all }),
         queryClient.invalidateQueries({ queryKey: ["emotion-behavior-details"] }),
         queryClient.invalidateQueries({ queryKey: queryKeys.sessionHistory.all }),
-        queryClient.invalidateQueries({ queryKey: queryKeys.flow.all }),
       ]);
       pushToast("기기 기록을 회원 기록으로 이전했습니다.", "success");
       router.refresh();

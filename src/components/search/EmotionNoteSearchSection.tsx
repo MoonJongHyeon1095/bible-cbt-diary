@@ -53,14 +53,12 @@ type EmotionNoteSearchSectionProps = {
   access: AccessContext;
   onImportNote?: (note: EmotionNote) => void;
   importingNoteId?: number | null;
-  excludeFlowId?: number | null;
 };
 
 export default function EmotionNoteSearchSection({
   access,
   onImportNote,
   importingNoteId,
-  excludeFlowId,
 }: EmotionNoteSearchSectionProps) {
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -97,14 +95,12 @@ export default function EmotionNoteSearchSection({
       searchQuery,
       startIso,
       endIso,
-      excludeFlowId,
     ),
     queryFn: async () => {
       const { response, data } = await fetchEmotionNoteSearchList(access, {
         query: searchQuery,
         start: submittedRange?.from ?? null,
         end: submittedRange?.to ?? null,
-        excludeFlowId,
       });
       if (!response.ok) {
         throw new Error("emotion_notes_search failed");

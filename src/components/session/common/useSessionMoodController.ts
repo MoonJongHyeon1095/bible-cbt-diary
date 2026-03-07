@@ -1,47 +1,37 @@
 import { useCallback, useEffect, useState } from "react";
 import type { SessionMoodType } from "@/components/session/minimal/emotion-select/CbtSessionMoodToggle";
-
-type EmotionOption = {
-  label: string;
-};
+import {
+  filterEmotionIdsByMood,
+  getMoodTypeFromEmotionId,
+} from "@/lib/constants/emotions";
 
 type UseSessionMoodControllerParams = {
-  selectedEmotions: string[];
-  setSelectedEmotions: (value: string[]) => void;
-  positiveEmotions: readonly EmotionOption[];
-  negativeEmotions: readonly EmotionOption[];
+  selectedEmotionIds: string[];
+  setSelectedEmotionIds: (value: string[]) => void;
 };
 
 export function useSessionMoodController({
-  selectedEmotions,
-  setSelectedEmotions,
-  positiveEmotions,
-  negativeEmotions,
+  selectedEmotionIds,
+  setSelectedEmotionIds,
 }: UseSessionMoodControllerParams) {
   const [moodType, setMoodType] = useState<SessionMoodType | null>(null);
 
   useEffect(() => {
-    const firstEmotion = selectedEmotions[0];
-    if (!firstEmotion) return;
-    const inPositive = positiveEmotions.some(
-      (emotion) => emotion.label === firstEmotion,
-    );
-    setMoodType(inPositive ? "positive" : "negative");
-  }, [positiveEmotions, selectedEmotions]);
+    const firstEmotionId = selectedEmotionIds[0];
+    if (!firstEmotionId) return;
+    setMoodType(getMoodTypeFromEmotionId(firstEmotionId));
+  }, [selectedEmotionIds]);
 
   const handleSelectMood = useCallback(
     (nextMood: SessionMoodType) => {
       setMoodType(nextMood);
-      if (selectedEmotions.length === 0) return;
-      const nextPool = nextMood === "positive" ? positiveEmotions : negativeEmotions;
-      const nextSelected = selectedEmotions.filter((selected) =>
-        nextPool.some((emotion) => emotion.label === selected),
-      );
-      if (nextSelected.length !== selectedEmotions.length) {
-        setSelectedEmotions(nextSelected);
+      if (selectedEmotionIds.length === 0) return;
+      const nextSelected = filterEmotionIdsByMood(selectedEmotionIds, nextMood);
+      if (nextSelected.length !== selectedEmotionIds.length) {
+        setSelectedEmotionIds(nextSelected);
       }
     },
-    [negativeEmotions, positiveEmotions, selectedEmotions, setSelectedEmotions],
+    [selectedEmotionIds, setSelectedEmotionIds],
   );
 
   return {

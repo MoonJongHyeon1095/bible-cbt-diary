@@ -81,5 +81,13 @@ export const COGNITIVE_ERRORS = [
 }>;
 
 export const COGNITIVE_ERRORS_BY_ID = Object.fromEntries(
-  COGNITIVE_ERRORS.map((error) => [error.id, error])
+  COGNITIVE_ERRORS.map((error) => [error.id, error]),
 ) as Record<CognitiveErrorId, (typeof COGNITIVE_ERRORS)[number]>;
+
+export const COGNITIVE_ERRORS_BY_TITLE = Object.fromEntries(
+  COGNITIVE_ERRORS.map((error) => [error.title, error]),
+) as Record<string, (typeof COGNITIVE_ERRORS)[number]>;
+
+export function findCognitiveErrorByTitle(title: string) {
+  return COGNITIVE_ERRORS_BY_TITLE[title];
+}

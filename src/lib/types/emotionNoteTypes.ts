@@ -11,7 +11,6 @@ export type EmotionNote = {
   emotion_labels?: string[];
   error_labels?: string[];
   behavior_labels?: string[];
-  flow_ids?: number[];
   thought_details?: EmotionNoteDetail[];
   error_details?: EmotionNoteErrorDetail[];
   alternative_details?: EmotionNoteAlternativeDetail[];
@@ -81,26 +80,4 @@ export type EmotionBehaviorHistory = {
   comments: string;
   created_at: string;
   checks: EmotionBehaviorHistoryCheck[];
-};
-
-export type EmotionNoteMiddle = {
-  id: number;
-  from_note_id: number;
-  to_note_id: number;
-  created_at: string;
-};
-
-export type EmotionMontage = {
-  id: number;
-  flow_id: number;
-  main_note_id: number;
-  sub_note_ids: number[] | null;
-  montage_caption: string | null;
-  montage_jsonb: {
-    sequenceText?: unknown[];
-    cutLogicText?: unknown[];
-  } | null;
-  atoms_jsonb: unknown[] | null;
-  freeze_frames_jsonb: unknown[] | null;
-  created_at?: string;
 };

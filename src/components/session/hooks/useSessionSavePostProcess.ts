@@ -14,7 +14,6 @@ type RunSessionSavePostProcessParams = {
   router: RouterLike;
   nextPath: string;
   pushToast: (message: string, type: "success" | "error") => void;
-  includeFlowQuery?: boolean;
 };
 
 export async function runSessionSavePostProcess({
@@ -22,7 +21,6 @@ export async function runSessionSavePostProcess({
   router,
   nextPath,
   pushToast,
-  includeFlowQuery = false,
 }: RunSessionSavePostProcessParams) {
   pushToast("세션 기록이 저장되었습니다.", "success");
   void queryClient.invalidateQueries({
@@ -31,11 +29,6 @@ export async function runSessionSavePostProcess({
   void queryClient.invalidateQueries({
     queryKey: queryKeys.sessionHistory.all,
   });
-  if (includeFlowQuery) {
-    void queryClient.invalidateQueries({
-      queryKey: queryKeys.flow.all,
-    });
-  }
 
   try {
     void flushTokenSessionUsage({ sessionCount: 1 });

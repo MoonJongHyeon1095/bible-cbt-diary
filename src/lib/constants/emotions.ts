@@ -1,4 +1,6 @@
-// src/constants/emotions.ts
+import { NEGATIVE_EMOTIONS } from "./negative-emotions";
+import { POSITIVE_EMOTIONS } from "./positive-emotions";
+
 export type EmotionOption = {
   id: string;
   label: string;
@@ -9,319 +11,93 @@ export type EmotionOption = {
   caution: string[];
 };
 
-// 11개 부정 감정
-export const NEGATIVE_EMOTIONS: EmotionOption[] = [
-  {
-    id: "sadness",
-    label: "슬픔",
-    description: "상실과 아픔을 느끼는 감정",
-    physical: "가슴이 답답하고, 목이 메이며, 눈물이 나옴",
-    color: "bg-blue-50 border-blue-300 hover:border-blue-500",
-    positive: [
-      "슬픔은 상실의 가치를 인정하는 신호입니다. 소중했던 것을 알게 해줍니다.",
-      "눈물은 치유의 시작입니다. 감정을 표현하는 것이 회복의 첫걸음입니다.",
-      "슬픔을 통해 우리는 더 깊은 공감 능력을 갖게 됩니다.",
-    ],
-    caution: [
-      "지나친 슬픔에 빠지면 일상생활이 어려워질 수 있습니다.",
-      "오랜 기간 지속되면 우울증으로 발전할 수 있으니 주의가 필요합니다.",
-    ],
-  },
-  {
-    id: "anger",
-    label: "분노",
-    description: "부당함과 침해에 대한 반응",
-    physical: "심장이 빠르게 뛰고, 얼굴이 화끈거리며, 주먹이 쥐어짐",
-    color: "bg-red-50 border-red-300 hover:border-red-500",
-    positive: [
-      "분노는 경계가 침해되었음을 알려주는 신호입니다.",
-      "정당한 분노는 변화와 정의를 위한 에너지가 됩니다.",
-      "자신의 가치를 지키려는 건강한 반응일 수 있습니다.",
-    ],
-    caution: [
-      "분노를 억누르거나 폭발시키면 관계가 손상될 수 있습니다.",
-      "분노 뒤에 숨은 두려움이나 상처를 살펴볼 필요가 있습니다.",
-    ],
-  },
-  {
-    id: "fear",
-    label: "두려움",
-    description: "위험을 감지하고 경계하는 감정",
-    physical: "온몸이 경직되고, 식은땀이 나며, 심장이 두근거림",
-    color: "bg-purple-50 border-purple-300 hover:border-purple-500",
-    positive: [
-      "두려움은 위험을 미리 감지하는 보호 기능입니다.",
-      "신중함과 준비를 하게 만들어 더 안전하게 만듭니다.",
-      "용기는 두려움이 없는 것이 아니라, 두려움에도 불구하고 나아가는 것입니다.",
-    ],
-    caution: [
-      "과도한 두려움은 회피 행동으로 이어져 삶이 제한될 수 있습니다.",
-      "불안장애로 발전하지 않도록 현실적인 위험 평가가 필요합니다.",
-    ],
-  },
-  {
-    id: "disgust",
-    label: "혐오",
-    description: "거부감과 멀어지고 싶은 느낌",
-    physical: "속이 메스껍고, 얼굴을 찡그리며, 몸을 움츠림",
-    color: "bg-green-50 border-green-300 hover:border-green-500",
-    positive: [
-      "혐오감은 건강하지 못한 것으로부터 자신을 지키는 본능입니다.",
-      "부적절한 상황이나 관계를 구분하는 데 도움을 줍니다.",
-      "자기 보호의 건강한 신호일 수 있습니다.",
-    ],
-    caution: [
-      "과도한 혐오감은 타인과의 건강한 관계를 방해할 수 있습니다.",
-      "자신에 대한 혐오로 이어지지 않도록 주의가 필요합니다.",
-    ],
-  },
-  {
-    id: "shame",
-    label: "수치심",
-    description: "남들 앞에서 부끄럽고 창피한 감정",
-    physical: "얼굴이 붉어지고, 고개가 숙여지며, 시을 피하게 됨",
-    color: "bg-rose-50 border-rose-300 hover:border-rose-500",
-    positive: [
-      "수치심은 사회적 규범을 배우고 성장하게 만듭니다.",
-      "겸손함과 자기 성찰의 기회를 제공합니다.",
-      "타인을 배려하는 마음에서 비롯될 수 있습니다.",
-    ],
-    caution: [
-      "만성적인 수치심은 자존감을 크게 떨어뜨립니다.",
-      '수치심과 죄책감을 구분하고, "나는 나쁜 사람"이 아니라 "실수를 했다"로 이해하세요.',
-    ],
-  },
-  {
-    id: "guilt",
-    label: "죄책감",
-    description: "잘못했다는 자책과 미안함",
-    physical: "가슴이 무겁고, 어깨가 처지며, 한숨이 나옴",
-    color: "bg-pink-50 border-pink-300 hover:border-pink-500",
-    positive: [
-      "죄책감은 양심이 살아있다는 증거입니다.",
-      "잘못을 인정하고 관계를 회복할 기회를 줍니다.",
-      "더 나은 사람이 되려는 동기가 됩니다.",
-    ],
-    caution: [
-      "과도한 죄책감은 자기 비난으로 이어져 우울증을 유발할 수 있습니다.",
-      "자신의 책임이 아닌 일까지 떠안지 않도록 주의하세요.",
-    ],
-  },
-  {
-    id: "loneliness",
-    label: "외로움",
-    description: "혼자라는 느낌과 연결의 부재",
-    physical: "가슴이 텅 빈 느낌, 몸 차고, 기력이 없음",
-    color: "bg-indigo-50 border-indigo-300 hover:border-indigo-500",
-    positive: [
-      "외로움은 연결이 필요하다는 신호입니다. 관계의 중요성을 일깨웁니다.",
-      "자기 자신과 깊이 만날 수 있는 시간이 됩니다.",
-      "진정한 친밀감을 갈망하게 만들어 의미 있는 관계를 추구하게 합니다.",
-    ],
-    caution: [
-      "장기간 외로움은 우울증과 불안으로 이어질 수 있습니다.",
-      "회피가 아닌 작은 연결부터 시도하는 것이 중요합니다.",
-    ],
-  },
-  {
-    id: "despair",
-    label: "절망",
-    description: "희망이 없고 막막한 감정",
-    physical: "온몸에 힘이 빠지고, 숨쉬기 힘들며, 모든 게 무기력함",
-    color: "bg-slate-50 border-slate-400 hover:border-slate-600",
-    positive: [
-      "절망은 근본적인 변화가 필요하다는 강력한 신호입니다.",
-      "인생의 바닥을 경험한 후 새로운 시작을 할 수 있습니다.",
-      "더 이상 내려갈 곳이 없다면, 이제는 올라갈 일만 남았습니다.",
-    ],
-    caution: [
-      "절망감이 지속되면 자해나 자살 충동으로 이어질 수 있어 즉각적인 도움이 필요합니다.",
-      "전문가의 도움을 받는 것이 중요합니다. 혼자 견디지 마세요.",
-    ],
-  },
-  {
-    id: "frustration",
-    label: "답답함",
-    description: "막히고 풀리지 않는 느낌",
-    physical: "가슴이 답답하고, 한숨이 나오며, 안절부절못함",
-    color: "bg-amber-50 border-amber-300 hover:border-amber-500",
-    positive: [
-      "답답함은 현재 방법이 효과가 없다는 신호입니다. 새로운 접근이 필요함을 알려줍니다.",
-      "문제 해결을 위한 창의적 사고를 자극합니다.",
-      "인내심과 끈기를 기르는 과정이 됩니다.",
-    ],
-    caution: [
-      "지속적인 답답함은 포기나 무기력으로 이어질 수 있습니다.",
-      "작은 성공 경험을 쌓으며 한 걸음씩 나아가는 것이 중요합니다.",
-    ],
-  },
-  {
-    id: "anxiety",
-    label: "불안",
-    description: "미래에 대한 걱정과 초조함",
-    physical: "가슴이 두근거리고, 손발이 떨리며, 잠을 못 잠",
-    color: "bg-orange-50 border-orange-300 hover:border-orange-500",
-    positive: [
-      "불안은 미래를 준비하도록 만드는 동기입니다.",
-      "위험을 예측하고 대비하게 만들어 더 안전하게 합니다.",
-      "적절한 불안은 집중력과 수행 능력을 높입니다.",
-    ],
-    caution: [
-      "과도한 불안은 일상생활과 수면을 방해합니다.",
-      "불안장애로 발전하지 않도록 현실적인 사고와 이완이 요합니다.",
-    ],
-  },
-  {
-    id: "irritation",
-    label: "짜증",
-    description: "작은 일에도 화가 나는 예민한 상태",
-    physical: "신경이 곤두서고, 이를 악물며, 목소리가 날카로워짐",
-    color: "bg-yellow-50 border-yellow-300 hover:border-yellow-500",
-    positive: [
-      "짜증은 피로나 스트레스가 누적되었다는 신호입다. 휴식이 필요함을 알려줍니다.",
-      "경계를 설정하고 자기 보호가 필요한 때를 알려줍니다.",
-      "무언가 변화가 필요하다는 메시지입니다.",
-    ],
-    caution: [
-      "지속적인 짜증은 관계를 손상시키고 고립을 초래할 수 있습니다.",
-      "근본 원인을 찾아 해결하지 않으면 만성 스트레스로 이어집니다.",
-    ],
-  },
-];
+export type EmotionMood = "positive" | "negative";
 
-// 10개 긍정 감정
-export const POSITIVE_EMOTIONS: EmotionOption[] = [
-  {
-    id: "joy",
-    label: "기쁨",
-    description: "바라던 일이 이루어질 때 생기는 밝고 가벼운 감정",
-    physical: "몸이 가볍고 에너지가 올라오며 자연스럽게 미소가 지어짐",
-    color: "bg-amber-50 border-amber-300 hover:border-amber-500",
-    positive: [
-      "기쁨은 새로운 시도와 놀이 같은 태도를 이끌어 삶의 활력을 높입니다.",
-      "작은 성취를 기뻐하는 습관은 회복탄력성과 일상 만족도를 키웁니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "gratitude",
-    label: "감사",
-    description: "주어진 도움과 환경에 고마움을 느끼는 감정",
-    physical: "가슴이 따뜻해지고 표정이 부드러워지며 관계에 마음이 열림",
-    color: "bg-emerald-50 border-emerald-300 hover:border-emerald-500",
-    positive: [
-      "감사는 타인과의 유대감을 강화하고 관계의 신뢰를 깊게 만듭니다.",
-      "현재 삶을 풍요롭게 인식하게 해 심리적 안녕감의 기반이 됩니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "serenity",
-    label: "평온",
-    description: "자극은 적지만 마음이 고요하고 안전한 상태",
-    physical: "호흡이 안정되고 긴장이 풀리며 몸과 마음이 차분해짐",
-    color: "bg-sky-50 border-sky-300 hover:border-sky-500",
-    positive: [
-      "평온은 내면을 정리하고 에너지를 회복하는 시간을 제공합니다.",
-      "삶의 조화감을 높여 장기적인 스트레스 완충 효과를 줍니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "interest",
-    label: "흥미",
-    description: "새로운 대상을 탐색하고 싶은 호기심의 감정",
-    physical: "집중이 또렷해지고 눈빛이 살아나며 시간 가는 줄 모르게 됨",
-    color: "bg-cyan-50 border-cyan-300 hover:border-cyan-500",
-    positive: [
-      "흥미는 탐구와 몰입을 유도해 역량 확장과 성장을 촉진합니다.",
-      "배움과 경험의 폭을 넓혀 자기효능감을 높이는 동력이 됩니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "hope",
-    label: "희망",
-    description: "어려움 속에서도 미래의 가능성을 믿는 감정",
-    physical: "무거웠던 몸이 조금 가벼워지고 다시 시도할 힘이 생김",
-    color: "bg-lime-50 border-lime-300 hover:border-lime-500",
-    positive: [
-      "희망은 회복탄력성을 높여 포기하지 않고 앞으로 나아가게 합니다.",
-      "불확실한 상황에서도 행동을 지속하게 하는 의지의 근원이 됩니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "pride",
-    label: "자부심",
-    description: "노력의 성과를 확인하며 자신을 긍정적으로 평가하는 감정",
-    physical: "어깨가 펴지고 표정이 당당해지며 자신감이 또렷해짐",
-    color: "bg-violet-50 border-violet-300 hover:border-violet-500",
-    positive: [
-      "자부심은 자신의 가치를 확인하게 하여 건강한 자신감을 만듭니다.",
-      "다음 단계에 도전할 용기와 지속 동기를 강화합니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "amusement",
-    label: "재미",
-    description: "웃음과 유머에서 오는 가벼운 즐거움의 감정",
-    physical: "얼굴 근육이 풀리고 웃음이 나오며 긴장이 완화됨",
-    color: "bg-orange-50 border-orange-300 hover:border-orange-500",
-    positive: [
-      "재미는 긴장을 해소하고 정신적 여유를 회복하게 합니다.",
-      "함께 웃는 경험은 사회적 결속감과 친밀감을 높입니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "inspiration",
-    label: "영감",
-    description: "위대한 가치나 아름다움을 보고 마음이 고양되는 감정",
-    physical: "가슴이 뜨거워지고 생각이 맑아지며 행동 의지가 커짐",
-    color: "bg-fuchsia-50 border-fuchsia-300 hover:border-fuchsia-500",
-    positive: [
-      "영감은 더 나은 기준을 향해 삶의 방향을 끌어올립니다.",
-      "새로운 창작과 실천을 시작하게 하는 강한 내적 동기가 됩니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "awe",
-    label: "경외감",
-    description: "압도적인 자연·진리 앞에서 느끼는 경탄의 감정",
-    physical: "숨이 멎는 듯 집중되고 마음이 넓어지는 느낌이 듦",
-    color: "bg-indigo-50 border-indigo-300 hover:border-indigo-500",
-    positive: [
-      "경외감은 자아 중심성을 낮추고 더 넓은 관점을 갖게 합니다.",
-      "세상과의 연결감을 높여 삶의 의미를 깊게 체감하게 합니다.",
-    ],
-    caution: [],
-  },
-  {
-    id: "love",
-    label: "사랑",
-    description: "기쁨·감사·평온이 관계 안에서 통합되는 포괄적 감정",
-    physical: "마음이 따뜻해지고 안정감이 커지며 타인을 향해 열림",
-    color: "bg-rose-50 border-rose-300 hover:border-rose-500",
-    positive: [
-      "사랑은 관계를 지속시키고 상호 돌봄을 가능하게 하는 핵심 정서입니다.",
-      "함께 기쁨과 평온을 나누며 삶의 의미와 안정감을 확장합니다.",
-    ],
-    caution: [],
-  },
-];
+export { NEGATIVE_EMOTIONS, POSITIVE_EMOTIONS };
 
-// 기존 호환: 기본 감정 목록은 부정 감정 사용
 export const EMOTIONS = NEGATIVE_EMOTIONS;
 export const ALL_EMOTIONS: EmotionOption[] = [
   ...NEGATIVE_EMOTIONS,
   ...POSITIVE_EMOTIONS,
 ];
 
+const EMOTIONS_BY_MOOD: Record<EmotionMood, EmotionOption[]> = {
+  negative: NEGATIVE_EMOTIONS,
+  positive: POSITIVE_EMOTIONS,
+};
 
-// 각 감정의 장점 (5가지 이상)
+const EMOTION_BY_ID = Object.fromEntries(
+  ALL_EMOTIONS.map((emotion) => [emotion.id, emotion]),
+) as Record<string, EmotionOption>;
+
+const EMOTION_BY_LABEL = Object.fromEntries(
+  ALL_EMOTIONS.map((emotion) => [emotion.label, emotion]),
+) as Record<string, EmotionOption>;
+
+export function getEmotionsByMood(mood: EmotionMood | null | undefined) {
+  return mood === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
+}
+
+export function findEmotionById(id: string) {
+  return EMOTION_BY_ID[id];
+}
+
+export function findEmotionByLabel(label: string) {
+  return EMOTION_BY_LABEL[label];
+}
+
+export function mapEmotionIdsToLabels(ids: readonly string[]) {
+  return ids
+    .map((id) => findEmotionById(id)?.label ?? "")
+    .filter((label) => label.length > 0);
+}
+
+export function mapEmotionLabelsToIds(labels: readonly string[]) {
+  return labels
+    .map((label) => findEmotionByLabel(label)?.id ?? "")
+    .filter((id) => id.length > 0);
+}
+
+export function getMoodTypeFromEmotionLabel(label: string): EmotionMood | null {
+  if (!label) return null;
+  if (POSITIVE_EMOTIONS.some((emotion) => emotion.label === label)) {
+    return "positive";
+  }
+  if (NEGATIVE_EMOTIONS.some((emotion) => emotion.label === label)) {
+    return "negative";
+  }
+  return null;
+}
+
+export function getMoodTypeFromEmotionId(id: string): EmotionMood | null {
+  const emotion = findEmotionById(id);
+  if (!emotion) return null;
+  return getMoodTypeFromEmotionLabel(emotion.label);
+}
+
+export function filterEmotionLabelsByMood(
+  labels: readonly string[],
+  mood: EmotionMood,
+) {
+  const allowedLabels = new Set(
+    EMOTIONS_BY_MOOD[mood].map((emotion) => emotion.label),
+  );
+  return labels.filter((label) => allowedLabels.has(label));
+}
+
+export function filterEmotionIdsByMood(ids: readonly string[], mood: EmotionMood) {
+  const allowedIds = new Set(EMOTIONS_BY_MOOD[mood].map((emotion) => emotion.id));
+  return ids.filter((id) => allowedIds.has(id));
+}
+
+export function formatEmotionLabels(labels: readonly string[]) {
+  return labels.join(", ");
+}
+
+export function formatEmotionIds(ids: readonly string[]) {
+  return formatEmotionLabels(mapEmotionIdsToLabels(ids));
+}
+
 export const EMOTION_BENEFITS: { [key: string]: string[] } = {
   슬픔: [
     "내가 무엇을 소중히 여기는지 깨닫게 해줍니다",
@@ -406,7 +182,6 @@ export const EMOTION_BENEFITS: { [key: string]: string[] } = {
   ],
 };
 
-// 각 감정의 주의할 점 (5가지)
 export const EMOTION_WARNINGS: { [key: string]: string[] } = {
   슬픔: [
     "너무 오래 지속되면 우울증으로 발전할 수 있습니다",

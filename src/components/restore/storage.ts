@@ -1,25 +1,16 @@
 import { safeLocalStorage, safeSessionStorage } from "@/lib/storage/core/safeStorage";
 import {
+  findEmotionById,
+  mapEmotionLabelsToIds,
+} from "@/lib/constants/emotions";
+import {
   SESSION_RESUME_DRAFT_KEY,
   SESSION_RESUME_RESTORE_KEY,
 } from "@/lib/storage/keys/session";
-import type { DeepInternalContext } from "@/lib/gpt/deepContext";
 import type { SessionResumeDraft } from "./types";
 
 const isValidDate = (value: unknown): value is string =>
   typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
-
-const normalizeNumber = (value: unknown) => {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
-};
-
-const normalizeIds = (value: unknown) => {
-  if (!Array.isArray(value)) return [] as number[];
-  return value
-    .map((item) => normalizeNumber(item))
-    .filter((item): item is number => item !== null);
-};
 
 const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
   if (!value || typeof value !== "object") return null;
@@ -29,10 +20,6 @@ const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
     incident?: unknown;
     savedAt?: unknown;
     date?: unknown;
-    mainId?: unknown;
-    flowId?: unknown;
-    subIds?: unknown;
-    internalContext?: unknown;
   };
   const kind = String(source.kind ?? "").trim();
   const selectedEmotions = Array.isArray(source.selectedEmotions)
@@ -41,35 +28,23 @@ const normalizeDraft = (value: unknown): SessionResumeDraft | null => {
         .filter((item) => item.length > 0)
         .slice(0, 2)
     : [];
+  const normalizedEmotionIds = selectedEmotions.filter((item) =>
+    Boolean(findEmotionById(item)),
+  );
+  const nextSelectedEmotions =
+    normalizedEmotionIds.length > 0
+      ? normalizedEmotionIds
+      : mapEmotionLabelsToIds(selectedEmotions);
   const incident = String(source.incident ?? "");
   const savedAt = String(source.savedAt ?? "").trim() || new Date().toISOString();
-  if (selectedEmotions.length === 0) return null;
+  if (nextSelectedEmotions.length === 0) return null;
 
   if (kind === "minimal") {
     return {
       kind: "minimal",
-      selectedEmotions,
+      selectedEmotions: nextSelectedEmotions,
       incident,
       date: isValidDate(source.date) ? source.date : undefined,
-      savedAt,
-    };
-  }
-
-  if (kind === "deep") {
-    const mainId = normalizeNumber(source.mainId);
-    const flowId = normalizeNumber(source.flowId);
-    const subIds = normalizeIds(source.subIds);
-    if (mainId === null || flowId === null || subIds.length > 2) {
-      return null;
-    }
-    return {
-      kind: "deep",
-      selectedEmotions,
-      incident,
-      mainId,
-      flowId,
-      subIds,
-      internalContext: source.internalContext as DeepInternalContext | undefined,
       savedAt,
     };
   }

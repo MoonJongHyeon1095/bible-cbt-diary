@@ -8,7 +8,7 @@ const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date().toISOString());
 };
 
-// GET /api/emotion-notes?action=search&query=...&start=...&end=...&excludeFlowId=...
+// GET /api/emotion-notes?action=search&query=...&start=...&end=...
 // emotion-notes 검색 목록 조회
 export const handleSearchEmotionNoteList = async (
   req: VercelRequest,
@@ -21,10 +21,6 @@ export const handleSearchEmotionNoteList = async (
   }
 
   const queryParam = (getQueryParam(req, "query") ?? "").trim();
-  const excludeFlowIdParam = getQueryParam(req, "excludeFlowId");
-  const excludeFlowId = excludeFlowIdParam
-    ? Number(excludeFlowIdParam)
-    : null;
 
   const startParam = getQueryParam(req, "start");
   const endParam = getQueryParam(req, "end");
@@ -57,8 +53,7 @@ export const handleSearchEmotionNoteList = async (
       trigger_text,
       created_at,
       emotion_tags,
-      error_label,
-      emotion_flow_note_middles(flow_id)
+      error_label
     `,
   );
 
@@ -100,17 +95,10 @@ export const handleSearchEmotionNoteList = async (
     });
   }
 
-  let notes =
+  const notes =
     data?.map((note) => {
       const emotionLabels = Array.from(new Set((note.emotion_tags ?? []).filter(Boolean)));
       const errorLabels = note.error_label ? [note.error_label] : [];
-      const flowIds = Array.from(
-        new Set(
-          (note.emotion_flow_note_middles ?? [])
-            .map((detail) => Number(detail.flow_id))
-            .filter((id) => Number.isFinite(id)),
-        ),
-      );
 
       return {
         id: note.id,
@@ -119,13 +107,8 @@ export const handleSearchEmotionNoteList = async (
         created_at: note.created_at,
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
-        flow_ids: flowIds,
       };
     }) ?? [];
-
-  if (excludeFlowId && Number.isFinite(excludeFlowId)) {
-    notes = notes.filter((note) => !note.flow_ids.includes(excludeFlowId));
-  }
 
   return json(res, 200, { notes });
 };

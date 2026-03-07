@@ -1,6 +1,6 @@
 import {
-  NEGATIVE_EMOTIONS,
-  POSITIVE_EMOTIONS,
+  findEmotionById,
+  getEmotionsByMood,
 } from "@/lib/constants/emotions";
 import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderSection";
 import { CbtMinimalEmotionDetailsSection } from "./CbtMinimalEmotionDetailsSection";
@@ -14,33 +14,33 @@ import styles from "../MinimalStyles.module.css";
 interface CbtMinimalEmotionSectionProps {
   moodType: SessionMoodType | null;
   onSelectMood: (moodType: SessionMoodType) => void;
-  selectedEmotions: string[];
-  onSelectEmotion: (emotion: string[]) => void;
+  selectedEmotionIds: string[];
+  onSelectEmotion: (emotionIds: string[]) => void;
   onNext: () => void;
 }
 
 export function CbtMinimalEmotionSection({
   moodType,
   onSelectMood,
-  selectedEmotions,
+  selectedEmotionIds,
   onSelectEmotion,
   onNext,
 }: CbtMinimalEmotionSectionProps) {
-  const emotions = moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS;
-  const selectedEmotionData = emotions.find(
-    (emotion) => emotion.label === selectedEmotions[selectedEmotions.length - 1],
+  const emotions = getEmotionsByMood(moodType);
+  const selectedEmotionData = findEmotionById(
+    selectedEmotionIds[selectedEmotionIds.length - 1] ?? "",
   );
 
-  const toggleEmotion = (emotion: string) => {
-    const isSelected = selectedEmotions.includes(emotion);
+  const toggleEmotion = (emotionId: string) => {
+    const isSelected = selectedEmotionIds.includes(emotionId);
     if (isSelected) {
-      onSelectEmotion(selectedEmotions.filter((value) => value !== emotion));
+      onSelectEmotion(selectedEmotionIds.filter((value) => value !== emotionId));
       return;
     }
-    if (selectedEmotions.length >= 2) {
+    if (selectedEmotionIds.length >= 2) {
       return;
     }
-    onSelectEmotion([...selectedEmotions, emotion]);
+    onSelectEmotion([...selectedEmotionIds, emotionId]);
   };
 
   return (
@@ -53,13 +53,13 @@ export function CbtMinimalEmotionSection({
         <div className={styles.emotionGridWrap} data-tour="emotion-grid">
           <CbtMinimalEmotionList
             emotions={emotions}
-            selectedEmotions={selectedEmotions}
+            selectedEmotionIds={selectedEmotionIds}
             onSelectEmotion={toggleEmotion}
           />
         </div>
         <CbtMinimalEmotionDetailsSection
           emotion={selectedEmotionData}
-          isVisible={selectedEmotions.length > 0}
+          isVisible={selectedEmotionIds.length > 0}
           onNext={onNext}
         />
       </div>

@@ -14,7 +14,7 @@ import ResumePromptModal from "@/components/restore/ResumePromptModal";
 import { useSessionResume } from "@/components/restore/useSessionResume";
 import sessionStyles from "@/components/session/minimal/MinimalStyles.module.css";
 import SafeButton from "@/components/ui/SafeButton";
-import { NEGATIVE_EMOTIONS, POSITIVE_EMOTIONS } from "@/lib/constants/emotions";
+import { getEmotionsByMood } from "@/lib/constants/emotions";
 import { useAiUsageGuard } from "@/lib/hooks/useAiUsageGuard";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -40,7 +40,7 @@ export default function EmotionNoteHomePage() {
   const [step, setStep] = useState<"mood" | "emotion">("mood");
   const [moodType, setMoodType] = useState<HomeMoodType | null>(null);
   const emotions = useMemo(
-    () => (moodType === "positive" ? POSITIVE_EMOTIONS : NEGATIVE_EMOTIONS),
+    () => getEmotionsByMood(moodType),
     [moodType],
   );
   const todayLabel = useMemo(

@@ -18,10 +18,6 @@ export function useSessionResume({ navigate }: UseSessionResumeParams) {
     let timerId: number | null = null;
     const draft = readSessionResumeDraft();
     if (!draft) return;
-    if (draft.kind === "deep") {
-      clearSessionResumeDraft();
-      return;
-    }
     setResumeDraft(draft);
     timerId = window.setTimeout(() => {
       setShowResumeModal(true);

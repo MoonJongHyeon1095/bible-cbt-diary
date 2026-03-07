@@ -114,6 +114,7 @@ export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
   "mood",
   "emotion",
   "incident",
+  "sdt",
   "distortion",
   "alternative",
 ];
@@ -151,6 +152,18 @@ export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
         selector: "[data-tour='minimal-incident-next']",
         side: "bottom",
         content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
+      },
+    ],
+    sdt: [
+      {
+        selector: "[data-tour='minimal-distortion-list']",
+        side: "bottom",
+        content: "이 긍정 감정이 어떤 힘에서 왔는지 살펴보는 카드예요.",
+      },
+      {
+        selector: "[data-tour='minimal-distortion-more']",
+        side: "bottom",
+        content: "다른 SDT 축으로도 다시 볼 수 있어요.",
       },
     ],
     distortion: [

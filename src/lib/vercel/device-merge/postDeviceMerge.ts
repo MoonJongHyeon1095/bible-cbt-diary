@@ -65,7 +65,6 @@ export const handlePostDeviceMerge = async (
       "emotion_behavior_details",
       "emotion_behavior_checks",
       "emotion_behavior_history",
-      "session_history",
     ];
 
     for (const table of tables) {

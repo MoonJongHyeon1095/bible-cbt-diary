@@ -11,6 +11,7 @@ import { CbtMinimalEmotionSection } from "./emotion-select/CbtMinimalEmotionSect
 import { CbtMinimalMoodSection } from "./emotion-select/CbtMinimalMoodSection";
 import { useMinimalSessionController } from "./hooks/useMinimalSessionController";
 import { CbtMinimalIncidentSection } from "./incident/CbtMinimalIncidentSection";
+import { CbtMinimalSdtSection } from "./sdt/CbtMinimalSdtSection";
 import styles from "./MinimalStyles.module.css";
 
 function MinimalSessionPageContent() {
@@ -31,6 +32,7 @@ function MinimalSessionPageContent() {
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
+    handleCompletePositive,
     tourSteps,
     isTourOpen,
     setIsTourOpen,
@@ -74,6 +76,7 @@ function MinimalSessionPageContent() {
             onInputChange={actions.setUserInput}
             onNext={handleProceedFromIncident}
             title={incidentTitle}
+            moodType={moodType}
           />
         )}
 
@@ -94,6 +97,14 @@ function MinimalSessionPageContent() {
             userInput={flow.userInput}
             emotion={formatEmotionIds(flow.selectedEmotions)}
             onSelect={handleSelectDistortion}
+          />
+        )}
+
+        {flow.step === "sdt" && (
+          <CbtMinimalSdtSection
+            userInput={flow.userInput}
+            emotion={formatEmotionIds(flow.selectedEmotions)}
+            onSelect={handleCompletePositive}
           />
         )}
 

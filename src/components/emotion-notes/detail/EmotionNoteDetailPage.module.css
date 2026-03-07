@@ -267,6 +267,18 @@
   border-color: rgba(195, 110, 170, 0.45);
 }
 
+.noteTagSdt {
+  color: #cff4ff;
+  background: rgba(28, 80, 104, 0.66);
+  border-color: rgba(105, 198, 232, 0.42);
+}
+
+.noteTagBehavior {
+  color: #ffe1a8;
+  background: rgba(96, 63, 16, 0.7);
+  border-color: rgba(220, 174, 82, 0.42);
+}
+
 .distortionEntry {
   display: flex;
   flex-direction: column;
@@ -348,6 +360,26 @@
   margin: 0;
   color: rgba(189, 207, 238, 0.74);
   font-size: 0.9rem;
+}
+
+.sectionReflection,
+.sectionPastelReflection {
+  background: linear-gradient(
+    180deg,
+    rgba(30, 48, 43, 0.96),
+    rgba(23, 37, 34, 0.95)
+  );
+  border-color: rgba(110, 190, 162, 0.44);
+}
+
+.reflectionQuestionText {
+  margin: 0;
+  color: #e5fff7;
+  font-size: 1rem;
+  line-height: 1.9;
+  letter-spacing: -0.003em;
+  max-width: 68ch;
+  text-wrap: pretty;
 }
 
 .fabHidden {

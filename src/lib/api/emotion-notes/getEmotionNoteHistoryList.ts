@@ -1,32 +1,31 @@
 "use client";
 
 import type { AccessContext } from "@/lib/types/access";
-import type { SessionHistory } from "@/lib/types/sessionTypes";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { buildApiUrl } from "@/lib/utils/apiBase";
 import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-type FetchSessionHistoriesOptions = {
+type FetchEmotionHistoryOptions = {
   limit?: number;
   offset?: number;
 };
 
-// GET /api/session-history?limit=...&offset=...
-// session-history 목록 조회
-export const fetchSessionHistoryList = async (
+export const fetchEmotionNoteHistoryList = async (
   access: AccessContext,
-  options: FetchSessionHistoriesOptions = {},
+  options: FetchEmotionHistoryOptions = {},
 ) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
     return {
       response: new Response(null, { status: 401 }),
-      data: { histories: [] as SessionHistory[] },
+      data: { notes: [] as EmotionNote[] },
     };
   }
 
   const limit = options.limit ?? 50;
   const offset = options.offset ?? 0;
-  const url = appendQuery(buildApiUrl("/api/session-history"), {
+  const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
+    action: "history",
     limit: String(limit),
     offset: String(offset),
     ...(resolved.kind === "guest" ? { deviceId: resolved.deviceId } : {}),
@@ -37,8 +36,8 @@ export const fetchSessionHistoryList = async (
   });
 
   const data = response.ok
-    ? ((await response.json()) as { histories: SessionHistory[] })
-    : { histories: [] };
+    ? ((await response.json()) as { notes: EmotionNote[] })
+    : { notes: [] };
 
   return { response, data };
 };

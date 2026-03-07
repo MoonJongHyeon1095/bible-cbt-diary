@@ -12,6 +12,7 @@ export type MinimalStep =
   | "mood"
   | "incident"
   | "emotion"
+  | "sdt"
   | "distortion"
   | "alternative";
 
@@ -23,6 +24,7 @@ export const MINIMAL_EMOTION_SELECT_STEPS: ReadonlyArray<MinimalStep> = [
 export const MINIMAL_DISTORTION_STEPS: ReadonlyArray<MinimalStep> = [
   "distortion",
 ];
+export const MINIMAL_SDT_STEPS: ReadonlyArray<MinimalStep> = ["sdt"];
 export const MINIMAL_ALTERNATIVE_STEPS: ReadonlyArray<MinimalStep> = [
   "alternative",
 ];

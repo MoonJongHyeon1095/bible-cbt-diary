@@ -9,9 +9,16 @@ type MinimalPayload = {
   triggerText?: string;
   emotion?: string;
   emotions?: string[];
+  emotionType?: "positive" | "negative";
   automaticThought?: string;
   alternativeThought?: string;
   cognitiveError?: { title?: string; detail?: string } | null;
+  sdtType?: "autonomy" | "relatedness" | "competence" | null;
+  sdtEmpathyText?: string;
+  reflectionQuestion?: string;
+  behaviorLabel?: string;
+  behaviorDescription?: string;
+  behaviorChecklist?: string[];
 };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

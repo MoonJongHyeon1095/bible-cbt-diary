@@ -35,6 +35,7 @@ export default function EmotionNoteCard({
   });
   const emotionTags = note.emotion_labels ?? [];
   const errorTags = note.error_labels ?? [];
+  const sdtTags = note.sdt_labels ?? [];
 
   const handleClick = (event: MouseEvent<HTMLButtonElement>) => {
     if (isImportMode) {
@@ -64,7 +65,7 @@ export default function EmotionNoteCard({
           <span className={styles.noteTime}>{timeLabel}</span>
         </div>
       </div>
-      {(emotionTags.length > 0 || errorTags.length > 0) && (
+      {(emotionTags.length > 0 || errorTags.length > 0 || sdtTags.length > 0) && (
         <div className={styles.noteTags}>
           {emotionTags.map((tag) => (
             <span key={`emotion-${tag}`} className={styles.tagEmotion}>
@@ -73,6 +74,11 @@ export default function EmotionNoteCard({
           ))}
           {errorTags.map((tag) => (
             <span key={`error-${tag}`} className={styles.tagError}>
+              {tag}
+            </span>
+          ))}
+          {sdtTags.map((tag) => (
+            <span key={`sdt-${tag}`} className={styles.tagError}>
               {tag}
             </span>
           ))}

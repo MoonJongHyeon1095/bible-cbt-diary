@@ -11,6 +11,11 @@ create table public.emotion_notes (
   error_label text not null default ''::text,
   error_description text not null default ''::text,
   alternative text not null default ''::text,
+  emotion_type text not null default 'negative'::text,
+  sdt_type text null,
+  sdt_empathy_text text not null default ''::text,
+  reflection_question text not null default ''::text,
+  is_history_represent boolean not null default true,
   constraint emotion_notes_pkey primary key (id),
   constraint emotion_notes_user_id_fkey foreign KEY (user_id) references auth.users (id) on delete CASCADE,
   constraint emotion_notes_owner_check check (
@@ -20,6 +25,8 @@ create table public.emotion_notes (
     )
   )
 ) TABLESPACE pg_default;
+
+create index IF not exists emotion_notes_emotion_type_idx on public.emotion_notes using btree (emotion_type) TABLESPACE pg_default;
 
 create index IF not exists emotion_notes_emotion_tags_gin_idx on public.emotion_notes using gin (emotion_tags) TABLESPACE pg_default;
 

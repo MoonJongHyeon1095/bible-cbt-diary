@@ -1,4 +1,5 @@
 import type { CognitiveErrorId } from "@/lib/constants/errors";
+import type { SdtKey } from "@/lib/constants/sdt";
 
 export interface EmotionThoughtPair {
   emotion: string;
@@ -12,23 +13,12 @@ export interface SelectedCognitiveError {
   detail?: string;
 }
 
-export interface SessionHistory {
-  id: string;
-  timestamp: string;
-  userInput: string;
-  emotionThoughtPairs: EmotionThoughtPair[];
-  selectedCognitiveErrors: SelectedCognitiveError[];
-  selectedAlternativeThought: string;
-  selectedBehavior?: {
-    behaviorLabel: string;
-    behaviorText: string;
-  } | null;
-  bibleVerse?: {
-    book: string;
-    chapter: number | null;
-    startVerse: number | null;
-    endVerse: number | null;
-    verse: string;
-    prayer: string;
-  } | null;
+export interface PositiveSdtSelection {
+  sdtType: SdtKey;
+  innerBelief: string;
+  empathyText: string;
+  behaviorLabel: string;
+  behaviorDescription: string;
+  behaviorChecklist: string[];
+  reflectionQuestion: string;
 }

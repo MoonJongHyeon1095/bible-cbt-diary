@@ -16,6 +16,7 @@ export const updateEmotionNote = async (
     error_label?: string;
     error_description?: string;
     alternative?: string;
+    is_history_represent?: boolean;
   },
   access: AccessContext,
 ): Promise<{

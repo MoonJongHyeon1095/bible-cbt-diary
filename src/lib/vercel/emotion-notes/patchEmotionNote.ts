@@ -20,6 +20,7 @@ export const handlePatchEmotionNote = async (
     error_label?: string;
     error_description?: string;
     alternative?: string;
+    is_history_represent?: boolean;
     deviceId?: string;
   }>(req);
 
@@ -41,6 +42,7 @@ export const handlePatchEmotionNote = async (
     error_label?: string;
     error_description?: string;
     alternative?: string;
+    is_history_represent?: boolean;
     updated_at?: string;
   } = {
     updated_at: new Date().toISOString(),
@@ -70,6 +72,9 @@ export const handlePatchEmotionNote = async (
   }
   if (payload.alternative !== undefined) {
     updatePayload.alternative = String(payload.alternative).trim();
+  }
+  if (payload.is_history_represent !== undefined) {
+    updatePayload.is_history_represent = Boolean(payload.is_history_represent);
   }
 
   const supabase = createSupabaseAdminClient();

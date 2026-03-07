@@ -3,9 +3,13 @@ import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderS
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { validateUserText } from "@/components/session/utils/validation";
 import SafeButton from "@/components/ui/SafeButton";
-import { ALL_EXAMPLES } from "@/lib/constants/examples";
+import {
+  NEGATIVE_EXAMPLES,
+  POSITIVE_EXAMPLES,
+} from "@/lib/constants/examples";
 import { Sparkles } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { SessionMoodType } from "../emotion-select/CbtSessionMoodToggle";
 import { CbtInlineNextButton } from "../common/CbtInlineNextButton";
 import styles from "../MinimalStyles.module.css";
 import { CbtMinimalIncidentForm } from "./CbtMinimalIncidentForm";
@@ -15,6 +19,7 @@ interface CbtMinimalIncidentSectionProps {
   onInputChange: (value: string) => void;
   onNext: () => void;
   title?: string;
+  moodType?: SessionMoodType | null;
 }
 
 export function CbtMinimalIncidentSection({
@@ -22,13 +27,24 @@ export function CbtMinimalIncidentSection({
   onInputChange,
   onNext,
   title = "오늘 무슨 일이 있었나요?",
+  moodType = null,
 }: CbtMinimalIncidentSectionProps) {
   const { pushToast } = useCbtToast();
   const description = (
     <>
-      힘들었던 경험이나 불편했던 상황을{" "}
-      <br className={styles.mobileLineBreak} />
-      자유롭게 적어주세요.
+      {moodType === "positive" ? (
+        <>
+          기쁘거나 의미 있었던 순간을{" "}
+          <br className={styles.mobileLineBreak} />
+          자유롭게 적어주세요.
+        </>
+      ) : (
+        <>
+          힘들었던 경험이나 불편했던 상황을{" "}
+          <br className={styles.mobileLineBreak} />
+          자유롭게 적어주세요.
+        </>
+      )}
     </>
   );
   const headerRef = useRef<HTMLDivElement | null>(null);
@@ -36,27 +52,30 @@ export function CbtMinimalIncidentSection({
   const [isExampleOpen, setIsExampleOpen] = useState(false);
   const [highlightInput, setHighlightInput] = useState(false);
 
-  const buildExampleItems = (examples: typeof ALL_EXAMPLES) =>
-    examples.map((example, index) => ({
+  const examples =
+    moodType === "positive" ? POSITIVE_EXAMPLES : NEGATIVE_EXAMPLES;
+
+  const buildExampleItems = (sourceExamples: readonly { text: string; emoji: string }[]) =>
+    sourceExamples.map((example, index) => ({
       id: `example-${index}`,
-      title: `예시 ${index + 1}`,
+      title: `${example.emoji} 예시 ${index + 1}`,
       body: example.text,
       applyText: example.text,
     }));
 
-  const shuffleExampleItems = () => {
-    const shuffled = [...ALL_EXAMPLES];
+  const shuffleExampleItems = useCallback(() => {
+    const shuffled = [...examples];
     for (let i = shuffled.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
     return buildExampleItems(shuffled);
-  };
+  }, [examples]);
 
   const [exampleItems, setExampleItems] = useState(() => shuffleExampleItems());
 
   const handleShowExample = () => {
-    if (!ALL_EXAMPLES.length) return;
+    if (!examples.length) return;
     setExampleItems(shuffleExampleItems());
     setIsExampleOpen(true);
   };
@@ -90,6 +109,10 @@ export function CbtMinimalIncidentSection({
     }, 1400);
     return () => window.clearTimeout(timer);
   }, [highlightInput]);
+
+  useEffect(() => {
+    setExampleItems(shuffleExampleItems());
+  }, [shuffleExampleItems]);
 
   return (
     <div className={styles.section}>
@@ -127,7 +150,11 @@ export function CbtMinimalIncidentSection({
 
       <CbtCarouselModal
         open={isExampleOpen}
-        title="예시를 골라서 시작해볼까요?"
+        title={
+          moodType === "positive"
+            ? "긍정 감정 예시로 시작해볼까요?"
+            : "예시를 골라서 시작해볼까요?"
+        }
         notice="선택하면 입력창에 자동으로 입력됩니다."
         items={exampleItems}
         onClose={() => setIsExampleOpen(false)}

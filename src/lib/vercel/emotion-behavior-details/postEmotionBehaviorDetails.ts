@@ -11,6 +11,7 @@ export const handlePostEmotionBehaviorDetails = async (
 ) => {
   const user = await getUserFromAuthHeader(req.headers.authorization);
   const payload = await readJson<{
+    note_id?: number;
     behavior_label?: string;
     behavior_description?: string;
     checks?: string[];
@@ -39,6 +40,7 @@ export const handlePostEmotionBehaviorDetails = async (
 
   const supabase = createSupabaseAdminClient();
   const insertPayload: {
+    note_id?: number | null;
     user_id?: string | null;
     device_id?: string | null;
     behavior_label: string;
@@ -50,6 +52,13 @@ export const handlePostEmotionBehaviorDetails = async (
     behavior_description: behaviorDescription,
     is_pinned: Boolean(payload.is_pinned),
   };
+
+  if (payload.note_id !== undefined) {
+    const noteId = Number(payload.note_id);
+    if (Number.isFinite(noteId)) {
+      insertPayload.note_id = noteId;
+    }
+  }
 
   if (user) {
     insertPayload.user_id = user.id;

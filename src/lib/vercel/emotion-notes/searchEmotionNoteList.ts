@@ -4,6 +4,12 @@ import { getKstDayRange } from "../../utils/time.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
 import { getQueryParam, json } from "../_utils.js";
 
+const SDT_LABEL_BY_KEY: Record<string, string> = {
+  autonomy: "자율성",
+  relatedness: "관계성",
+  competence: "유능감",
+};
+
 const getDateRange = (dateParam?: string | null) => {
   return getKstDayRange(dateParam ?? new Date().toISOString());
 };
@@ -53,7 +59,9 @@ export const handleSearchEmotionNoteList = async (
       trigger_text,
       created_at,
       emotion_tags,
-      error_label
+      error_label,
+      emotion_type,
+      sdt_type
     `,
   );
 
@@ -62,6 +70,7 @@ export const handleSearchEmotionNoteList = async (
     : baseQuery.eq("device_id", deviceId).is("user_id", null);
 
   let searchQuery = scopedQuery;
+  searchQuery = searchQuery.eq("is_history_represent", true);
   if (hasQuery) {
     const safeQuery = queryParam.replace(/,/g, " ");
     const likePattern = `%${safeQuery}%`;
@@ -99,6 +108,10 @@ export const handleSearchEmotionNoteList = async (
     data?.map((note) => {
       const emotionLabels = Array.from(new Set((note.emotion_tags ?? []).filter(Boolean)));
       const errorLabels = note.error_label ? [note.error_label] : [];
+      const sdtLabels =
+        note.emotion_type === "positive" && note.sdt_type
+          ? [SDT_LABEL_BY_KEY[note.sdt_type] ?? note.sdt_type]
+          : [];
 
       return {
         id: note.id,
@@ -107,6 +120,7 @@ export const handleSearchEmotionNoteList = async (
         created_at: note.created_at,
         emotion_labels: emotionLabels,
         error_labels: errorLabels,
+        sdt_labels: sdtLabels,
       };
     }) ?? [];
 

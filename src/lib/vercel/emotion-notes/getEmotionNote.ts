@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import type { EmotionNoteWithDetails } from "@/lib/types/emotionNoteTypes";
 import { createSupabaseAdminClient } from "../../supabase/adminNode.js";
 import { getQueryParam, json } from "../_utils.js";
 import { resolveIdentityFromQuery } from "../_identity.js";
@@ -30,11 +31,16 @@ export const handleGetEmotionNote = async (
         title,
         trigger_text,
         created_at,
+        emotion_type,
         emotion_tags,
         inner_belief,
         error_label,
         error_description,
-        alternative
+        alternative,
+        sdt_type,
+        sdt_empathy_text,
+        reflection_question,
+        is_history_represent
       `,
     );
 
@@ -43,6 +49,7 @@ export const handleGetEmotionNote = async (
     : baseQuery.eq("device_id", deviceId).is("user_id", null);
 
   const { data, error } = await scopedQuery
+    .eq("is_history_represent", true)
     .eq("id", noteId)
     .maybeSingle();
 
@@ -59,17 +66,22 @@ export const handleGetEmotionNote = async (
     });
   }
 
-  const note = data
+  const note: EmotionNoteWithDetails | null = data
     ? {
         id: data.id,
         title: data.title,
         trigger_text: data.trigger_text,
         created_at: data.created_at,
+        emotion_type: data.emotion_type ?? "negative",
         emotion_tags: data.emotion_tags ?? [],
         inner_belief: data.inner_belief ?? "",
         error_label: data.error_label ?? "",
         error_description: data.error_description ?? "",
         alternative: data.alternative ?? "",
+        sdt_type: data.sdt_type ?? "",
+        sdt_empathy_text: data.sdt_empathy_text ?? "",
+        reflection_question: data.reflection_question ?? "",
+        is_history_represent: data.is_history_represent ?? true,
         emotion_labels: data.emotion_tags ?? [],
         error_labels: data.error_label ? [data.error_label] : [],
         thought_details: data.inner_belief
@@ -107,6 +119,57 @@ export const handleGetEmotionNote = async (
         behavior_details: [],
       }
     : null;
+
+  if (note?.emotion_type === "positive") {
+    let behaviorRows: Array<{
+      id: number;
+      behavior_label: string;
+      behavior_description: string;
+      is_pinned: boolean;
+      latest_tracked_on: string | null;
+      created_at: string;
+    }> | null = null;
+    let behaviorError: unknown = null;
+
+    if (data?.id) {
+      // A note can have multiple linked behavior details over time, but only the oldest
+      // linked one is the original session-generated suggestion. Later linked entries
+      // belong to a different user flow and should not be mixed into note detail.
+      const behaviorQuery = user
+        ? supabase
+            .from("emotion_behavior_details")
+            .select(
+              "id,behavior_label,behavior_description,is_pinned,latest_tracked_on,created_at",
+            )
+            .eq("user_id", user.id)
+            .eq("note_id", data.id)
+        : supabase
+            .from("emotion_behavior_details")
+            .select(
+              "id,behavior_label,behavior_description,is_pinned,latest_tracked_on,created_at",
+            )
+            .eq("device_id", deviceId)
+            .is("user_id", null)
+            .eq("note_id", data.id);
+
+      const result = await behaviorQuery
+        .order("created_at", { ascending: true })
+        .limit(1);
+      behaviorRows = result.data;
+      behaviorError = result.error;
+    }
+
+    if (!behaviorError && behaviorRows && behaviorRows.length > 0) {
+      note.behavior_details = behaviorRows.map((row) => ({
+        id: row.id,
+        behavior_label: row.behavior_label,
+        behavior_description: row.behavior_description,
+        is_pinned: row.is_pinned,
+        latest_tracked_on: row.latest_tracked_on,
+        created_at: row.created_at,
+      }));
+    }
+  }
 
   return json(res, 200, { note });
 };

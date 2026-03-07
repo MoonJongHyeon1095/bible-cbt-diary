@@ -2,32 +2,31 @@
 
 import type { AccessContext } from "@/lib/types/access";
 import { buildApiUrl } from "@/lib/utils/apiBase";
-import { resolveAccess } from "@/lib/api/_helpers";
+import { appendQuery, resolveAccess } from "@/lib/api/_helpers";
 
-// DELETE /api/session-history
-// session-history 삭제
-export const deleteSessionHistory = async (
+export const hideOneEmotionNoteFromHistory = async (
+  noteId: number,
   access: AccessContext,
-  id: string,
 ) => {
   const resolved = resolveAccess(access);
   if (resolved.kind === "blocked") {
-    return { response: new Response(null, { status: 401 }) };
+    return new Response(null, { status: 401 });
   }
 
+  const url = appendQuery(buildApiUrl("/api/emotion-notes"), {
+    action: "hide-one-history",
+  });
   const body =
     resolved.kind === "guest"
-      ? { id, deviceId: resolved.deviceId }
-      : { id };
+      ? { id: noteId, deviceId: resolved.deviceId }
+      : { id: noteId };
 
-  const response = await fetch(buildApiUrl("/api/session-history"), {
-    method: "DELETE",
+  return fetch(url, {
+    method: "PATCH",
     headers: {
       "Content-Type": "application/json",
       ...(resolved.kind === "auth" ? resolved.headers : {}),
     },
     body: JSON.stringify(body),
   });
-
-  return { response };
 };

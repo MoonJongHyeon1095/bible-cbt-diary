@@ -1,24 +1,28 @@
 "use client";
 
 import SafeButton from "@/components/ui/SafeButton";
+import { fetchEmotionNoteHistoryList } from "@/lib/api/emotion-notes/getEmotionNoteHistoryList";
+import { hideAllEmotionNotesFromHistory } from "@/lib/api/emotion-notes/hideAllEmotionNotesFromHistory";
+import { hideOneEmotionNoteFromHistory } from "@/lib/api/emotion-notes/hideOneEmotionNoteFromHistory";
+import { queryKeys } from "@/lib/queryKeys";
 import type { AccessContext } from "@/lib/types/access";
-import type { SessionHistory } from "@/lib/types/sessionTypes";
-import { normalizeSelectedCognitiveErrors } from "@/lib/utils/normalizeSelectedCognitiveErrors";
+import type { EmotionNote } from "@/lib/types/emotionNoteTypes";
 import { formatKoreanDateTime } from "@/lib/utils/time";
+import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ChevronDown, Trash2 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import styles from "./SessionHistorySection.module.css";
 import SessionHistorySectionCard, {
   SessionHistoryChip,
   SessionHistoryChipRow,
-  SessionHistorySectionItalic,
   SessionHistorySectionText,
 } from "./SessionHistorySectionCard";
-import { deleteAllSessionHistories } from "@/lib/api/session-history/deleteAllSessionHistories";
-import { deleteSessionHistory } from "@/lib/api/session-history/deleteSessionHistory";
-import { fetchSessionHistoryList } from "@/lib/api/session-history/getSessionHistoryList";
-import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { queryKeys } from "@/lib/queryKeys";
+
+const SDT_LABEL_BY_KEY: Record<string, string> = {
+  autonomy: "자율성",
+  relatedness: "관계성",
+  competence: "유능감",
+};
 
 const formatHistoryDate = (value: string) =>
   formatKoreanDateTime(value, {
@@ -29,54 +33,33 @@ const formatHistoryDate = (value: string) =>
     minute: "2-digit",
   });
 
-const formatScriptureReference = (
-  bibleVerse: SessionHistory["bibleVerse"],
-): string => {
-  if (!bibleVerse) return "";
-  const chapter = bibleVerse.chapter ? `${bibleVerse.chapter}장` : "";
-  const verseRange = bibleVerse.startVerse
-    ? bibleVerse.endVerse && bibleVerse.endVerse !== bibleVerse.startVerse
-      ? `${bibleVerse.startVerse}-${bibleVerse.endVerse}`
-      : `${bibleVerse.startVerse}`
-    : "";
-  const verseLabel = verseRange ? ` ${verseRange}절` : "";
-  return `${bibleVerse.book} ${chapter}${verseLabel}`.trim();
-};
-
 type SessionHistorySectionProps = {
   access: AccessContext;
 };
 
-export default function SessionHistorySection({ access }: SessionHistorySectionProps) {
+export default function SessionHistorySection({
+  access,
+}: SessionHistorySectionProps) {
   const pageSize = 20;
   const [notice, setNotice] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
-  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
   const [deletingAll, setDeletingAll] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const queryClient = useQueryClient();
 
   const historiesQuery = useInfiniteQuery({
-    queryKey: queryKeys.sessionHistory.list(access),
+    queryKey: queryKeys.emotionNotes.history(access),
     queryFn: async ({ pageParam = 0 }) => {
-      const { response, data } = await fetchSessionHistoryList(access, {
+      const { response, data } = await fetchEmotionNoteHistoryList(access, {
         limit: pageSize,
         offset: pageParam as number,
       });
       if (!response.ok) {
-        throw new Error("session_history fetch failed");
+        throw new Error("emotion_note_history fetch failed");
       }
-      const normalized = (data.histories ?? []).map((history) => ({
-        ...history,
-        emotionThoughtPairs: Array.isArray(history.emotionThoughtPairs)
-          ? history.emotionThoughtPairs
-          : [],
-        selectedCognitiveErrors: normalizeSelectedCognitiveErrors(
-          history.selectedCognitiveErrors,
-        ),
-      }));
-      return normalized as SessionHistory[];
+      return data.notes ?? [];
     },
     initialPageParam: 0,
     getNextPageParam: (lastPage, pages) => {
@@ -91,15 +74,15 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
 
   const histories = useMemo(() => {
     const pages = historiesQuery.data?.pages ?? [];
-    const seen = new Set<string>();
-    const result: SessionHistory[] = [];
-    pages.forEach((page) => {
-      page.forEach((item) => {
-        if (seen.has(item.id)) return;
+    const seen = new Set<number>();
+    const result: EmotionNote[] = [];
+    for (const page of pages) {
+      for (const item of page) {
+        if (seen.has(item.id)) continue;
         seen.add(item.id);
         result.push(item);
-      });
-    });
+      }
+    }
     return result;
   }, [historiesQuery.data?.pages]);
 
@@ -114,14 +97,12 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
 
   useEffect(() => {
     const node = sentinelRef.current;
-    if (!node || !hasMore) {
-      return;
-    }
+    if (!node || !hasMore) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0]?.isIntersecting) {
-          loadMore();
+          void loadMore();
         }
       },
       { rootMargin: "200px 0px" },
@@ -133,57 +114,54 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
 
   useEffect(() => {
     if (historiesQuery.isError) {
-      setNotice("세션 기록을 불러오지 못했습니다.");
+      setNotice("기록을 불러오지 못했습니다.");
       return;
     }
     setNotice(null);
   }, [historiesQuery.isError]);
 
-  const deleteMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const { response } = await deleteSessionHistory(access, id);
+  const hideMutation = useMutation({
+    mutationFn: async (noteId: number) => {
+      const response = await hideOneEmotionNoteFromHistory(noteId, access);
       if (!response.ok) {
-        throw new Error("delete session history failed");
+        throw new Error("hide emotion note failed");
       }
-      return id;
+      return noteId;
     },
-    onSuccess: (deletedId) => {
-      queryClient.setQueryData(
-        queryKeys.sessionHistory.list(access),
-        (prev) => {
-          if (!prev || typeof prev !== "object") return prev;
-          const pages = (prev as { pages?: SessionHistory[][] }).pages ?? [];
-          const nextPages = pages.map((page) =>
-            page.filter((item) => item.id !== deletedId),
-          );
-          return { ...(prev as object), pages: nextPages };
-        },
-      );
+    onSuccess: (hiddenId) => {
+      queryClient.setQueryData(queryKeys.emotionNotes.history(access), (prev) => {
+        if (!prev || typeof prev !== "object") return prev;
+        const pages = (prev as { pages?: EmotionNote[][] }).pages ?? [];
+        const nextPages = pages.map((page) =>
+          page.filter((item) => item.id !== hiddenId),
+        );
+        return { ...(prev as object), pages: nextPages };
+      });
     },
   });
 
-  const deleteAllMutation = useMutation({
+  const hideAllMutation = useMutation({
     mutationFn: async () => {
-      const { response } = await deleteAllSessionHistories(access);
+      const response = await hideAllEmotionNotesFromHistory(access);
       if (!response.ok) {
-        throw new Error("delete all session history failed");
+        throw new Error("hide all emotion notes failed");
       }
       return true;
     },
     onSuccess: () => {
-      queryClient.setQueryData(queryKeys.sessionHistory.list(access), (prev) => {
+      queryClient.setQueryData(queryKeys.emotionNotes.history(access), (prev) => {
         if (!prev || typeof prev !== "object") return prev;
         return { ...(prev as object), pages: [[]] };
       });
     },
   });
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (id: number) => {
     setDeletingId(id);
     try {
-      await deleteMutation.mutateAsync(id);
+      await hideMutation.mutateAsync(id);
     } catch {
-      setNotice("세션 기록을 삭제하지 못했습니다.");
+      setNotice("기록을 숨기지 못했습니다.");
       setDeletingId(null);
       return;
     }
@@ -193,9 +171,9 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
   const handleDeleteAll = async () => {
     setDeletingAll(true);
     try {
-      await deleteAllMutation.mutateAsync();
+      await hideAllMutation.mutateAsync();
     } catch {
-      setNotice("세션 기록을 삭제하지 못했습니다.");
+      setNotice("기록을 숨기지 못했습니다.");
       setDeletingAll(false);
       return;
     }
@@ -204,7 +182,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
     setDeletingAll(false);
   };
 
-  const toggleExpanded = (id: string) => {
+  const toggleExpanded = (id: number) => {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
   };
 
@@ -229,7 +207,7 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
 
       {confirmDeleteAll && (
         <div className={styles.confirmBar}>
-          <span>이전 세션 기록이 모두 삭제됩니다.</span>
+          <span>기록 목록에서 모두 숨깁니다.</span>
           <div className={styles.actions}>
             <SafeButton
               variant="danger"
@@ -264,142 +242,122 @@ export default function SessionHistorySection({ access }: SessionHistorySectionP
             <p className={styles.subtle}>완료된 세션은 자동으로 저장됩니다.</p>
           </div>
         ) : (
-          histories.map((history) => (
-            <div key={history.id} className={styles.item}>
-              <div className={styles.itemTop}>
-                <SafeButton
-                  variant="unstyled"
-                  className={styles.itemHeaderButton}
-                  onClick={() => toggleExpanded(history.id)}
-                  aria-expanded={expanded[history.id] ?? false}
-                >
-                  <div>
-                    <p className={styles.itemTitle}>
-                      {history.userInput || "경험"}
-                    </p>
-                    <div className={styles.itemSummary}>
-                      <span>{formatHistoryDate(history.timestamp)}</span>
-                    </div>
-                  </div>
-                  <span
-                    className={`${styles.itemToggle} ${
-                      expanded[history.id] ? styles.itemToggleActive : ""
-                    }`}
-                  >
-                    <ChevronDown size={16} />
-                  </span>
-                </SafeButton>
-                <SafeButton
-                  variant="ghost"
-                  size="icon"
-                  className={styles.deleteButton}
-                  onClick={() => handleDelete(history.id)}
-                  aria-label="기록 삭제"
-                  loading={deletingId === history.id}
-                  loadingText=""
-                  loadingBehavior="replace"
-                >
-                  <Trash2 size={16} />
-                </SafeButton>
-              </div>
+          histories.map((history) => {
+            const isPositive = history.emotion_type === "positive";
+            const sdtLabel = history.sdt_type
+              ? SDT_LABEL_BY_KEY[history.sdt_type] ?? history.sdt_type
+              : "SDT";
 
-              {expanded[history.id] && (
-                <div className={styles.itemBody}>
-                  {history.userInput && (
+            return (
+              <div key={history.id} className={styles.item}>
+                <div className={styles.itemTop}>
+                  <SafeButton
+                    variant="unstyled"
+                    className={styles.itemHeaderButton}
+                    onClick={() => toggleExpanded(history.id)}
+                    aria-expanded={expanded[history.id] ?? false}
+                  >
+                    <div>
+                      <p className={styles.itemTitle}>
+                        {history.trigger_text || history.title || "경험"}
+                      </p>
+                      <div className={styles.itemSummary}>
+                        <span>{formatHistoryDate(history.created_at)}</span>
+                      </div>
+                    </div>
+                    <span
+                      className={`${styles.itemToggle} ${
+                        expanded[history.id] ? styles.itemToggleActive : ""
+                      }`}
+                    >
+                      <ChevronDown size={16} />
+                    </span>
+                  </SafeButton>
+                  <SafeButton
+                    variant="ghost"
+                    size="icon"
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(history.id)}
+                    aria-label="기록 삭제"
+                    loading={deletingId === history.id}
+                    loadingText=""
+                    loadingBehavior="replace"
+                  >
+                    <Trash2 size={16} />
+                  </SafeButton>
+                </div>
+
+                {expanded[history.id] && (
+                  <div className={styles.itemBody}>
                     <SessionHistorySectionCard title="경험">
                       <SessionHistorySectionText>
-                        {history.userInput}
+                        {history.trigger_text || "기록 없음"}
                       </SessionHistorySectionText>
                     </SessionHistorySectionCard>
-                  )}
 
-                  {history.emotionThoughtPairs.length > 0 && (
-                    <SessionHistorySectionCard title="감정 & 자동사고">
-                      {history.emotionThoughtPairs.map((pair, index) => (
-                        <div key={`${history.id}-pair-${index}`}>
-                          <SessionHistoryChipRow>
-                            <SessionHistoryChip>
-                              {pair.emotion}
-                            </SessionHistoryChip>
-                            {pair.intensity != null && (
-                              <SessionHistoryChip>
-                                강도 {pair.intensity}/100
-                              </SessionHistoryChip>
-                            )}
-                          </SessionHistoryChipRow>
-                          <SessionHistorySectionText>
-                            {pair.thought}
-                          </SessionHistorySectionText>
-                        </div>
-                      ))}
-                    </SessionHistorySectionCard>
-                  )}
-
-                  {history.selectedCognitiveErrors.length > 0 && (
-                    <SessionHistorySectionCard title="인지 오류">
-                      {history.selectedCognitiveErrors.map((error, index) => (
-                        <div key={`${history.id}-error-${index}`}>
-                          <SessionHistoryChipRow>
-                            <SessionHistoryChip>
-                              {error.title}
-                            </SessionHistoryChip>
-                          </SessionHistoryChipRow>
-                          {error.detail ? (
-                            <SessionHistorySectionText>
-                              {error.detail}
-                            </SessionHistorySectionText>
-                          ) : null}
-                        </div>
-                      ))}
-                    </SessionHistorySectionCard>
-                  )}
-
-                  {history.selectedAlternativeThought && (
-                    <SessionHistorySectionCard title="대안 사고">
-                      <SessionHistorySectionItalic>
-                        {history.selectedAlternativeThought}
-                      </SessionHistorySectionItalic>
-                    </SessionHistorySectionCard>
-                  )}
-
-                  {history.selectedBehavior && (
-                    <SessionHistorySectionCard title="행동 반응">
+                    <SessionHistorySectionCard title="감정">
                       <SessionHistoryChipRow>
-                        <SessionHistoryChip>
-                          {history.selectedBehavior.behaviorLabel}
-                        </SessionHistoryChip>
+                        {(history.emotion_tags ?? []).map((tag) => (
+                          <SessionHistoryChip key={`${history.id}-emotion-${tag}`}>
+                            {tag}
+                          </SessionHistoryChip>
+                        ))}
                       </SessionHistoryChipRow>
+                    </SessionHistorySectionCard>
+
+                    <SessionHistorySectionCard title="자동사고">
                       <SessionHistorySectionText>
-                        {history.selectedBehavior.behaviorText}
+                        {history.inner_belief || "기록 없음"}
                       </SessionHistorySectionText>
                     </SessionHistorySectionCard>
-                  )}
 
-                  {history.bibleVerse && (
-                    <SessionHistorySectionCard title="성경 말씀">
-                      <SessionHistoryChipRow>
-                        <SessionHistoryChip>
-                          {formatScriptureReference(history.bibleVerse) ||
-                            "말씀"}
-                        </SessionHistoryChip>
-                      </SessionHistoryChipRow>
-                      <SessionHistorySectionItalic>
-                        “{history.bibleVerse.verse}”
-                      </SessionHistorySectionItalic>
-                    </SessionHistorySectionCard>
-                  )}
-                </div>
-              )}
-            </div>
-          ))
+                    {isPositive ? (
+                      <SessionHistorySectionCard title={sdtLabel}>
+                        <SessionHistorySectionText>
+                          {history.sdt_empathy_text || "기록 없음"}
+                        </SessionHistorySectionText>
+                        {history.reflection_question ? (
+                          <SessionHistorySectionText>
+                            {history.reflection_question}
+                          </SessionHistorySectionText>
+                        ) : null}
+                      </SessionHistorySectionCard>
+                    ) : (
+                      <>
+                        <SessionHistorySectionCard title="Distortion">
+                          {history.error_label ? (
+                            <SessionHistoryChipRow>
+                              <SessionHistoryChip>
+                                {history.error_label}
+                              </SessionHistoryChip>
+                            </SessionHistoryChipRow>
+                          ) : null}
+                          <SessionHistorySectionText>
+                            {history.error_description || "기록 없음"}
+                          </SessionHistorySectionText>
+                        </SessionHistorySectionCard>
+
+                        <SessionHistorySectionCard title="대안 사고">
+                          <SessionHistorySectionText>
+                            {history.alternative || "기록 없음"}
+                          </SessionHistorySectionText>
+                        </SessionHistorySectionCard>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
         )}
       </div>
+
       {hasMore && !loading ? (
         <div ref={sentinelRef} className={styles.loadMore}>
           {isLoadingMore ? (
             <>
-              <span className={styles.loadMoreSpinner} aria-hidden />더 불러오는
-              중...
+              <span className={styles.loadMoreSpinner} aria-hidden />
+              더 불러오는 중...
             </>
           ) : (
             "스크롤하여 더 보기"

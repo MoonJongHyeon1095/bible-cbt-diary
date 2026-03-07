@@ -10,6 +10,8 @@ export const queryKeys = {
     all: ["emotion-notes"] as const,
     list: (access: AccessContext) =>
       ["emotion-notes", "list", accessKey(access)] as const,
+    history: (access: AccessContext) =>
+      ["emotion-notes", "history", accessKey(access)] as const,
     range: (access: AccessContext, start: string, end: string) =>
       ["emotion-notes", "range", accessKey(access), start, end] as const,
     search: (
@@ -37,11 +39,6 @@ export const queryKeys = {
     ["emotion-behavior-detail", accessKey(access), behaviorDetailId] as const,
   behaviorHistory: (access: AccessContext) =>
     ["emotion-behavior-history", accessKey(access)] as const,
-  sessionHistory: {
-    all: ["session-history"] as const,
-    list: (access: AccessContext) =>
-      ["session-history", "list", accessKey(access)] as const,
-  },
   share: {
     all: ["share-snapshot"] as const,
     snapshot: (shareId: string) =>

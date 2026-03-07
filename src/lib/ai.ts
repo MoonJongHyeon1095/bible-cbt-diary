@@ -6,7 +6,9 @@ import {
 import {
   generateContextualAlternativeThoughts as gptGenerateContextualAlternativeThoughts,
   generateDistortionCard as gptGenerateDistortionCard,
+  generatePositiveSdtCard as gptGeneratePositiveSdtCard,
 } from "./gpt";
+import type { SdtKey } from "./constants/sdt";
 
 // 메타 export (UI에서 사용)
 export { COGNITIVE_ERRORS, COGNITIVE_ERRORS_BY_ID };
@@ -21,6 +23,15 @@ export type DistortionCardGenerationResult = {
   innerBelief: string;
   analysis: string;
   emotionReason: string;
+};
+
+export type PositiveSdtCardGenerationResult = {
+  innerBelief: string;
+  empathyText: string;
+  behaviorLabel: string;
+  behaviorDescription: string;
+  behaviorChecklist: string[];
+  reflectionQuestion: string;
 };
 
 export async function generateDistortionCard(
@@ -52,4 +63,13 @@ export async function generateContextualAlternativeThoughts(
     cognitiveErrors,
     options,
   );
+}
+
+export async function generatePositiveSdtCard(
+  journal: string,
+  emotions: string,
+  sdtKey: SdtKey,
+  userHint?: string,
+): Promise<PositiveSdtCardGenerationResult> {
+  return gptGeneratePositiveSdtCard(journal, emotions, sdtKey, userHint);
 }

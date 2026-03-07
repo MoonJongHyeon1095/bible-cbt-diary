@@ -7,8 +7,10 @@ import { formatKoreanDateTime } from "@/lib/utils/time";
 import { NotebookPen, Share2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import EmotionNoteAlternativeDetailSection from "./EmotionNoteAlternativeDetailSection";
+import PositiveEmotionNoteDetailSection from "./PositiveEmotionNoteDetailSection";
 import styles from "./EmotionNoteDetailPage.module.css";
 import useEmotionNoteDetail from "./hooks/useEmotionNoteDetail";
+import { SDT_NEEDS_BY_KEY } from "@/lib/constants/sdt";
 
 type EmotionNoteDetailPageProps = {
   noteId?: number | null;
@@ -63,15 +65,31 @@ export default function EmotionNoteDetailPage({
           </section>
 
           <section className={styles.sectionView}>
-            <EmotionNoteAlternativeDetailSection
-              alternative={note?.alternative ?? ""}
-              innerBelief={note?.inner_belief ?? ""}
-              emotionTags={note?.emotion_tags ?? []}
-              errorLabel={note?.error_label ?? ""}
-              errorDescription={note?.error_description ?? ""}
-              createdAt={note?.created_at ?? new Date().toISOString()}
-              formatDateTime={formatDateTime}
-            />
+            {note?.emotion_type === "positive" ? (
+              <PositiveEmotionNoteDetailSection
+                innerBelief={note?.inner_belief ?? ""}
+                empathyText={note?.sdt_empathy_text ?? ""}
+                behaviorLabel={note?.behavior_details?.[0]?.behavior_label ?? ""}
+                behaviorDescription={note?.behavior_details?.[0]?.behavior_description ?? ""}
+                reflectionQuestion={note?.reflection_question ?? ""}
+                emotionTags={note?.emotion_tags ?? []}
+                sdtLabel={
+                  note?.sdt_type
+                    ? (SDT_NEEDS_BY_KEY[note.sdt_type as keyof typeof SDT_NEEDS_BY_KEY]?.label ?? "")
+                    : ""
+                }
+              />
+            ) : (
+              <EmotionNoteAlternativeDetailSection
+                alternative={note?.alternative ?? ""}
+                innerBelief={note?.inner_belief ?? ""}
+                emotionTags={note?.emotion_tags ?? []}
+                errorLabel={note?.error_label ?? ""}
+                errorDescription={note?.error_description ?? ""}
+                createdAt={note?.created_at ?? new Date().toISOString()}
+                formatDateTime={formatDateTime}
+              />
+            )}
           </section>
         </div>
       </main>

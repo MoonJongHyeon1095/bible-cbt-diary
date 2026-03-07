@@ -26,9 +26,6 @@ export async function runSessionSavePostProcess({
   void queryClient.invalidateQueries({
     queryKey: queryKeys.emotionNotes.all,
   });
-  void queryClient.invalidateQueries({
-    queryKey: queryKeys.sessionHistory.all,
-  });
 
   try {
     void flushTokenSessionUsage({ sessionCount: 1 });

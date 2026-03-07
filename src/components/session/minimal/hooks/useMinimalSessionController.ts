@@ -6,6 +6,7 @@ import {
   MINIMAL_EMOTION_SELECT_STEPS,
   MINIMAL_INCIDENT_STEPS,
   MINIMAL_MOOD_STEPS,
+  MINIMAL_SDT_STEPS,
   useCbtMinimalSessionFlow,
   type MinimalStep,
 } from "@/components/session/hooks/useCbtMinimalSessionFlow";
@@ -31,11 +32,10 @@ import {
   saveMinimalPatternAPI,
   type MinimalSavePayload,
 } from "@/lib/api/session/postMinimalSession";
-import { saveSessionHistoryAPI } from "@/lib/api/session-history/postSessionHistory";
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import type {
+  PositiveSdtSelection,
   SelectedCognitiveError,
-  SessionHistory,
 } from "@/lib/types/sessionTypes";
 import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import { formatKoreanDateTime } from "@/lib/utils/time";
@@ -48,6 +48,7 @@ import { buildSessionNoteTitle } from "@/components/session/utils/buildSessionNo
 import { generateSessionNoteTitle } from "@/lib/gpt/sessionTitle";
 import {
   formatEmotionIds,
+  getMoodTypeFromEmotionId,
   mapEmotionIdsToLabels,
 } from "@/lib/constants/emotions";
 import { useSessionMoodController } from "@/components/session/common/useSessionMoodController";
@@ -96,15 +97,23 @@ export function useMinimalSessionController() {
     : "오늘 무슨 일이 있었나요?";
 
   const stepOrder: MinimalStep[] = useMemo(
-    () => [
-      ...(flow.selectedEmotions.length > 0
-        ? []
-        : [...MINIMAL_MOOD_STEPS, ...MINIMAL_EMOTION_SELECT_STEPS]),
-      ...MINIMAL_INCIDENT_STEPS,
-      ...MINIMAL_DISTORTION_STEPS,
-      ...MINIMAL_ALTERNATIVE_STEPS,
-    ],
-    [flow.selectedEmotions.length],
+    () => {
+      const moodFromSelection = flow.selectedEmotions[0]
+        ? getMoodTypeFromEmotionId(flow.selectedEmotions[0])
+        : null;
+      const analysisSteps =
+        moodFromSelection === "positive"
+          ? [...MINIMAL_SDT_STEPS]
+          : [...MINIMAL_DISTORTION_STEPS, ...MINIMAL_ALTERNATIVE_STEPS];
+      return [
+        ...(flow.selectedEmotions.length > 0
+          ? []
+          : [...MINIMAL_MOOD_STEPS, ...MINIMAL_EMOTION_SELECT_STEPS]),
+        ...MINIMAL_INCIDENT_STEPS,
+        ...analysisSteps,
+      ];
+    },
+    [flow.selectedEmotions],
   );
   const currentStepIndex = stepOrder.indexOf(flow.step);
   const tourSteps = useMemo<OnboardingStep[]>(
@@ -167,16 +176,6 @@ export function useMinimalSessionController() {
     }) => saveMinimalPatternAPI(args.access, args.payload),
   });
 
-  const saveHistoryMutation = useMutation({
-    mutationFn: async (args: {
-      access: {
-        mode: "auth" | "guest" | "blocked";
-        accessToken: string | null;
-      };
-      payload: SessionHistory;
-    }) => saveSessionHistoryAPI(args.access, args.payload),
-  });
-
   const {
     isOpen: isTourOpen,
     setIsOpen: setIsTourOpen,
@@ -219,7 +218,7 @@ export function useMinimalSessionController() {
     confirmLeave: handleConfirmLeave,
   } = useLeaveConfirm({
     step: flow.step,
-    protectedSteps: ["distortion", "alternative"] as const,
+    protectedSteps: ["sdt", "distortion", "alternative"] as const,
     onLeave: moveToHome,
   });
 
@@ -248,12 +247,15 @@ export function useMinimalSessionController() {
   const handleProceedFromIncident = useCallback(() => {
     const incident = flow.userInput;
     const emotion = formatEmotionIds(flow.selectedEmotions);
+    const moodFromSelection = flow.selectedEmotions[0]
+      ? getMoodTypeFromEmotionId(flow.selectedEmotions[0])
+      : null;
     const fallbackTitle = buildSessionNoteTitle({
       emotion,
       incident,
     });
     actions.setNoteTitle(fallbackTitle);
-    actions.setStep("distortion");
+    actions.setStep(moodFromSelection === "positive" ? "sdt" : "distortion");
 
     const seq = ++titleRequestSeqRef.current;
     void generateSessionNoteTitle({
@@ -277,22 +279,6 @@ export function useMinimalSessionController() {
       const access = await requireAccessContext();
       if (!access) return;
 
-      const pairsToSave = flow.emotionThoughtPairs.map((pair) => ({
-        ...pair,
-        intensity: null,
-      }));
-
-      const historyItem: SessionHistory = {
-        id: Date.now().toString(),
-        timestamp: new Date().toISOString(),
-        userInput: flow.userInput,
-        emotionThoughtPairs: pairsToSave,
-        selectedCognitiveErrors: flow.selectedCognitiveErrors,
-        selectedAlternativeThought: thought,
-        selectedBehavior: null,
-        bibleVerse: null,
-      };
-
       const minimalPayload = {
         title:
           flow.noteTitle ||
@@ -303,6 +289,7 @@ export function useMinimalSessionController() {
         triggerText: flow.userInput,
         emotion: formatEmotionIds(flow.selectedEmotions),
         emotions: mapEmotionIdsToLabels(flow.selectedEmotions),
+        emotionType: "negative" as const,
         automaticThought: flow.emotionThoughtPairs[0]?.thought ?? "",
         alternativeThought: thought,
         cognitiveError: flow.selectedCognitiveErrors[0] ?? null,
@@ -317,14 +304,6 @@ export function useMinimalSessionController() {
         });
         if (!ok) {
           throw new Error("save_minimal_note_failed");
-        }
-
-        const historyResult = await saveHistoryMutation.mutateAsync({
-          access,
-          payload: historyItem,
-        });
-        if (!historyResult.ok) {
-          throw new Error("save_session_history_failed");
         }
 
         const noteId = payload?.noteId;
@@ -364,7 +343,84 @@ export function useMinimalSessionController() {
       queryClient,
       requireAccessContext,
       router,
-      saveHistoryMutation,
+      saveMinimalMutation,
+    ],
+  );
+
+  const handleCompletePositive = useCallback(
+    async (selection: PositiveSdtSelection) => {
+      if (isSaving) return;
+      const access = await requireAccessContext();
+      if (!access) return;
+
+      const minimalPayload = {
+        title:
+          flow.noteTitle ||
+          buildSessionNoteTitle({
+            emotion: formatEmotionIds(flow.selectedEmotions),
+            incident: flow.userInput,
+          }),
+        triggerText: flow.userInput,
+        emotion: formatEmotionIds(flow.selectedEmotions),
+        emotions: mapEmotionIdsToLabels(flow.selectedEmotions),
+        emotionType: "positive" as const,
+        automaticThought: selection.innerBelief,
+        alternativeThought: "",
+        cognitiveError: null,
+        sdtType: selection.sdtType,
+        sdtEmpathyText: selection.empathyText,
+        reflectionQuestion: selection.reflectionQuestion,
+        behaviorLabel: selection.behaviorLabel,
+        behaviorDescription: selection.behaviorDescription,
+        behaviorChecklist: selection.behaviorChecklist,
+      };
+
+      setIsSaving(true);
+
+      try {
+        const { ok, payload } = await saveMinimalMutation.mutateAsync({
+          access,
+          payload: minimalPayload,
+        });
+        if (!ok) {
+          throw new Error("save_positive_note_failed");
+        }
+
+        const noteId = payload?.noteId;
+        if (!noteId) {
+          throw new Error("note_id_missing");
+        }
+        const unifiedProgress = readUnifiedTourProgress();
+        if (unifiedProgress && unifiedProgress.lastStep >= MINIMAL_TOUR_TOTAL - 1) {
+          markDetailConfettiPending();
+        }
+
+        clearSessionResumeDraft();
+
+        const moved = await runSessionSavePostProcess({
+          queryClient,
+          router,
+          nextPath: `/detail?id=${noteId}`,
+          pushToast,
+        });
+        if (!moved) {
+          setIsSaving(false);
+        }
+      } catch (error) {
+        console.error("긍정 세션 저장 실패:", error);
+        pushToast("세션 기록을 저장하지 못했습니다.", "error");
+        setIsSaving(false);
+      }
+    },
+    [
+      flow.noteTitle,
+      flow.selectedEmotions,
+      flow.userInput,
+      isSaving,
+      pushToast,
+      queryClient,
+      requireAccessContext,
+      router,
       saveMinimalMutation,
     ],
   );
@@ -391,6 +447,7 @@ export function useMinimalSessionController() {
     handleProceedFromIncident,
     handleSelectDistortion,
     handleComplete,
+    handleCompletePositive,
     tourSteps,
     isTourOpen,
     setIsTourOpen,

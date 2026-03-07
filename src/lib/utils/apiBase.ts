@@ -1,6 +1,6 @@
 export const getApiBase = () => {
-  //return process.env.NEXT_PUBLIC_API_BASE ?? "";
-  return "http://localhost:3000";
+  return process.env.NEXT_PUBLIC_API_BASE ?? "";
+  //return "http://localhost:3000";
 };
 
 export const buildApiUrl = (path: string) => {

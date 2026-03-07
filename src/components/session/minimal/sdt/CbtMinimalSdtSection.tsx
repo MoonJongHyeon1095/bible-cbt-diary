@@ -4,8 +4,8 @@ import { CbtStepHeaderSection } from "@/components/session/common/CbtStepHeaderS
 import { useCbtToast } from "@/components/session/common/CbtToast";
 import { useCbtPositiveSdtCards } from "@/components/session/hooks/useCbtPositiveSdtCards";
 import { validateUserText } from "@/components/session/utils/validation";
-import type { PositiveSdtSelection } from "@/lib/types/sessionTypes";
 import SafeButton from "@/components/ui/SafeButton";
+import type { PositiveSdtSelection } from "@/lib/types/sessionTypes";
 import { useMemo, useState } from "react";
 import styles from "../MinimalStyles.module.css";
 import { CbtPositiveSdtCard } from "./CbtPositiveSdtCard";
@@ -18,18 +18,12 @@ type CbtMinimalSdtSectionProps = {
 
 const TITLE = (
   <>
-    이 긍정 감정은 <br className={styles.mobileOnlyBreak} />
-    어디에서 힘을 얻고 있을까요?
+    이 감정은 <br className={styles.mobileOnlyBreak} />
+    어디에서 비롯되었을까요?
   </>
 );
 
-const DESCRIPTION = (
-  <>
-    같은 기쁨도 그 뿌리는 조금씩 다를 수 있어요.
-    <br />
-    지금 감정을 가장 잘 설명하는 축을 함께 찾아봅시다.
-  </>
-);
+const DESCRIPTION = <>같은 기쁨도 그 뿌리는 조금씩 다를 수 있어요.</>;
 
 export function CbtMinimalSdtSection({
   userInput,
@@ -109,9 +103,11 @@ export function CbtMinimalSdtSection({
                         innerBelief: currentCard.innerBelief.trim(),
                         empathyText: currentCard.empathyText.trim(),
                         behaviorLabel: currentCard.behaviorLabel.trim(),
-                        behaviorDescription: currentCard.behaviorDescription.trim(),
+                        behaviorDescription:
+                          currentCard.behaviorDescription.trim(),
                         behaviorChecklist: currentCard.behaviorChecklist,
-                        reflectionQuestion: currentCard.reflectionQuestion.trim(),
+                        reflectionQuestion:
+                          currentCard.reflectionQuestion.trim(),
                       })
                     }
                   />

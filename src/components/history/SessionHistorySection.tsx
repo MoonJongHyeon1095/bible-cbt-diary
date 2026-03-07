@@ -305,7 +305,7 @@ export default function SessionHistorySection({
                       </SessionHistoryChipRow>
                     </SessionHistorySectionCard>
 
-                    <SessionHistorySectionCard title="자동사고">
+                    <SessionHistorySectionCard title="inner belief">
                       <SessionHistorySectionText>
                         {history.inner_belief || "기록 없음"}
                       </SessionHistorySectionText>

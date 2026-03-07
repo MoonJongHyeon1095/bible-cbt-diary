@@ -110,85 +110,90 @@ export const consumeDetailConfettiPending = () => {
   return true;
 };
 
-export const MINIMAL_TOUR_STEP_ORDER: MinimalStep[] = [
+type MinimalTourSegment = "mood" | "emotion" | "incident" | "analysis";
+
+const ANALYSIS_ONBOARDING_STEPS: OnboardingStep[] = [
+  {
+    selector: "[data-tour='minimal-distortion-list']",
+    side: "bottom",
+    content: "감정 뒤에 혹시 있었을지 모르는 생각이에요.",
+  },
+  {
+    selector: "[data-tour='minimal-distortion-more']",
+    side: "bottom",
+    content: "다른 생각을 더 보려면 여기를 눌러보세요.",
+  },
+];
+
+export const MINIMAL_TOUR_SEGMENT_ORDER: MinimalTourSegment[] = [
   "mood",
   "emotion",
   "incident",
-  "sdt",
-  "distortion",
-  "alternative",
+  "analysis",
 ];
+
+const MINIMAL_TOUR_SEGMENT_STEPS: Record<MinimalTourSegment, OnboardingStep[]> = {
+  mood: [
+    {
+      selector:
+        "[data-tour='home-mood-toggle'], [data-tour='session-mood-toggle']",
+      side: "bottom",
+      content: "오늘 기분을 골라보죠. \n아주 단순하게 좋은지 나쁜지로.",
+    },
+  ],
+  emotion: [
+    {
+      selector: "[data-tour='home-emotion-grid'], [data-tour='emotion-grid']",
+      side: "bottom",
+      content: "지금의 감정에 가장 가까운 것을 골라주세요.",
+      completeOnTargetClick: true,
+    },
+  ],
+  incident: [
+    {
+      selector: "[data-tour='minimal-incident-input']",
+      side: "bottom",
+      content: "오늘 있었던 일을 간단히 적어주세요.",
+    },
+    {
+      selector: "[data-tour='minimal-incident-example']",
+      side: "bottom",
+      content: "직접 적을 수도, 예시를 볼 수도 있어요.",
+    },
+    {
+      selector: "[data-tour='minimal-incident-next']",
+      side: "bottom",
+      content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
+    },
+  ],
+  analysis: ANALYSIS_ONBOARDING_STEPS,
+};
+
+const getMinimalTourSegment = (step: MinimalStep): MinimalTourSegment => {
+  if (step === "sdt" || step === "distortion" || step === "alternative") {
+    return "analysis";
+  }
+  return step;
+};
 
 export const MINIMAL_TOUR_STEPS_BY_FLOW: Record<MinimalStep, OnboardingStep[]> =
   {
-    mood: [
-      {
-        selector:
-          "[data-tour='home-mood-toggle'], [data-tour='session-mood-toggle']",
-        side: "bottom",
-        content: "오늘 기분을 골라보죠. \n아주 단순하게 좋은지 나쁜지로.",
-      },
-    ],
-    emotion: [
-      {
-        selector: "[data-tour='home-emotion-grid'], [data-tour='emotion-grid']",
-        side: "bottom",
-        content: "지금의 감정에 가장 가까운 것을 골라주세요.",
-        completeOnTargetClick: true,
-      },
-    ],
-    incident: [
-      {
-        selector: "[data-tour='minimal-incident-input']",
-        side: "bottom",
-        content: "오늘 있었던 일을 간단히 적어주세요.",
-      },
-      {
-        selector: "[data-tour='minimal-incident-example']",
-        side: "bottom",
-        content: "직접 적을 수도, 예시를 볼 수도 있어요.",
-      },
-      {
-        selector: "[data-tour='minimal-incident-next']",
-        side: "bottom",
-        content: "이 이야기를 바탕으로 다음 단계로 넘어가요.",
-      },
-    ],
-    sdt: [
-      {
-        selector: "[data-tour='minimal-distortion-list']",
-        side: "bottom",
-        content: "이 긍정 감정이 어떤 힘에서 왔는지 살펴보는 카드예요.",
-      },
-      {
-        selector: "[data-tour='minimal-distortion-more']",
-        side: "bottom",
-        content: "다른 SDT 축으로도 다시 볼 수 있어요.",
-      },
-    ],
-    distortion: [
-      {
-        selector: "[data-tour='minimal-distortion-list']",
-        side: "bottom",
-        content: "감정 뒤에 혹시 있었을지 모르는 생각이에요.",
-      },
-      {
-        selector: "[data-tour='minimal-distortion-more']",
-        side: "bottom",
-        content: "다른 생각을 더 보려면 여기를 눌러보세요.",
-      },
-    ],
+    mood: MINIMAL_TOUR_SEGMENT_STEPS.mood,
+    emotion: MINIMAL_TOUR_SEGMENT_STEPS.emotion,
+    incident: MINIMAL_TOUR_SEGMENT_STEPS.incident,
+    sdt: ANALYSIS_ONBOARDING_STEPS,
+    distortion: ANALYSIS_ONBOARDING_STEPS,
     alternative: [],
   };
 
-export const MINIMAL_TOUR_TOTAL = MINIMAL_TOUR_STEP_ORDER.reduce(
-  (total, step) => total + MINIMAL_TOUR_STEPS_BY_FLOW[step].length,
+export const MINIMAL_TOUR_TOTAL = MINIMAL_TOUR_SEGMENT_ORDER.reduce(
+  (total, step) => total + MINIMAL_TOUR_SEGMENT_STEPS[step].length,
   0,
 );
 
 // Global step indices (0-based):
 // 0..6 minimal onboarding (display 1..7)
-// 7..10 detail onboarding (display 8..11)
+// 7..8 detail onboarding (display 8..9)
 export const UNIFIED_DETAIL_CELEBRATION_STEP = 7;
 export const UNIFIED_DETAIL_TOUR_OFFSET = 7;
 export const DETAIL_TOUR_STEPS: OnboardingStep[] = [
@@ -202,22 +207,17 @@ export const DETAIL_TOUR_STEPS: OnboardingStep[] = [
     side: "bottom",
     content: "이 곳은 기억을 보관하는 방입니다.",
   },
-  {
-    selector: "[data-tour='detail-alternative-box']",
-    side: "bottom",
-    content: "방금 고른 생각도 이곳에 저장되어 있네요.",
-    hidePopoverDuringScroll: true,
-  },
 ];
 
 export const UNIFIED_TOUR_BASE_TOTAL =
   UNIFIED_DETAIL_TOUR_OFFSET + DETAIL_TOUR_STEPS.length;
 
 export const getMinimalTourOffset = (step: MinimalStep) => {
+  const segment = getMinimalTourSegment(step);
   let offset = 0;
-  for (const key of MINIMAL_TOUR_STEP_ORDER) {
-    if (key === step) break;
-    offset += MINIMAL_TOUR_STEPS_BY_FLOW[key].length;
+  for (const key of MINIMAL_TOUR_SEGMENT_ORDER) {
+    if (key === segment) break;
+    offset += MINIMAL_TOUR_SEGMENT_STEPS[key].length;
   }
   return offset;
 };

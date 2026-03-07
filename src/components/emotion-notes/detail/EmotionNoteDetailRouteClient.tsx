@@ -35,9 +35,6 @@ export default function EmotionNoteDetailRouteClient() {
     canShow: canShowOnboarding,
     blocked: Boolean(blocker),
   });
-  const shouldHideAllFabs =
-    isTourOpen &&
-    DETAIL_TOUR_STEPS[currentStep]?.selector === "[data-tour='detail-alternative-box']";
 
   useEffect(() => {
     if (!isTourOpen || currentStep !== 0) return;
@@ -79,7 +76,7 @@ export default function EmotionNoteDetailRouteClient() {
     <>
       <EmotionNoteDetailPage
         noteId={resolvedNoteId}
-        hideFloatingActions={shouldHideAllFabs}
+        hideFloatingActions={false}
       />
       <OnboardingTour
         steps={DETAIL_TOUR_STEPS}

@@ -7,7 +7,7 @@ import {
   persistUnifiedTourProgress,
   resolveUnifiedSegmentStartStep,
 } from "@/components/onboarding/unifiedOnboarding";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 
 type UseUnifiedOnboardingSegmentOptions = {
   steps: OnboardingStep[];
@@ -22,6 +22,7 @@ export function useUnifiedOnboardingSegment({
   canShow,
   blocked,
 }: UseUnifiedOnboardingSegmentOptions) {
+  const suppressedStepKeyRef = useRef<string | null>(null);
   const progress = useMemo(
     () => ({
       offset,
@@ -47,6 +48,21 @@ export function useUnifiedOnboardingSegment({
       );
     },
   });
+  const localStep = useMemo(
+    () => resolveUnifiedSegmentStartStep(offset, steps.length),
+    [offset, steps.length],
+  );
+  const localStepKey = localStep === null ? null : `${offset}:${localStep}`;
+
+  useEffect(() => {
+    if (localStepKey === null) {
+      suppressedStepKeyRef.current = null;
+      return;
+    }
+    if (suppressedStepKeyRef.current && suppressedStepKeyRef.current !== localStepKey) {
+      suppressedStepKeyRef.current = null;
+    }
+  }, [localStepKey]);
 
   useEffect(() => {
     if (blocked && isOpen) {
@@ -64,8 +80,8 @@ export function useUnifiedOnboardingSegment({
     if (!canShow) return;
     if (blocked) return;
     if (isOpen) return;
-    const localStep = resolveUnifiedSegmentStartStep(offset, steps.length);
     if (localStep === null) return;
+    if (suppressedStepKeyRef.current === localStepKey) return;
     const targetSelector = steps[localStep]?.selector;
     if (targetSelector) {
       const targetElement = document.querySelector(targetSelector);
@@ -80,11 +96,32 @@ export function useUnifiedOnboardingSegment({
     canShow,
     currentStep,
     isOpen,
-    offset,
+    localStep,
+    localStepKey,
     setCurrentStep,
     setIsOpen,
     steps,
   ]);
+
+  const suppressCurrentStep = () => {
+    suppressedStepKeyRef.current =
+      localStepKey ?? `${offset}:${Math.max(0, Math.min(currentStep, steps.length - 1))}`;
+  };
+
+  const handleFinish = (stepIndex: number) => {
+    suppressCurrentStep();
+    onFinish(stepIndex);
+  };
+
+  const handleClose = (stepIndex: number) => {
+    suppressCurrentStep();
+    onClose(stepIndex);
+  };
+
+  const handleMaskClick = (stepIndex: number) => {
+    suppressCurrentStep();
+    onMaskClick(stepIndex);
+  };
 
   return {
     steps,
@@ -93,8 +130,8 @@ export function useUnifiedOnboardingSegment({
     setIsOpen,
     currentStep,
     setCurrentStep,
-    onFinish,
-    onClose,
-    onMaskClick,
+    onFinish: handleFinish,
+    onClose: handleClose,
+    onMaskClick: handleMaskClick,
   };
 }

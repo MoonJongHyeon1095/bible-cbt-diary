@@ -232,6 +232,7 @@ export default function EmotionNoteListCalendarSection({
   };
   const todayKey = formatDateKey(new Date());
   const selectedKey = selectedDate ? formatDateKey(selectedDate) : todayKey;
+  const isFutureSelected = selectedKey > todayKey;
   const getHeatClass = (count: number) => {
     if (count >= 5) {
       return styles.cellHeat4;
@@ -370,33 +371,35 @@ export default function EmotionNoteListCalendarSection({
           getDetailHref={getDetailHref}
         />
       </div>
-      <FloatingActionButton
-        label="기록 추가"
-        icon={<Plus size={24} />}
-        helperText="기록 추가"
-        placement="tab"
-        loadingRing={isAddLoading}
-        disabled={isAddLoading}
-        onClick={async () => {
-          if (isAddLoading) {
-            return;
-          }
-          setIsAddLoading(true);
-          await new Promise<void>((resolve) =>
-            requestAnimationFrame(() => resolve()),
-          );
-          const allowed = await checkUsage();
-          if (!allowed) {
-            setIsAddLoading(false);
-            return;
-          }
-          if (selectedKey === todayKey) {
-            router.push("/session");
-            return;
-          }
-          router.push(`/session?date=${selectedKey}`);
-        }}
-      />
+      {isFutureSelected ? null : (
+        <FloatingActionButton
+          label="기록 추가"
+          icon={<Plus size={24} />}
+          helperText="기록 추가"
+          placement="tab"
+          loadingRing={isAddLoading}
+          disabled={isAddLoading}
+          onClick={async () => {
+            if (isAddLoading) {
+              return;
+            }
+            setIsAddLoading(true);
+            await new Promise<void>((resolve) =>
+              requestAnimationFrame(() => resolve()),
+            );
+            const allowed = await checkUsage();
+            if (!allowed) {
+              setIsAddLoading(false);
+              return;
+            }
+            if (selectedKey === todayKey) {
+              router.push("/session");
+              return;
+            }
+            router.push(`/session?date=${selectedKey}`);
+          }}
+        />
+      )}
     </section>
   );
 }

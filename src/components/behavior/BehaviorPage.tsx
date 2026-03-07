@@ -14,6 +14,7 @@ import { upsertBehaviorHistory } from "@/lib/api/emotion-behavior-history/postEm
 import { useAccessContext } from "@/lib/hooks/useAccessContext";
 import { useStorageBlockedRedirect } from "@/lib/hooks/useStorageBlockedRedirect";
 import { queryKeys } from "@/lib/queryKeys";
+import { safeLocalStorage } from "@/lib/storage/core/safeStorage";
 import {
   formatKoreanDateKey,
   formatKoreanDateTime,
@@ -21,22 +22,22 @@ import {
 } from "@/lib/utils/time";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import {
-  CalendarDays,
-  CalendarHeart,
   Bookmark,
   BookmarkCheck,
-  ChevronDown,
-  ChevronUp,
-  ChevronRight,
+  CalendarDays,
+  CalendarHeart,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  ChevronUp,
   Circle,
   ClipboardPen,
   Disc3,
   Download,
   FolderOpen,
   NotebookPen,
-  Plus,
   Pin,
+  Plus,
   RefreshCcw,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
@@ -104,6 +105,8 @@ const getCompletion = (
 };
 
 const uniqueIds = (ids: number[]) => Array.from(new Set(ids));
+const TODAY_SUGGESTION_PROGRESS_KEY =
+  "behavior:today-suggestion-progress:kst-date";
 
 export default function BehaviorPage() {
   const { accessMode, accessToken, isLoading } = useAccessContext();
@@ -123,22 +126,22 @@ export default function BehaviorPage() {
   const [historySyncKey, setHistorySyncKey] = useState("");
   const [isSavingRecord, setIsSavingRecord] = useState(false);
   const [isSelectingSuggestion, setIsSelectingSuggestion] = useState(false);
-  const [isTrackingSetConfirmedByDate, setIsTrackingSetConfirmedByDate] =
-    useState<Record<string, boolean>>({});
   const [isSavedSuggestionModalOpen, setIsSavedSuggestionModalOpen] =
     useState(false);
   const [importedDetailIdsByDate, setImportedDetailIdsByDate] = useState<
     Record<string, number[]>
   >({});
-  const [modalSelectedDetailIds, setModalSelectedDetailIds] = useState<number[]>(
-    [],
-  );
-  const [expandedModalDetailIds, setExpandedModalDetailIds] = useState<number[]>(
-    [],
-  );
+  const [modalSelectedDetailIds, setModalSelectedDetailIds] = useState<
+    number[]
+  >([]);
+  const [expandedModalDetailIds, setExpandedModalDetailIds] = useState<
+    number[]
+  >([]);
   const [pinLoadingByDetailId, setPinLoadingByDetailId] = useState<
     Record<number, boolean>
   >({});
+  const [todaySuggestionProgressDate, setTodaySuggestionProgressDate] =
+    useState<string | null>(null);
 
   useModalOpen(isSavedSuggestionModalOpen);
 
@@ -153,6 +156,12 @@ export default function BehaviorPage() {
     month: "numeric",
     day: "numeric",
   });
+
+  useEffect(() => {
+    setTodaySuggestionProgressDate(
+      safeLocalStorage.getItem(TODAY_SUGGESTION_PROGRESS_KEY),
+    );
+  }, []);
 
   const historyQuery = useQuery({
     queryKey: queryKeys.behaviorHistory(access),
@@ -216,7 +225,8 @@ export default function BehaviorPage() {
     () =>
       suggestionDetails.filter(
         (detail) =>
-          Boolean(detail.is_pinned) && detailDateKey(detail.created_at) !== selectedDateKey,
+          Boolean(detail.is_pinned) &&
+          detailDateKey(detail.created_at) !== selectedDateKey,
       ),
     [selectedDateKey, suggestionDetails],
   );
@@ -268,7 +278,8 @@ export default function BehaviorPage() {
   }, [selectedHistory]);
 
   const historySelectedCheckIds = useMemo(
-    () => uniqueIds((selectedHistory?.checks ?? []).map((check) => check.check_id)),
+    () =>
+      uniqueIds((selectedHistory?.checks ?? []).map((check) => check.check_id)),
     [selectedHistory],
   );
 
@@ -291,11 +302,11 @@ export default function BehaviorPage() {
   const selectedCheckIds =
     selectedCheckIdsByDate[selectedDateKey] ?? historySelectedCheckIds;
 
-  const hasTrackingSet = selectedCheckIds.length > 0;
-  const isTrackingSetConfirmed =
-    isTrackingSetConfirmedByDate[selectedDateKey] ?? historySelectedCheckIds.length > 0;
+  const hasCompletedTodaySuggestion = todaySuggestionProgressDate === todayKey;
+  const isSelectedDateToday = selectedDateKey === todayKey;
   const currentStep =
-    isSelectingSuggestion || !hasTrackingSet || !isTrackingSetConfirmed
+    isSelectingSuggestion ||
+    (isSelectedDateToday && !hasCompletedTodaySuggestion)
       ? "suggestion"
       : "tracking";
 
@@ -313,12 +324,7 @@ export default function BehaviorPage() {
     setDoneCheckIds(nextDone);
     setComments(selectedHistory?.comments ?? "");
     setHistorySyncKey(syncKey);
-  }, [
-    historySyncKey,
-    selectedCheckIds,
-    selectedDateKey,
-    selectedHistory,
-  ]);
+  }, [historySyncKey, selectedCheckIds, selectedDateKey, selectedHistory]);
 
   useEffect(() => {
     const selectedSet = new Set(selectedCheckIds);
@@ -337,7 +343,9 @@ export default function BehaviorPage() {
       return {
         checkId,
         label:
-          meta?.label ?? historyLabelByCheckId.get(checkId) ?? `체크 #${checkId}`,
+          meta?.label ??
+          historyLabelByCheckId.get(checkId) ??
+          `체크 #${checkId}`,
         isSavedSuggestion: Boolean(meta?.isSavedSuggestion),
       };
     });
@@ -436,7 +444,10 @@ export default function BehaviorPage() {
         pushToast("저장 상태 변경에 실패했습니다.", "error");
         return;
       }
-      pushToast(!isSaved ? "행동 제안을 저장했습니다." : "저장을 해제했습니다.", "success");
+      pushToast(
+        !isSaved ? "행동 제안을 저장했습니다." : "저장을 해제했습니다.",
+        "success",
+      );
       await queryClient.invalidateQueries({
         queryKey: [
           ...queryKeys.behaviorLibrary(access),
@@ -511,10 +522,17 @@ export default function BehaviorPage() {
             title={detail.is_pinned ? "저장됨" : "저장"}
             loading={Boolean(pinLoadingByDetailId[detail.id])}
             onClick={() =>
-              void handleToggleSavedSuggestion(detail.id, Boolean(detail.is_pinned))
+              void handleToggleSavedSuggestion(
+                detail.id,
+                Boolean(detail.is_pinned),
+              )
             }
           >
-            {detail.is_pinned ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
+            {detail.is_pinned ? (
+              <BookmarkCheck size={15} />
+            ) : (
+              <Bookmark size={15} />
+            )}
             {detail.is_pinned ? "저장됨" : "저장"}
           </SafeButton>
         )}
@@ -561,7 +579,9 @@ export default function BehaviorPage() {
         }`}
       >
         <div className={styles.savedSuggestionModalItemHeader}>
-          <h5 className={styles.savedSuggestionModalItemTitle}>{detail.behavior_label}</h5>
+          <h5 className={styles.savedSuggestionModalItemTitle}>
+            {detail.behavior_label}
+          </h5>
           <SafeButton
             size="sm"
             variant="unstyled"
@@ -614,10 +634,16 @@ export default function BehaviorPage() {
       <div className={`${pageStyles.page} ${styles.pageRoot}`}>
         <AppHeader />
         <main className={pageStyles.main}>
-          <div className={`${pageStyles.shell} ${styles.shell} ${styles.guestShell}`}>
+          <div
+            className={`${pageStyles.shell} ${styles.shell} ${styles.guestShell}`}
+          >
             <section className={styles.suggestionStage}>
-              <div className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}>
-                <h3 className={`${styles.sectionTitle} ${styles.suggestionTitle}`}>
+              <div
+                className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}
+              >
+                <h3
+                  className={`${styles.sectionTitle} ${styles.suggestionTitle}`}
+                >
                   <span className={styles.suggestionTitleIcon} aria-hidden>
                     <NotebookPen size={14} />
                   </span>
@@ -652,9 +678,11 @@ export default function BehaviorPage() {
                         className={styles.progressCircle}
                         style={{
                           background: `conic-gradient(#5ce4b3 0deg, #56a8ff ${
-                            Math.max(0, Math.min(100, todayCompletion.rate)) * 3.6
+                            Math.max(0, Math.min(100, todayCompletion.rate)) *
+                            3.6
                           }deg, #1b2439 ${
-                            Math.max(0, Math.min(100, todayCompletion.rate)) * 3.6
+                            Math.max(0, Math.min(100, todayCompletion.rate)) *
+                            3.6
                           }deg)`,
                         }}
                         aria-label={`오늘 완료율 ${todayCompletion.rate}%`}
@@ -674,9 +702,11 @@ export default function BehaviorPage() {
                         className={styles.progressCircle}
                         style={{
                           background: `conic-gradient(#75e39a 0deg, #58cbcc ${
-                            Math.max(0, Math.min(100, weeklyCompletion.rate)) * 3.6
+                            Math.max(0, Math.min(100, weeklyCompletion.rate)) *
+                            3.6
                           }deg, #1b2439 ${
-                            Math.max(0, Math.min(100, weeklyCompletion.rate)) * 3.6
+                            Math.max(0, Math.min(100, weeklyCompletion.rate)) *
+                            3.6
                           }deg)`,
                         }}
                         aria-label={`주간 완료율 ${weeklyCompletion.rate}%`}
@@ -694,30 +724,38 @@ export default function BehaviorPage() {
                   </div>
                 </div>
 
-                <div className={`${styles.sectionHeader} ${styles.trackerDateHeader}`}>
-                  <h3 className={`${styles.sectionTitle} ${styles.trackerDateTitle}`}>
+                <div
+                  className={`${styles.sectionHeader} ${styles.trackerDateHeader}`}
+                >
+                  <h3
+                    className={`${styles.sectionTitle} ${styles.trackerDateTitle}`}
+                  >
                     {selectedDateKey}
                   </h3>
                 </div>
 
                 <div className={styles.weekHeatRow}>
                   {weekCells.map((cell) => {
-                    const completion = getCompletion(historyByDate.get(cell.key));
+                    const completion = getCompletion(
+                      historyByDate.get(cell.key),
+                    );
                     const isSelected = cell.key === selectedDateKey;
                     const isFuture = cell.key > todayKey;
                     const level =
                       completion.rate >= 80
                         ? 4
                         : completion.rate >= 60
-                          ? 3
-                          : completion.rate >= 30
-                            ? 2
-                            : completion.rate > 0
-                              ? 1
-                              : 0;
+                        ? 3
+                        : completion.rate >= 30
+                        ? 2
+                        : completion.rate > 0
+                        ? 1
+                        : 0;
                     return (
                       <div key={cell.key} className={styles.weekHeatCellWrap}>
-                        <span className={styles.weekHeatLabel}>{cell.label}</span>
+                        <span className={styles.weekHeatLabel}>
+                          {cell.label}
+                        </span>
                         <button
                           type="button"
                           disabled={isFuture}
@@ -726,7 +764,9 @@ export default function BehaviorPage() {
                           } ${isSelected ? styles.weekHeatCellSelected : ""} ${
                             isFuture ? styles.weekHeatCellDisabled : ""
                           }`}
-                          onClick={() => setSelectedDate(new Date(`${cell.key}T00:00:00`))}
+                          onClick={() =>
+                            setSelectedDate(new Date(`${cell.key}T00:00:00`))
+                          }
                         >
                           <span className={styles.weekHeatDay}>{cell.day}</span>
                           <span className={styles.weekHeatCount}>
@@ -757,16 +797,16 @@ export default function BehaviorPage() {
                   </SafeButton>
                 </div>
                 {includedChecks.length === 0 ? (
-                  <p className={styles.empty}>
-                    선택된 체크리스트가 없습니다. 행동 제안 선택 단계로 돌아가세요.
-                  </p>
+                  <p className={styles.empty}>선택된 체크리스트가 없습니다.</p>
                 ) : (
                   <div className={styles.checkCardList}>
                     {includedChecks.map((check) => (
                       <label
                         key={check.checkId}
                         className={`${styles.checkCardItem} ${
-                          doneCheckIds.has(check.checkId) ? styles.checkCardItemDone : ""
+                          doneCheckIds.has(check.checkId)
+                            ? styles.checkCardItemDone
+                            : ""
                         }`}
                       >
                         <input
@@ -782,7 +822,10 @@ export default function BehaviorPage() {
                               className={styles.checkStateIconHistoryDone}
                             />
                           ) : (
-                            <Circle size={18} className={styles.checkStateIcon} />
+                            <Circle
+                              size={18}
+                              className={styles.checkStateIcon}
+                            />
                           )}
                         </span>
                         <span className={styles.checkLabelWrap}>
@@ -810,8 +853,12 @@ export default function BehaviorPage() {
             </>
           ) : (
             <section className={styles.suggestionStage}>
-              <div className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}>
-                <h3 className={`${styles.sectionTitle} ${styles.suggestionTitle}`}>
+              <div
+                className={`${styles.sectionHeader} ${styles.suggestionTitleRow}`}
+              >
+                <h3
+                  className={`${styles.sectionTitle} ${styles.suggestionTitle}`}
+                >
                   <span className={styles.suggestionTitleIcon} aria-hidden>
                     <NotebookPen size={14} />
                   </span>
@@ -822,7 +869,9 @@ export default function BehaviorPage() {
                   variant="unstyled"
                   className={styles.openImportModalButton}
                   onClick={() => {
-                    setModalSelectedDetailIds(importedDetailIdsByDate[selectedDateKey] ?? []);
+                    setModalSelectedDetailIds(
+                      importedDetailIdsByDate[selectedDateKey] ?? [],
+                    );
                     setExpandedModalDetailIds([]);
                     setIsSavedSuggestionModalOpen(true);
                   }}
@@ -861,12 +910,14 @@ export default function BehaviorPage() {
             helperText="진행"
             placement="tab"
             className={styles.fabRight}
-            disabled={selectedCheckIds.length === 0}
             onClick={() => {
-              setIsTrackingSetConfirmedByDate((prev) => ({
-                ...prev,
-                [selectedDateKey]: true,
-              }));
+              if (selectedDateKey === todayKey) {
+                safeLocalStorage.setItem(
+                  TODAY_SUGGESTION_PROGRESS_KEY,
+                  todayKey,
+                );
+                setTodaySuggestionProgressDate(todayKey);
+              }
               setIsSelectingSuggestion(false);
             }}
           />
